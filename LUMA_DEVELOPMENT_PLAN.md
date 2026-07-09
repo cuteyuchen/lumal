@@ -576,13 +576,13 @@ corepack pnpm --filter @luma/vben-compat build
   - `LumaSchemaForm`
   - `LumaCrudTable`
   - `LumaSchemaTable`
-- [ ] 创建 `apps/vben-compat-demo`，使用：
+- [x] 创建 `apps/vben-compat-demo`，使用：
   - `@luma/core`
   - `@luma/icons`
   - `@luma/vben-compat`
   - `useVbenForm`
   - `useVbenVxeGrid`
-- [ ] 添加构建脚本：
+- [x] 添加构建脚本：
 
 ```json
 {

@@ -1,0 +1,24 @@
+{
+  "name": "luma-vben-compat-demo",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vue-tsc --noEmit -p tsconfig.json && vite build",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@luma/core": "workspace:*",
+    "@luma/icons": "workspace:*",
+    "@luma/vben-compat": "workspace:*",
+    "element-plus": "^2.11.0",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "typescript": "^6.0.0",
+    "vite": "^8.0.0",
+    "vue-tsc": "^3.1.1"
+  }
+}

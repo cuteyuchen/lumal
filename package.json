@@ -14,7 +14,7 @@
     "admin:dev": "pnpm build && pnpm --filter luma-admin dev",
     "admin:build": "pnpm build && pnpm --filter luma-admin build",
     "admin:preview": "pnpm --filter luma-admin preview",
-    "compat:build": "pnpm --filter @luma/vben-compat build"
+    "compat:build": "pnpm build && pnpm --filter luma-vben-compat-demo build"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^8.2.0",
