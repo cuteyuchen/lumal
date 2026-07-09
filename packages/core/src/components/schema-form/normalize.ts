@@ -10,7 +10,7 @@ export function normalizeSchemaFormItems(items: SchemaFormItem[] = []): Normaliz
   return items
     .filter(item => item.field.trim())
     .map((item) => {
-      const component = item.component ?? 'input'
+      const component = item.component ?? (item.dictionary || item.dictType ? 'select' : 'input')
       const renderable = !item.hidden && component !== 'hidden'
 
       return {

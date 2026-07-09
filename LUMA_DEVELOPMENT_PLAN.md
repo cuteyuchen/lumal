@@ -117,7 +117,6 @@ F:\my-project\luma
 │     │  └─ types.ts
 │     └─ tests
 └─ apps
-   ├─ playground
    ├─ luma-admin
    └─ vben-compat-demo
 ```
@@ -572,14 +571,13 @@ corepack pnpm --filter @luma/vben-compat build
 
 **应用：**
 
-- `apps/playground`：组件和服务开发预览。
-- `apps/luma-admin`：干净的后台模板。
+- `apps/luma-admin`：原生写法示例和后台模板验证入口。
 - `apps/vben-compat-demo`：使用 Vben 兼容 API 的迁移示例。
 
 **任务：**
 
-- [x] 创建 `apps/playground`，通过 workspace 包名和 package exports 消费公开包入口。
-- [x] 创建 `apps/luma-admin`，使用：
+- [x] 在 `apps/luma-admin` 中通过 workspace 包名和 package exports 消费公开包入口。
+- [x] 在 `apps/luma-admin` 中使用：
   - `@luma/core`
   - `@luma/icons`
   - `LumaLayout`
@@ -597,8 +595,6 @@ corepack pnpm --filter @luma/vben-compat build
 ```json
 {
   "scripts": {
-    "playground:dev": "pnpm build && pnpm --filter luma-playground dev",
-    "playground:build": "pnpm build && pnpm --filter luma-playground build",
     "admin:dev": "pnpm build && pnpm --filter luma-admin dev",
     "admin:build": "pnpm build && pnpm --filter luma-admin build",
     "compat:build": "pnpm build && pnpm --filter luma-vben-compat-demo build"
@@ -609,7 +605,6 @@ corepack pnpm --filter @luma/vben-compat build
 - [x] 执行：
 
 ```bash
-corepack pnpm playground:build
 corepack pnpm admin:build
 corepack pnpm compat:build
 ```
@@ -617,13 +612,12 @@ corepack pnpm compat:build
 **验收标准：**
 
 - 原生后台模板可以构建。
-- Playground 可以构建。
 - Vben 兼容示例可以构建。
-- 三个示例应用都不需要多语言配置。
+- 两个示例应用都不需要多语言配置。
 
 **停止条件：**
 
-- 三个示例应用构建未通过前，不进入发布准备。
+- 两个示例应用构建未通过前，不进入发布准备。
 
 ---
 

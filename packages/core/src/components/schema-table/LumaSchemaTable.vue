@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { TableInstance } from 'element-plus'
+import type { DictionaryLabelValue } from '../../dictionary'
 import type { NormalizedSchemaTableColumn, SchemaTableColumn, SchemaTableRow } from './types'
 import { ElTable, ElTableColumn } from 'element-plus'
 import { computed, useTemplateRef } from 'vue'
+import { getDictionaryLabel, useDictionaryMap } from '../../dictionary'
 import { normalizeSchemaTableColumns } from './normalize'
 
 /***********************属性定义*********************/
@@ -24,6 +26,10 @@ const normalizedColumns = computed(() => normalizeSchemaTableColumns(props.colum
 
 const renderableColumns = computed(() => normalizedColumns.value.filter(column => column.renderable))
 
+const { dictionaryMap } = useDictionaryMap(() =>
+  normalizedColumns.value.map(column => column.dictionary ?? column.dictType),
+)
+
 const elementRowKey = computed(() => {
   const rowKey = props.rowKey
 
@@ -38,12 +44,47 @@ const elementRowKey = computed(() => {
 })
 
 /***********************表格取值*********************/
+function resolveColumnOptions(column: NormalizedSchemaTableColumn) {
+  if (column.options?.length) {
+    return column.options
+  }
+
+  const dictionary = column.dictionary ?? column.dictType
+
+  return dictionary ? dictionaryMap.value[dictionary] ?? [] : []
+}
+
+function isDictionaryLabelValue(value: unknown): value is DictionaryLabelValue {
+  if (value === undefined || value === null) {
+    return true
+  }
+
+  if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
+    return true
+  }
+
+  return Array.isArray(value)
+    && value.every(item =>
+      typeof item === 'boolean' || typeof item === 'number' || typeof item === 'string',
+    )
+}
+
 function formatCellText(row: SchemaTableRow, column: NormalizedSchemaTableColumn, index: number): string {
   const rawValue = row[column.field]
   const formattedValue = column.formatter?.(rawValue, row, index) ?? rawValue
 
   if (formattedValue === undefined || formattedValue === null || formattedValue === '') {
     return column.emptyText
+  }
+
+  if (column.formatter) {
+    return String(formattedValue)
+  }
+
+  const options = resolveColumnOptions(column)
+
+  if (options.length > 0 && isDictionaryLabelValue(formattedValue)) {
+    return getDictionaryLabel(options, formattedValue)
   }
 
   return String(formattedValue)

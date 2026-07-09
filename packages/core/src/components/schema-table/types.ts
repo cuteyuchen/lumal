@@ -1,3 +1,5 @@
+import type { DictionaryOption } from '../../dictionary'
+
 export type SchemaTableRow = Record<string, unknown>
 
 export type SchemaTableAlign = 'center' | 'left' | 'right'
@@ -11,6 +13,9 @@ export type SchemaTableCellFormatter = (
 export interface SchemaTableColumn {
   field: string
   label: string
+  dictionary?: string
+  dictType?: string
+  options?: DictionaryOption[]
   hidden?: boolean
   align?: SchemaTableAlign
   width?: number | string

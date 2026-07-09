@@ -25,6 +25,11 @@ createLumaAdmin({
   router,
   pinia: createPinia(),
   elementPlus: ElementPlus,
+  dictionary: {
+    fetcher: async dictionary => ({
+      items: [],
+    }),
+  },
   icons: {
     localSvg: [],
   },
@@ -35,9 +40,9 @@ createLumaAdmin({
 }).mount('#app')
 ```
 
-`createLumaAdmin` 当前负责创建 Vue app、注册本地图标、安装调用方传入的 router/pinia/Element Plus 插件、注册全局组件并执行应用级 setup。Element Plus、Pinia 和 Vue Router 都由应用侧传入，`@luma/core` 不做默认安装。
+`createLumaAdmin` 当前负责创建 Vue app、注册本地图标、安装字典上下文、安装调用方传入的 router/pinia/Element Plus 插件、注册全局组件并执行应用级 setup。Element Plus、Pinia 和 Vue Router 都由应用侧传入，`@luma/core` 不做默认安装。
 
-安装顺序固定为：本地图标注册 -> `router` -> `pinia` -> `elementPlus` -> `components` -> `setup`。
+安装顺序固定为：本地图标注册 -> 字典上下文 -> `router` -> `pinia` -> `elementPlus` -> `components` -> `setup`。
 
 ## 组件
 
@@ -47,7 +52,9 @@ createLumaAdmin({
 - `LumaSchemaTable`
 - `LumaCrudTable`
 - `LumaPage`
+- `LumaPageLayout`
 - `LumaPagination`
+- `LumaInfoTable`
 - `LumaIcon`
 - `LumaIconPicker`
 - `LumaIconPickerDialog`
@@ -67,11 +74,7 @@ const schemas: SchemaFormItem[] = [
   {
     field: 'status',
     label: '状态',
-    component: 'select',
-    options: [
-      { label: '启用', value: 'enabled' },
-      { label: '停用', value: 'disabled' },
-    ],
+    dictionary: 'status',
   },
 ]
 </script>
@@ -89,7 +92,7 @@ import { LumaCrudTable } from '@luma/core/components'
 
 const columns = [
   { field: 'name', label: '名称' },
-  { field: 'status', label: '状态' },
+  { field: 'status', label: '状态', dictionary: 'status' },
 ]
 
 const rows = [
@@ -106,6 +109,53 @@ const rows = [
     :total="1"
   />
 </template>
+```
+
+### Dictionary
+
+从 `@luma/core/dictionary` 导入：
+
+- `installDictionary`
+- `useDictionary`
+- `useDictionaryMap`
+- `getDictionaryLabel`
+- `normalizeDictionaryOptions`
+- `createDictionaryFetcherWithFallback`
+
+推荐字段名是 `dictionary`，用于 Schema Form 的下拉 options 生成，以及 Schema Table / CRUD Table 的值回显：
+
+```ts
+const schemas = [
+  { field: 'status', label: '状态', dictionary: 'status' },
+]
+
+const columns = [
+  { field: 'status', label: '状态', dictionary: 'status' },
+]
+```
+
+标准响应结构固定为：
+
+```ts
+interface DictionaryResponse {
+  items: DictionaryOption[]
+}
+```
+
+默认解析器只读取 `{ items: [...] }`，不会自动兼容 `data`、`result`、`list` 等非标准响应。非标准接口需要显式传入 `fieldNames` 或 `parseResponse`：
+
+```ts
+createLumaAdmin({
+  rootComponent: App,
+  dictionary: {
+    fieldNames: {
+      items: 'records',
+      label: 'name',
+      value: 'code',
+    },
+    fetcher: dictionary => fetch(`/api/dictionaries/${dictionary}`).then(res => res.json()),
+  },
+})
 ```
 
 ## Layout

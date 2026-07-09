@@ -13,6 +13,10 @@ body {
   margin: 0;
 }
 
+button {
+  font: inherit;
+}
+
 .luma-admin-home {
   display: grid;
   gap: 24px;
@@ -54,4 +58,143 @@ body {
   color: #334155;
   font-size: 14px;
   line-height: 1.6;
+}
+
+.luma-admin-example {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.luma-admin-example__metrics,
+.luma-admin-example__chart-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.luma-admin-example__metric,
+.luma-admin-example__chart-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.luma-admin-example__metric span,
+.luma-admin-example__chart-card-label {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.luma-admin-example__metric strong,
+.luma-admin-example__chart-card-value {
+  color: #111827;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.luma-admin-example__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.luma-admin-example__button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #334155;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.luma-admin-example__button--primary {
+  border-color: #2563eb;
+  color: #ffffff;
+  background: #2563eb;
+}
+
+.luma-admin-example__swatch {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px #cbd5e1;
+  cursor: pointer;
+}
+
+.luma-admin-example__theme-preview {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border-radius: var(--luma-admin-example-preview-radius);
+  color: #ffffff;
+  background: var(--luma-admin-example-preview-color);
+}
+
+.luma-admin-example__two-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+.luma-admin-example__chart {
+  display: grid;
+  gap: 14px;
+}
+
+.luma-admin-example__chart-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 56px;
+  gap: 12px;
+  align-items: center;
+}
+
+.luma-admin-example__chart-label,
+.luma-admin-example__chart-value {
+  color: #334155;
+  font-size: 13px;
+}
+
+.luma-admin-example__chart-track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+
+.luma-admin-example__chart-bar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.luma-admin-example__chart-card-line {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+}
+
+@media (max-width: 980px) {
+  .luma-admin-example__two-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .luma-admin-example__metrics,
+  .luma-admin-example__chart-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .luma-admin-example__chart-row {
+    grid-template-columns: 1fr;
+  }
 }

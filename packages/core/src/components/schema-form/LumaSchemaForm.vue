@@ -3,6 +3,7 @@ import type { FormInstance } from 'element-plus'
 import type { NormalizedSchemaFormItem, SchemaFormItem, SchemaFormModel } from './types'
 import { ElButton, ElForm, ElFormItem, ElInput, ElOption, ElSelect } from 'element-plus'
 import { computed, useTemplateRef } from 'vue'
+import { useDictionaryMap } from '../../dictionary'
 import { normalizeSchemaFormItems, resolveSchemaFormInitialModel } from './normalize'
 
 /***********************属性定义*********************/
@@ -33,6 +34,10 @@ const renderableSchemas = computed(() => normalizedSchemas.value.filter(schema =
 
 const normalizedModel = computed(() => resolveSchemaFormInitialModel(normalizedSchemas.value, model.value))
 
+const { dictionaryMap } = useDictionaryMap(() =>
+  normalizedSchemas.value.map(schema => schema.dictionary ?? schema.dictType),
+)
+
 /***********************字段取值*********************/
 function getInputValue(field: string): string | number {
   const value = normalizedModel.value[field]
@@ -60,6 +65,16 @@ function getInputType(schema: NormalizedSchemaFormItem): string {
 
 function isFieldDisabled(schema: NormalizedSchemaFormItem): boolean {
   return Boolean(schema.props?.disabled)
+}
+
+function resolveSchemaOptions(schema: NormalizedSchemaFormItem) {
+  if (schema.options.length > 0) {
+    return schema.options
+  }
+
+  const dictionary = schema.dictionary ?? schema.dictType
+
+  return dictionary ? dictionaryMap.value[dictionary] ?? [] : []
 }
 
 /***********************事件处理*********************/
@@ -120,7 +135,7 @@ defineExpose({
         @update:model-value="updateFieldValue(schema.field, $event)"
       >
         <ElOption
-          v-for="option in schema.options"
+          v-for="option in resolveSchemaOptions(schema)"
           :key="String(option.value)"
           :label="option.label"
           :value="option.value"

@@ -13,6 +13,7 @@ export default defineConfig({
       entry: {
         index: resolve(packageRoot, 'src/index.ts'),
         components: resolve(packageRoot, 'src/exports/components.ts'),
+        dictionary: resolve(packageRoot, 'src/dictionary/index.ts'),
         layout: resolve(packageRoot, 'src/layout/index.ts'),
         permission: resolve(packageRoot, 'src/permission/index.ts'),
         request: resolve(packageRoot, 'src/request/index.ts'),

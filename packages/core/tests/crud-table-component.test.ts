@@ -4,6 +4,7 @@ import { LumaCrudTable } from '../src/components/crud-table'
 import { LumaPagination } from '../src/components/pagination'
 import { LumaSchemaForm } from '../src/components/schema-form'
 import { LumaSchemaTable } from '../src/components/schema-table'
+import { createDictionaryStore, dictionaryContextKey } from '../src/dictionary'
 import { elementPlusStubs } from './helpers/element-plus-stubs'
 
 describe('luma crud table', () => {
@@ -172,5 +173,62 @@ describe('luma crud table', () => {
     })
 
     expect(wrapper.find('.luma-crud-table__extra').text()).toBe('当前展示示例数据')
+  })
+
+  it('查询表单和表格列会复用 dictionary 字典能力', async () => {
+    const rows = [
+      {
+        id: 'row-1',
+        status: 'enabled',
+      },
+    ]
+    const store = createDictionaryStore({
+      fetcher: async () => ({
+        items: [
+          { label: '启用', value: 'enabled' },
+          { label: '停用', value: 'disabled' },
+        ],
+      }),
+    })
+
+    const wrapper = mount(LumaCrudTable, {
+      global: {
+        provide: {
+          [dictionaryContextKey as symbol]: {
+            store,
+          },
+        },
+        stubs: elementPlusStubs,
+      },
+      props: {
+        columns: [
+          {
+            dictionary: 'status',
+            field: 'status',
+            label: '状态',
+          },
+        ],
+        querySchemas: [
+          {
+            dictionary: 'status',
+            field: 'status',
+            label: '状态',
+          },
+        ],
+        rowKey: 'id',
+        rows,
+      },
+    })
+
+    await Promise.resolve()
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.findAllComponents({ name: 'ElOption' }).map(item => item.props('label'))).toEqual(['启用', '停用'])
+
+    const formatter = wrapper.findComponent({ name: 'ElTableColumn' }).props('formatter') as
+      | ((row: Record<string, unknown>, column: unknown, value: unknown, index: number) => unknown)
+      | undefined
+
+    expect(formatter?.(rows[0], {}, 'enabled', 0)).toBe('启用')
   })
 })

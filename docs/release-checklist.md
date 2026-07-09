@@ -48,7 +48,6 @@ corepack pnpm release:boundaries
 corepack pnpm test
 corepack pnpm typecheck
 corepack pnpm build
-corepack pnpm playground:build
 corepack pnpm admin:build
 corepack pnpm compat:build
 ```

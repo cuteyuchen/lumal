@@ -30,6 +30,11 @@
       "import": "./dist/components.js",
       "require": "./dist/components.cjs"
     },
+    "./dictionary": {
+      "types": "./dist/src/dictionary/index.d.ts",
+      "import": "./dist/dictionary.js",
+      "require": "./dist/dictionary.cjs"
+    },
     "./layout": {
       "types": "./dist/src/layout/index.d.ts",
       "import": "./dist/layout.js",

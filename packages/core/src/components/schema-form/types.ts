@@ -1,19 +1,19 @@
+import type { DictionaryOption } from '../../dictionary'
+
 export type SchemaFormModel = Record<string, unknown>
 
 export type SchemaFormComponentType = 'hidden' | 'input' | 'select' | 'textarea'
 
 export type SchemaFormOptionValue = string | number | boolean
 
-export interface SchemaFormOption {
-  label: string
-  value: SchemaFormOptionValue
-  disabled?: boolean
-}
+export interface SchemaFormOption extends DictionaryOption {}
 
 export interface SchemaFormItem {
   field: string
   label: string
   component?: SchemaFormComponentType
+  dictionary?: string
+  dictType?: string
   defaultValue?: unknown
   hidden?: boolean
   required?: boolean

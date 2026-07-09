@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import { LumaSchemaTable } from '../src/components/schema-table'
+import { createDictionaryStore, dictionaryContextKey } from '../src/dictionary'
 import { elementPlusStubs } from './helpers/element-plus-stubs'
 
 describe('luma schema table', () => {
@@ -72,5 +73,53 @@ describe('luma schema table', () => {
     })
 
     expect(wrapper.findComponent({ name: 'ElTable' }).props('emptyText')).toBe('暂无项目')
+  })
+
+  it('会使用 dictionary 字段把表格值回显为 label', async () => {
+    const rows = [
+      {
+        id: 'row-1',
+        status: 'enabled',
+      },
+    ]
+    const store = createDictionaryStore({
+      fetcher: async () => ({
+        items: [
+          { label: '启用', value: 'enabled' },
+          { label: '停用', value: 'disabled' },
+        ],
+      }),
+    })
+
+    const wrapper = mount(LumaSchemaTable, {
+      global: {
+        provide: {
+          [dictionaryContextKey as symbol]: {
+            store,
+          },
+        },
+        stubs: elementPlusStubs,
+      },
+      props: {
+        columns: [
+          {
+            dictionary: 'status',
+            field: 'status',
+            label: '状态',
+          },
+        ],
+        rowKey: 'id',
+        rows,
+      },
+    })
+
+    await Promise.resolve()
+    await wrapper.vm.$nextTick()
+
+    const formatter = wrapper.findComponent({ name: 'ElTableColumn' }).props('formatter') as
+      | ((row: Record<string, unknown>, column: unknown, value: unknown, index: number) => unknown)
+      | undefined
+
+    expect(formatter?.(rows[0], {}, 'enabled', 0)).toBe('启用')
   })
 })
