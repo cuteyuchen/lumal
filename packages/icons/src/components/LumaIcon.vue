@@ -88,7 +88,7 @@ const resolvedTitle = computed(() => props.title ?? resolvedDefinition.value?.la
   </span>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .luma-icon {
   display: inline-flex;
   width: var(--luma-icon-size);

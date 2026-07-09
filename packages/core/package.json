@@ -2,6 +2,10 @@
   "name": "@luma/core",
   "type": "module",
   "version": "0.0.0",
+  "sideEffects": [
+    "**/*.css",
+    "**/*.scss"
+  ],
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -12,7 +16,8 @@
       "types": "./dist/src/exports/components.d.ts",
       "import": "./dist/components.js",
       "require": "./dist/components.cjs"
-    }
+    },
+    "./theme-chalk/index.scss": "./theme-chalk/index.scss"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

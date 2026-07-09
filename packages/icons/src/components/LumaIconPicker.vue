@@ -25,3 +25,23 @@ const icons = computed<IconDefinition[]>(() => getRegisteredIconDefinitions())
     </button>
   </div>
 </template>
+
+<style scoped lang="scss">
+.luma-icon-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  gap: 8px;
+}
+
+.luma-icon-picker__item {
+  display: inline-flex;
+  aspect-ratio: 1;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #374151;
+  background: #ffffff;
+  cursor: pointer;
+}
+</style>
