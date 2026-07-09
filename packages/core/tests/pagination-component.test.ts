@@ -1,16 +1,22 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import { LumaPagination } from '../src/components/pagination'
+import { elementPlusStubs } from './helpers/element-plus-stubs'
 
 describe('luma pagination', () => {
-  it('点击下一页会更新页码并触发 change', async () => {
+  it('会使用 Element Plus 分页组件，点击下一页会更新页码并触发 change', async () => {
     const wrapper = mount(LumaPagination, {
+      global: {
+        stubs: elementPlusStubs,
+      },
       props: {
         page: 2,
         pageSize: 10,
         total: 35,
       },
     })
+
+    expect(wrapper.findComponent({ name: 'ElPagination' }).exists()).toBe(true)
 
     await wrapper.find('[data-action="next"]').trigger('click')
 
@@ -25,6 +31,9 @@ describe('luma pagination', () => {
 
   it('修改每页条数会重置到第一页', async () => {
     const wrapper = mount(LumaPagination, {
+      global: {
+        stubs: elementPlusStubs,
+      },
       props: {
         page: 3,
         pageSize: 10,

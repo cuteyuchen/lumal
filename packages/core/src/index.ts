@@ -7,3 +7,4 @@ export type {
   LumaAdminInstance,
 } from './app'
 export * from './exports/components'
+export * from './router'

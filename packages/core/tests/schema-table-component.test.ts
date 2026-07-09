@@ -1,10 +1,23 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import { LumaSchemaTable } from '../src/components/schema-table'
+import { elementPlusStubs } from './helpers/element-plus-stubs'
 
 describe('luma schema table', () => {
-  it('会渲染可见列，并使用 formatter 输出单元格', () => {
+  it('会使用 Element Plus 表格组件渲染可见列，并保留 formatter', () => {
+    const rows = [
+      {
+        id: 'row-1',
+        name: 'Luma',
+        status: 'enabled',
+        secret: '不可见',
+      },
+    ]
+
     const wrapper = mount(LumaSchemaTable, {
+      global: {
+        stubs: elementPlusStubs,
+      },
       props: {
         rowKey: 'id',
         columns: [
@@ -23,27 +36,29 @@ describe('luma schema table', () => {
             hidden: true,
           },
         ],
-        rows: [
-          {
-            id: 'row-1',
-            name: 'Luma',
-            status: 'enabled',
-            secret: '不可见',
-          },
-        ],
+        rows,
       },
     })
 
-    const headers = wrapper.findAll('th').map(item => item.text())
-    const cells = wrapper.findAll('td').map(item => item.text())
+    const table = wrapper.findComponent({ name: 'ElTable' })
+    const columns = wrapper.findAllComponents({ name: 'ElTableColumn' })
+    const statusFormatter = columns[1]?.props('formatter') as
+      | ((row: Record<string, unknown>, column: unknown, value: unknown, index: number) => unknown)
+      | undefined
 
-    expect(headers).toEqual(['名称', '状态'])
-    expect(cells).toEqual(['Luma', '启用'])
-    expect(wrapper.text()).not.toContain('不可见')
+    expect(table.exists()).toBe(true)
+    expect(table.props('data')).toEqual(rows)
+    expect(columns.map(item => item.props('label'))).toEqual(['名称', '状态'])
+    expect(columns.map(item => item.props('prop'))).toEqual(['name', 'status'])
+    expect(statusFormatter?.(rows[0], {}, 'enabled', 0)).toBe('启用')
+    expect(columns.map(item => item.props('prop'))).not.toContain('secret')
   })
 
-  it('没有数据时会显示空状态', () => {
+  it('没有数据时会把空状态文案交给 Element Plus 表格', () => {
     const wrapper = mount(LumaSchemaTable, {
+      global: {
+        stubs: elementPlusStubs,
+      },
       props: {
         emptyText: '暂无项目',
         columns: [
@@ -56,6 +71,6 @@ describe('luma schema table', () => {
       },
     })
 
-    expect(wrapper.find('.luma-schema-table__empty').text()).toBe('暂无项目')
+    expect(wrapper.findComponent({ name: 'ElTable' }).props('emptyText')).toBe('暂无项目')
   })
 })

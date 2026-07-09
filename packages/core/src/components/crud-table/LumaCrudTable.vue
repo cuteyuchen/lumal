@@ -2,6 +2,7 @@
 import type { PaginationChangePayload } from '../pagination'
 import type { SchemaFormModel } from '../schema-form'
 import type { CrudTableProps, CrudTableResetPayload, CrudTableSearchPayload } from './types'
+import { ElButton } from 'element-plus'
 import { computed, useTemplateRef } from 'vue'
 import { LumaPage } from '../page'
 import { LumaPagination } from '../pagination'
@@ -87,22 +88,21 @@ defineExpose({
       <div v-if="hasQuery" class="luma-crud-table__query">
         <LumaSchemaForm v-model="queryModel" :schemas="querySchemas" />
         <div class="luma-crud-table__query-actions">
-          <button
-            class="luma-crud-table__button luma-crud-table__button--primary"
-            type="button"
+          <ElButton
+            type="primary"
+            native-type="button"
             data-action="search"
             @click="handleSearchClick"
           >
             {{ searchText }}
-          </button>
-          <button
-            class="luma-crud-table__button"
-            type="button"
+          </ElButton>
+          <ElButton
+            native-type="button"
             data-action="reset"
             @click="handleResetClick"
           >
             {{ resetText }}
-          </button>
+          </ElButton>
         </div>
       </div>
 
@@ -148,23 +148,6 @@ defineExpose({
   display: flex;
   gap: 8px;
   justify-content: flex-end;
-}
-
-.luma-crud-table__button {
-  min-width: 72px;
-  min-height: 34px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  color: #111827;
-  background: #ffffff;
-  cursor: pointer;
-  font: inherit;
-}
-
-.luma-crud-table__button--primary {
-  border-color: #1677ff;
-  color: #ffffff;
-  background: #1677ff;
 }
 
 .luma-crud-table__body {

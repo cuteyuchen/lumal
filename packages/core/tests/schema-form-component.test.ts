@@ -2,10 +2,14 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 import { LumaSchemaForm } from '../src/components/schema-form'
+import { elementPlusStubs } from './helpers/element-plus-stubs'
 
 describe('luma schema form', () => {
-  it('会渲染可见字段，并在输入后回写模型且保留隐藏字段', async () => {
+  it('会使用 Element Plus 表单组件渲染可见字段，并在输入后回写模型且保留隐藏字段', async () => {
     const wrapper = mount(LumaSchemaForm, {
+      global: {
+        stubs: elementPlusStubs,
+      },
       props: {
         modelValue: {
           id: '1001',
@@ -35,6 +39,9 @@ describe('luma schema form', () => {
       },
     })
 
+    expect(wrapper.findComponent({ name: 'ElForm' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'ElInput' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'ElSelect' }).exists()).toBe(true)
     expect(wrapper.find('[data-field="id"]').exists()).toBe(false)
     expect(wrapper.find('[data-field="name"]').exists()).toBe(true)
     expect(wrapper.find('[data-field="status"]').exists()).toBe(true)

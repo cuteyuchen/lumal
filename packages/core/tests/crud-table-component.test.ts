@@ -1,10 +1,17 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import { LumaCrudTable } from '../src/components/crud-table'
+import { LumaPagination } from '../src/components/pagination'
+import { LumaSchemaForm } from '../src/components/schema-form'
+import { LumaSchemaTable } from '../src/components/schema-table'
+import { elementPlusStubs } from './helpers/element-plus-stubs'
 
 describe('luma crud table', () => {
-  it('会组合查询表单、表格和分页', () => {
+  it('会组合查询表单、表格、分页和 Element Plus 操作按钮', () => {
     const wrapper = mount(LumaCrudTable, {
+      global: {
+        stubs: elementPlusStubs,
+      },
       props: {
         title: '项目列表',
         querySchemas: [
@@ -33,12 +40,17 @@ describe('luma crud table', () => {
 
     expect(wrapper.find('.luma-page__title').text()).toBe('项目列表')
     expect(wrapper.find('.luma-crud-table__query').exists()).toBe(true)
-    expect(wrapper.find('.luma-schema-table').text()).toContain('Luma')
-    expect(wrapper.find('.luma-pagination').exists()).toBe(true)
+    expect(wrapper.findComponent(LumaSchemaForm).exists()).toBe(true)
+    expect(wrapper.findComponent(LumaSchemaTable).exists()).toBe(true)
+    expect(wrapper.findComponent(LumaPagination).exists()).toBe(true)
+    expect(wrapper.findAllComponents({ name: 'ElButton' })).toHaveLength(2)
   })
 
   it('点击搜索会触发 search 并携带查询模型', async () => {
     const wrapper = mount(LumaCrudTable, {
+      global: {
+        stubs: elementPlusStubs,
+      },
       props: {
         queryModel: {
           keyword: 'Luma',
@@ -71,6 +83,9 @@ describe('luma crud table', () => {
 
   it('点击重置会恢复查询默认值并触发 reset', async () => {
     const wrapper = mount(LumaCrudTable, {
+      global: {
+        stubs: elementPlusStubs,
+      },
       props: {
         queryModel: {
           keyword: '旧值',
@@ -109,6 +124,9 @@ describe('luma crud table', () => {
 
   it('分页变化会透传 page-change', async () => {
     const wrapper = mount(LumaCrudTable, {
+      global: {
+        stubs: elementPlusStubs,
+      },
       props: {
         columns: [
           {
@@ -136,6 +154,9 @@ describe('luma crud table', () => {
 
   it('会渲染默认插槽作为表格扩展内容', () => {
     const wrapper = mount(LumaCrudTable, {
+      global: {
+        stubs: elementPlusStubs,
+      },
       props: {
         columns: [
           {

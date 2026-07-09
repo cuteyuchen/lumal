@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { TableInstance } from 'element-plus'
 import type { NormalizedSchemaTableColumn, SchemaTableColumn, SchemaTableRow } from './types'
+import { ElTable, ElTableColumn } from 'element-plus'
 import { computed, useTemplateRef } from 'vue'
 import { normalizeSchemaTableColumns } from './normalize'
 
@@ -15,37 +17,27 @@ const props = withDefaults(defineProps<{
 })
 
 /***********************模板引用*********************/
-const tableRef = useTemplateRef<HTMLTableElement>('tableRef')
+const tableRef = useTemplateRef<TableInstance>('tableRef')
 
 /***********************列状态*********************/
 const normalizedColumns = computed(() => normalizeSchemaTableColumns(props.columns))
 
 const renderableColumns = computed(() => normalizedColumns.value.filter(column => column.renderable))
 
+const elementRowKey = computed(() => {
+  const rowKey = props.rowKey
+
+  if (typeof rowKey !== 'function') {
+    return rowKey
+  }
+
+  return (row: SchemaTableRow): string => {
+    const index = props.rows.findIndex(item => item === row)
+    return String(rowKey(row, index))
+  }
+})
+
 /***********************表格取值*********************/
-function resolveRowKey(row: SchemaTableRow, index: number): string | number {
-  if (typeof props.rowKey === 'function') {
-    return props.rowKey(row, index)
-  }
-
-  if (typeof props.rowKey === 'string') {
-    const value = row[props.rowKey]
-    return typeof value === 'number' || typeof value === 'string' ? value : index
-  }
-
-  return index
-}
-
-function getColumnStyle(column: NormalizedSchemaTableColumn): Record<string, string> {
-  if (column.width === undefined) {
-    return {}
-  }
-
-  return {
-    width: typeof column.width === 'number' ? `${column.width}px` : column.width,
-  }
-}
-
 function formatCellText(row: SchemaTableRow, column: NormalizedSchemaTableColumn, index: number): string {
   const rawValue = row[column.field]
   const formattedValue = column.formatter?.(rawValue, row, index) ?? rawValue
@@ -57,98 +49,42 @@ function formatCellText(row: SchemaTableRow, column: NormalizedSchemaTableColumn
   return String(formattedValue)
 }
 
+function createColumnFormatter(column: NormalizedSchemaTableColumn) {
+  return (row: SchemaTableRow, _column: unknown, _cellValue: unknown, index: number): string => {
+    return formatCellText(row, column, index)
+  }
+}
+
 /***********************公开方法*********************/
 defineExpose({
-  getTableElement: () => tableRef.value,
+  getTableElement: () => tableRef.value?.$el as HTMLElement | undefined,
+  getTableInstance: () => tableRef.value,
 })
 </script>
 
 <template>
-  <div class="luma-schema-table">
-    <table ref="tableRef" class="luma-schema-table__table">
-      <thead class="luma-schema-table__head">
-        <tr class="luma-schema-table__row">
-          <th
-            v-for="column in renderableColumns"
-            :key="column.field"
-            class="luma-schema-table__cell luma-schema-table__cell--head"
-            :class="`luma-schema-table__cell--${column.align}`"
-            :style="getColumnStyle(column)"
-            :data-field="column.field"
-          >
-            {{ column.label }}
-          </th>
-        </tr>
-      </thead>
-
-      <tbody class="luma-schema-table__body">
-        <tr
-          v-for="(row, rowIndex) in rows"
-          :key="resolveRowKey(row, rowIndex)"
-          class="luma-schema-table__row"
-        >
-          <td
-            v-for="column in renderableColumns"
-            :key="column.field"
-            class="luma-schema-table__cell"
-            :class="`luma-schema-table__cell--${column.align}`"
-            :data-field="column.field"
-          >
-            {{ formatCellText(row, column, rowIndex) }}
-          </td>
-        </tr>
-
-        <tr v-if="rows.length === 0" class="luma-schema-table__row">
-          <td class="luma-schema-table__empty" :colspan="renderableColumns.length || 1">
-            {{ emptyText }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <ElTable
+    ref="tableRef"
+    class="luma-schema-table"
+    :data="rows"
+    :row-key="elementRowKey"
+    :empty-text="emptyText"
+  >
+    <ElTableColumn
+      v-for="column in renderableColumns"
+      :key="column.field"
+      :prop="column.field"
+      :label="column.label"
+      :align="column.align"
+      :width="column.width"
+      :formatter="createColumnFormatter(column)"
+      :data-field="column.field"
+    />
+  </ElTable>
 </template>
 
 <style scoped lang="scss">
 .luma-schema-table {
   width: 100%;
-  overflow-x: auto;
-}
-
-.luma-schema-table__table {
-  width: 100%;
-  border-collapse: collapse;
-  color: #111827;
-  font-size: 14px;
-}
-
-.luma-schema-table__cell {
-  padding: 10px 12px;
-  border-bottom: 1px solid #e5e7eb;
-  line-height: 1.5;
-  white-space: nowrap;
-}
-
-.luma-schema-table__cell--head {
-  color: #374151;
-  background: #f9fafb;
-  font-weight: 600;
-}
-
-.luma-schema-table__cell--left {
-  text-align: left;
-}
-
-.luma-schema-table__cell--center {
-  text-align: center;
-}
-
-.luma-schema-table__cell--right {
-  text-align: right;
-}
-
-.luma-schema-table__empty {
-  padding: 20px 12px;
-  color: #6b7280;
-  text-align: center;
 }
 </style>

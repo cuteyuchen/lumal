@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { FormInstance } from 'element-plus'
 import type { NormalizedSchemaFormItem, SchemaFormItem, SchemaFormModel } from './types'
+import { ElButton, ElForm, ElFormItem, ElInput, ElOption, ElSelect } from 'element-plus'
 import { computed, useTemplateRef } from 'vue'
 import { normalizeSchemaFormItems, resolveSchemaFormInitialModel } from './normalize'
 
@@ -22,7 +24,7 @@ const model = defineModel<SchemaFormModel>({
 })
 
 /***********************模板引用*********************/
-const formRef = useTemplateRef<HTMLFormElement>('formRef')
+const formRef = useTemplateRef<FormInstance>('formRef')
 
 /***********************字段状态*********************/
 const normalizedSchemas = computed(() => normalizeSchemaFormItems(props.schemas))
@@ -32,9 +34,24 @@ const renderableSchemas = computed(() => normalizedSchemas.value.filter(schema =
 const normalizedModel = computed(() => resolveSchemaFormInitialModel(normalizedSchemas.value, model.value))
 
 /***********************字段取值*********************/
-function getFieldValue(field: string): string {
+function getInputValue(field: string): string | number {
   const value = normalizedModel.value[field]
+
+  if (typeof value === 'number' || typeof value === 'string') {
+    return value
+  }
+
   return value == null ? '' : String(value)
+}
+
+function getSelectValue(field: string): boolean | number | string {
+  const value = normalizedModel.value[field]
+
+  if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
+    return value
+  }
+
+  return ''
 }
 
 function getInputType(schema: NormalizedSchemaFormItem): string {
@@ -53,90 +70,83 @@ function updateFieldValue(field: string, value: unknown): void {
   }
 }
 
-function handleInputChange(field: string, event: Event): void {
-  const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null
-  updateFieldValue(field, target?.value ?? '')
-}
-
 function handleSubmit(): void {
   emit('submit', normalizedModel.value)
 }
 
 /***********************公开方法*********************/
 defineExpose({
-  getFormElement: () => formRef.value,
+  getFormElement: () => formRef.value?.$el as HTMLFormElement | undefined,
+  getFormInstance: () => formRef.value,
 })
 </script>
 
 <template>
-  <form ref="formRef" class="luma-schema-form" @submit.prevent="handleSubmit">
-    <div
+  <ElForm
+    ref="formRef"
+    class="luma-schema-form"
+    :model="normalizedModel"
+    @submit.prevent="handleSubmit"
+  >
+    <ElFormItem
       v-for="schema in renderableSchemas"
       :key="schema.field"
       class="luma-schema-form__item"
+      :label="schema.label"
+      :prop="schema.field"
+      :required="schema.required"
       :data-field="schema.field"
     >
-      <label class="luma-schema-form__label" :for="schema.id">
-        {{ schema.label }}
-      </label>
+      <ElInput
+        v-if="schema.component === 'textarea'"
+        :id="schema.id"
+        :model-value="getInputValue(schema.field)"
+        :name="schema.field"
+        :placeholder="schema.placeholder"
+        :disabled="isFieldDisabled(schema)"
+        :required="schema.required"
+        type="textarea"
+        @update:model-value="updateFieldValue(schema.field, $event)"
+      />
 
-      <div class="luma-schema-form__control">
-        <textarea
-          v-if="schema.component === 'textarea'"
-          :id="schema.id"
-          class="luma-schema-form__textarea"
-          :name="schema.field"
-          :placeholder="schema.placeholder"
-          :disabled="isFieldDisabled(schema)"
-          :required="schema.required"
-          :value="getFieldValue(schema.field)"
-          @input="handleInputChange(schema.field, $event)"
+      <ElSelect
+        v-else-if="schema.component === 'select'"
+        :id="schema.id"
+        :model-value="getSelectValue(schema.field)"
+        :name="schema.field"
+        :placeholder="schema.placeholder"
+        :disabled="isFieldDisabled(schema)"
+        :required="schema.required"
+        @update:model-value="updateFieldValue(schema.field, $event)"
+      >
+        <ElOption
+          v-for="option in schema.options"
+          :key="String(option.value)"
+          :label="option.label"
+          :value="option.value"
+          :disabled="option.disabled"
         />
+      </ElSelect>
 
-        <select
-          v-else-if="schema.component === 'select'"
-          :id="schema.id"
-          class="luma-schema-form__select"
-          :name="schema.field"
-          :disabled="isFieldDisabled(schema)"
-          :required="schema.required"
-          :value="getFieldValue(schema.field)"
-          @change="handleInputChange(schema.field, $event)"
-        >
-          <option v-if="schema.placeholder" value="">
-            {{ schema.placeholder }}
-          </option>
-          <option
-            v-for="option in schema.options"
-            :key="String(option.value)"
-            :value="option.value"
-            :disabled="option.disabled"
-          >
-            {{ option.label }}
-          </option>
-        </select>
-
-        <input
-          v-else
-          :id="schema.id"
-          class="luma-schema-form__input"
-          :name="schema.field"
-          :type="getInputType(schema)"
-          :placeholder="schema.placeholder"
-          :disabled="isFieldDisabled(schema)"
-          :required="schema.required"
-          :value="getFieldValue(schema.field)"
-          @input="handleInputChange(schema.field, $event)"
-        >
-      </div>
-    </div>
+      <ElInput
+        v-else
+        :id="schema.id"
+        :model-value="getInputValue(schema.field)"
+        :name="schema.field"
+        :type="getInputType(schema)"
+        :placeholder="schema.placeholder"
+        :disabled="isFieldDisabled(schema)"
+        :required="schema.required"
+        @update:model-value="updateFieldValue(schema.field, $event)"
+      />
+    </ElFormItem>
 
     <div v-if="showActions" class="luma-schema-form__actions">
-      <button class="luma-schema-form__submit" type="submit">
+      <ElButton type="primary" native-type="submit">
         {{ submitText }}
-      </button>
+      </ElButton>
     </div>
-  </form>
+  </ElForm>
 </template>
 
 <style scoped lang="scss">
@@ -146,58 +156,11 @@ defineExpose({
 }
 
 .luma-schema-form__item {
-  display: grid;
-  grid-template-columns: minmax(88px, max-content) minmax(0, 1fr);
-  gap: 10px;
-  align-items: center;
-}
-
-.luma-schema-form__label {
-  color: #374151;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.luma-schema-form__control {
-  min-width: 0;
-}
-
-.luma-schema-form__input,
-.luma-schema-form__select,
-.luma-schema-form__textarea {
-  width: 100%;
-  min-height: 36px;
-  box-sizing: border-box;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  color: #111827;
-  background: #ffffff;
-  font: inherit;
-}
-
-.luma-schema-form__input,
-.luma-schema-form__select {
-  padding: 0 10px;
-}
-
-.luma-schema-form__textarea {
-  min-height: 72px;
-  padding: 8px 10px;
-  resize: vertical;
+  margin-bottom: 0;
 }
 
 .luma-schema-form__actions {
   display: flex;
   justify-content: flex-end;
-}
-
-.luma-schema-form__submit {
-  min-width: 72px;
-  min-height: 36px;
-  border: 0;
-  border-radius: 6px;
-  color: #ffffff;
-  background: #1677ff;
-  cursor: pointer;
 }
 </style>

@@ -27,6 +27,11 @@
       "import": "./dist/request.js",
       "require": "./dist/request.cjs"
     },
+    "./router": {
+      "types": "./dist/src/router/index.d.ts",
+      "import": "./dist/router.js",
+      "require": "./dist/router.cjs"
+    },
     "./theme": {
       "types": "./dist/src/theme/index.d.ts",
       "import": "./dist/theme.js",

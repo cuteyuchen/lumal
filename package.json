@@ -21,6 +21,7 @@
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/compiler-sfc": "^3.5.22",
     "@vue/test-utils": "^2.4.6",
+    "element-plus": "^2.11.0",
     "eslint": "^9.37.0",
     "jsdom": "^27.0.0",
     "sass-embedded": "^1.95.1",
