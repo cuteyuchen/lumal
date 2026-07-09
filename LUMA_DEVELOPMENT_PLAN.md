@@ -630,19 +630,19 @@ corepack pnpm compat:build
 
 **任务：**
 
-- [ ] README 写清楚：
+- [x] README 写清楚：
   - Luma 是什么。
   - 包列表。
   - 安装方式。
   - 原生写法。
   - Vben 兼容写法。
   - 不做什么。
-- [ ] 图标文档写清楚：
+- [x] 图标文档写清楚：
   - Iconify 图标。
   - 本地 SVG。
   - 静态本地 SVG Vite 插件。
   - 图标选择器。
-- [ ] core API 文档写清楚：
+- [x] core API 文档写清楚：
   - `createLumaAdmin`
   - layout
   - request
@@ -650,7 +650,7 @@ corepack pnpm compat:build
   - theme
   - schema form/table
   - CRUD table
-- [ ] Vben 迁移文档写清楚：
+- [x] Vben 迁移文档写清楚：
   - 支持哪些 `useVbenForm` 配置。
   - 支持哪些 `useVbenVxeGrid` 配置。
   - 不支持哪些 Vben 能力。

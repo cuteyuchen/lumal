@@ -53,6 +53,47 @@ Luma 的 Vben 兼容层用于降低迁移成本，不追求完整复刻 Vben Adm
 - `handleSearch(payload)` / `handleReset(payload)` / `handlePageChange(payload)`：用于绑定 LumaCrudTable 事件。
 - `getGridInstance()`：获取通过 `register` 绑定的表格实例。
 
+## 最小迁移示例
+
+旧页面可以先保留 Vben 风格 schema，再把兼容层产出的 props 绑定到 Luma 原生组件：
+
+```vue
+<script setup lang="ts">
+import { LumaCrudTable, LumaSchemaForm } from '@luma/core/components'
+import { useVbenForm, useVbenVxeGrid } from '@luma/vben-compat'
+
+const [, formApi] = useVbenForm({
+  schemas: [
+    { component: 'Input', fieldName: 'keyword', label: '关键词' },
+  ],
+})
+
+const [, gridApi] = useVbenVxeGrid({
+  gridOptions: {
+    columns: [
+      { field: 'name', title: '名称' },
+    ],
+    formOptions: {
+      schemas: [
+        { component: 'Input', fieldName: 'keyword', label: '关键词' },
+      ],
+    },
+  },
+})
+</script>
+
+<template>
+  <LumaSchemaForm v-bind="formApi.schemaFormProps.value" />
+  <LumaCrudTable v-bind="gridApi.crudTableProps.value" />
+</template>
+```
+
+完整可构建示例见 `apps/vben-compat-demo`，验证命令：
+
+```bash
+corepack pnpm compat:build
+```
+
 ## 当前未支持
 
 - Vben 表单的完整校验规则映射。
