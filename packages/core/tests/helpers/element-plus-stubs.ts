@@ -2,6 +2,13 @@ import { defineComponent } from 'vue'
 
 /***********************Element Plus 测试替身*********************/
 export const elementPlusStubs = {
+  ElAside: defineComponent({
+    name: 'ElAside',
+    props: {
+      width: String,
+    },
+    template: '<aside class="el-aside" :style="{ width }"><slot /></aside>',
+  }),
   ElButton: defineComponent({
     name: 'ElButton',
     props: {
@@ -9,6 +16,13 @@ export const elementPlusStubs = {
       type: String,
     },
     template: '<button class="el-button" :disabled="disabled" v-bind="$attrs"><slot /></button>',
+  }),
+  ElContainer: defineComponent({
+    name: 'ElContainer',
+    props: {
+      direction: String,
+    },
+    template: '<section class="el-container" :data-direction="direction"><slot /></section>',
   }),
   ElForm: defineComponent({
     name: 'ElForm',
@@ -60,6 +74,28 @@ export const elementPlusStubs = {
         @input="$emit('update:modelValue', $event.target.value)"
       >
     `,
+  }),
+  ElMain: defineComponent({
+    name: 'ElMain',
+    template: '<main class="el-main"><slot /></main>',
+  }),
+  ElMenu: defineComponent({
+    name: 'ElMenu',
+    props: {
+      collapse: Boolean,
+      defaultActive: String,
+      router: Boolean,
+    },
+    emits: ['select'],
+    template: '<nav class="el-menu" :data-active="defaultActive" :data-collapse="String(collapse)"><slot /></nav>',
+  }),
+  ElMenuItem: defineComponent({
+    name: 'ElMenuItem',
+    props: {
+      index: String,
+    },
+    emits: ['click'],
+    template: '<button class="el-menu-item" type="button" :data-menu-path="index" @click="$emit(\'click\')"><slot /></button>',
   }),
   ElOption: defineComponent({
     name: 'ElOption',
@@ -114,6 +150,10 @@ export const elementPlusStubs = {
       </nav>
     `,
   }),
+  ElScrollbar: defineComponent({
+    name: 'ElScrollbar',
+    template: '<div class="el-scrollbar"><slot /></div>',
+  }),
   ElSelect: defineComponent({
     name: 'ElSelect',
     props: {
@@ -137,6 +177,13 @@ export const elementPlusStubs = {
         <slot />
       </select>
     `,
+  }),
+  ElSubMenu: defineComponent({
+    name: 'ElSubMenu',
+    props: {
+      index: String,
+    },
+    template: '<section class="el-sub-menu" :data-menu-path="index"><slot name="title" /><slot /></section>',
   }),
   ElTable: defineComponent({
     name: 'ElTable',
@@ -165,5 +212,29 @@ export const elementPlusStubs = {
       width: [String, Number],
     },
     template: '<span class="el-table-column" :data-field="prop">{{ label }}</span>',
+  }),
+  ElTabPane: defineComponent({
+    name: 'ElTabPane',
+    props: {
+      closable: Boolean,
+      label: String,
+      name: String,
+    },
+    template: '<section class="el-tab-pane" :data-tab-path="name">{{ label }}</section>',
+  }),
+  ElTabs: defineComponent({
+    name: 'ElTabs',
+    props: {
+      modelValue: String,
+      type: String,
+    },
+    emits: ['edit', 'tab-change', 'update:modelValue'],
+    template: `
+      <div class="el-tabs" :data-active-tab="modelValue">
+        <button data-action="change-tab" type="button" @click="$emit('update:modelValue', '/system'); $emit('tab-change', '/system')">切换</button>
+        <button data-action="remove-tab" type="button" @click="$emit('edit', modelValue, 'remove')">关闭</button>
+        <slot />
+      </div>
+    `,
   }),
 }
