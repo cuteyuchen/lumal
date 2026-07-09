@@ -5,10 +5,10 @@
 ## 命名检查
 
 ```bash
-rg -n "guiren|gr-framework|GrFramework" .
+rg -n "guiren|gr-framework|GrFramework|GSchemaForm|GSchemaTable|GCrudTable|GPage|GPagination" README.md docs packages apps --glob "!docs/release-checklist.md"
 ```
 
-`G*` 组件别名如果后续保留，需要明确写成兼容 API；如果不保留，应在首个公开版本前删除。
+当前首版不保留 `G*` 组件别名，公开 API 使用 `Luma*` 命名。如果后续为了迁移保留别名，需要明确写成兼容 API，不能作为推荐 API。
 
 ## 依赖方向
 
@@ -18,6 +18,14 @@ rg -n "guiren|gr-framework|GrFramework" .
 - `@luma/core` 不默认引入多语言运行时。
 
 ## 验证命令
+
+推荐直接运行串行发布检查，避免多个构建命令同时清理和重写 `dist`：
+
+```bash
+corepack pnpm release:check
+```
+
+拆开执行时也必须保持串行：
 
 ```bash
 corepack pnpm lint
@@ -29,6 +37,12 @@ corepack pnpm compat:build
 ```
 
 ## 发包 dry-run
+
+```bash
+corepack pnpm pack:dry-run
+```
+
+等价于：
 
 ```bash
 corepack pnpm --filter @luma/icons pack --dry-run
@@ -55,4 +69,8 @@ corepack pnpm --filter @luma/vben-compat pack --dry-run
 
 ## npm scope
 
-当前按 `@luma` 规划。正式发布前需要确认 npm scope 是否可用；如果不可用，再确定备用 scope。
+当前按 `@luma` 规划。`npm view @luma/core` 返回 404 只能说明包名当前未在 registry 查询到，不能证明当前 npm 账号拥有或可创建 `@luma` scope。正式发布前需要用发布账号确认 scope 权限；如果不可用，再确定备用 scope。
+
+## License
+
+正式发布前需要确认开源许可证，并把许可证写入根 `LICENSE` 和各包 `package.json`。这个决定属于项目所有者，当前不在代码里预设。

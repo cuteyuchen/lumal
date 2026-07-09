@@ -2,10 +2,22 @@
   "name": "@luma/core",
   "type": "module",
   "version": "0.0.0",
+  "description": "Luma lightweight Vue admin core components and services.",
+  "keywords": [
+    "luma",
+    "vue",
+    "admin",
+    "element-plus",
+    "schema-form",
+    "crud-table"
+  ],
   "sideEffects": [
     "**/*.css",
     "**/*.scss"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",

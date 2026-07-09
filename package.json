@@ -14,7 +14,9 @@
     "admin:dev": "pnpm build && pnpm --filter luma-admin dev",
     "admin:build": "pnpm build && pnpm --filter luma-admin build",
     "admin:preview": "pnpm --filter luma-admin preview",
-    "compat:build": "pnpm build && pnpm --filter luma-vben-compat-demo build"
+    "compat:build": "pnpm build && pnpm --filter luma-vben-compat-demo build",
+    "pack:dry-run": "pnpm --filter @luma/icons pack --dry-run && pnpm --filter @luma/core pack --dry-run && pnpm --filter @luma/vben-compat pack --dry-run",
+    "release:check": "pnpm lint && pnpm test && pnpm typecheck && pnpm build && pnpm admin:build && pnpm compat:build && pnpm pack:dry-run"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^8.2.0",

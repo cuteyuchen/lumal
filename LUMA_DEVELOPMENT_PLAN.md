@@ -668,17 +668,23 @@ corepack pnpm compat:build
 
 **任务：**
 
-- [ ] 搜索旧名称：
+- [x] 搜索旧名称：
 
 ```bash
-rg -n "guiren|gr-framework|GrFramework|G[A-Z]" .
+rg -n "guiren|gr-framework|GrFramework|GSchemaForm|GSchemaTable|GCrudTable|GPage|GPagination" README.md docs packages apps --glob "!docs/release-checklist.md"
 ```
 
-- [ ] 决定 `G*` 别名是临时兼容导出，还是首个公开版本前删除。
+- [x] 决定 `G*` 别名是临时兼容导出，还是首个公开版本前删除。
 - [ ] 确认 npm scope：
   - 优先确认 `@luma` 是否可用。
   - 如果不可用，再选择备用 scope。
-- [ ] 执行完整验证：
+- [x] 执行完整验证：
+
+```bash
+corepack pnpm release:check
+```
+
+或保持串行执行：
 
 ```bash
 corepack pnpm lint
@@ -689,7 +695,13 @@ corepack pnpm admin:build
 corepack pnpm compat:build
 ```
 
-- [ ] dry-run 打包：
+- [x] dry-run 打包：
+
+```bash
+corepack pnpm pack:dry-run
+```
+
+或逐包执行：
 
 ```bash
 corepack pnpm --filter @luma/icons pack --dry-run

@@ -2,9 +2,20 @@
   "name": "@luma/icons",
   "type": "module",
   "version": "0.0.0",
+  "description": "Luma independent icon registry and Vue icon components.",
+  "keywords": [
+    "luma",
+    "vue",
+    "icons",
+    "iconify",
+    "svg"
+  ],
   "sideEffects": [
     "**/*.css"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
