@@ -17,6 +17,11 @@
       "import": "./dist/components.js",
       "require": "./dist/components.cjs"
     },
+    "./permission": {
+      "types": "./dist/src/permission/index.d.ts",
+      "import": "./dist/permission.js",
+      "require": "./dist/permission.cjs"
+    },
     "./request": {
       "types": "./dist/src/request/index.d.ts",
       "import": "./dist/request.js",
