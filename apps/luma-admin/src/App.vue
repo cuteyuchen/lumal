@@ -1,6 +1,18 @@
 <script setup lang="ts">
-import type { SchemaFormItem, SchemaFormModel, SchemaTableColumn, SchemaTableRow } from '@luma/core/components'
-import { LumaIcon, LumaSchemaForm, LumaSchemaTable } from '@luma/core/components'
+import type {
+  PaginationChangePayload,
+  SchemaFormItem,
+  SchemaFormModel,
+  SchemaTableColumn,
+  SchemaTableRow,
+} from '@luma/core/components'
+import {
+  LumaIcon,
+  LumaPage,
+  LumaPagination,
+  LumaSchemaForm,
+  LumaSchemaTable,
+} from '@luma/core/components'
 import { shallowRef } from 'vue'
 
 /***********************页面状态*********************/
@@ -57,22 +69,23 @@ const tableRows: SchemaTableRow[] = [
     status: 'enabled',
   },
 ]
+
+/***********************分页状态*********************/
+const page = shallowRef(1)
+const pageSize = shallowRef(10)
+const paginationMessage = shallowRef('当前展示示例数据')
+
+function handlePaginationChange(payload: PaginationChangePayload): void {
+  paginationMessage.value = `第 ${payload.page} 页，每页 ${payload.pageSize} 条`
+}
 </script>
 
 <template>
   <main class="luma-admin-home">
-    <section class="luma-admin-home__panel">
-      <header class="luma-admin-home__header">
+    <LumaPage :title="title" :description="description">
+      <template #actions>
         <LumaIcon name="app:dashboard" color="#1677ff" :size="36" />
-        <div class="luma-admin-home__content">
-          <h1 class="luma-admin-home__title">
-            {{ title }}
-          </h1>
-          <p class="luma-admin-home__description">
-            {{ description }}
-          </p>
-        </div>
-      </header>
+      </template>
 
       <div class="luma-admin-home__form">
         <LumaSchemaForm v-model="formModel" :schemas="schemas" />
@@ -81,6 +94,19 @@ const tableRows: SchemaTableRow[] = [
       <div class="luma-admin-home__table">
         <LumaSchemaTable row-key="id" :columns="tableColumns" :rows="tableRows" />
       </div>
-    </section>
+
+      <footer class="luma-admin-home__pagination">
+        <span class="luma-admin-home__pagination-text">
+          {{ paginationMessage }}
+        </span>
+        <LumaPagination
+          v-model:page="page"
+          v-model:page-size="pageSize"
+          :total="35"
+          :page-sizes="[10, 20]"
+          @change="handlePaginationChange"
+        />
+      </footer>
+    </LumaPage>
   </main>
 </template>

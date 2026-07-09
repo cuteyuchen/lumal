@@ -1,4 +1,13 @@
 export {
+  LumaPage,
+} from '../components/page'
+export {
+  LumaPagination,
+} from '../components/pagination'
+export type {
+  PaginationChangePayload,
+} from '../components/pagination'
+export {
   LumaSchemaForm,
 } from '../components/schema-form'
 export type {
