@@ -690,9 +690,10 @@ rg -n "guiren|gr-framework|GrFramework|GSchemaForm|GSchemaTable|GCrudTable|GPage
 - [x] 决定 `G*` 别名是临时兼容导出，还是首个公开版本前删除。
 - [x] 增加发布边界自动检查，防止 core 反向依赖兼容层、误引入 i18n/VXE 默认依赖，或把 Element Plus 放进普通 dependencies。
 - [ ] 确认 npm scope：
-  - 优先确认 `@luma` 是否可用。
-  - 如果不可用，再选择备用 scope。
-  - 当前 registry 查询 `@luma/core`、`@luma/icons`、`@luma/vben-compat`、`create-luma-admin` 返回 404；这只能说明包名查询不到，不能证明发布账号拥有或可创建 `@luma` scope。
+  - [x] 增加 `corepack pnpm release:names`，用于检查目标包名是否已被 npm registry 占用。
+  - [x] 当前 registry 查询 `@luma/core`、`@luma/icons`、`@luma/vben-compat`、`create-luma-admin` 返回 404，目标包名当前未查询到。
+  - [ ] 使用正式发布账号确认是否拥有或可创建 `@luma` scope。
+  - [ ] 如果 `@luma` 不可用，再选择备用 scope。
 - [x] 确认开源许可证：
   - [x] 确定使用 MIT。
   - [x] 增加根目录 `LICENSE`。

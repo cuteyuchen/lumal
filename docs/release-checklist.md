@@ -32,6 +32,14 @@ corepack pnpm release:check
 corepack pnpm release:boundaries
 ```
 
+首次发布前还需要检查目标包名是否已被 npm registry 占用：
+
+```bash
+corepack pnpm release:names
+```
+
+这个命令只验证 `@luma/icons`、`@luma/core`、`@luma/vben-compat`、`create-luma-admin` 当前是否能在 registry 查询到；它不能证明发布账号拥有或可创建 `@luma` scope。
+
 拆开执行时也必须保持串行：
 
 ```bash
@@ -80,7 +88,7 @@ corepack pnpm --filter create-luma-admin pack --dry-run
 
 ## npm scope
 
-当前按 `@luma` 规划。`npm view @luma/core` 返回 404 只能说明包名当前未在 registry 查询到，不能证明当前 npm 账号拥有或可创建 `@luma` scope。正式发布前需要用发布账号确认 scope 权限；如果不可用，再确定备用 scope。
+当前按 `@luma` 规划。`corepack pnpm release:names` 已用于检查目标包名当前未在 registry 查询到，但这不能证明当前 npm 账号拥有或可创建 `@luma` scope。正式发布前需要用发布账号确认 scope 权限；如果不可用，再确定备用 scope。
 
 ## License
 
