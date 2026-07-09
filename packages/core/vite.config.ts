@@ -15,6 +15,7 @@ export default defineConfig({
         components: resolve(packageRoot, 'src/exports/components.ts'),
         permission: resolve(packageRoot, 'src/permission/index.ts'),
         request: resolve(packageRoot, 'src/request/index.ts'),
+        theme: resolve(packageRoot, 'src/theme/index.ts'),
       },
       formats: ['es', 'cjs'],
       fileName: (format, entryName) => `${entryName}.${format === 'cjs' ? 'cjs' : 'js'}`,

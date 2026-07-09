@@ -27,6 +27,11 @@
       "import": "./dist/request.js",
       "require": "./dist/request.cjs"
     },
+    "./theme": {
+      "types": "./dist/src/theme/index.d.ts",
+      "import": "./dist/theme.js",
+      "require": "./dist/theme.cjs"
+    },
     "./theme-chalk/index.scss": "./theme-chalk/index.scss"
   },
   "main": "./dist/index.cjs",
