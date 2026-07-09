@@ -1,5 +1,5 @@
 import type { IconDefinition } from '@luma/icons'
-import type { App, Component } from 'vue'
+import type { App, Component, Plugin } from 'vue'
 
 /***********************应用上下文类型*********************/
 export interface LumaAdminContext {
@@ -7,11 +7,15 @@ export interface LumaAdminContext {
 }
 
 export interface CreateLumaAdminOptions {
-  rootComponent: Component
-  rootProps?: Record<string, unknown>
+  components?: Record<string, Component>
+  elementPlus?: Plugin
   icons?: {
     localSvg?: IconDefinition[]
   }
+  pinia?: Plugin
+  router?: Plugin
+  rootComponent: Component
+  rootProps?: Record<string, unknown>
   setup?: (context: LumaAdminContext) => void | Promise<void>
 }
 
