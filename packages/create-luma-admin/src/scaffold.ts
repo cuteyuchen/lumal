@@ -53,6 +53,7 @@ function createPackageJson(projectName: string): string {
       '@luma/icons': '^0.0.0',
       'element-plus': '^2.11.0',
       'vue': '^3.5.0',
+      'vue-router': '^4.5.0',
     },
     devDependencies: {
       '@vitejs/plugin-vue': '^6.0.1',
@@ -123,6 +124,7 @@ function createMainTs(): string {
   return `import type { IconDefinition } from '@luma/icons'
 import { createLumaAdmin } from '@luma/core'
 import App from './App.vue'
+import { router } from './router'
 import '@luma/core/theme-chalk/index.scss'
 import '@luma/icons/style.css'
 import './styles.scss'
@@ -140,6 +142,7 @@ const localIcons: IconDefinition[] = [
 /***********************应用启动*********************/
 createLumaAdmin({
   rootComponent: App,
+  router,
   icons: {
     localSvg: localIcons,
   },
@@ -148,6 +151,215 @@ createLumaAdmin({
 }
 
 function createAppVue(): string {
+  return `<script setup lang="ts">
+import type { LumaLayoutMenuItem, LumaLayoutTabItem } from '@luma/core/layout'
+import { LumaLayout, LumaRouterView } from '@luma/core/layout'
+import { computed, shallowRef } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import {
+  createAdminSidebarMenus,
+  createAdminTabs,
+} from './router'
+
+/***********************页面状态*********************/
+const title = 'Luma Admin'
+const collapsed = shallowRef(false)
+
+/***********************路由状态*********************/
+const route = useRoute()
+const router = useRouter()
+
+const menus = computed<LumaLayoutMenuItem[]>(() => createAdminSidebarMenus())
+const tabs = computed<LumaLayoutTabItem[]>(() => createAdminTabs(route.path))
+const activePath = computed({
+  get: () => route.path,
+  set: (path: string) => {
+    if (path !== route.path) {
+      void router.push(path)
+    }
+  },
+})
+
+/***********************导航事件*********************/
+function handleMenuSelect(path: string): void {
+  activePath.value = path
+}
+
+function handleTabChange(path: string): void {
+  activePath.value = path
+}
+</script>
+
+<template>
+  <LumaLayout
+    v-model:collapsed="collapsed"
+    v-model:active-tab-path="activePath"
+    :title="title"
+    :menus="menus"
+    :tabs="tabs"
+    :active-menu-path="activePath"
+    @menu-select="handleMenuSelect"
+    @tab-change="handleTabChange"
+  >
+    <template #headerActions>
+      <span class="luma-admin-home__status">Mini</span>
+    </template>
+
+    <LumaRouterView />
+  </LumaLayout>
+</template>
+`
+}
+
+function createRouterTs(): string {
+  return `import type { LumaLayoutTabItem } from '@luma/core/layout'
+import type { MenuNode, SidebarMenuItem } from '@luma/core/router'
+import type { Router, RouteRecordRaw, RouterHistory } from 'vue-router'
+import { createPermissionStore, setupPermissionGuard } from '@luma/core/permission'
+import {
+  createRouteRecords,
+  createSidebarMenus,
+  findFirstAccessibleMenu,
+  normalizeMenuNodes,
+} from '@luma/core/router'
+import { createRouter, createWebHashHistory } from 'vue-router'
+import DashboardView from '../views/dashboard/DashboardView.vue'
+import ForbiddenView from '../views/error/ForbiddenView.vue'
+import ProjectView from '../views/project/ProjectView.vue'
+
+/***********************权限状态*********************/
+export const permissionStore = createPermissionStore({
+  permissions: ['dashboard:view'],
+  roles: ['admin'],
+})
+
+/***********************菜单配置*********************/
+export const adminMenuNodes: MenuNode[] = [
+  {
+    component: 'dashboard',
+    icon: 'app:dashboard',
+    id: 'dashboard',
+    order: 1,
+    path: '/dashboard',
+    permissions: ['dashboard:view'],
+    title: '工作台',
+  },
+  {
+    component: 'project',
+    icon: 'app:dashboard',
+    id: 'project',
+    order: 2,
+    path: '/project',
+    permissions: ['project:list'],
+    title: '项目管理',
+  },
+  {
+    component: 'forbidden',
+    id: 'forbidden',
+    path: '/403',
+    title: '无权限',
+    visible: false,
+  },
+]
+
+export const normalizedAdminMenus = normalizeMenuNodes(adminMenuNodes)
+
+/***********************菜单生成*********************/
+function hasPermission(permissions: string[]): boolean {
+  return permissionStore.hasPermission(permissions, 'every')
+}
+
+function hasRole(roles: string[]): boolean {
+  return permissionStore.hasRole(roles, 'every')
+}
+
+function flattenMenuTabs(menus: SidebarMenuItem[]): LumaLayoutTabItem[] {
+  return menus.flatMap((menu) => {
+    if (menu.children.length > 0) {
+      return flattenMenuTabs(menu.children)
+    }
+
+    return {
+      path: menu.path,
+      title: menu.title,
+    }
+  })
+}
+
+export function createAdminSidebarMenus(): SidebarMenuItem[] {
+  return createSidebarMenus(normalizedAdminMenus, {
+    hasPermission,
+    hasRole,
+  })
+}
+
+export function createAdminTabs(activePath?: string): LumaLayoutTabItem[] {
+  const tabs = flattenMenuTabs(createAdminSidebarMenus())
+
+  if (activePath === '/403' && !tabs.some(tab => tab.path === '/403')) {
+    tabs.push({
+      closable: false,
+      path: '/403',
+      title: '无权限',
+    })
+  }
+
+  return tabs
+}
+
+/***********************路由创建*********************/
+function resolveRouteComponent(component: string): RouteRecordRaw['component'] | undefined {
+  const components: Record<string, RouteRecordRaw['component']> = {
+    dashboard: DashboardView,
+    forbidden: ForbiddenView,
+    project: ProjectView,
+  }
+
+  return components[component]
+}
+
+function createRoutes(): RouteRecordRaw[] {
+  const firstAccessibleMenu = findFirstAccessibleMenu(normalizedAdminMenus, {
+    hasPermission,
+    hasRole,
+  })
+  const menuRoutes = createRouteRecords(normalizedAdminMenus, {
+    componentResolver: resolveRouteComponent,
+  }) as RouteRecordRaw[]
+
+  return [
+    {
+      path: '/',
+      redirect: firstAccessibleMenu?.path ?? '/403',
+    },
+    ...menuRoutes,
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: firstAccessibleMenu?.path ?? '/403',
+    },
+  ]
+}
+
+export function createAdminRouter(history: RouterHistory = createWebHashHistory()): Router {
+  const router = createRouter({
+    history,
+    routes: createRoutes(),
+  })
+
+  setupPermissionGuard(router, permissionStore, {
+    mode: 'every',
+    noAccessRedirect: '/403',
+    roleMode: 'every',
+  })
+
+  return router
+}
+
+export const router = createAdminRouter()
+`
+}
+
+function createDashboardViewVue(): string {
   return `<script setup lang="ts">
 import type {
   CrudTablePageChangePayload,
@@ -158,47 +370,17 @@ import type {
   SchemaTableColumn,
   SchemaTableRow,
 } from '@luma/core/components'
-import type { LumaLayoutMenuItem, LumaLayoutTabItem } from '@luma/core/layout'
 import {
   LumaCrudTable,
   LumaIcon,
 } from '@luma/core/components'
-import { LumaLayout } from '@luma/core/layout'
 import { onMounted, shallowRef } from 'vue'
-import RequestExamplePanel from './components/request/RequestExamplePanel.vue'
-import { useMockRequestExample } from './composables/useMockRequestExample'
+import RequestExamplePanel from '../../components/request/RequestExamplePanel.vue'
+import { useMockRequestExample } from '../../composables/useMockRequestExample'
 
 /***********************页面状态*********************/
 const title = 'Luma Admin'
-const description = '轻量 Vue Admin 项目已启动'
-const collapsed = shallowRef(false)
-const activeMenuPath = shallowRef('/dashboard')
-const activeTabPath = shallowRef('/dashboard')
-
-/***********************布局配置*********************/
-const menus: LumaLayoutMenuItem[] = [
-  {
-    path: '/dashboard',
-    title: '工作台',
-    icon: 'app:dashboard',
-  },
-  {
-    path: '/project',
-    title: '项目管理',
-    icon: 'app:dashboard',
-  },
-]
-
-const tabs: LumaLayoutTabItem[] = [
-  {
-    path: '/dashboard',
-    title: '工作台',
-  },
-  {
-    path: '/project',
-    title: '项目管理',
-  },
-]
+const description = '轻量 Vue Admin 框架基线已启动'
 
 /***********************表单配置*********************/
 const formModel = shallowRef<SchemaFormModel>({
@@ -254,7 +436,7 @@ const tableRows: SchemaTableRow[] = [
 /***********************分页状态*********************/
 const page = shallowRef(1)
 const pageSize = shallowRef(10)
-const message = shallowRef('当前展示示例数据')
+const paginationMessage = shallowRef('当前展示示例数据')
 
 /***********************请求示例*********************/
 const {
@@ -274,87 +456,125 @@ onMounted(() => {
   void loadProjectSummary()
 })
 
+/***********************事件处理*********************/
 function handleSearch(payload: CrudTableSearchPayload): void {
-  message.value = \`查询项目：\${String(payload.name ?? '') || '全部'}\`
+  paginationMessage.value = \`查询项目：\${String(payload.name ?? '') || '全部'}\`
 }
 
 function handleReset(_payload: CrudTableResetPayload): void {
-  message.value = '已重置查询条件'
+  paginationMessage.value = '已重置查询条件'
 }
 
 function handlePaginationChange(payload: CrudTablePageChangePayload): void {
-  message.value = \`第 \${payload.page} 页，每页 \${payload.pageSize} 条\`
-}
-
-function handleMenuSelect(path: string): void {
-  activeMenuPath.value = path
-  activeTabPath.value = path
-  message.value = \`已切换菜单：\${path}\`
-}
-
-function handleTabChange(path: string): void {
-  activeMenuPath.value = path
+  paginationMessage.value = \`第 \${payload.page} 页，每页 \${payload.pageSize} 条\`
 }
 </script>
 
 <template>
-  <LumaLayout
-    v-model:collapsed="collapsed"
-    v-model:active-tab-path="activeTabPath"
-    :title="title"
-    :menus="menus"
-    :tabs="tabs"
-    :active-menu-path="activeMenuPath"
-    @menu-select="handleMenuSelect"
-    @tab-change="handleTabChange"
-  >
-    <template #headerActions>
-      <span class="luma-admin-template__status">Mini</span>
-    </template>
+  <main class="luma-admin-home">
+    <LumaCrudTable
+      v-model:query-model="formModel"
+      v-model:page="page"
+      v-model:page-size="pageSize"
+      class="luma-admin-home__crud"
+      :title="title"
+      :description="description"
+      :query-schemas="schemas"
+      :columns="tableColumns"
+      :rows="tableRows"
+      row-key="id"
+      :total="35"
+      :page-sizes="[10, 20]"
+      @search="handleSearch"
+      @reset="handleReset"
+      @page-change="handlePaginationChange"
+    >
+      <template #actions>
+        <LumaIcon name="app:dashboard" color="#1677ff" :size="36" />
+      </template>
 
-    <main class="luma-admin-template">
-      <LumaCrudTable
-        v-model:query-model="formModel"
-        v-model:page="page"
-        v-model:page-size="pageSize"
-        class="luma-admin-template__crud"
-        :title="title"
-        :description="description"
-        :query-schemas="schemas"
-        :columns="tableColumns"
-        :rows="tableRows"
-        row-key="id"
-        :total="35"
-        :page-sizes="[10, 20]"
-        @search="handleSearch"
-        @reset="handleReset"
-        @page-change="handlePaginationChange"
-      >
-        <template #actions>
-          <LumaIcon name="app:dashboard" color="#2563eb" :size="36" />
-        </template>
+      <template #default>
+        <span class="luma-admin-home__pagination-text">
+          {{ paginationMessage }}
+        </span>
+      </template>
+    </LumaCrudTable>
 
-        <template #default>
-          <span class="luma-admin-template__message">
-            {{ message }}
-          </span>
-        </template>
-      </LumaCrudTable>
+    <RequestExamplePanel
+      :authorization-header="authorizationHeader"
+      :last-url="lastUrl"
+      :loading="requestLoading"
+      :message="requestMessage"
+      :project-name="projectName"
+      :project-status="projectStatus"
+      :session-expired-count="sessionExpiredCount"
+      :status="requestStatus"
+      :token-injected="tokenInjected"
+      @refresh="loadProjectSummary"
+    />
+  </main>
+</template>
+`
+}
 
-      <RequestExamplePanel
-        :authorization-header="authorizationHeader"
-        :last-url="lastUrl"
-        :loading="requestLoading"
-        :message="requestMessage"
-        :project-name="projectName"
-        :project-status="projectStatus"
-        :session-expired-count="sessionExpiredCount"
-        :status="requestStatus"
-        :token-injected="tokenInjected"
-        @refresh="loadProjectSummary"
-      />
-    </main>
-  </LumaLayout>
+function createProjectViewVue(): string {
+  return `<script setup lang="ts">
+import { LumaPage } from '@luma/core/components'
+
+/***********************页面数据*********************/
+const features = [
+  '菜单节点来自后端菜单格式',
+  '路由记录由 @luma/core/router 生成',
+  '权限不足会通过守卫进入 403 页面',
+]
+</script>
+
+<template>
+  <main class="luma-admin-page">
+    <LumaPage
+      title="项目管理"
+      description="这是一个需要 project:list 权限的路由页面。"
+    >
+      <ul class="luma-admin-page__list">
+        <li
+          v-for="feature in features"
+          :key="feature"
+          class="luma-admin-page__item"
+        >
+          {{ feature }}
+        </li>
+      </ul>
+    </LumaPage>
+  </main>
+</template>
+`
+}
+
+function createForbiddenViewVue(): string {
+  return `<script setup lang="ts">
+import { LumaPage } from '@luma/core/components'
+import { ElButton } from 'element-plus'
+import { useRouter } from 'vue-router'
+
+/***********************路由操作*********************/
+const router = useRouter()
+
+function handleBackDashboardClick(): void {
+  void router.push('/dashboard')
+}
+</script>
+
+<template>
+  <main class="luma-admin-page">
+    <LumaPage
+      title="无权限"
+      description="当前账号没有访问该页面所需的权限。"
+    >
+      <ElButton type="primary" @click="handleBackDashboardClick">
+        返回工作台
+      </ElButton>
+    </LumaPage>
+  </main>
 </template>
 `
 }
@@ -733,29 +953,47 @@ body {
   margin: 0;
 }
 
-.luma-admin-template {
+.luma-admin-home {
   display: grid;
   gap: 24px;
   box-sizing: border-box;
   padding: 32px;
 }
 
-.luma-admin-template__crud {
+.luma-admin-home__crud {
   max-width: 920px;
   box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
 }
 
-.luma-admin-template__message {
+.luma-admin-home__pagination-text {
   display: block;
   padding-top: 12px;
-  color: #64748b;
+  color: #6b7280;
   font-size: 13px;
 }
 
-.luma-admin-template__status {
+.luma-admin-home__status {
   color: #2563eb;
   font-size: 13px;
   font-weight: 700;
+}
+
+.luma-admin-page {
+  box-sizing: border-box;
+  padding: 32px;
+}
+
+.luma-admin-page__list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.luma-admin-page__item {
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.6;
 }
 `
 }
@@ -768,7 +1006,11 @@ function createTemplateFiles(projectName: string): TemplateFile[] {
     { path: 'src/components/request/RequestExamplePanel.vue', content: createRequestPanelVue() },
     { path: 'src/composables/useMockRequestExample.ts', content: createRequestExampleTs() },
     { path: 'src/main.ts', content: createMainTs() },
+    { path: 'src/router/index.ts', content: createRouterTs() },
     { path: 'src/styles.scss', content: createStylesScss() },
+    { path: 'src/views/dashboard/DashboardView.vue', content: createDashboardViewVue() },
+    { path: 'src/views/error/ForbiddenView.vue', content: createForbiddenViewVue() },
+    { path: 'src/views/project/ProjectView.vue', content: createProjectViewVue() },
     { path: 'tsconfig.json', content: createTsConfig() },
     { path: 'vite.config.ts', content: createViteConfig() },
   ]
