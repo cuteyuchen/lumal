@@ -7,13 +7,14 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "build": "pnpm --filter @luma/icons build && pnpm --filter @luma/core build",
-    "typecheck": "pnpm --filter @luma/icons typecheck && pnpm --filter @luma/icons build && pnpm --filter @luma/core typecheck",
-    "test": "pnpm --filter @luma/icons test && pnpm --filter @luma/icons build && pnpm --filter @luma/core test",
+    "build": "pnpm --filter @luma/icons build && pnpm --filter @luma/core build && pnpm --filter @luma/vben-compat build",
+    "typecheck": "pnpm --filter @luma/icons typecheck && pnpm --filter @luma/icons build && pnpm --filter @luma/core typecheck && pnpm --filter @luma/core build && pnpm --filter @luma/vben-compat typecheck",
+    "test": "pnpm --filter @luma/icons test && pnpm --filter @luma/icons build && pnpm --filter @luma/core test && pnpm --filter @luma/core build && pnpm --filter @luma/vben-compat test",
     "lint": "eslint .",
     "admin:dev": "pnpm build && pnpm --filter luma-admin dev",
     "admin:build": "pnpm build && pnpm --filter luma-admin build",
-    "admin:preview": "pnpm --filter luma-admin preview"
+    "admin:preview": "pnpm --filter luma-admin preview",
+    "compat:build": "pnpm --filter @luma/vben-compat build"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^8.2.0",
