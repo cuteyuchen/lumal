@@ -158,15 +158,45 @@ import type {
   SchemaTableColumn,
   SchemaTableRow,
 } from '@luma/core/components'
+import type { LumaLayoutMenuItem, LumaLayoutTabItem } from '@luma/core/layout'
 import {
   LumaCrudTable,
   LumaIcon,
 } from '@luma/core/components'
+import { LumaLayout } from '@luma/core/layout'
 import { shallowRef } from 'vue'
 
 /***********************页面状态*********************/
 const title = 'Luma Admin'
 const description = '轻量 Vue Admin 项目已启动'
+const collapsed = shallowRef(false)
+const activeMenuPath = shallowRef('/dashboard')
+const activeTabPath = shallowRef('/dashboard')
+
+/***********************布局配置*********************/
+const menus: LumaLayoutMenuItem[] = [
+  {
+    path: '/dashboard',
+    title: '工作台',
+    icon: 'app:dashboard',
+  },
+  {
+    path: '/project',
+    title: '项目管理',
+    icon: 'app:dashboard',
+  },
+]
+
+const tabs: LumaLayoutTabItem[] = [
+  {
+    path: '/dashboard',
+    title: '工作台',
+  },
+  {
+    path: '/project',
+    title: '项目管理',
+  },
+]
 
 /***********************表单配置*********************/
 const formModel = shallowRef<SchemaFormModel>({
@@ -235,38 +265,63 @@ function handleReset(_payload: CrudTableResetPayload): void {
 function handlePaginationChange(payload: CrudTablePageChangePayload): void {
   message.value = \`第 \${payload.page} 页，每页 \${payload.pageSize} 条\`
 }
+
+function handleMenuSelect(path: string): void {
+  activeMenuPath.value = path
+  activeTabPath.value = path
+  message.value = \`已切换菜单：\${path}\`
+}
+
+function handleTabChange(path: string): void {
+  activeMenuPath.value = path
+}
 </script>
 
 <template>
-  <main class="luma-admin-template">
-    <LumaCrudTable
-      v-model:query-model="formModel"
-      v-model:page="page"
-      v-model:page-size="pageSize"
-      class="luma-admin-template__crud"
-      :title="title"
-      :description="description"
-      :query-schemas="schemas"
-      :columns="tableColumns"
-      :rows="tableRows"
-      row-key="id"
-      :total="35"
-      :page-sizes="[10, 20]"
-      @search="handleSearch"
-      @reset="handleReset"
-      @page-change="handlePaginationChange"
-    >
-      <template #actions>
-        <LumaIcon name="app:dashboard" color="#2563eb" :size="36" />
-      </template>
+  <LumaLayout
+    v-model:collapsed="collapsed"
+    v-model:active-tab-path="activeTabPath"
+    :title="title"
+    :menus="menus"
+    :tabs="tabs"
+    :active-menu-path="activeMenuPath"
+    @menu-select="handleMenuSelect"
+    @tab-change="handleTabChange"
+  >
+    <template #headerActions>
+      <span class="luma-admin-template__status">Mini</span>
+    </template>
 
-      <template #default>
-        <span class="luma-admin-template__message">
-          {{ message }}
-        </span>
-      </template>
-    </LumaCrudTable>
-  </main>
+    <main class="luma-admin-template">
+      <LumaCrudTable
+        v-model:query-model="formModel"
+        v-model:page="page"
+        v-model:page-size="pageSize"
+        class="luma-admin-template__crud"
+        :title="title"
+        :description="description"
+        :query-schemas="schemas"
+        :columns="tableColumns"
+        :rows="tableRows"
+        row-key="id"
+        :total="35"
+        :page-sizes="[10, 20]"
+        @search="handleSearch"
+        @reset="handleReset"
+        @page-change="handlePaginationChange"
+      >
+        <template #actions>
+          <LumaIcon name="app:dashboard" color="#2563eb" :size="36" />
+        </template>
+
+        <template #default>
+          <span class="luma-admin-template__message">
+            {{ message }}
+          </span>
+        </template>
+      </LumaCrudTable>
+    </main>
+  </LumaLayout>
 </template>
 `
 }
@@ -289,14 +344,11 @@ body {
 
 .luma-admin-template {
   box-sizing: border-box;
-  display: grid;
-  min-height: 100vh;
   padding: 32px;
-  place-items: center;
 }
 
 .luma-admin-template__crud {
-  width: min(560px, 100%);
+  max-width: 920px;
   box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
 }
 
@@ -305,6 +357,12 @@ body {
   padding-top: 12px;
   color: #64748b;
   font-size: 13px;
+}
+
+.luma-admin-template__status {
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 700;
 }
 `
 }

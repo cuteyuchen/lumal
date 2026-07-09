@@ -14,15 +14,12 @@ body {
 }
 
 .luma-admin-home {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 32px;
   box-sizing: border-box;
+  padding: 32px;
 }
 
 .luma-admin-home__crud {
-  width: min(520px, 100%);
+  max-width: 920px;
   box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
 }
 
@@ -31,4 +28,10 @@ body {
   padding-top: 12px;
   color: #6b7280;
   font-size: 13px;
+}
+
+.luma-admin-home__status {
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 700;
 }

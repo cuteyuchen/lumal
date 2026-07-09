@@ -582,6 +582,7 @@ corepack pnpm --filter @luma/vben-compat build
 - [x] 创建 `apps/luma-admin`，使用：
   - `@luma/core`
   - `@luma/icons`
+  - `LumaLayout`
   - `LumaSchemaForm`
   - `LumaCrudTable`
   - `LumaSchemaTable`
@@ -738,7 +739,7 @@ corepack pnpm --filter create-luma-admin pack --dry-run
 **任务：**
 
 - [x] 新增 `packages/create-luma-admin`。
-- [x] 实现 `createLumaAdminProject`，生成 Vue 3、TypeScript、Vite、Element Plus、SCSS 模板。
+- [x] 实现 `createLumaAdminProject`，生成 Vue 3、TypeScript、Vite、Element Plus、SCSS 和 Luma Layout 模板。
 - [x] CLI 暴露 `create-luma-admin` 命令。
 - [x] 生成模板通过 `@luma/core` 和 `@luma/icons` 公开入口消费能力。
 - [x] 目标目录非空时拒绝覆盖已有文件。

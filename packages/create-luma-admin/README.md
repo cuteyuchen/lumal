@@ -22,4 +22,5 @@ pnpm dev
 - Element Plus 作为 UI 基础。
 - SCSS 样式入口。
 - `createLumaAdmin` 应用启动代码。
+- `LumaLayout` 后台布局壳。
 - `LumaCrudTable` 最小示例页面。

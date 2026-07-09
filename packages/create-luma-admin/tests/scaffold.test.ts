@@ -40,6 +40,7 @@ describe('createLumaAdminProject', () => {
       expect(mainTs).toContain('import \'@luma/core/theme-chalk/index.scss\'')
       expect(appVue).toContain('<script setup lang="ts">')
       expect(appVue).toContain('/***********************页面状态*********************/')
+      expect(appVue).toContain('LumaLayout')
       expect(appVue).toContain('LumaCrudTable')
       expect(stylesScss).toContain('.luma-admin-template')
     }
