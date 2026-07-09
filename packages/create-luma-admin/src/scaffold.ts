@@ -214,14 +214,14 @@ function handleTabChange(path: string): void {
 
 function createRouterTs(): string {
   return `import type { LumaLayoutTabItem } from '@luma/core/layout'
-import type { MenuNode, SidebarMenuItem } from '@luma/core/router'
+import type { LumaMenuRecord, SidebarMenuItem } from '@luma/core/router'
 import type { Router, RouteRecordRaw, RouterHistory } from 'vue-router'
 import { createPermissionStore, setupPermissionGuard } from '@luma/core/permission'
 import {
   createRouteRecords,
   createSidebarMenus,
   findFirstAccessibleMenu,
-  normalizeMenuNodes,
+  normalizeMenuRecords,
 } from '@luma/core/router'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import DashboardView from '../views/dashboard/DashboardView.vue'
@@ -235,35 +235,41 @@ export const permissionStore = createPermissionStore({
 })
 
 /***********************菜单配置*********************/
-export const adminMenuNodes: MenuNode[] = [
+export const adminRouteRecords: LumaMenuRecord[] = [
   {
-    component: 'dashboard',
-    icon: 'app:dashboard',
-    id: 'dashboard',
-    order: 1,
+    component: 'dashboard/index',
+    name: 'Dashboard',
     path: '/dashboard',
-    permissions: ['dashboard:view'],
-    title: '工作台',
+    meta: {
+      authority: ['dashboard:view'],
+      icon: 'app:dashboard',
+      order: 1,
+      title: '工作台',
+    },
   },
   {
-    component: 'project',
-    icon: 'app:dashboard',
-    id: 'project',
-    order: 2,
+    component: 'project/index',
+    name: 'Project',
     path: '/project',
-    permissions: ['project:list'],
-    title: '项目管理',
+    meta: {
+      authority: ['project:list'],
+      icon: 'app:dashboard',
+      order: 2,
+      title: '项目管理',
+    },
   },
   {
-    component: 'forbidden',
-    id: 'forbidden',
+    component: 'error/forbidden',
+    name: 'Forbidden',
     path: '/403',
-    title: '无权限',
-    visible: false,
+    meta: {
+      hideInMenu: true,
+      title: '无权限',
+    },
   },
 ]
 
-export const normalizedAdminMenus = normalizeMenuNodes(adminMenuNodes)
+export const normalizedAdminMenus = normalizeMenuRecords(adminRouteRecords)
 
 /***********************菜单生成*********************/
 function hasPermission(permissions: string[]): boolean {
@@ -311,9 +317,9 @@ export function createAdminTabs(activePath?: string): LumaLayoutTabItem[] {
 /***********************路由创建*********************/
 function resolveRouteComponent(component: string): RouteRecordRaw['component'] | undefined {
   const components: Record<string, RouteRecordRaw['component']> = {
-    dashboard: DashboardView,
-    forbidden: ForbiddenView,
-    project: ProjectView,
+    'dashboard/index': DashboardView,
+    'error/forbidden': ForbiddenView,
+    'project/index': ProjectView,
   }
 
   return components[component]

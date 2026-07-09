@@ -3,10 +3,142 @@ import {
   createRouteRecords,
   createSidebarMenus,
   findFirstAccessibleMenu,
+  normalizeMenuRecords,
   normalizeMenuNodes,
 } from '../src/router'
 
 describe('router menu helpers', () => {
+  it('会按 Vue Router 和 Vben 风格字段归一化菜单记录', () => {
+    const menus = normalizeMenuRecords([
+      {
+        path: '/project',
+        name: 'Project',
+        component: 'project/index',
+        meta: {
+          title: '项目管理',
+          icon: 'app:project',
+          order: 2,
+          authority: 'project:list',
+          roles: ['admin'],
+          keepAlive: true,
+        },
+      },
+      {
+        path: '/dashboard',
+        name: 'Dashboard',
+        component: 'dashboard/index',
+        meta: {
+          title: '工作台',
+          icon: 'app:dashboard',
+          order: 1,
+          authority: ['dashboard:view'],
+        },
+      },
+      {
+        path: '/hidden',
+        name: 'Hidden',
+        meta: {
+          title: '隐藏页面',
+          hideInMenu: true,
+        },
+      },
+    ])
+
+    expect(menus.map(item => item.name)).toEqual(['Dashboard', 'Project', 'Hidden'])
+    expect(menus[0]).toMatchObject({
+      authority: ['dashboard:view'],
+      component: 'dashboard/index',
+      icon: 'app:dashboard',
+      path: '/dashboard',
+      roles: [],
+      title: '工作台',
+      visible: true,
+    })
+    expect(menus[1]).toMatchObject({
+      authority: ['project:list'],
+      keepAlive: true,
+      roles: ['admin'],
+      title: '项目管理',
+    })
+    expect(menus[2]?.visible).toBe(false)
+  })
+
+  it('会基于标准 meta 字段生成路由和侧边栏菜单', () => {
+    const dashboardComponent = () => Promise.resolve({ default: 'DashboardView' })
+    const projectComponent = () => Promise.resolve({ default: 'ProjectView' })
+    const normalized = normalizeMenuRecords([
+      {
+        path: '/dashboard',
+        name: 'Dashboard',
+        component: 'dashboard/index',
+        meta: {
+          title: '工作台',
+          icon: 'app:dashboard',
+          authority: ['dashboard:view'],
+          affixTab: true,
+        },
+      },
+      {
+        path: '/project',
+        name: 'Project',
+        component: 'project/index',
+        meta: {
+          title: '项目管理',
+          icon: 'app:project',
+          authority: ['project:list'],
+          roles: ['admin'],
+        },
+      },
+    ])
+
+    const routes = createRouteRecords(normalized, {
+      componentResolver: component => ({
+        'dashboard/index': dashboardComponent,
+        'project/index': projectComponent,
+      })[component],
+    })
+    const sidebarMenus = createSidebarMenus(normalized, {
+      hasPermission: permissions => permissions.includes('dashboard:view'),
+      hasRole: roles => roles.includes('admin'),
+    })
+
+    expect(routes).toEqual([
+      {
+        component: dashboardComponent,
+        meta: {
+          affixTab: true,
+          authority: ['dashboard:view'],
+          icon: 'app:dashboard',
+          permissions: ['dashboard:view'],
+          roles: [],
+          title: '工作台',
+        },
+        name: 'Dashboard',
+        path: '/dashboard',
+      },
+      {
+        component: projectComponent,
+        meta: {
+          authority: ['project:list'],
+          icon: 'app:project',
+          permissions: ['project:list'],
+          roles: ['admin'],
+          title: '项目管理',
+        },
+        name: 'Project',
+        path: '/project',
+      },
+    ])
+    expect(sidebarMenus).toEqual([
+      {
+        children: [],
+        icon: 'app:dashboard',
+        path: '/dashboard',
+        title: '工作台',
+      },
+    ])
+  })
+
   it('会归一化扁平菜单为树结构，并按 order 排序', () => {
     const menus = normalizeMenuNodes([
       {

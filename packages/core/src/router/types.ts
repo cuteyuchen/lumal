@@ -1,5 +1,30 @@
 export type MenuNodeId = string
 
+export type LumaRouteAuthority = string | string[]
+
+export interface LumaRouteMeta {
+  title?: string
+  icon?: string
+  order?: number
+  hideInMenu?: boolean
+  hideChildrenInMenu?: boolean
+  activeMenu?: string
+  keepAlive?: boolean
+  affixTab?: boolean
+  authority?: LumaRouteAuthority
+  roles?: LumaRouteAuthority
+  [key: string]: unknown
+}
+
+export interface LumaMenuRecord {
+  path: string
+  children?: LumaMenuRecord[]
+  component?: string
+  meta?: LumaRouteMeta
+  name?: string
+  redirect?: string
+}
+
 export interface MenuNode {
   id: MenuNodeId
   path: string
@@ -7,21 +32,26 @@ export interface MenuNode {
   children?: MenuNode[]
   component?: string
   icon?: string
+  keepAlive?: boolean
   meta?: Record<string, unknown>
   name?: string
   order?: number
   parentId?: MenuNodeId
   permissions?: string[]
+  redirect?: string
   roles?: string[]
   visible?: boolean
 }
 
 export interface NormalizedMenuNode extends Omit<MenuNode, 'children' | 'parentId'> {
+  authority: string[]
   children: NormalizedMenuNode[]
   meta: Record<string, unknown>
   name: string
   permissions: string[]
+  redirect?: string
   roles: string[]
+  keepAlive?: boolean
   visible: boolean
 }
 
@@ -35,7 +65,9 @@ export interface LumaRouteRecord {
   path: string
   children?: LumaRouteRecord[]
   component?: unknown
+  redirect?: string
   meta: {
+    authority?: string[]
     permissions: string[]
     roles: string[]
     title: string

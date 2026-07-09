@@ -2,6 +2,9 @@ import type {
   CreateRouteRecordsOptions,
   CreateSidebarMenusOptions,
   FindAccessibleMenuOptions,
+  LumaMenuRecord,
+  LumaRouteAuthority,
+  LumaRouteMeta,
   LumaRouteRecord,
   MenuNode,
   NormalizedMenuNode,
@@ -12,6 +15,9 @@ export type {
   CreateRouteRecordsOptions,
   CreateSidebarMenusOptions,
   FindAccessibleMenuOptions,
+  LumaMenuRecord,
+  LumaRouteAuthority,
+  LumaRouteMeta,
   LumaRouteRecord,
   MenuNode,
   MenuNodeId,
@@ -21,8 +27,55 @@ export type {
 } from './types'
 
 interface InternalMenuNode extends Omit<MenuNode, 'children'> {
+  authority?: string[]
   children: InternalMenuNode[]
+  keepAlive?: boolean
+  redirect?: string
   sourceIndex: number
+}
+
+/***********************标准字段归一化*********************/
+export function normalizeMenuRecords(records: LumaMenuRecord[]): NormalizedMenuNode[] {
+  return normalizeMenuNodes(records.map(record => convertMenuRecord(record)))
+}
+
+function convertMenuRecord(record: LumaMenuRecord): MenuNode {
+  const meta = record.meta ?? {}
+  const title = resolveRouteTitle(record, meta)
+  const name = record.name ?? createRouteName(record.path)
+
+  return {
+    children: record.children?.map(child => convertMenuRecord(child)),
+    component: record.component,
+    icon: typeof meta.icon === 'string' ? meta.icon : undefined,
+    id: name || record.path,
+    keepAlive: meta.keepAlive === true,
+    meta,
+    name,
+    order: typeof meta.order === 'number' ? meta.order : undefined,
+    path: record.path,
+    permissions: normalizePermissionRequirement(meta.authority),
+    redirect: record.redirect,
+    roles: normalizePermissionRequirement(meta.roles),
+    title,
+    visible: meta.hideInMenu !== true,
+  } as MenuNode
+}
+
+function resolveRouteTitle(record: LumaMenuRecord, meta: LumaRouteMeta): string {
+  if (typeof meta.title === 'string' && meta.title) {
+    return meta.title
+  }
+
+  return record.name ?? record.path
+}
+
+function normalizePermissionRequirement(value: LumaRouteAuthority | undefined): string[] {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean)
+  }
+
+  return value ? [value] : []
 }
 
 /***********************菜单归一化*********************/
@@ -74,8 +127,10 @@ function flattenMenuNodes(nodes: MenuNode[]): InternalMenuNode[] {
 function normalizeMenuNode(node: InternalMenuNode, parentPath = ''): NormalizedMenuNode {
   const path = resolveMenuPath(node.path, parentPath)
   const children = sortMenuNodes(node.children).map(child => normalizeMenuNode(child, path))
+  const authority = node.authority ?? node.permissions ?? []
 
   return {
+    authority,
     children,
     component: node.component,
     icon: node.icon,
@@ -84,8 +139,10 @@ function normalizeMenuNode(node: InternalMenuNode, parentPath = ''): NormalizedM
     name: node.name ?? createRouteName(node.id),
     order: node.order,
     path,
+    redirect: node.redirect,
     permissions: node.permissions ?? [],
     roles: node.roles ?? [],
+    keepAlive: node.keepAlive,
     title: node.title,
     visible: node.visible !== false,
   }
@@ -93,7 +150,9 @@ function normalizeMenuNode(node: InternalMenuNode, parentPath = ''): NormalizedM
 
 function sortMenuNodes(nodes: InternalMenuNode[]): InternalMenuNode[] {
   return [...nodes].sort((left, right) => {
-    const orderDiff = (left.order ?? 0) - (right.order ?? 0)
+    const leftOrder = left.order ?? Number.MAX_SAFE_INTEGER
+    const rightOrder = right.order ?? Number.MAX_SAFE_INTEGER
+    const orderDiff = leftOrder - rightOrder
     return orderDiff === 0 ? left.sourceIndex - right.sourceIndex : orderDiff
   })
 }
@@ -119,6 +178,14 @@ function createRouteRecord(
     },
     name: node.name,
     path: node.path,
+  }
+
+  if ((node.authority?.length ?? 0) > 0) {
+    route.meta.authority = node.authority
+  }
+
+  if (node.redirect) {
+    route.redirect = node.redirect
   }
 
   if (node.component) {
