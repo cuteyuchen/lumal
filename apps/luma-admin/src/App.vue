@@ -14,7 +14,9 @@ import {
   LumaIcon,
 } from '@luma/core/components'
 import { LumaLayout } from '@luma/core/layout'
-import { shallowRef } from 'vue'
+import { onMounted, shallowRef } from 'vue'
+import RequestExamplePanel from './components/request/RequestExamplePanel.vue'
+import { useMockRequestExample } from './composables/useMockRequestExample'
 
 /***********************页面状态*********************/
 const title = 'Luma Admin'
@@ -104,6 +106,24 @@ const page = shallowRef(1)
 const pageSize = shallowRef(10)
 const paginationMessage = shallowRef('当前展示示例数据')
 
+/***********************请求示例*********************/
+const {
+  authorizationHeader,
+  lastUrl,
+  loadProjectSummary,
+  loading: requestLoading,
+  message: requestMessage,
+  projectName,
+  projectStatus,
+  sessionExpiredCount,
+  status: requestStatus,
+  tokenInjected,
+} = useMockRequestExample()
+
+onMounted(() => {
+  void loadProjectSummary()
+})
+
 function handleSearch(payload: CrudTableSearchPayload): void {
   paginationMessage.value = `查询项目：${String(payload.name ?? '') || '全部'}`
 }
@@ -170,6 +190,19 @@ function handleTabChange(path: string): void {
           </span>
         </template>
       </LumaCrudTable>
+
+      <RequestExamplePanel
+        :authorization-header="authorizationHeader"
+        :last-url="lastUrl"
+        :loading="requestLoading"
+        :message="requestMessage"
+        :project-name="projectName"
+        :project-status="projectStatus"
+        :session-expired-count="sessionExpiredCount"
+        :status="requestStatus"
+        :token-injected="tokenInjected"
+        @refresh="loadProjectSummary"
+      />
     </main>
   </LumaLayout>
 </template>

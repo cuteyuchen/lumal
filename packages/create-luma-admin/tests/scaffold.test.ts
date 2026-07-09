@@ -22,12 +22,16 @@ describe('createLumaAdminProject', () => {
       const packageJson = await readFile(join(targetDir, 'package.json'), 'utf8')
       const mainTs = await readFile(join(targetDir, 'src/main.ts'), 'utf8')
       const appVue = await readFile(join(targetDir, 'src/App.vue'), 'utf8')
+      const requestExample = await readFile(join(targetDir, 'src/composables/useMockRequestExample.ts'), 'utf8')
+      const requestPanel = await readFile(join(targetDir, 'src/components/request/RequestExamplePanel.vue'), 'utf8')
       const stylesScss = await readFile(join(targetDir, 'src/styles.scss'), 'utf8')
 
       expect(result.createdFiles).toEqual([
         'index.html',
         'package.json',
         'src/App.vue',
+        'src/components/request/RequestExamplePanel.vue',
+        'src/composables/useMockRequestExample.ts',
         'src/main.ts',
         'src/styles.scss',
         'tsconfig.json',
@@ -42,6 +46,11 @@ describe('createLumaAdminProject', () => {
       expect(appVue).toContain('/***********************页面状态*********************/')
       expect(appVue).toContain('LumaLayout')
       expect(appVue).toContain('LumaCrudTable')
+      expect(appVue).toContain('RequestExamplePanel')
+      expect(requestExample).toContain('createRequestClient')
+      expect(requestExample).toContain('getToken')
+      expect(requestExample).toContain('onResponse')
+      expect(requestPanel).toContain('<style scoped lang="scss">')
       expect(stylesScss).toContain('.luma-admin-template')
     }
     finally {
