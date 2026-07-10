@@ -1,111 +1,25 @@
 # Luma
 
-Luma 是一个面向中小型后台项目的轻量 Vue Admin 框架。它的最终目标不是复刻一个完整的 Vben Admin，也不是沉淀公司内部业务框架，而是打造一套可以独立发包、可以稳定复用、可以让 Vben 用户低成本迁移的开源 Admin 基础设施。
+Luma 是一套面向中小型后台项目的轻量 Vue Admin 基础设施。它以 Vue 3、TypeScript、Vite 和 Element Plus 为基础，提供应用安装、布局导航、主题、权限、路由、请求、字典、Schema 表单、Schema 表格、CRUD、图标、图表和迁移兼容能力。
 
-用 `@luma/*` 包创建出来的后台管理平台叫 `luma-admin`。`luma-admin` 本身应该是示例、模板和验证入口；真正可复用、可发布的能力必须沉淀在包中。
+`apps/luma-admin` 是公开 API 的集成示例与验收入口；可复用能力必须沉淀到 `packages/*`，业务接口字段、状态码和页面逻辑不得进入框架包。
 
-## 最终目标
+## 快速开始
 
-Luma 要成为一个“mini 但完整”的 Vue Admin 方案：
-
-- **轻量**：不默认携带小型项目不需要的多语言、大型偏好设置、重型插件链和业务模板。
-- **通用**：不绑定公司后端字段、接口路径、状态码、菜单结构或业务 store。
-- **可迁移**：保留 `useVbenForm`、`useVbenVxeGrid` 等常用 Vben 写法兼容层，同时保留 Luma 原生写法。
-- **可发包**：`@luma/core`、`@luma/icons`、`@luma/vben-compat`、`create-luma-admin` 都按 npm 包设计，而不是普通项目源码。
-- **可验证**：所有核心能力都在 `apps/luma-admin` 中直接使用公开包入口验证，不再维护独立 playground。
-- **可维护**：接口字段使用语义化标准字段；非标准后端结构通过 `fieldNames`、`parseResponse` 等显式配置适配。
-
-目标形态是：开发者可以用 Luma 快速搭建后台项目，获得布局、菜单、权限、主题、图标、字典、请求、表单、表格、CRUD 等基础能力；如果来自 Vben 项目，可以先通过兼容层平滑迁移，再逐步改成 Luma 原生 API。
-
-## 技术栈
-
-- Vue 3
-- TypeScript
-- Vite
-- pnpm workspace
-- Element Plus
-- SCSS
-- Vitest
-- Vue Test Utils
-
-## 包边界
-
-### `@luma/icons`
-
-独立图标系统，不依赖 `@luma/core`。
-
-计划和已有职责：
-
-- 图标注册表
-- Iconify 图标适配
-- 本地 SVG 适配
-- data URI 生成
-- `LumaIcon`
-- 图标选择器
-- 构建期 SVG 注入能力
-
-### `@luma/core`
-
-Luma 的后台核心包。
-
-职责：
-
-- 应用安装器
-- 后台布局
-- 路由和菜单辅助
-- 权限 store、权限守卫和权限指令
-- 请求客户端辅助
-- 主题运行时
-- 字典能力
-- `LumaSchemaForm`
-- `LumaSchemaTable`
-- `LumaCrudTable`
-- 页面容器、信息表格、分页等基础组件
-
-`@luma/core` 不应该依赖 `@luma/vben-compat`，也不应该默认依赖 VXE。
-
-### `@luma/vben-compat`
-
-Vben 常用写法兼容层，只用于降低迁移成本。
-
-职责：
-
-- `useVbenForm`
-- `useVbenVxeGrid`
-- Vben 风格 schema 到 Luma 原生配置的转换
-- 常用 Vben grid/form 调用方式兼容
-
-新页面优先使用 Luma 原生 API；旧项目迁移时再使用兼容层。
-
-### `@luma/charts`
-
-可选图表包，基于 ECharts 与 vue-echarts 封装 `LumaChart`、`LumaChartPanel`、`useChartResize`。ECharts、vue-echarts 作为 peer dependency，不进入 `@luma/core` 默认依赖，符合 Luma mini 定位。
-
-### `create-luma-admin`
-
-脚手架包，用于创建基于 Luma 包的后台项目模板。
-
-## 目标使用方式
-
-安装核心包：
+环境要求：Node.js 20+、pnpm 10.33.0。
 
 ```bash
-pnpm add @luma/core @luma/icons element-plus vue
+pnpm install
+pnpm admin:dev
 ```
 
-如果需要迁移 Vben 常用写法：
-
-```bash
-pnpm add @luma/vben-compat
-```
-
-创建后台项目：
+创建新项目：
 
 ```bash
 pnpm create luma-admin my-admin
 ```
 
-Luma 原生写法示例：
+应用侧最小接入：
 
 ```ts
 import { createLumaAdmin } from '@luma/core'
@@ -119,208 +33,87 @@ createLumaAdmin({
 }).mount('#app')
 ```
 
-Vben 兼容写法示例：
+## 工作区
 
-```ts
-import { useVbenForm, useVbenVxeGrid } from '@luma/vben-compat'
+| 目录 | 职责 |
+| --- | --- |
+| `packages/icons` | 独立图标注册、渲染、选择和构建能力 |
+| `packages/core` | 安装器、布局、路由、权限、请求、主题、字典和核心组件 |
+| `packages/charts` | 可选 ECharts 面板与自适应能力 |
+| `packages/vben-compat` | 常用旧项目写法到 Luma 原生 API 的迁移层 |
+| `packages/create-luma-admin` | 轻量后台项目脚手架 |
+| `apps/luma-admin` | 原生 Admin 集成、系统管理示例和浏览器验收入口 |
+| `apps/vben-compat-demo` | 兼容层构建示例 |
 
-const [, formApi] = useVbenForm({
-  schemas: [
-    { fieldName: 'keyword', label: '关键词', component: 'Input' },
-  ],
-})
+依赖方向固定为：
 
-const [, gridApi] = useVbenVxeGrid({
-  gridOptions: {
-    columns: [
-      { field: 'name', title: '名称' },
-    ],
-  },
-})
+```text
+@luma/icons
+     ↑
+@luma/core  ←  apps/luma-admin
+     ↑
+@luma/vben-compat  ←  apps/vben-compat-demo
+
+@luma/charts  ←  apps/luma-admin
+create-luma-admin  →  生成消费公开包入口的应用
 ```
 
-## 当前开发进度
+## 当前稳定能力
 
-截至 2026-07-10，当前仓库已经完成以下基线：
+- Element Plus 驱动的后台应用壳、顶部导航、侧边导航和基础标签页。
+- 标准菜单模型、权限过滤、路由记录生成和登录守卫。
+- 明暗主题、主题色、布局偏好和设置面板基线。
+- 字典上下文、标准 `{ items }` 响应、字段映射与颜色标签回显。
+- `LumaSchemaForm`、`LumaSchemaTable`、`LumaCrudTable`、页面与分页组件。
+- fetch 请求客户端、Token 注入、响应处理和会话过期回调。
+- 用户、角色、菜单、字典和系统配置 Mock CRUD 页面。
+- 独立图标包、可选图表包、迁移兼容层和项目脚手架。
 
-- monorepo 工程结构、pnpm workspace、MIT License。
-- `@luma/icons` 独立包基线。
-- `@luma/core` 应用安装器、布局、权限、请求、主题、字典、基础组件。
-- `@luma/vben-compat` 常用写法适配基线。
-- `create-luma-admin` 脚手架包基线。
-- `apps/luma-admin` 作为唯一原生示例和验证入口。
-- 删除独立 playground，后续示例统一进入 admin 路由体系中验证。
+正在进行的全量重构、阶段状态和最终验收标准统一维护在 [开发路线图](docs/development-roadmap.md)。
 
-已经完成的增强阶段：
+## 标准模型与适配原则
 
-- Schema Form 增强：支持 `create/edit/view` 模式、更多控件、校验、布局、权限、字典、插槽和公开方法。
-- Schema Table 增强：支持 selection、index、loading、pagination、列隐藏、列权限、Element Plus 透传、字典回显和操作列插槽。
-- CRUD Table 增强：支持标准 `dataSource`、远程加载、分页、查询、新增、查看、编辑、删除、批量删除、loading、error 和标准响应 `{ items, total }`。
-- 权限、动态路由、Auth、Request、主题布局、composables、utils、directives 和独立 charts 包能力补齐。
-- `luma-admin` 登录、登出、角色权限、全局主题设置和三种导航布局闭环。
-- 系统管理基座：用户、角色授权、菜单树、字典类型/字典项和系统配置页面。
-- 应用级可变 Mock API：用户、角色、菜单、字典数据均支持真实增删改查和测试重置。
+框架内部优先使用稳定的语义字段：
 
-当前正在推进的阶段：
+- 菜单：`path`、`name`、`component`、`children`、`meta.title`、`meta.authority`。
+- 字典：`label`、`value`、`color`、`disabled`、`children`。
+- 表单和表格：`field`、`dictionary`、`options`、`componentProps`。
+- 分页：`{ items, total }`。
+- 会话：`{ accessToken, refreshToken?, expiresAt? }`。
 
-- 对照 `E:\project\gr-framework` 重构 Admin 应用壳和视觉层级。
-- 优化菜单分组、顶部导航、侧边导航和标签页的职责边界，避免重复导航。
-- 修正主题与布局设置入口、内容容器、间距、背景、表格和表单样式。
-- 完成字典颜色标签展示，并继续接入后端菜单 API、动态路由注册和重置。
-
-## 后续开发目标
-
-优先级从高到低：
-
-1. **权限和动态路由**
-   - 标准后端菜单模型。
-   - 非标准字段通过 `fieldNames` 显式映射。
-   - 动态路由注册和重置。
-   - 登录态守卫和白名单。
-   - 403/404 兜底。
-   - 顶部菜单、侧边菜单和首个可访问菜单解析。
-   - 在 `apps/luma-admin` 中用真实路由示例验证权限体系。
-
-2. **Auth 会话能力**
-   - token 存储。
-   - 用户信息加载。
-   - 登录、退出、刷新会话。
-   - 不绑定具体接口字段，通过配置函数适配后端。
-
-3. **主题能力完善**
-   - 主题切换。
-   - Element Plus 主题变量联动。
-   - 暗色模式。
-   - 主题设置面板。
-   - admin 中提供可交互示例。
-
-4. **字典能力继续打磨**
-   - 标准响应固定为 `{ items: DictionaryOption[] }`。
-   - 表单、表格、CRUD 中统一使用字典 options 和回显。
-   - 非标准响应通过显式解析函数适配。
-
-5. **组件和工具子入口**
-   - `@luma/core/components`
-   - `@luma/core/router`
-   - `@luma/core/permission`
-   - `@luma/core/request`
-   - `@luma/core/theme`
-   - `@luma/core/dictionary`
-   - `@luma/core/composables`
-   - `@luma/core/directives`
-   - `@luma/core/utils`
-
-6. **admin 示例完善**
-   - 仪表盘。
-   - 表单示例。
-   - 表格示例。
-   - CRUD 示例。
-   - 字典示例。
-   - 权限路由示例。
-   - 主题切换示例。
-   - 图标示例。
-   - 请求和错误处理示例。
-
-7. **发布前质量建设**
-   - 单元测试覆盖核心行为。
-   - admin 构建通过。
-   - 包边界检查通过。
-   - `pack --dry-run` 验证发包内容。
-   - 文档同步 API。
-
-## 字段设计原则
-
-Luma 不沿用公司内部后端字段，也不默认猜测各种历史响应结构。
-
-推荐标准字段：
-
-- 路由权限：`meta.authority`、`meta.roles`、`meta.title`、`meta.icon`。
-- 菜单：`id`、`parentId`、`title`、`path`、`name`、`component`、`redirect`、`children`。
-- 字典：`type`、`label`、`value`、`color`、`disabled`。
-- 表单：`field`、`label`、`component`、`dictionary`、`options`、`rules`、`defaultValue`、`componentProps`。
-- 表格：`field`、`label`、`dictionary`、`options`、`formatter`、`componentProps`。
-- CRUD 响应：`{ items, total }`。
-
-非标准后端结构必须通过显式配置适配，例如：
-
-- `fieldNames`
-- `parseResponse`
-- `transform`
-- `componentResolver`
-
-## 开发规范
-
-- 始终使用中文文档和中文提交信息。
-- Vue 组件使用 `<script setup lang="ts">`。
-- Vue 组件 ref 使用 `useTemplateRef`。
-- Vue 组件组合式 API 按 `/***********************说明*********************/` 功能块划分。
-- 样式使用 SCSS。
-- 包代码不能写业务接口、业务路由、业务 store。
-- admin 应通过公开包入口消费能力，不直连包源码。
-- 每个阶段完成后建议中文提交一次。
+非标准后端结构必须在应用适配层通过 `fieldNames`、`parseResponse`、`transform` 或专用 adapter 转换。组件内不得散落公司分页字段、Token 字段、菜单字段和业务状态码判断。
 
 ## 常用命令
 
-```bash
-corepack pnpm install
-corepack pnpm build
-corepack pnpm test
-corepack pnpm lint
-corepack pnpm release:boundaries
-corepack pnpm admin:build
-corepack pnpm compat:build
-corepack pnpm pack:dry-run
-```
-
-开发 admin：
+请直接使用项目声明的 pnpm 版本，不通过可能在部分 Windows 环境切换错误版本的 Corepack 包装执行。
 
 ```bash
-corepack pnpm admin:dev
+pnpm test
+pnpm typecheck
+pnpm build
+pnpm admin:build
+pnpm compat:build
+pnpm lint
+pnpm release:boundaries
+pnpm pack:dry-run
 ```
 
-注意：`luma-admin` 的类型和构建依赖 `@luma/core` 的产物声明。排查构建问题时，优先先构建 core，再构建 admin。
+构建任务会清理并重建 `dist`，组合执行时保持串行，避免消费方在产物重建过程中读取到不完整声明。
 
-```bash
-corepack pnpm --filter @luma/core build
-corepack pnpm --filter luma-admin build
-```
+## 开发约定
 
-## 给后续 Claude 开发的接力说明
-
-建议先阅读：
-
-- `LUMA_DEVELOPMENT_PLAN.md`
-- `docs/source-framework-migration-plan.md`
-- `docs/core-api.md`
-- `docs/architecture.md`
-- `docs/package-boundaries.md`
-
-开始开发前先检查：
-
-```bash
-git status --short --branch
-git diff --stat
-```
-
-后续开发应优先处理 `luma-admin` 应用壳与 `gr-framework` 的体验差距。每个一级阶段完成后先执行完整验证，再使用 Conventional Commits 规范和中文描述提交。
-
-推荐验证命令：
-
-```bash
-corepack pnpm test
-corepack pnpm typecheck
-corepack pnpm --filter luma-admin build
-corepack pnpm lint
-corepack pnpm release:boundaries
-```
+- Vue 组件使用 `<script setup lang="ts">`，模板引用优先使用 `useTemplateRef`。
+- 样式使用 SCSS 和语义变量，不在业务组件中重复硬编码主题色、间距和层级。
+- Admin 只通过 `@luma/*` 公开入口消费包能力，不直连包源码或包内测试文件。
+- 每个阶段完成后先验证，再按 `<type>(<scope>): <中文动宾描述>` 提交。
+- 不自动推送；不同 Conventional Commit 类型的修改拆分提交。
 
 ## 文档
 
+- [开发路线图](docs/development-roadmap.md)
 - [架构说明](docs/architecture.md)
-- [图标系统](docs/icons.md)
 - [Core API](docs/core-api.md)
-- [Vben 兼容 API](docs/vben-compat-api.md)
-- [从 Vben 迁移](docs/migration-from-vben.md)
-- [源框架能力迁移计划](docs/source-framework-migration-plan.md)
-- [后续开发计划](docs/luma-next-development-plan.md)
+- [图标系统](docs/icons.md)
+- [包边界](docs/package-boundaries.md)
 - [发布检查清单](docs/release-checklist.md)
+- [从 Vben 迁移](docs/migration-from-vben.md)

@@ -91,7 +91,7 @@ const [, gridApi] = useVbenVxeGrid({
 完整可构建示例见 `apps/vben-compat-demo`，验证命令：
 
 ```bash
-corepack pnpm compat:build
+pnpm compat:build
 ```
 
 ## 当前未支持

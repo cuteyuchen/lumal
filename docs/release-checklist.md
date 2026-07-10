@@ -23,19 +23,19 @@ rg -n "guiren|gr-framework|GrFramework|GSchemaForm|GSchemaTable|GCrudTable|GPage
 推荐直接运行串行发布检查，避免多个构建命令同时清理和重写 `dist`：
 
 ```bash
-corepack pnpm release:check
+pnpm release:check
 ```
 
 其中 `release:boundaries` 会作为发布检查的一部分自动执行；如果只想快速检查包边界，可以单独运行：
 
 ```bash
-corepack pnpm release:boundaries
+pnpm release:boundaries
 ```
 
 首次发布前还需要检查目标包名是否已被 npm registry 占用：
 
 ```bash
-corepack pnpm release:names
+pnpm release:names
 ```
 
 这个命令只验证 `@luma/icons`、`@luma/core`、`@luma/vben-compat`、`create-luma-admin` 当前是否能在 registry 查询到；它不能证明发布账号拥有或可创建 `@luma` scope。
@@ -43,28 +43,29 @@ corepack pnpm release:names
 拆开执行时也必须保持串行：
 
 ```bash
-corepack pnpm lint
-corepack pnpm release:boundaries
-corepack pnpm test
-corepack pnpm typecheck
-corepack pnpm build
-corepack pnpm admin:build
-corepack pnpm compat:build
+pnpm lint
+pnpm release:boundaries
+pnpm test
+pnpm typecheck
+pnpm build
+pnpm admin:build
+pnpm compat:build
 ```
 
 ## 发包 dry-run
 
 ```bash
-corepack pnpm pack:dry-run
+pnpm pack:dry-run
 ```
 
 等价于：
 
 ```bash
-corepack pnpm --filter @luma/icons pack --dry-run
-corepack pnpm --filter @luma/core pack --dry-run
-corepack pnpm --filter @luma/vben-compat pack --dry-run
-corepack pnpm --filter create-luma-admin pack --dry-run
+pnpm --filter @luma/icons pack --dry-run
+pnpm --filter @luma/core pack --dry-run
+pnpm --filter @luma/charts pack --dry-run
+pnpm --filter @luma/vben-compat pack --dry-run
+pnpm --filter create-luma-admin pack --dry-run
 ```
 
 检查 tarball 内容：
@@ -79,15 +80,15 @@ corepack pnpm --filter create-luma-admin pack --dry-run
 ## 文档检查
 
 - README 与当前实现一致。
+- `docs/development-roadmap.md` 是唯一开发规划和阶段状态来源。
 - `docs/architecture.md` 说明包边界。
 - `docs/icons.md` 说明图标注册、渲染和选择器。
 - `docs/core-api.md` 说明 core 公开入口。
-- `docs/vben-compat-api.md` 说明兼容范围和不支持项。
-- `docs/migration-from-vben.md` 说明迁移边界。
+- `docs/migration-from-vben.md` 说明兼容映射、迁移边界和不支持项。
 
 ## npm scope
 
-当前按 `@luma` 规划。`corepack pnpm release:names` 已用于检查目标包名当前未在 registry 查询到。
+当前按 `@luma` 规划。`pnpm release:names` 用于检查目标包名是否能在 registry 查询到。
 
 scope 权限已用当前 npm 用户 `cuteyuchen` 确认：
 

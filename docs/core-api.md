@@ -213,6 +213,15 @@ function handlePageChange(payload: SchemaTablePaginationChangePayload) {
 - `tableProps`：透传给底层 `ElTable`。
 - `rowClassName` / `cellClassName` / `headerCellClassName`：行、单元格和表头 class。
 - `actions` 插槽：追加操作列。
+- 字典项包含 `color` 时渲染“颜色点 + 文本”标签；颜色不作为唯一状态信息。
+
+复杂表格或自定义渲染可以复用公开 helper：
+
+```ts
+import { resolveSchemaTableCellDisplay } from '@luma/core/components'
+```
+
+该 helper 统一处理 formatter、空值、数组和字典回显；内部渲染组件不作为公共 API 导出。
 
 ### CRUD Table
 

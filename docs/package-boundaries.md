@@ -29,7 +29,9 @@ Luma 按职责拆包，兼容层不能反向污染核心包。
 发布前运行：
 
 ```bash
-corepack pnpm release:boundaries
+pnpm release:boundaries
 ```
 
-这个脚本会检查包发布字段、依赖方向、Element Plus / ECharts peer dependency、core 中禁止默认引入的 i18n/VXE/ECharts 标识，以及示例应用是否绕过包名直连 `packages/*/src`。
+这个脚本会检查包发布字段、依赖方向、Element Plus / ECharts peer dependency、core 中禁止默认引入的 i18n/VXE/ECharts 标识，以及示例应用是否绕过包名直连 `packages/*` 源码或测试内部文件。
+
+当前 Windows 开发环境直接执行项目声明的 pnpm 10.33.0；不要使用可能切换到其他 pnpm 版本的包装命令。
