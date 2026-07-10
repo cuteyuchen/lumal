@@ -59,10 +59,11 @@ defineExpose({
   display: grid;
   gap: 16px;
   min-width: 0;
-  padding: 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #ffffff;
+  padding: 20px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: calc(10px * var(--luma-radius-scale, 1));
+  background: var(--el-bg-color);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
 }
 
 .luma-page__header {
@@ -79,14 +80,14 @@ defineExpose({
 
 .luma-page__title {
   margin: 0;
-  color: #111827;
+  color: var(--el-text-color-primary);
   font-size: 18px;
   line-height: 1.4;
 }
 
 .luma-page__description {
   margin: 4px 0 0;
-  color: #6b7280;
+  color: var(--el-text-color-secondary);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -107,8 +108,24 @@ defineExpose({
   inset: 0;
   display: grid;
   place-items: center;
-  color: #374151;
-  background: rgb(255 255 255 / 72%);
+  color: var(--el-text-color-regular);
+  background: color-mix(in srgb, var(--el-bg-color) 82%, transparent);
   font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .luma-page {
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .luma-page__header {
+    flex-direction: column;
+  }
+
+  .luma-page__actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
 }
 </style>

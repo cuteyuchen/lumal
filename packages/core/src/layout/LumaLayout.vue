@@ -18,6 +18,7 @@ const props = withDefaults(defineProps<{
   activeMenuPath?: string
   activeTopMenuPath?: string
   activeTabPath?: string
+  topMenuMode?: 'flat' | 'tree'
   sidebarWidth?: string
   collapsedSidebarWidth?: string
   headerHeight?: string
@@ -30,6 +31,7 @@ const props = withDefaults(defineProps<{
   menus: () => [],
   sidebarWidth: '220px',
   tabs: () => [],
+  topMenuMode: 'tree',
   topMenus: () => [],
 })
 
@@ -87,71 +89,147 @@ defineExpose({
 </script>
 
 <template>
-  <ElContainer ref="layoutRef" class="luma-layout">
-    <LumaSidebar
-      v-if="hasSidebar"
-      :menus="menus"
-      :active-path="activeMenuPath"
+  <ElContainer
+    ref="layoutRef"
+    class="luma-layout"
+    :class="{
+      'is-sidebar-collapsed': collapsed,
+      'is-sidebar-hidden': !hasSidebar,
+    }"
+    direction="vertical"
+  >
+    <LumaHeader
+      :title="title"
       :collapsed="collapsed"
-      :width="sidebarWidth"
-      :collapsed-width="collapsedSidebarWidth"
-      @select="handleMenuSelect"
-    />
+      :height="headerHeight"
+      :sidebar-enabled="hasSidebar"
+      @toggle-collapse="handleToggleCollapse"
+    >
+      <template v-if="$slots.logo" #logo>
+        <slot name="logo" />
+      </template>
 
-    <ElContainer class="luma-layout__main" direction="vertical">
-      <LumaHeader
-        :title="title"
+      <template v-if="hasTopMenus" #navigation>
+        <LumaTopNav
+          :menus="topMenus"
+          :active-path="activeTopMenuPath"
+          :mode="topMenuMode"
+          @select="handleTopMenuSelect"
+        />
+      </template>
+
+      <template v-if="$slots.headerActions" #actions>
+        <slot name="headerActions" />
+      </template>
+    </LumaHeader>
+
+    <ElContainer class="luma-layout__body">
+      <button
+        v-if="hasSidebar"
+        class="luma-layout__sidebar-scrim"
+        type="button"
+        aria-label="关闭侧边栏"
+        @click="collapsed = true"
+      />
+
+      <LumaSidebar
+        v-if="hasSidebar"
+        :menus="menus"
+        :active-path="activeMenuPath"
         :collapsed="collapsed"
-        :height="headerHeight"
-        @toggle-collapse="handleToggleCollapse"
-      >
-        <template v-if="$slots.logo" #logo>
-          <slot name="logo" />
-        </template>
-
-        <template v-if="$slots.headerActions" #actions>
-          <slot name="headerActions" />
-        </template>
-      </LumaHeader>
-
-      <LumaTopNav
-        v-if="hasTopMenus"
-        class="luma-layout__top-nav"
-        :menus="topMenus"
-        :active-path="activeTopMenuPath"
-        @select="handleTopMenuSelect"
+        :width="sidebarWidth"
+        :collapsed-width="collapsedSidebarWidth"
+        @select="handleMenuSelect"
       />
 
-      <LumaTabs
-        v-if="hasTabs"
-        v-model:active-path="currentActiveTabPath"
-        :tabs="tabs"
-        @change="handleTabChange"
-        @remove="handleTabRemove"
-      />
+      <ElContainer class="luma-layout__main" direction="vertical">
+        <LumaTabs
+          v-if="hasTabs"
+          v-model:active-path="currentActiveTabPath"
+          :tabs="tabs"
+          @change="handleTabChange"
+          @remove="handleTabRemove"
+        />
 
-      <LumaContent>
-        <slot />
-      </LumaContent>
+        <LumaContent>
+          <slot />
+        </LumaContent>
+      </ElContainer>
     </ElContainer>
   </ElContainer>
 </template>
 
 <style scoped lang="scss">
 .luma-layout {
+  position: relative;
   min-width: 0;
+  height: 100vh;
   min-height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
   background: var(--el-bg-color-page);
 }
 
-.luma-layout__main {
+.luma-layout__body {
+  position: relative;
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
 }
 
-.luma-layout__top-nav {
-  padding: 0 16px;
-  border-bottom: 1px solid var(--el-border-color-light);
-  background: var(--el-bg-color);
+.luma-layout__main {
+  flex: 1 1 auto;
+  width: 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--el-bg-color-page);
+}
+
+.luma-layout__sidebar-scrim {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .luma-layout__body :deep(.luma-sidebar) {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 30;
+    width: min(var(--luma-sidebar-width, 248px), 84vw) !important;
+    box-shadow: 16px 0 36px rgb(15 23 42 / 18%);
+    transform: translateX(0);
+  }
+
+  .luma-layout.is-sidebar-collapsed .luma-layout__body :deep(.luma-sidebar) {
+    pointer-events: none;
+    transform: translateX(-100%);
+  }
+
+  .luma-layout__sidebar-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: rgb(15 23 42 / 42%);
+    cursor: pointer;
+  }
+
+  .luma-layout.is-sidebar-collapsed .luma-layout__sidebar-scrim {
+    display: none;
+  }
+
+  .luma-layout__main {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .luma-layout__body :deep(.luma-sidebar) {
+    transition: none;
+  }
 }
 </style>

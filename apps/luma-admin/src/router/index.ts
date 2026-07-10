@@ -43,6 +43,10 @@ function flattenMenuTabs(menus: SidebarMenuItem[]): LumaLayoutTabItem[] {
   })
 }
 
+function resolveMenuTab(menus: LumaLayoutTabItem[], path: string): LumaLayoutTabItem | undefined {
+  return menus.find(tab => tab.path === path)
+}
+
 export function createAdminSidebarMenus(): SidebarMenuItem[] {
   return createSidebarMenus(normalizedAdminMenus, {
     hasPermission,
@@ -51,7 +55,24 @@ export function createAdminSidebarMenus(): SidebarMenuItem[] {
 }
 
 export function createAdminTabs(activePath?: string): LumaLayoutTabItem[] {
-  const tabs = flattenMenuTabs(createAdminSidebarMenus())
+  const menuTabs = flattenMenuTabs(createAdminSidebarMenus())
+  const homeTab = resolveMenuTab(menuTabs, '/dashboard') ?? menuTabs[0]
+  const activeTab = activePath ? resolveMenuTab(menuTabs, activePath) : undefined
+  const tabs: LumaLayoutTabItem[] = []
+
+  if (homeTab) {
+    tabs.push({
+      ...homeTab,
+      closable: false,
+    })
+  }
+
+  if (activeTab && activeTab.path !== homeTab?.path) {
+    tabs.push({
+      ...activeTab,
+      closable: true,
+    })
+  }
 
   if (activePath === '/403' && !tabs.some(tab => tab.path === '/403')) {
     tabs.push({

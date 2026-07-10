@@ -37,8 +37,10 @@ function handlePreferencesUpdate(nextPreferences: LumaPreferences): void {
 <template>
   <ElDrawer
     v-model="visibleModel"
+    class="luma-admin-settings-drawer"
     title="主题与布局设置"
     size="420px"
+    append-to-body
     destroy-on-close
   >
     <LumaThemeSettingsPanel
@@ -48,3 +50,34 @@ function handlePreferencesUpdate(nextPreferences: LumaPreferences): void {
     />
   </ElDrawer>
 </template>
+
+<style lang="scss">
+.luma-admin-settings-drawer {
+  max-width: 100%;
+}
+
+.luma-admin-settings-drawer .el-drawer__header {
+  min-height: 64px;
+  margin: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  color: var(--el-text-color-primary);
+  font-weight: 700;
+}
+
+.luma-admin-settings-drawer .el-drawer__body {
+  padding: 24px;
+}
+
+@media (max-width: 640px) {
+  .luma-admin-settings-drawer {
+    width: min(420px, 100vw) !important;
+  }
+
+  .luma-admin-settings-drawer .el-drawer__header,
+  .luma-admin-settings-drawer .el-drawer__body {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+}
+</style>

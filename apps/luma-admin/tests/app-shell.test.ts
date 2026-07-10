@@ -20,6 +20,7 @@ const LayoutStub = defineComponent({
     tabs: Array,
     title: String,
     topMenus: Array,
+    topMenuMode: String,
   },
   template: `
     <section
@@ -27,6 +28,9 @@ const LayoutStub = defineComponent({
       :data-menu-count="menus?.length ?? 0"
       :data-sidebar-width="sidebarWidth"
       :data-title="title"
+      :data-tab-count="tabs?.length ?? 0"
+      :data-tab-paths="tabs?.map(tab => tab.path).join(',')"
+      :data-top-menu-mode="topMenuMode"
       :data-top-menu-count="topMenus?.length ?? 0"
     >
       <slot name="headerActions" />
@@ -102,6 +106,9 @@ describe('app shell', () => {
     expect(wrapper.find('.layout-stub').attributes('data-top-menu-count')).toBe('4')
     expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('13')
     expect(wrapper.find('.layout-stub').attributes('data-sidebar-width')).toBe('248px')
+    expect(wrapper.find('.layout-stub').attributes('data-tab-count')).toBe('2')
+    expect(wrapper.find('.layout-stub').attributes('data-tab-paths')).toBe('/dashboard,/examples/overview')
+    expect(wrapper.find('.layout-stub').attributes('data-top-menu-mode')).toBe('flat')
     expect(wrapper.find('[data-action="open-settings"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('超级管理员')
     expect(wrapper.find('.router-view-stub').attributes()).toMatchObject({
@@ -112,6 +119,12 @@ describe('app shell', () => {
       'data-transition': 'true',
       'data-transition-name': 'fade-side',
     })
+
+    await router.push('/system/user')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.layout-stub').attributes('data-tab-count')).toBe('3')
+    expect(wrapper.find('.layout-stub').attributes('data-tab-paths')).toBe('/dashboard,/examples/overview,/system/user')
   })
 
   it('设置抽屉更新布局偏好后会重新拆分菜单', async () => {
@@ -143,6 +156,7 @@ describe('app shell', () => {
 
     expect(wrapper.find('.layout-stub').attributes('data-top-menu-count')).toBe('4')
     expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('0')
+    expect(wrapper.find('.layout-stub').attributes('data-top-menu-mode')).toBe('tree')
   })
 
   it('登录页使用 public layout，不渲染后台壳', async () => {
@@ -165,5 +179,33 @@ describe('app shell', () => {
 
     expect(wrapper.find('.layout-stub').exists()).toBe(false)
     expect(wrapper.find('.router-view-stub').exists()).toBe(true)
+  })
+
+  it('应用挂载后登录会刷新菜单并显示后台壳', async () => {
+    const router = createAdminRouter(createMemoryHistory())
+    await router.push('/login')
+    await router.isReady()
+
+    const wrapper = mount(App, {
+      global: {
+        plugins: [router],
+        stubs: {
+          ...elementPlusStubs,
+          ElDrawer: DrawerStub,
+          LumaIcon: IconStub,
+          LumaLayout: LayoutStub,
+          LumaRouterView: RouterViewStub,
+        },
+      },
+    })
+
+    expect(wrapper.find('.layout-stub').exists()).toBe(false)
+
+    await login('admin')
+    await router.push('/system/user')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.layout-stub').attributes('data-top-menu-count')).toBe('4')
+    expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('5')
   })
 })

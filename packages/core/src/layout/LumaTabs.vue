@@ -64,9 +64,38 @@ defineExpose({
 
 <style scoped lang="scss">
 .luma-tabs {
+  flex: 0 0 auto;
   min-width: 0;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--el-border-color-light);
+  height: 40px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
   background: var(--el-bg-color);
+}
+
+.luma-tabs :deep(.el-tabs__header) {
+  height: 40px;
+  margin: 0;
+  border-bottom: 0;
+}
+
+.luma-tabs :deep(.el-tabs__nav) {
+  border: 0;
+}
+
+.luma-tabs :deep(.el-tabs__item) {
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  color: var(--el-text-color-regular);
+  font-size: 13px;
+}
+
+.luma-tabs :deep(.el-tabs__item.is-active) {
+  color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
+}
+
+.luma-tabs :deep(.el-tabs__content) {
+  display: none;
 }
 </style>

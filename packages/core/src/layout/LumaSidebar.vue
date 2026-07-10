@@ -63,10 +63,13 @@ defineExpose({
 
 <style scoped lang="scss">
 .luma-sidebar {
+  flex: 0 0 auto;
   min-height: 0;
-  border-right: 1px solid var(--el-border-color-light);
+  border-right: 1px solid var(--el-border-color-lighter);
   background: var(--el-bg-color);
-  transition: width 0.2s ease;
+  transition:
+    width 0.2s ease,
+    transform 0.2s ease;
 }
 
 .luma-sidebar__scrollbar {
@@ -75,6 +78,19 @@ defineExpose({
 
 .luma-sidebar__menu {
   min-height: 100%;
+  padding: 12px 8px;
   border-right: 0;
+}
+
+.luma-sidebar__menu :deep(.el-menu-item),
+.luma-sidebar__menu :deep(.el-sub-menu__title) {
+  height: 44px;
+  margin: 2px 0;
+  border-radius: var(--el-border-radius-base);
+}
+
+.luma-sidebar__menu :deep(.el-menu-item.is-active) {
+  font-weight: 600;
+  background: var(--el-color-primary-light-9);
 }
 </style>

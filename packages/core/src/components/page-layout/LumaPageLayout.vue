@@ -100,9 +100,9 @@ defineExpose({
   display: grid;
   gap: 12px;
   padding: 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #ffffff;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--el-border-radius-base);
+  background: var(--el-fill-color-blank);
 }
 
 .luma-page-layout__query-body {
@@ -121,25 +121,38 @@ defineExpose({
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #ffffff;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--el-border-radius-base);
+  background: var(--el-fill-color-blank);
 }
 
 .luma-page-layout__content {
-  border-radius: 8px;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--el-border-radius-base);
 }
 
 .luma-page-layout__pagination {
   display: flex;
   justify-content: flex-end;
   padding: 12px 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #ffffff;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--el-border-radius-base);
+  background: var(--el-fill-color-blank);
 }
 
 @media (max-width: 760px) {
+  .luma-page-layout {
+    gap: 12px;
+  }
+
+  .luma-page-layout__query,
+  .luma-page-layout__toolbar,
+  .luma-page-layout__pagination {
+    padding: 12px;
+  }
+
   .luma-page-layout__query-actions,
   .luma-page-layout__pagination {
     justify-content: flex-start;

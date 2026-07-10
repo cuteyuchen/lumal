@@ -1,6 +1,6 @@
 :root {
-  color: #1f2937;
-  background: #f5f7fb;
+  color: var(--el-text-color-primary);
+  background: var(--el-bg-color-page);
   font-family:
     Inter,
     "Segoe UI",
@@ -9,8 +9,23 @@
     sans-serif;
 }
 
+html,
 body {
   margin: 0;
+  min-width: 320px;
+  min-height: 100%;
+  background: var(--el-bg-color-page);
+}
+
+body,
+#app {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+body {
+  overflow: hidden;
 }
 
 button {
@@ -21,12 +36,13 @@ button {
   display: grid;
   gap: 24px;
   box-sizing: border-box;
-  padding: 32px;
+  padding: 0;
 }
 
 .luma-admin-home__crud {
-  max-width: 920px;
-  box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
+  width: 100%;
+  max-width: none;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
 }
 
 .luma-admin-home__pagination-text {
@@ -44,7 +60,7 @@ button {
 
 .luma-admin-page {
   box-sizing: border-box;
-  padding: 32px;
+  padding: 0;
 }
 
 .luma-admin-page__list {
@@ -79,20 +95,20 @@ button {
   gap: 8px;
   min-width: 0;
   padding: 16px;
-  border: 1px solid #dbe3ef;
+  border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--el-bg-color);
 }
 
 .luma-admin-example__metric span,
 .luma-admin-example__chart-card-label {
-  color: #64748b;
+  color: var(--el-text-color-secondary);
   font-size: 13px;
 }
 
 .luma-admin-example__metric strong,
 .luma-admin-example__chart-card-value {
-  color: #111827;
+  color: var(--el-text-color-primary);
   font-size: 24px;
   line-height: 1.2;
 }
@@ -107,10 +123,11 @@ button {
 .luma-admin-example__button {
   min-height: 32px;
   padding: 0 12px;
-  border: 1px solid #cbd5e1;
+  min-height: 40px;
+  border: 1px solid var(--el-border-color);
   border-radius: 8px;
-  color: #334155;
-  background: #ffffff;
+  color: var(--el-text-color-regular);
+  background: var(--el-bg-color);
   cursor: pointer;
 }
 
@@ -166,7 +183,7 @@ button {
 
 .luma-admin-example__chart-label,
 .luma-admin-example__chart-value {
-  color: #334155;
+  color: var(--el-text-color-regular);
   font-size: 13px;
 }
 
@@ -174,7 +191,7 @@ button {
   height: 10px;
   overflow: hidden;
   border-radius: 999px;
-  background: #e5e7eb;
+  background: var(--el-fill-color-dark);
 }
 
 .luma-admin-example__chart-bar {
@@ -203,5 +220,16 @@ button {
 
   .luma-admin-example__chart-row {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

@@ -243,7 +243,8 @@ const transitionEnable = computed<boolean>({
 
   &__mode {
     flex: 1;
-    padding: 6px 0;
+    min-height: 40px;
+    padding: 8px 12px;
     font-size: 13px;
     color: var(--el-text-color-regular);
     cursor: pointer;
@@ -266,8 +267,8 @@ const transitionEnable = computed<boolean>({
   }
 
   &__color {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
     padding: 0;
     cursor: pointer;
     border: 2px solid transparent;
@@ -282,8 +283,8 @@ const transitionEnable = computed<boolean>({
 
   &__color-custom {
     display: inline-flex;
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
     overflow: hidden;
     cursor: pointer;
     border: 2px dashed var(--el-border-color);

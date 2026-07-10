@@ -21,9 +21,23 @@ defineExpose({
 
 <style scoped lang="scss">
 .luma-content {
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
-  padding: 16px;
+  padding: 20px;
+  overflow: auto;
   background: var(--el-bg-color-page);
+}
+
+@media (max-width: 1024px) {
+  .luma-content {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .luma-content {
+    padding: 12px;
+  }
 }
 </style>

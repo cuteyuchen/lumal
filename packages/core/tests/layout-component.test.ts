@@ -84,7 +84,7 @@ describe('luma layout', () => {
       },
       props: {
         collapsed: false,
-        menus: [],
+        menus,
       },
     })
 
@@ -107,10 +107,28 @@ describe('luma layout', () => {
 
     expect(wrapper.findComponent(LumaTopNav).exists()).toBe(true)
     expect(wrapper.findComponent(LumaTopNav).props('activePath')).toBe('/system')
+    expect(wrapper.find('.luma-header__navigation').exists()).toBe(true)
 
     await wrapper.find('[data-menu-path="/system/user"]').trigger('click')
 
     expect(wrapper.emitted('topMenuSelect')?.[0]).toEqual(['/system/user'])
+  })
+
+  it('混合导航会把一级菜单渲染为可直接切换的平级入口', () => {
+    const wrapper = mount(LumaLayout, {
+      global: {
+        stubs: elementPlusStubs,
+      },
+      props: {
+        menus: menus[1]!.children,
+        topMenuMode: 'flat',
+        topMenus: menus,
+      },
+    })
+
+    expect(wrapper.findComponent(LumaTopNav).props('mode')).toBe('flat')
+    expect(wrapper.find('[data-menu-path="/system"]').exists()).toBe(true)
+    expect(wrapper.findComponent(LumaSidebar).props('menus')).toEqual(menus[1]!.children)
   })
 })
 
