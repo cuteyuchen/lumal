@@ -248,15 +248,69 @@ describe('luma schema table', () => {
     expect(columns.map(item => item.props('type'))).toEqual(['selection', 'index', undefined, undefined, undefined])
     expect(columns[2]?.props('minWidth')).toBe(160)
     expect(wrapper.find('.row-action').exists()).toBe(true)
+    expect(wrapper.find('.luma-schema-table__mobile-actions summary').text()).toBe('更多')
 
     table.vm.$emit('selection-change', [rows[0]])
     await nextTick()
     expect(wrapper.emitted('selectionChange')?.at(-1)?.[0]).toEqual([rows[0]])
+    expect(wrapper.emitted('selectionChange')?.at(-1)?.[1]).toEqual(['row-1'])
 
     await wrapper.find('[data-action="next"]').trigger('click')
     expect(wrapper.emitted('pageChange')?.at(-1)?.[0]).toEqual({
       page: 2,
       pageSize: 10,
     })
+  })
+
+  it('支持字段插槽、行级隐藏、列设置和树表属性', async () => {
+    const rows = [{ children: [], id: 'row-1', name: 'Luma', secret: true, status: 'enabled' }]
+    const TableColumnStub = defineComponent({
+      name: 'ElTableColumn',
+      setup(_props, { slots }) {
+        return () => h('div', { class: 'el-table-column' }, slots.default?.({
+          $index: 0,
+          row: rows[0],
+        }))
+      },
+    })
+    const wrapper = mount(LumaSchemaTable, {
+      global: {
+        stubs: {
+          ...elementPlusStubs,
+          ElTableColumn: TableColumnStub,
+        },
+      },
+      props: {
+        columns: [
+          {
+            field: 'name',
+            hidden: ({ row }) => Boolean(row?.secret),
+            label: '名称',
+          },
+          {
+            field: 'status',
+            label: '状态',
+          },
+        ],
+        defaultExpandAll: true,
+        rowKey: 'id',
+        rows,
+        showColumnSettings: true,
+        treeProps: { children: 'children' },
+      },
+      slots: {
+        'table-name': () => h('strong', { class: 'hidden-row-cell' }, '不应显示'),
+        'table-status': ({ value }) => h('strong', { class: 'custom-table-cell' }, String(value)),
+      },
+    })
+
+    expect(wrapper.find('.hidden-row-cell').exists()).toBe(false)
+    expect(wrapper.find('.custom-table-cell').text()).toBe('enabled')
+    expect(wrapper.find('.luma-schema-table__column-settings').exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'ElTable' }).props('defaultExpandAll')).toBe(true)
+    expect(wrapper.findComponent({ name: 'ElTable' }).props('treeProps')).toEqual({ children: 'children' })
+
+    await wrapper.findAll('.luma-schema-table__column-options input')[1]?.setValue(false)
+    expect(wrapper.find('.custom-table-cell').exists()).toBe(false)
   })
 })

@@ -6,13 +6,17 @@ export {
 export type {
   NormalizedSchemaFormItem,
   SchemaFormAuthority,
+  SchemaFormComponentProps,
+  SchemaFormComponentPropsMap,
   SchemaFormComponentType,
   SchemaFormContext,
+  SchemaFormFieldKey,
   SchemaFormItem,
   SchemaFormMode,
   SchemaFormModel,
   SchemaFormOption,
   SchemaFormOptionValue,
+  SchemaFormRecord,
   SchemaFormRule,
   SchemaFormStateResolver,
 } from './types'

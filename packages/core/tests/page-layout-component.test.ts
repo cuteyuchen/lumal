@@ -46,4 +46,18 @@ describe('luma page layout', () => {
     expect(wrapper.emitted('search')).toHaveLength(1)
     expect(wrapper.emitted('reset')).toHaveLength(1)
   })
+
+  it('支持填充高度、内容滚动和无表面布局', () => {
+    const wrapper = mount(LumaPageLayout, {
+      props: {
+        contentScrollable: false,
+        fill: true,
+        surface: false,
+      },
+    })
+
+    expect(wrapper.classes()).toContain('is-fill')
+    expect(wrapper.classes()).not.toContain('is-content-scrollable')
+    expect(wrapper.classes()).not.toContain('is-surface')
+  })
 })

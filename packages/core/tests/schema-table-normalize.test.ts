@@ -66,7 +66,7 @@ describe('schema table normalize', () => {
       componentProps: {
         minWidth: 160,
       },
-      renderable: false,
+      renderable: true,
     })
     expect(columns[1]?.renderable).toBe(false)
   })

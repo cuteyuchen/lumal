@@ -30,4 +30,17 @@ describe('luma page', () => {
 
     expect(wrapper.find('.luma-page__loading').exists()).toBe(true)
   })
+
+  it('支持填充布局、无外层表面和内容类名', () => {
+    const wrapper = mount(LumaPage, {
+      props: {
+        contentClass: 'custom-content',
+        fill: true,
+        noPadding: true,
+      },
+    })
+
+    expect(wrapper.classes()).toEqual(expect.arrayContaining(['is-fill', 'is-no-padding']))
+    expect(wrapper.find('.luma-page__body').classes()).toContain('custom-content')
+  })
 })

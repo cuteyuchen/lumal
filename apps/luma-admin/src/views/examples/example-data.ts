@@ -44,9 +44,11 @@ export const exampleFormSchemas: SchemaFormItem[] = [
   },
   {
     component: 'input',
+    editDisabled: true,
     field: 'name',
     label: '名称',
     placeholder: '请输入项目名称',
+    prepend: '项目',
     required: true,
     rules: [{ required: true, message: '请输入名称', trigger: 'blur' }],
   },
@@ -69,7 +71,9 @@ export const exampleFormSchemas: SchemaFormItem[] = [
       step: 5,
     },
     field: 'score',
+    formatter: value => `${String(value ?? 0)} 分`,
     label: '评分',
+    suffix: '分',
   },
   {
     component: 'switch',

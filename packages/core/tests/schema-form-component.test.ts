@@ -24,6 +24,7 @@ describe('luma schema form', () => {
           },
           {
             field: 'name',
+            formatter: value => `格式化：${String(value)}`,
             label: '名称',
             component: 'input',
           },
@@ -225,6 +226,7 @@ describe('luma schema form', () => {
         schemas: [
           {
             field: 'name',
+            formatter: value => `格式化：${String(value)}`,
             label: '名称',
           },
           {
@@ -242,12 +244,46 @@ describe('luma schema form', () => {
     })
 
     expect(wrapper.find('.luma-schema-form__actions').exists()).toBe(false)
-    expect(wrapper.find('input[name="name"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('input[name="name"]').exists()).toBe(false)
+    expect(wrapper.find('.luma-schema-form__readonly-value').text()).toBe('格式化：Luma')
     expect(wrapper.find('.field-prefix').text()).toBe('前缀')
     expect(wrapper.find('.field-suffix').text()).toBe('后缀')
     expect(wrapper.find('.custom-field').text()).toBe('enabled')
 
     await wrapper.find('form').trigger('submit')
     expect(wrapper.emitted('submit')).toBeUndefined()
+  })
+
+  it('编辑模式支持 editDisabled、复合输入文本和 Ref options', async () => {
+    const { ref } = await import('vue')
+    const options = ref([{ label: '启用', value: 'enabled' }])
+    const wrapper = mount(LumaSchemaForm, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        mode: 'edit',
+        modelValue: { code: 'LUMA', status: 'enabled' },
+        schemas: [
+          {
+            append: '.com',
+            editDisabled: true,
+            field: 'code',
+            label: '编码',
+            prepend: 'https://',
+          },
+          {
+            component: 'select',
+            field: 'status',
+            label: '状态',
+            options,
+          },
+        ],
+      },
+    })
+
+    expect(wrapper.find('input[name="code"]').attributes('disabled')).toBeDefined()
+    const codeInput = wrapper.findAllComponents({ name: 'ElInput' })[0]
+    expect(codeInput?.vm.$slots.prepend?.()[0]?.children).toBe('https://')
+    expect(codeInput?.vm.$slots.append?.()[0]?.children).toBe('.com')
+    expect(wrapper.findAllComponents({ name: 'ElOption' })).toHaveLength(1)
   })
 })

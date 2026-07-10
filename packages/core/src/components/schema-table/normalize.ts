@@ -2,15 +2,20 @@ import type {
   NormalizedSchemaTableColumn,
   SchemaTableColumn,
   SchemaTableContext,
+  SchemaTableRecord,
+  SchemaTableRow,
   SchemaTableStateResolver,
 } from './types'
 
-export interface NormalizeSchemaTableColumnsOptions {
-  canAccess?: (authority: NonNullable<SchemaTableColumn['authority']>) => boolean
-  rows?: SchemaTableContext['rows']
+export interface NormalizeSchemaTableColumnsOptions<T extends SchemaTableRecord = SchemaTableRow> {
+  canAccess?: (authority: NonNullable<SchemaTableColumn<T>['authority']>) => boolean
+  rows?: SchemaTableContext<T>['rows']
 }
 
-function resolveState(value: SchemaTableStateResolver | undefined, context: SchemaTableContext): boolean {
+function resolveState<T extends SchemaTableRecord>(
+  value: SchemaTableStateResolver<T> | undefined,
+  context: SchemaTableContext<T>,
+): boolean {
   if (typeof value === 'function') {
     return Boolean(value(context))
   }
@@ -18,9 +23,9 @@ function resolveState(value: SchemaTableStateResolver | undefined, context: Sche
   return Boolean(value)
 }
 
-function canRenderByAuthority(
-  column: SchemaTableColumn,
-  options: NormalizeSchemaTableColumnsOptions,
+function canRenderByAuthority<T extends SchemaTableRecord>(
+  column: SchemaTableColumn<T>,
+  options: NormalizeSchemaTableColumnsOptions<T>,
 ): boolean {
   if (!column.authority) {
     return true
@@ -30,18 +35,18 @@ function canRenderByAuthority(
 }
 
 /***********************列归一化*********************/
-export function normalizeSchemaTableColumns(
-  columns: SchemaTableColumn[] = [],
-  options: NormalizeSchemaTableColumnsOptions = {},
-): NormalizedSchemaTableColumn[] {
-  const context: SchemaTableContext = {
+export function normalizeSchemaTableColumns<T extends SchemaTableRecord = SchemaTableRow>(
+  columns: SchemaTableColumn<T>[] = [],
+  options: NormalizeSchemaTableColumnsOptions<T> = {},
+): NormalizedSchemaTableColumn<T>[] {
+  const context: SchemaTableContext<T> = {
     rows: options.rows ?? [],
   }
 
   return columns
     .map(column => ({
       ...column,
-      field: column.field.trim(),
+      field: column.field.trim() as SchemaTableColumn<T>['field'],
     }))
     .filter(column => column.field)
     .map(column => ({
@@ -49,6 +54,7 @@ export function normalizeSchemaTableColumns(
       align: column.align ?? 'left',
       componentProps: column.componentProps ?? {},
       emptyText: column.emptyText ?? '-',
-      renderable: !resolveState(column.hidden, context) && canRenderByAuthority(column, options),
-    }))
+      renderable: (typeof column.hidden === 'function' || !resolveState(column.hidden, context))
+        && canRenderByAuthority(column, options),
+    } as NormalizedSchemaTableColumn<T>))
 }

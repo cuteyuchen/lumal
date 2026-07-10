@@ -17,7 +17,11 @@ export type {
   SchemaTableClassName,
   SchemaTableColumn,
   SchemaTableContext,
+  SchemaTableFieldKey,
   SchemaTablePaginationChangePayload,
+  SchemaTableRecord,
   SchemaTableRow,
+  SchemaTableSelectionPayload,
   SchemaTableStateResolver,
+  SchemaTableTreeProps,
 } from './types'

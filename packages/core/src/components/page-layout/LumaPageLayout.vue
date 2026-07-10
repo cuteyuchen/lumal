@@ -5,9 +5,12 @@ import { computed, useSlots, useTemplateRef } from 'vue'
 
 /***********************属性定义*********************/
 const props = withDefaults(defineProps<PageLayoutProps>(), {
+  contentScrollable: true,
+  fill: false,
   queryCollapsed: false,
   resetText: '重置',
   searchText: '查询',
+  surface: true,
 })
 
 const emit = defineEmits<{
@@ -41,7 +44,15 @@ defineExpose({
 </script>
 
 <template>
-  <section ref="pageLayoutRef" class="luma-page-layout">
+  <section
+    ref="pageLayoutRef"
+    class="luma-page-layout"
+    :class="{
+      'is-content-scrollable': contentScrollable,
+      'is-fill': fill,
+      'is-surface': surface,
+    }"
+  >
     <div v-if="hasQuery" class="luma-page-layout__query">
       <div v-show="!props.queryCollapsed" class="luma-page-layout__query-body">
         <slot name="query">
@@ -89,6 +100,12 @@ defineExpose({
   min-width: 0;
 }
 
+.luma-page-layout.is-fill {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+}
+
 .luma-page-layout__query,
 .luma-page-layout__toolbar,
 .luma-page-layout__content,
@@ -96,7 +113,7 @@ defineExpose({
   min-width: 0;
 }
 
-.luma-page-layout__query {
+.luma-page-layout.is-surface .luma-page-layout__query {
   display: grid;
   gap: 12px;
   padding: 16px;
@@ -115,7 +132,7 @@ defineExpose({
   justify-content: flex-end;
 }
 
-.luma-page-layout__toolbar {
+.luma-page-layout.is-surface .luma-page-layout__toolbar {
   display: flex;
   gap: 8px;
   align-items: center;
@@ -128,15 +145,27 @@ defineExpose({
 
 .luma-page-layout__content {
   min-width: 0;
+  min-height: 0;
   overflow: hidden;
+}
+
+.luma-page-layout.is-content-scrollable .luma-page-layout__content {
+  overflow: auto;
+}
+
+.luma-page-layout.is-surface .luma-page-layout__content {
   border: 1px solid var(--el-border-color-lighter);
   border-radius: var(--el-border-radius-base);
+  background: var(--el-fill-color-blank);
 }
 
 .luma-page-layout__pagination {
   display: flex;
   justify-content: flex-end;
   padding: 12px 16px;
+}
+
+.luma-page-layout.is-surface .luma-page-layout__pagination {
   border: 1px solid var(--el-border-color-lighter);
   border-radius: var(--el-border-radius-base);
   background: var(--el-fill-color-blank);
@@ -156,6 +185,11 @@ defineExpose({
   .luma-page-layout__query-actions,
   .luma-page-layout__pagination {
     justify-content: flex-start;
+  }
+
+  .luma-page-layout__query-actions :deep(.el-button) {
+    min-height: 44px;
+    padding-inline: 16px;
   }
 }
 </style>

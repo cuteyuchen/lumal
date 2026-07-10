@@ -1,6 +1,6 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends SchemaFormRecord = Record<string, unknown>">
 import type { FormInstance } from 'element-plus'
-import type { NormalizedSchemaFormItem, SchemaFormAuthority, SchemaFormItem, SchemaFormMode, SchemaFormModel } from './types'
+import type { NormalizedSchemaFormItem, SchemaFormAuthority, SchemaFormItem, SchemaFormMode, SchemaFormModel, SchemaFormRecord } from './types'
 import {
   ElButton,
   ElCheckbox,
@@ -25,6 +25,7 @@ import { useDictionaryMap } from '../../dictionary'
 import { normalizeSchemaFormItems, resolveSchemaFormInitialModel } from './normalize'
 
 type SchemaDatePickerType = 'date' | 'daterange' | 'datetime'
+type SchemaDatePickerIdentifier = string | [string, string]
 type SchemaDatePickerValue = Date | Date[] | number | number[] | string | string[] | undefined
 type SchemaTreeSelectValue
   = | Array<boolean | number | Record<string, unknown> | string>
@@ -42,7 +43,7 @@ const props = withDefaults(defineProps<{
   labelPosition?: 'left' | 'right' | 'top'
   labelWidth?: number | string
   mode?: SchemaFormMode
-  schemas: SchemaFormItem[]
+  schemas: SchemaFormItem<T>[]
   submitText?: string
   showActions?: boolean
 }>(), {
@@ -58,7 +59,7 @@ const emit = defineEmits<{
   submit: [model: SchemaFormModel]
 }>()
 
-const model = defineModel<SchemaFormModel>({
+const model = defineModel<SchemaFormModel<T>>({
   default: () => ({}),
 })
 
@@ -84,7 +85,9 @@ const normalizedSchemas = computed(() => normalizeSchemaFormItems(props.schemas,
 
 const renderableSchemas = computed(() => normalizedSchemas.value.filter(schema => schema.renderable))
 
-const normalizedModel = computed(() => resolveSchemaFormInitialModel(normalizedSchemas.value, model.value))
+const normalizedModel = computed<SchemaFormModel<T>>(() =>
+  resolveSchemaFormInitialModel(normalizedSchemas.value, model.value),
+)
 
 const { dictionaryMap } = useDictionaryMap(() =>
   normalizedSchemas.value.map(schema => schema.dictionary ?? schema.dictType),
@@ -155,7 +158,7 @@ function getDatePickerValue(field: string): SchemaDatePickerValue {
   return undefined
 }
 
-function getDatePickerType(schema: NormalizedSchemaFormItem): SchemaDatePickerType {
+function getDatePickerType(schema: NormalizedSchemaFormItem<T>): SchemaDatePickerType {
   if (schema.component === 'datetime') {
     return 'datetime'
   }
@@ -181,15 +184,31 @@ function getTreeSelectValue(field: string): SchemaTreeSelectValue {
   return undefined
 }
 
-function getInputType(schema: NormalizedSchemaFormItem): string {
-  return String(schema.componentProps.type ?? 'text')
+function getInputType(schema: NormalizedSchemaFormItem<T>): string {
+  return String((schema.componentProps as Record<string, unknown>).type ?? 'text')
 }
 
-function isFieldDisabled(schema: NormalizedSchemaFormItem): boolean {
-  return props.disabled || schema.disabled || schema.readonly || Boolean(schema.componentProps.disabled)
+function getDatePickerId(schema: NormalizedSchemaFormItem<T>): SchemaDatePickerIdentifier {
+  return schema.component === 'daterange'
+    ? [`${schema.id}-start`, `${schema.id}-end`]
+    : schema.id
 }
 
-function resolveFieldSpan(schema: NormalizedSchemaFormItem): number {
+function getDatePickerName(schema: NormalizedSchemaFormItem<T>): SchemaDatePickerIdentifier {
+  return schema.component === 'daterange'
+    ? [`${schema.field}-start`, `${schema.field}-end`]
+    : schema.field
+}
+
+function isFieldDisabled(schema: NormalizedSchemaFormItem<T>): boolean {
+  return props.disabled
+    || schema.disabled
+    || schema.readonly
+    || (activeMode.value === 'edit' && Boolean(schema.editDisabled))
+    || Boolean(schema.componentProps.disabled)
+}
+
+function resolveFieldSpan(schema: NormalizedSchemaFormItem<T>): number {
   if (typeof schema.span === 'number') {
     return Math.min(24, Math.max(1, schema.span))
   }
@@ -197,7 +216,7 @@ function resolveFieldSpan(schema: NormalizedSchemaFormItem): number {
   return Math.floor(24 / Math.max(1, props.columns))
 }
 
-function resolveSchemaOptions(schema: NormalizedSchemaFormItem) {
+function resolveSchemaOptions(schema: NormalizedSchemaFormItem<T>) {
   if (schema.options.length > 0) {
     return schema.options
   }
@@ -207,12 +226,30 @@ function resolveSchemaOptions(schema: NormalizedSchemaFormItem) {
   return dictionary ? dictionaryMap.value[dictionary] ?? [] : []
 }
 
+function resolveComponentProps(schema: NormalizedSchemaFormItem<T>): Record<string, unknown> {
+  return schema.componentProps as Record<string, unknown>
+}
+
+function resolveViewValue(schema: NormalizedSchemaFormItem<T>): string {
+  const value = normalizedModel.value[schema.field]
+
+  if (schema.formatter) {
+    return schema.formatter(value, normalizedModel.value)
+  }
+
+  const labels = (Array.isArray(value) ? value : [value])
+    .map(item => resolveSchemaOptions(schema).find(option => Object.is(option.value, item))?.label ?? item)
+    .filter(item => item !== null && item !== undefined && item !== '')
+
+  return labels.length > 0 ? labels.map(String).join(', ') : '-'
+}
+
 /***********************事件处理*********************/
 function updateFieldValue(field: string, value: unknown): void {
   model.value = {
     ...normalizedModel.value,
     [field]: value,
-  }
+  } as SchemaFormModel<T>
 }
 
 function handleSubmit(): void {
@@ -223,15 +260,15 @@ function handleSubmit(): void {
   emit('submit', normalizedModel.value)
 }
 
-function resolveFieldSlotName(schema: NormalizedSchemaFormItem): string {
+function resolveFieldSlotName(schema: NormalizedSchemaFormItem<T>): string {
   return `field-${schema.field}`
 }
 
-function resolvePrefixSlotName(schema: NormalizedSchemaFormItem): string {
+function resolvePrefixSlotName(schema: NormalizedSchemaFormItem<T>): string {
   return `prefix-${schema.field}`
 }
 
-function resolveSuffixSlotName(schema: NormalizedSchemaFormItem): string {
+function resolveSuffixSlotName(schema: NormalizedSchemaFormItem<T>): string {
   return `suffix-${schema.field}`
 }
 
@@ -239,7 +276,7 @@ function setValues(value: SchemaFormModel): void {
   model.value = {
     ...normalizedModel.value,
     ...value,
-  }
+  } as SchemaFormModel<T>
 }
 
 function setMode(mode: SchemaFormMode): void {
@@ -282,6 +319,7 @@ defineExpose({
         v-for="schema in renderableSchemas"
         :key="schema.field"
         :span="resolveFieldSpan(schema)"
+        :class="{ 'is-full-span': resolveFieldSpan(schema) === 24 }"
       >
         <ElFormItem
           class="luma-schema-form__item"
@@ -304,9 +342,13 @@ defineExpose({
             :schema="schema"
             :value="normalizedModel[schema.field]"
           >
+            <span v-if="activeMode === 'view'" class="luma-schema-form__readonly-value">
+              {{ resolveViewValue(schema) }}
+            </span>
+
             <ElInput
-              v-if="schema.component === 'textarea'"
-              v-bind="schema.componentProps"
+              v-else-if="schema.component === 'textarea'"
+              v-bind="resolveComponentProps(schema)"
               :id="schema.id"
               :model-value="getInputValue(schema.field)"
               :name="schema.field"
@@ -319,7 +361,7 @@ defineExpose({
 
             <ElSelect
               v-else-if="schema.component === 'select'"
-              v-bind="schema.componentProps"
+              v-bind="resolveComponentProps(schema)"
               :id="schema.id"
               :model-value="getSelectValue(schema.field)"
               :name="schema.field"
@@ -339,18 +381,25 @@ defineExpose({
 
             <ElInputNumber
               v-else-if="schema.component === 'number'"
-              v-bind="schema.componentProps"
+              v-bind="resolveComponentProps(schema)"
               :id="schema.id"
               :model-value="getNumberValue(schema.field)"
               :name="schema.field"
               :placeholder="schema.placeholder"
               :disabled="isFieldDisabled(schema)"
               @update:model-value="updateFieldValue(schema.field, $event)"
-            />
+            >
+              <template v-if="schema.prefix" #prefix>
+                {{ schema.prefix }}
+              </template>
+              <template v-if="schema.suffix" #suffix>
+                {{ schema.suffix }}
+              </template>
+            </ElInputNumber>
 
             <ElSwitch
               v-else-if="schema.component === 'switch'"
-              v-bind="schema.componentProps"
+              v-bind="resolveComponentProps(schema)"
               :model-value="getBooleanValue(schema.field)"
               :name="schema.field"
               :disabled="isFieldDisabled(schema)"
@@ -359,10 +408,10 @@ defineExpose({
 
             <ElDatePicker
               v-else-if="schema.component === 'date' || schema.component === 'datetime' || schema.component === 'daterange'"
-              v-bind="schema.componentProps"
-              :id="schema.id"
+              v-bind="resolveComponentProps(schema)"
+              :id="getDatePickerId(schema)"
               :model-value="getDatePickerValue(schema.field)"
-              :name="schema.field"
+              :name="getDatePickerName(schema)"
               :placeholder="schema.placeholder"
               :disabled="isFieldDisabled(schema)"
               :type="getDatePickerType(schema)"
@@ -371,7 +420,7 @@ defineExpose({
 
             <ElRadioGroup
               v-else-if="schema.component === 'radio'"
-              v-bind="schema.componentProps"
+              v-bind="resolveComponentProps(schema)"
               :model-value="getSelectValue(schema.field)"
               :name="schema.field"
               :disabled="isFieldDisabled(schema)"
@@ -389,7 +438,7 @@ defineExpose({
 
             <ElCheckboxGroup
               v-else-if="schema.component === 'checkbox'"
-              v-bind="schema.componentProps"
+              v-bind="resolveComponentProps(schema)"
               :model-value="getCheckboxValue(schema.field)"
               :name="schema.field"
               :disabled="isFieldDisabled(schema)"
@@ -407,7 +456,7 @@ defineExpose({
 
             <ElTreeSelect
               v-else-if="schema.component === 'tree-select'"
-              v-bind="schema.componentProps"
+              v-bind="resolveComponentProps(schema)"
               :id="schema.id"
               :model-value="getTreeSelectValue(schema.field)"
               :name="schema.field"
@@ -418,7 +467,7 @@ defineExpose({
 
             <ElUpload
               v-else-if="schema.component === 'upload'"
-              v-bind="schema.componentProps"
+              v-bind="resolveComponentProps(schema)"
               :disabled="isFieldDisabled(schema)"
             >
               <ElButton type="primary">
@@ -428,7 +477,7 @@ defineExpose({
 
             <ElInput
               v-else
-              v-bind="schema.componentProps"
+              v-bind="resolveComponentProps(schema)"
               :id="schema.id"
               :model-value="getInputValue(schema.field)"
               :name="schema.field"
@@ -437,7 +486,20 @@ defineExpose({
               :disabled="isFieldDisabled(schema)"
               :required="schema.required"
               @update:model-value="updateFieldValue(schema.field, $event)"
-            />
+            >
+              <template v-if="schema.prepend" #prepend>
+                {{ schema.prepend }}
+              </template>
+              <template v-if="schema.append" #append>
+                {{ schema.append }}
+              </template>
+              <template v-if="schema.prefix" #prefix>
+                {{ schema.prefix }}
+              </template>
+              <template v-if="schema.suffix" #suffix>
+                {{ schema.suffix }}
+              </template>
+            </ElInput>
           </slot>
 
           <slot
@@ -472,8 +534,45 @@ defineExpose({
   margin-bottom: 0;
 }
 
+.luma-schema-form__readonly-value {
+  min-height: 32px;
+  color: var(--el-text-color-regular);
+  line-height: 32px;
+  overflow-wrap: anywhere;
+}
+
 .luma-schema-form__actions {
   display: flex;
   justify-content: flex-end;
+}
+
+@media (max-width: 1024px) {
+  .luma-schema-form__row :deep(.el-col:not(.is-full-span)) {
+    max-width: 50%;
+    flex: 0 0 50%;
+  }
+}
+
+@media (max-width: 768px) {
+  .luma-schema-form__row :deep(.el-col.el-col) {
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+
+  .luma-schema-form :deep(.el-input__wrapper),
+  .luma-schema-form :deep(.el-select__wrapper),
+  .luma-schema-form :deep(.el-input-number),
+  .luma-schema-form :deep(.el-date-editor) {
+    min-height: 44px;
+  }
+
+  .luma-schema-form__actions {
+    justify-content: stretch;
+  }
+
+  .luma-schema-form__actions :deep(.el-button) {
+    min-height: 44px;
+    flex: 1 1 auto;
+  }
 }
 </style>

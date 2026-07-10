@@ -5,11 +5,17 @@ import { computed, useSlots, useTemplateRef } from 'vue'
 const props = withDefaults(defineProps<{
   title?: string
   description?: string
+  contentClass?: string
+  fill?: boolean
   loading?: boolean
   loadingText?: string
+  noPadding?: boolean
 }>(), {
+  contentClass: '',
+  fill: false,
   loading: false,
   loadingText: '加载中',
+  noPadding: false,
 })
 
 /***********************模板引用*********************/
@@ -27,7 +33,11 @@ defineExpose({
 </script>
 
 <template>
-  <section ref="pageRef" class="luma-page">
+  <section
+    ref="pageRef"
+    class="luma-page"
+    :class="{ 'is-fill': fill, 'is-no-padding': noPadding }"
+  >
     <header v-if="hasHeader" class="luma-page__header">
       <div class="luma-page__heading">
         <h2 v-if="title" class="luma-page__title">
@@ -43,7 +53,7 @@ defineExpose({
       </div>
     </header>
 
-    <div class="luma-page__body">
+    <div class="luma-page__body" :class="contentClass">
       <slot />
     </div>
 
@@ -64,6 +74,19 @@ defineExpose({
   border-radius: calc(10px * var(--luma-radius-scale, 1));
   background: var(--el-bg-color);
   box-shadow: var(--luma-shadow-light);
+}
+
+.luma-page.is-fill {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.luma-page.is-no-padding {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .luma-page__header {
@@ -101,6 +124,11 @@ defineExpose({
 
 .luma-page__body {
   min-width: 0;
+  min-height: 0;
+}
+
+.luma-page.is-fill .luma-page__body {
+  overflow: auto;
 }
 
 .luma-page__loading {

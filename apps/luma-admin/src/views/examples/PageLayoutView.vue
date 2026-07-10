@@ -41,7 +41,7 @@ function handlePageChange(payload: PaginationChangePayload): void {
     <LumaPage title="Page Layout" :description="message">
       <LumaPageLayout @search="handleSearch" @reset="handleReset">
         <template #query>
-          <LumaSchemaForm v-model="queryModel" :schemas="exampleQuerySchemas" />
+          <LumaSchemaForm v-model="queryModel" :columns="3" :schemas="exampleQuerySchemas" />
         </template>
 
         <template #toolbar>
@@ -55,7 +55,12 @@ function handlePageChange(payload: PaginationChangePayload): void {
           </div>
         </template>
 
-        <LumaSchemaTable :columns="exampleTableColumns" :rows="exampleTableRows" row-key="id" />
+        <LumaSchemaTable
+          :columns="exampleTableColumns"
+          :rows="exampleTableRows"
+          row-key="id"
+          show-column-settings
+        />
 
         <template #pagination>
           <LumaPagination
