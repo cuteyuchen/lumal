@@ -7,7 +7,7 @@ import type {
 import {
   applyThemePreferences,
   createDefaultPreferences,
-  mergePreferences,
+  createPreferencesStore,
 } from '@luma/core/theme'
 import { readonly, shallowRef } from 'vue'
 
@@ -25,6 +25,37 @@ const initialAdminSystemConfig: AdminSystemConfig = {
   layout: 'mixed-nav',
   tabbarEnable: true,
   transitionEnable: true,
+}
+
+const ADMIN_PREFERENCES_STORAGE_KEY = 'luma-admin:preferences'
+
+function createMemoryStorage(): Storage {
+  const values = new Map<string, string>()
+
+  return {
+    get length() {
+      return values.size
+    },
+    clear() {
+      values.clear()
+    },
+    getItem(key) {
+      return values.get(key) ?? null
+    },
+    key(index) {
+      return Array.from(values.keys())[index] ?? null
+    },
+    removeItem(key) {
+      values.delete(key)
+    },
+    setItem(key, value) {
+      values.set(key, value)
+    },
+  }
+}
+
+function resolveAdminPreferencesStorage(): Storage {
+  return typeof localStorage === 'undefined' ? createMemoryStorage() : localStorage
 }
 
 /***********************默认偏好*********************/
@@ -63,19 +94,33 @@ export function createAdminPreferences(): LumaPreferences {
 }
 
 /***********************应用级偏好状态*********************/
-const adminPreferencesState = shallowRef(createAdminPreferences())
+const adminPreferencesStore = createPreferencesStore({
+  defaults: adminPreferenceDefaults,
+  runtime: resolveAdminThemeEnvironment(),
+  storage: resolveAdminPreferencesStorage(),
+  storageKey: ADMIN_PREFERENCES_STORAGE_KEY,
+})
 const adminAppNameState = shallowRef(initialAdminSystemConfig.appName)
 
-export const adminPreferences = adminPreferencesState
+export const adminPreferences = adminPreferencesStore.state
 export const adminAppName = readonly(adminAppNameState)
+export const adminResolvedThemeMode = adminPreferencesStore.resolvedThemeMode
+
+export function patchAdminPreferences(next: LumaPreferencesDefaults): void {
+  adminPreferencesStore.patch(next)
+}
+
+export function exportAdminPreferences(): LumaPreferences {
+  return adminPreferencesStore.exportCurrent()
+}
 
 export function getAdminSystemConfig(): AdminSystemConfig {
   return {
     appName: adminAppNameState.value,
-    colorPrimary: adminPreferencesState.value.theme.colorPrimary,
-    layout: adminPreferencesState.value.app.layout,
-    tabbarEnable: adminPreferencesState.value.tabbar.enable,
-    transitionEnable: adminPreferencesState.value.transition.enable,
+    colorPrimary: adminPreferences.value.theme.colorPrimary,
+    layout: adminPreferences.value.app.layout,
+    tabbarEnable: adminPreferences.value.tabbar.enable,
+    transitionEnable: adminPreferences.value.transition.enable,
   }
 }
 
@@ -98,7 +143,7 @@ export function updateAdminSystemConfig(config: AdminSystemConfig): AdminSystemC
   }
 
   adminAppNameState.value = appName
-  adminPreferencesState.value = mergePreferences(adminPreferencesState.value, {
+  adminPreferencesStore.patch({
     app: { layout: config.layout },
     tabbar: { enable: config.tabbarEnable },
     theme: { colorPrimary },
@@ -123,7 +168,7 @@ export function resetAdminSystemConfig(): void {
     enable: initialAdminSystemConfig.transitionEnable,
   }
   adminAppNameState.value = initialAdminSystemConfig.appName
-  adminPreferencesState.value = createAdminPreferences()
+  adminPreferencesStore.reset()
 }
 
 /***********************主题运行环境*********************/

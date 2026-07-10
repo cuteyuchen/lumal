@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { LumaLayoutMode, LumaPreferences, ThemeMode } from './types'
+import type { LumaLayoutMode, LumaPreferences, LumaPreferencesDefaults, ThemeMode } from './types'
 import {
+  ElButton,
   ElDivider,
   ElInputNumber,
   ElOption,
@@ -9,13 +10,15 @@ import {
   ElSwitch,
 } from 'element-plus'
 import { computed } from 'vue'
-import { mergePreferences } from './preferences'
+import { createDefaultPreferences, mergePreferences } from './preferences'
 import { themeColorPresets } from './theme-color-presets'
 
 /***********************属性定义*********************/
 const props = withDefaults(defineProps<{
   /** 可选的主题色预设，默认使用内置 themeColorPresets。 */
   colorPresets?: { label: string, value: string, custom?: boolean }[]
+  /** 重置时使用的消费方默认偏好。 */
+  defaults?: LumaPreferencesDefaults
   /** 是否展示布局模式切换。 */
   showLayout?: boolean
 }>(), {
@@ -27,6 +30,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   /** 任一偏好变更时抛出最新偏好，便于外部持久化或应用到 DOM。 */
   change: [preferences: LumaPreferences]
+  reset: [preferences: LumaPreferences]
 }>()
 
 const preferences = defineModel<LumaPreferences>('preferences', {
@@ -48,9 +52,16 @@ const layoutModeOptions: { label: string, value: LumaLayoutMode }[] = [
 
 /***********************偏好更新*********************/
 function update(patch: Parameters<typeof mergePreferences>[1]): void {
-  const next = mergePreferences(preferences.value, patch)
+  const next = mergePreferences(preferences.value, patch, props.defaults)
   preferences.value = next
   emit('change', next)
+}
+
+function resetPreferences(): void {
+  const next = createDefaultPreferences(props.defaults)
+  preferences.value = next
+  emit('change', next)
+  emit('reset', next)
 }
 
 /***********************主题色*********************/
@@ -214,6 +225,12 @@ const transitionEnable = computed<boolean>({
         <ElSwitch v-model="transitionEnable" />
       </div>
     </section>
+
+    <ElDivider />
+
+    <ElButton class="luma-theme-settings__reset" plain @click="resetPreferences">
+      重置设置
+    </ElButton>
   </div>
 </template>
 
@@ -251,7 +268,10 @@ const transitionEnable = computed<boolean>({
     background: var(--el-fill-color-light);
     border: 1px solid transparent;
     border-radius: 6px;
-    transition: all 0.2s;
+    transition:
+      color var(--luma-motion-duration-fast) var(--luma-easing-standard),
+      border-color var(--luma-motion-duration-fast) var(--luma-easing-standard),
+      background-color var(--luma-motion-duration-fast) var(--luma-easing-standard);
 
     &.is-active {
       color: var(--el-color-primary);
@@ -273,7 +293,7 @@ const transitionEnable = computed<boolean>({
     cursor: pointer;
     border: 2px solid transparent;
     border-radius: 6px;
-    transition: transform 0.2s;
+    transition: transform var(--luma-motion-duration-fast) var(--luma-easing-standard);
 
     &.is-active {
       border-color: var(--el-text-color-primary);
@@ -319,6 +339,10 @@ const transitionEnable = computed<boolean>({
 
   &__control {
     flex: 1;
+  }
+
+  &__reset {
+    width: 100%;
   }
 }
 </style>

@@ -423,7 +423,7 @@ defineExpose({
   display: grid;
   gap: 12px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 .luma-crud-table__query-actions {
@@ -441,10 +441,10 @@ defineExpose({
 
 .luma-crud-table__error {
   padding: 10px 12px;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--el-color-danger-light-7);
   border-radius: 8px;
-  color: #991b1b;
-  background: #fef2f2;
+  color: var(--el-color-danger-dark-2);
+  background: var(--el-color-danger-light-9);
 }
 
 .luma-crud-table__body {
@@ -457,6 +457,6 @@ defineExpose({
 
 .luma-crud-table__pagination {
   padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--el-border-color-lighter);
 }
 </style>

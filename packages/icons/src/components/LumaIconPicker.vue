@@ -38,10 +38,10 @@ const icons = computed<IconDefinition[]>(() => getRegisteredIconDefinitions())
   aspect-ratio: 1;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--el-border-color-lighter, currentColor);
   border-radius: 6px;
-  color: #374151;
-  background: #ffffff;
+  color: var(--el-text-color-regular, CanvasText);
+  background: var(--el-bg-color, Canvas);
   cursor: pointer;
 }
 </style>

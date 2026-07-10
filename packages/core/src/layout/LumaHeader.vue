@@ -80,7 +80,7 @@ defineExpose({
   padding: 0 20px;
   border-bottom: 1px solid var(--el-border-color-lighter);
   background: var(--el-bg-color);
-  box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
+  box-shadow: var(--luma-shadow-light);
 }
 
 .luma-header__left {

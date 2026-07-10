@@ -63,7 +63,7 @@ defineExpose({
   border: 1px solid var(--el-border-color-lighter);
   border-radius: calc(10px * var(--luma-radius-scale, 1));
   background: var(--el-bg-color);
-  box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
+  box-shadow: var(--luma-shadow-light);
 }
 
 .luma-page__header {

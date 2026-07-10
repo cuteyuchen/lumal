@@ -198,7 +198,7 @@ defineExpose({
     inset: 0 auto 0 0;
     z-index: 30;
     width: min(var(--luma-sidebar-width, 248px), 84vw) !important;
-    box-shadow: 16px 0 36px rgb(15 23 42 / 18%);
+    box-shadow: var(--luma-shadow-base);
     transform: translateX(0);
   }
 
@@ -214,7 +214,7 @@ defineExpose({
     display: block;
     padding: 0;
     border: 0;
-    background: rgb(15 23 42 / 42%);
+    background: color-mix(in srgb, var(--luma-color-text-primary) 42%, transparent);
     cursor: pointer;
   }
 

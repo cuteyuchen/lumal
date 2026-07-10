@@ -1,6 +1,7 @@
 export {
   applyThemePreferences,
   applyThemeToElement,
+  watchSystemTheme,
 } from './dom'
 export { default as LumaThemeSettingsPanel } from './LumaThemeSettingsPanel.vue'
 export {
@@ -9,6 +10,7 @@ export {
   normalizePreferences,
   resolveThemeMode,
 } from './preferences'
+export { createPreferencesStore } from './preferences-store'
 export {
   createThemeStore,
 } from './store'
@@ -23,12 +25,15 @@ export {
   resolveThemeTokens,
 } from './tokens'
 export type {
+  CreatePreferencesStoreOptions,
   DeepPartial,
   LumaHeaderMenuAlign,
   LumaLayoutMode,
   LumaPreferences,
   LumaPreferencesDefaults,
   LumaTransitionName,
+  PreferencesStorage,
+  PreferencesStore,
   ResolvedThemeMode,
   ThemeMode,
   ThemeOptions,

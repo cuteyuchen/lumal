@@ -7,6 +7,7 @@
 ```ts
 import { createLumaAdmin } from '@luma/core'
 import ElementPlus from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import { createPinia } from 'pinia'
 import { createRouter, createWebHistory } from 'vue-router'
 import '@luma/core/theme-chalk/index.scss'
@@ -19,12 +20,18 @@ const router = createRouter({
   routes: [],
 })
 
-createLumaAdmin({
+const framework = createLumaAdmin({
+  preset: 'admin-default',
   rootComponent: App,
   rootProps: {},
   router,
   pinia: createPinia(),
-  elementPlus: ElementPlus,
+  elementPlus: {
+    plugin: ElementPlus,
+    options: {
+      locale: zhCn,
+    },
+  },
   dictionary: {
     fetcher: async dictionary => ({
       items: [],
@@ -33,16 +40,26 @@ createLumaAdmin({
   icons: {
     localSvg: [],
   },
-  components: {},
+  components: ['LumaLayout', 'LumaRouterView'],
   setup: ({ app }) => {
     // 应用级扩展
   },
-}).mount('#app')
+})
+
+await framework.mount('#app')
 ```
 
-`createLumaAdmin` 当前负责创建 Vue app、注册本地图标、安装字典上下文、安装调用方传入的 router/pinia/Element Plus 插件、注册全局组件并执行应用级 setup。Element Plus、Pinia 和 Vue Router 都由应用侧传入，`@luma/core` 不做默认安装。
+`createLumaAdmin` 负责创建 Vue app、注册本地图标、安装字典上下文、接入调用方传入的 router/pinia/Element Plus、选择性注册全局组件，并在挂载前执行应用级 setup。
 
-安装顺序固定为：本地图标注册 -> 字典上下文 -> `router` -> `pinia` -> `elementPlus` -> `components` -> `setup`。
+关键行为：
+
+- `preset` 支持 `admin-default` 和 `minimal`；两者都不内部创建 Pinia。
+- `elementPlus` 兼容旧 Plugin 写法和 `{ plugin, options }` 写法。
+- `components` 支持 `true`、`false`、组件名数组和组件映射。
+- `mount()` 为异步方法，会等待 `setup()` 和 `router.isReady()`。
+- 返回值暴露 `app`、`router`、`pinia`、`permissionStore`、`use()` 和 `mount()`。
+
+安装顺序固定为：本地图标注册 -> 字典上下文 -> `router` -> `pinia` -> `elementPlus` -> `components`；挂载阶段再执行 `setup` -> `router.isReady` -> Vue mount。
 
 ## 组件
 
@@ -413,8 +430,30 @@ const request = createRequestClient({
 从 `@luma/core/theme` 导入：
 
 - `createThemeStore`
+- `createPreferencesStore`
 - `applyThemeToElement`
 - `resolveThemeTokens`
 - `defaultThemeState`
 
 主题运行时支持明暗模式、主题色和紧凑布局，不包含多语言偏好。
+
+偏好持久化示例：
+
+```ts
+import { createPreferencesStore } from '@luma/core/theme'
+
+const preferences = createPreferencesStore({
+  storage: localStorage,
+  storageKey: 'admin:preferences',
+  defaults: {
+    app: { layout: 'mixed-nav' },
+  },
+})
+
+preferences.patch({ theme: { mode: 'dark' } })
+preferences.reset()
+preferences.exportCurrent()
+preferences.dispose()
+```
+
+Store 会清理损坏缓存、补齐新增默认字段，并只在主题模式为 `system` 时监听系统主题变化。

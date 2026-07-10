@@ -22,7 +22,7 @@ const iconValue = defineModel<string>()
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgb(15 23 42 / 32%);
+  background: color-mix(in srgb, CanvasText 32%, transparent);
 }
 
 .luma-icon-picker-dialog__body {
@@ -31,7 +31,7 @@ const iconValue = defineModel<string>()
   overflow: auto;
   padding: 16px;
   border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 18px 48px rgb(15 23 42 / 18%);
+  background: var(--el-bg-color, Canvas);
+  box-shadow: var(--luma-shadow-base, 0 18px 48px color-mix(in srgb, CanvasText 18%, transparent));
 }
 </style>

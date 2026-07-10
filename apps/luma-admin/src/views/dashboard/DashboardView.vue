@@ -128,7 +128,7 @@ function handlePaginationChange(payload: CrudTablePageChangePayload): void {
       @page-change="handlePaginationChange"
     >
       <template #actions>
-        <LumaIcon name="app:dashboard" color="#1677ff" :size="36" />
+        <LumaIcon name="app:dashboard" color="var(--el-color-primary)" :size="36" />
       </template>
 
       <template #default>

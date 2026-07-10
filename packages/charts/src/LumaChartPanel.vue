@@ -90,7 +90,7 @@ const panelStyle = computed(() => resolveChartPanelStyle({
     align-items: center;
     justify-content: center;
     height: 100%;
-    color: var(--el-text-color-secondary, #909399);
+    color: var(--el-text-color-secondary, CanvasText);
   }
 }
 </style>

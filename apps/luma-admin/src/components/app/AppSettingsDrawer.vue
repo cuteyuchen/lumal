@@ -6,6 +6,7 @@ import { computed } from 'vue'
 
 /***********************属性定义*********************/
 const props = withDefaults(defineProps<{
+  defaults?: import('@luma/core/theme').LumaPreferencesDefaults
   preferences: LumaPreferences
   visible?: boolean
 }>(), {
@@ -14,6 +15,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   'change': [preferences: LumaPreferences]
+  'reset': [preferences: LumaPreferences]
   'update:preferences': [preferences: LumaPreferences]
   'update:visible': [visible: boolean]
 }>()
@@ -32,6 +34,10 @@ function handleChange(nextPreferences: LumaPreferences): void {
 function handlePreferencesUpdate(nextPreferences: LumaPreferences): void {
   emit('update:preferences', nextPreferences)
 }
+
+function handleReset(nextPreferences: LumaPreferences): void {
+  emit('reset', nextPreferences)
+}
 </script>
 
 <template>
@@ -44,8 +50,10 @@ function handlePreferencesUpdate(nextPreferences: LumaPreferences): void {
     destroy-on-close
   >
     <LumaThemeSettingsPanel
+      :defaults="defaults"
       :preferences="preferences"
       @change="handleChange"
+      @reset="handleReset"
       @update:preferences="handlePreferencesUpdate"
     />
   </ElDrawer>

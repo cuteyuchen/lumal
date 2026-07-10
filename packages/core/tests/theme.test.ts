@@ -3,11 +3,40 @@ import {
   applyThemePreferences,
   applyThemeToElement,
   createDefaultPreferences,
+  createPreferencesStore,
   createThemeStore,
   mergePreferences,
   resolveThemeMode,
   resolveThemeTokens,
 } from '../src/theme'
+
+class MemoryStorage implements Storage {
+  private readonly values = new Map<string, string>()
+
+  get length(): number {
+    return this.values.size
+  }
+
+  clear(): void {
+    this.values.clear()
+  }
+
+  getItem(key: string): string | null {
+    return this.values.get(key) ?? null
+  }
+
+  key(index: number): string | null {
+    return Array.from(this.values.keys())[index] ?? null
+  }
+
+  removeItem(key: string): void {
+    this.values.delete(key)
+  }
+
+  setItem(key: string, value: string): void {
+    this.values.set(key, value)
+  }
+}
 
 describe('theme runtime', () => {
   it('会创建默认主题状态并生成 CSS 变量 token', () => {
@@ -117,5 +146,61 @@ describe('theme runtime', () => {
     expect(element.style.getPropertyValue('--el-color-primary')).toBe('#16a34a')
     expect(element.style.getPropertyValue('--luma-radius-scale')).toBe('0.75')
     expect(element.style.getPropertyValue('--luma-sidebar-width')).toBe('220px')
+  })
+
+  it('偏好 Store 会持久化、重置并清理损坏缓存', () => {
+    const storage = new MemoryStorage()
+    storage.setItem('preferences', '{invalid-json')
+    const store = createPreferencesStore({
+      autoApply: false,
+      defaults: {
+        app: { layout: 'mixed-nav' },
+        theme: { mode: 'dark' },
+      },
+      storage,
+      storageKey: 'preferences',
+    })
+
+    expect(store.state.value.app.layout).toBe('mixed-nav')
+    expect(store.state.value.theme.mode).toBe('dark')
+    expect(storage.getItem('preferences')).toBeNull()
+
+    store.patch({ theme: { colorPrimary: '#7c3aed' } })
+    expect(JSON.parse(storage.getItem('preferences') ?? '{}')).toMatchObject({
+      theme: { colorPrimary: '#7c3aed', mode: 'dark' },
+    })
+
+    store.reset()
+    expect(store.exportCurrent()).toMatchObject({
+      app: { layout: 'mixed-nav' },
+      theme: { colorPrimary: '#1677ff', mode: 'dark' },
+    })
+  })
+
+  it('偏好 Store 只在 system 模式监听系统主题并可释放监听', () => {
+    const listeners = new Set<() => void>()
+    const media = {
+      addEventListener: (_event: string, listener: () => void) => listeners.add(listener),
+      matches: false,
+      removeEventListener: (_event: string, listener: () => void) => listeners.delete(listener),
+    } as unknown as MediaQueryList
+    const store = createPreferencesStore({
+      defaults: { theme: { mode: 'system' } },
+      runtime: {
+        document,
+        matchMedia: () => media,
+      },
+      storage: new MemoryStorage(),
+      storageKey: 'preferences',
+    })
+
+    expect(listeners.size).toBe(1)
+    store.patch({ theme: { mode: 'light' } })
+    expect(listeners.size).toBe(0)
+    store.patch({ theme: { mode: 'system' } })
+    expect(listeners.size).toBe(1)
+
+    store.dispose()
+    expect(listeners.size).toBe(0)
   })
 })

@@ -168,7 +168,11 @@ async function handleSubmit(): Promise<void> {
   justify-content: center;
   padding: 32px;
   background:
-    linear-gradient(135deg, rgba(21, 94, 117, 0.12), rgba(22, 163, 74, 0.08)),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--el-color-primary) 12%, transparent),
+      color-mix(in srgb, var(--el-color-success) 8%, transparent)
+    ),
     var(--el-bg-color-page);
 }
 
@@ -195,8 +199,8 @@ async function handleSubmit(): Promise<void> {
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  background: #155e75;
-  color: #fff;
+  background: var(--el-color-primary);
+  color: var(--el-color-white);
   font-size: 20px;
   font-weight: 700;
 }

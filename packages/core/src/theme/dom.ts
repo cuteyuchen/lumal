@@ -38,6 +38,24 @@ export function applyThemePreferences(
   return resolvedMode
 }
 
+export function watchSystemTheme(
+  preferences: unknown,
+  onChange: (mode: ResolvedThemeMode) => void,
+  environment: ThemeRuntimeEnvironment = {},
+): () => void {
+  const normalizedPreferences = normalizePreferences(preferences)
+
+  if (normalizedPreferences.theme.mode !== 'system' || !environment.matchMedia) {
+    return () => undefined
+  }
+
+  const mediaQueryList = environment.matchMedia('(prefers-color-scheme: dark)')
+  const listener = () => onChange(mediaQueryList.matches ? 'dark' : 'light')
+  mediaQueryList.addEventListener('change', listener)
+
+  return () => mediaQueryList.removeEventListener('change', listener)
+}
+
 /***********************Element Plus 变量*********************/
 function applyElementPlusThemeVariables(
   element: HTMLElement,
@@ -54,12 +72,15 @@ function applyElementPlusThemeVariables(
   element.style.setProperty('--el-color-primary-dark-2', mixHexColor(color, mode === 'dark' ? '#ffffff' : '#000000', 0.2))
   element.style.setProperty('--luma-radius-scale', String(preferences.theme.radiusScale))
   element.style.setProperty('--el-border-radius-base', `${Math.round(8 * preferences.theme.radiusScale)}px`)
+  element.style.setProperty('--el-border-radius-small', `${Math.round(6 * preferences.theme.radiusScale)}px`)
 }
 
 /***********************布局变量*********************/
 function applyLayoutThemeVariables(element: HTMLElement, preferences: LumaPreferences): void {
   element.style.setProperty('--luma-sidebar-width', `${preferences.sidebar.width}px`)
   element.style.setProperty('--luma-header-height', '56px')
+  element.style.setProperty('--luma-tabbar-height', '40px')
+  element.style.setProperty('--luma-page-gutter', '20px')
 }
 
 function normalizeHexColor(value: string): string {
@@ -69,7 +90,7 @@ function normalizeHexColor(value: string): string {
     return `#${normalized.split('').map(item => `${item}${item}`).join('')}`.toLowerCase()
   }
 
-  if (normalized.length !== 6) {
+  if (!/^[\da-f]{6}$/i.test(normalized)) {
     return '#1677ff'
   }
 

@@ -58,6 +58,30 @@ export interface ThemeRuntimeEnvironment {
   matchMedia?: (query: string) => MediaQueryList
 }
 
+export interface PreferencesStorage {
+  getItem: (key: string) => string | null
+  removeItem: (key: string) => void
+  setItem: (key: string, value: string) => void
+}
+
+export interface CreatePreferencesStoreOptions {
+  autoApply?: boolean
+  defaults?: LumaPreferencesDefaults
+  runtime?: ThemeRuntimeEnvironment
+  storage: PreferencesStorage
+  storageKey: string
+}
+
+export interface PreferencesStore {
+  readonly resolvedThemeMode: import('vue').Ref<ResolvedThemeMode>
+  readonly state: import('vue').Ref<LumaPreferences>
+  apply: () => ResolvedThemeMode
+  dispose: () => void
+  exportCurrent: () => LumaPreferences
+  patch: (next?: LumaPreferencesDefaults) => void
+  reset: () => void
+}
+
 export interface ThemeStore {
   readonly state: ThemeState
   reset: () => void

@@ -175,7 +175,9 @@ defineExpose({
 
 .fade-side-enter-active,
 .fade-side-leave-active {
-  transition: all 0.3s;
+  transition:
+    opacity var(--luma-motion-duration-slow) var(--luma-easing-standard),
+    transform var(--luma-motion-duration-slow) var(--luma-easing-standard);
 }
 
 .fade-side-enter-from {
@@ -190,7 +192,7 @@ defineExpose({
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s ease-in-out;
+  transition: opacity var(--luma-motion-duration-base) var(--luma-easing-standard);
 }
 
 .fade-enter-from,
@@ -201,8 +203,8 @@ defineExpose({
 .fade-bottom-enter-active,
 .fade-bottom-leave-active {
   transition:
-    opacity 0.2s,
-    transform 0.25s;
+    opacity var(--luma-motion-duration-base) var(--luma-easing-standard),
+    transform var(--luma-motion-duration-slow) var(--luma-easing-standard);
 }
 
 .fade-bottom-enter-from {
@@ -217,7 +219,9 @@ defineExpose({
 
 .zoom-fade-enter-active,
 .zoom-fade-leave-active {
-  transition: all 0.28s;
+  transition:
+    opacity var(--luma-motion-duration-slow) var(--luma-easing-standard),
+    transform var(--luma-motion-duration-slow) var(--luma-easing-standard);
 }
 
 .zoom-fade-enter-from {

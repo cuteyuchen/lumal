@@ -52,7 +52,7 @@ describe('createLumaAdmin', () => {
     expect(true).toBe(true)
   })
 
-  it('会按核心插件、全局组件、setup 的顺序安装应用能力', () => {
+  it('会按核心插件、全局组件、setup 和 Router ready 的顺序安装应用能力', async () => {
     const order: string[] = []
     const GlobalWidget = defineComponent({
       name: 'GlobalWidget',
@@ -61,9 +61,13 @@ describe('createLumaAdmin', () => {
       },
     })
 
+    const router = createInstallPlugin('router', order) as Plugin & { isReady: () => Promise<void> }
+    router.isReady = async () => {
+      order.push('routerReady')
+    }
     const framework = createLumaAdmin({
       rootComponent: createRootComponent('RootForInstallOptionsTest'),
-      router: createInstallPlugin('router', order),
+      router,
       pinia: createInstallPlugin('pinia', order),
       elementPlus: createInstallPlugin('elementPlus', order),
       components: {
@@ -78,7 +82,57 @@ describe('createLumaAdmin', () => {
       },
     })
 
-    expect(order).toEqual(['router', 'pinia', 'elementPlus', 'setup'])
+    expect(order).toEqual(['router', 'pinia', 'elementPlus'])
+    await framework.mount(document.createElement('div'))
+
+    expect(order).toEqual(['router', 'pinia', 'elementPlus', 'setup', 'routerReady'])
     expect(framework.app.component('GlobalWidget')).toBe(GlobalWidget)
+  })
+
+  it('兼容 Element Plus 旧插件写法和带 options 的新写法', () => {
+    const installedOptions: unknown[] = []
+    const elementPlus: Plugin<[Record<string, unknown>]> = {
+      install(_app, options) {
+        installedOptions.push(options)
+      },
+    }
+
+    createLumaAdmin({
+      components: false,
+      elementPlus: {
+        options: {
+          locale: 'zh-cn',
+          zIndex: 3000,
+        },
+        plugin: elementPlus,
+      },
+      rootComponent: createRootComponent('RootForElementPlusOptionsTest'),
+    })
+
+    expect(installedOptions).toEqual([{
+      locale: 'zh-cn',
+      zIndex: 3000,
+    }])
+  })
+
+  it('支持默认组件、按名称选择和关闭全局组件注册', () => {
+    const allComponents = createLumaAdmin({
+      components: true,
+      rootComponent: createRootComponent('RootForAllComponentsTest'),
+    })
+    const selectedComponents = createLumaAdmin({
+      components: ['LumaPage'],
+      rootComponent: createRootComponent('RootForSelectedComponentsTest'),
+    })
+    const noComponents = createLumaAdmin({
+      components: false,
+      rootComponent: createRootComponent('RootForNoComponentsTest'),
+    })
+
+    expect(allComponents.app.component('LumaPage')).toBeTruthy()
+    expect(allComponents.app.component('LumaLayout')).toBeTruthy()
+    expect(selectedComponents.app.component('LumaPage')).toBeTruthy()
+    expect(selectedComponents.app.component('LumaLayout')).toBeUndefined()
+    expect(noComponents.app.component('LumaPage')).toBeUndefined()
   })
 })

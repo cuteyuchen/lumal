@@ -77,14 +77,14 @@ defineExpose({
 }
 
 .luma-info-table--bordered {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--el-border-color-lighter);
 }
 
 .luma-info-table__item {
   display: flex;
   min-width: 0;
-  border-bottom: 1px solid #e5e7eb;
-  background: #ffffff;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  background: var(--el-bg-color);
 }
 
 .luma-info-table__label {
@@ -92,8 +92,8 @@ defineExpose({
   flex: none;
   margin: 0;
   padding: 10px 12px;
-  color: #475569;
-  background: #f8fafc;
+  color: var(--el-text-color-regular);
+  background: var(--el-fill-color-light);
   font-size: 13px;
   font-weight: 600;
   line-height: 1.5;
@@ -104,7 +104,7 @@ defineExpose({
   min-width: 0;
   margin: 0;
   padding: 10px 12px;
-  color: #111827;
+  color: var(--el-text-color-primary);
   font-size: 13px;
   line-height: 1.5;
   overflow-wrap: anywhere;

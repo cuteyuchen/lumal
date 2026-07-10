@@ -115,10 +115,10 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
   box-sizing: border-box;
   width: min(920px, 100%);
   padding: 24px;
-  border: 1px solid #dbe4f0;
+  border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
+  background: var(--el-bg-color);
+  box-shadow: var(--luma-shadow-base);
 }
 
 .luma-request-panel__header {
@@ -134,7 +134,7 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
 }
 
 .luma-request-panel__eyebrow {
-  color: #0f766e;
+  color: var(--el-color-primary);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0;
@@ -143,7 +143,7 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
 
 .luma-request-panel__title {
   margin: 0;
-  color: #111827;
+  color: var(--el-text-color-primary);
   font-size: 20px;
   font-weight: 700;
 }
@@ -160,20 +160,20 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
   gap: 8px;
   min-width: 0;
   padding: 14px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--el-border-color-lighter);
   border-radius: 6px;
-  background: #f8fafc;
+  background: var(--el-fill-color-light);
 }
 
 .luma-request-panel__label,
 .luma-request-panel__detail-label {
-  color: #64748b;
+  color: var(--el-text-color-secondary);
   font-size: 12px;
 }
 
 .luma-request-panel__value {
   overflow: hidden;
-  color: #111827;
+  color: var(--el-text-color-primary);
   font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -196,7 +196,7 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
   min-width: 0;
   margin: 0;
   overflow-wrap: anywhere;
-  color: #334155;
+  color: var(--el-text-color-regular);
   font-family:
     "JetBrains Mono",
     Consolas,
@@ -206,7 +206,7 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
 
 .luma-request-panel__message {
   margin: 18px 0 0;
-  color: #475569;
+  color: var(--el-text-color-regular);
   font-size: 13px;
 }
 

@@ -1,6 +1,8 @@
 import type { IconDefinition } from '@luma/icons'
 import { createLumaAdmin } from '@luma/core'
 import { registerAuthorityDirectives } from '@luma/core/directives'
+import ElementPlus from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import App from './App.vue'
 import { router } from './router'
 import { permissionStore } from './services/permission'
@@ -95,7 +97,14 @@ const localIcons: IconDefinition[] = [
 ]
 
 /***********************应用启动*********************/
-createLumaAdmin({
+void createLumaAdmin({
+  components: false,
+  elementPlus: {
+    options: {
+      locale: zhCn,
+    },
+    plugin: ElementPlus,
+  },
   rootComponent: App,
   router,
   dictionary: {
@@ -104,6 +113,8 @@ createLumaAdmin({
   icons: {
     localSvg: localIcons,
   },
+  permissionStore,
+  preset: 'admin-default',
   setup({ app }) {
     registerAuthorityDirectives(app, permissionStore)
   },

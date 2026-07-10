@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { LumaLayoutTabItem } from '@luma/core/layout'
-import type { ResolvedThemeMode } from '@luma/core/theme'
+import type { LumaPreferences } from '@luma/core/theme'
 import {
   appendTab,
   closeTab,
@@ -10,7 +10,6 @@ import {
   resolveNavigationTarget,
   splitMenusByLayout,
 } from '@luma/core/layout'
-import { mergePreferences } from '@luma/core/theme'
 import { computed, onMounted, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeaderActions from './components/app/AppHeaderActions.vue'
@@ -21,8 +20,10 @@ import {
 } from './router'
 import {
   adminAppName,
+  adminPreferenceDefaults,
   adminPreferences,
-  applyAdminPreferences,
+  adminResolvedThemeMode,
+  patchAdminPreferences,
 } from './services/preferences'
 import { currentUser, logout } from './services/session'
 
@@ -30,7 +31,7 @@ import { currentUser, logout } from './services/session'
 const title = adminAppName
 const preferences = adminPreferences
 const settingsVisible = shallowRef(false)
-const resolvedThemeMode = shallowRef<ResolvedThemeMode>('light')
+const resolvedThemeMode = adminResolvedThemeMode
 const visitedTabs = shallowRef<LumaLayoutTabItem[]>([])
 
 /***********************路由状态*********************/
@@ -38,19 +39,10 @@ const route = useRoute()
 const router = useRouter()
 const isPublicLayout = computed(() => route.meta.layout === 'public')
 
-/***********************偏好状态*********************/
-watch(
-  preferences,
-  (value) => {
-    resolvedThemeMode.value = applyAdminPreferences(value)
-  },
-  { immediate: true },
-)
-
 const collapsed = computed({
   get: () => preferences.value.sidebar.collapsed,
   set: (collapsed: boolean) => {
-    preferences.value = mergePreferences(preferences.value, {
+    patchAdminPreferences({
       sidebar: { collapsed },
     })
   },
@@ -119,7 +111,7 @@ onMounted(() => {
 
 /***********************偏好事件*********************/
 function handleToggleTheme(): void {
-  preferences.value = mergePreferences(preferences.value, {
+  patchAdminPreferences({
     theme: {
       mode: resolvedThemeMode.value === 'dark' ? 'light' : 'dark',
     },
@@ -130,8 +122,8 @@ function handleOpenSettings(): void {
   settingsVisible.value = true
 }
 
-function handlePreferencesChange(): void {
-  // 偏好变化由 watch 统一应用到 DOM，这里保留事件入口便于后续持久化。
+function handlePreferencesChange(nextPreferences: LumaPreferences): void {
+  patchAdminPreferences(nextPreferences)
 }
 
 async function handleLogout(): Promise<void> {
@@ -232,8 +224,9 @@ function handleTabRemove(path: string): void {
 
     <AppSettingsDrawer
       v-model:visible="settingsVisible"
-      v-model:preferences="preferences"
-      @change="handlePreferencesChange"
+      :defaults="adminPreferenceDefaults"
+      :preferences="preferences"
+      @update:preferences="handlePreferencesChange"
     />
   </LumaLayout>
 </template>

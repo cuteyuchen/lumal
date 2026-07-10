@@ -63,4 +63,28 @@ describe('luma theme settings panel', () => {
 
     expect(wrapper.text()).not.toContain('布局模式')
   })
+
+  it('会按消费方 defaults 重置偏好并抛出 reset', async () => {
+    const wrapper = mount(LumaThemeSettingsPanel, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        defaults: {
+          app: { layout: 'mixed-nav' },
+          theme: { mode: 'dark' },
+        },
+        preferences: createDefaultPreferences({
+          app: { layout: 'top-nav' },
+          theme: { mode: 'light' },
+        }),
+      },
+    })
+
+    await wrapper.find('.luma-theme-settings__reset').trigger('click')
+
+    const reset = wrapper.emitted('reset') as [ReturnType<typeof createDefaultPreferences>][]
+    expect(reset[0]?.[0]).toMatchObject({
+      app: { layout: 'mixed-nav' },
+      theme: { mode: 'dark' },
+    })
+  })
 })

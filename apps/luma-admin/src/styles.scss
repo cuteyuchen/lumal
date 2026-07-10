@@ -42,18 +42,18 @@ button {
 .luma-admin-home__crud {
   width: 100%;
   max-width: none;
-  box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
+  box-shadow: var(--luma-shadow-light);
 }
 
 .luma-admin-home__pagination-text {
   display: block;
   padding-top: 12px;
-  color: #6b7280;
+  color: var(--el-text-color-secondary);
   font-size: 13px;
 }
 
 .luma-admin-home__status {
-  color: #2563eb;
+  color: var(--el-color-primary);
   font-size: 13px;
   font-weight: 700;
 }
@@ -71,7 +71,7 @@ button {
 }
 
 .luma-admin-page__item {
-  color: #334155;
+  color: var(--el-text-color-regular);
   font-size: 14px;
   line-height: 1.6;
 }
@@ -132,17 +132,17 @@ button {
 }
 
 .luma-admin-example__button--primary {
-  border-color: #2563eb;
-  color: #ffffff;
-  background: #2563eb;
+  border-color: var(--el-color-primary);
+  color: var(--el-color-white);
+  background: var(--el-color-primary);
 }
 
 .luma-admin-example__swatch {
   width: 32px;
   height: 32px;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--el-bg-color);
   border-radius: 999px;
-  box-shadow: 0 0 0 1px #cbd5e1;
+  box-shadow: 0 0 0 1px var(--el-border-color);
   cursor: pointer;
 }
 
@@ -151,7 +151,7 @@ button {
   gap: 4px;
   padding: 16px;
   border-radius: var(--luma-admin-example-preview-radius);
-  color: #ffffff;
+  color: var(--el-color-white);
   background: var(--luma-admin-example-preview-color);
 }
 

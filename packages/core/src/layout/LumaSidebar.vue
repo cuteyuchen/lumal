@@ -68,8 +68,8 @@ defineExpose({
   border-right: 1px solid var(--el-border-color-lighter);
   background: var(--el-bg-color);
   transition:
-    width 0.2s ease,
-    transform 0.2s ease;
+    width var(--luma-motion-duration-base) var(--luma-easing-standard),
+    transform var(--luma-motion-duration-base) var(--luma-easing-standard);
 }
 
 .luma-sidebar__scrollbar {

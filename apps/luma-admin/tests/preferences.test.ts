@@ -3,9 +3,12 @@ import {
   adminAppName,
   adminPreferenceDefaults,
   adminPreferences,
+  adminResolvedThemeMode,
   applyAdminPreferences,
   createAdminPreferences,
+  exportAdminPreferences,
   getAdminSystemConfig,
+  patchAdminPreferences,
   resetAdminSystemConfig,
   resolveAdminThemeEnvironment,
   updateAdminSystemConfig,
@@ -93,5 +96,22 @@ describe('luma admin preferences', () => {
       transition: { enable: false },
     })
     expect(getAdminSystemConfig()).toEqual(config)
+  })
+
+  it('会持久化偏好并导出归一化快照', () => {
+    patchAdminPreferences({
+      sidebar: { collapsed: true },
+      theme: { mode: 'dark' },
+    })
+
+    expect(exportAdminPreferences()).toMatchObject({
+      sidebar: { collapsed: true },
+      theme: { mode: 'dark' },
+    })
+    expect(JSON.parse(localStorage.getItem('luma-admin:preferences') ?? '{}')).toMatchObject({
+      sidebar: { collapsed: true },
+      theme: { mode: 'dark' },
+    })
+    expect(adminResolvedThemeMode.value).toBe('dark')
   })
 })
