@@ -1,0 +1,49 @@
+{
+  "name": "@luma/charts",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Luma optional ECharts-based chart components.",
+  "license": "MIT",
+  "keywords": [
+    "luma",
+    "vue",
+    "echarts",
+    "charts"
+  ],
+  "sideEffects": [
+    "**/*.css",
+    "**/*.scss"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./style.css": "./dist/charts.css"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/src/index.d.ts",
+  "files": [
+    "README.md",
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build --config vite.config.ts && vue-tsc -p tsconfig.json --emitDeclarationOnly --outDir dist && node ../../scripts/clean-package-dist.mjs dist",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --config ../../vitest.config.ts tests"
+  },
+  "peerDependencies": {
+    "echarts": "^5.5.0",
+    "vue": "^3.5.0",
+    "vue-echarts": "^7.0.0"
+  },
+  "devDependencies": {
+    "echarts": "^5.5.0",
+    "vue-echarts": "^7.0.3"
+  }
+}

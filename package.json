@@ -8,16 +8,16 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "build": "pnpm --filter @luma/icons build && pnpm --filter @luma/core build && pnpm --filter @luma/vben-compat build && pnpm --filter create-luma-admin build",
-    "typecheck": "pnpm --filter @luma/icons typecheck && pnpm --filter @luma/icons build && pnpm --filter @luma/core typecheck && pnpm --filter @luma/core build && pnpm --filter @luma/vben-compat typecheck && pnpm --filter create-luma-admin typecheck",
-    "test": "pnpm test:scripts && pnpm --filter @luma/icons test && pnpm --filter @luma/icons build && pnpm --filter @luma/core test && pnpm --filter @luma/core build && pnpm --filter @luma/vben-compat test && pnpm --filter create-luma-admin test && pnpm --filter luma-admin test",
+    "build": "pnpm --filter @luma/icons build && pnpm --filter @luma/core build && pnpm --filter @luma/charts build && pnpm --filter @luma/vben-compat build && pnpm --filter create-luma-admin build",
+    "typecheck": "pnpm --filter @luma/icons typecheck && pnpm --filter @luma/icons build && pnpm --filter @luma/core typecheck && pnpm --filter @luma/core build && pnpm --filter @luma/charts typecheck && pnpm --filter @luma/vben-compat typecheck && pnpm --filter create-luma-admin typecheck",
+    "test": "pnpm test:scripts && pnpm --filter @luma/icons test && pnpm --filter @luma/icons build && pnpm --filter @luma/core test && pnpm --filter @luma/core build && pnpm --filter @luma/charts test && pnpm --filter @luma/charts build && pnpm --filter @luma/vben-compat test && pnpm --filter create-luma-admin test && pnpm --filter luma-admin test",
     "test:scripts": "vitest run --config vitest.config.ts scripts",
     "lint": "eslint .",
     "admin:dev": "pnpm build && pnpm --filter luma-admin dev",
     "admin:build": "pnpm build && pnpm --filter luma-admin build",
     "admin:preview": "pnpm --filter luma-admin preview",
     "compat:build": "pnpm build && pnpm --filter luma-vben-compat-demo build",
-    "pack:dry-run": "pnpm --filter @luma/icons pack --dry-run && pnpm --filter @luma/core pack --dry-run && pnpm --filter @luma/vben-compat pack --dry-run && pnpm --filter create-luma-admin pack --dry-run",
+    "pack:dry-run": "pnpm --filter @luma/icons pack --dry-run && pnpm --filter @luma/core pack --dry-run && pnpm --filter @luma/charts pack --dry-run && pnpm --filter @luma/vben-compat pack --dry-run && pnpm --filter create-luma-admin pack --dry-run",
     "release:boundaries": "node scripts/check-release-boundaries.mjs",
     "release:names": "node scripts/check-npm-package-names.mjs",
     "release:check": "pnpm lint && pnpm release:boundaries && pnpm test && pnpm typecheck && pnpm build && pnpm admin:build && pnpm compat:build && pnpm pack:dry-run"

@@ -9,6 +9,7 @@ const packageDirs = {
   createLumaAdmin: join(rootDir, 'packages/create-luma-admin'),
   icons: join(rootDir, 'packages/icons'),
   core: join(rootDir, 'packages/core'),
+  charts: join(rootDir, 'packages/charts'),
   vbenCompat: join(rootDir, 'packages/vben-compat'),
 }
 
@@ -107,6 +108,7 @@ if (existsSync(licensePath)) {
 
 const iconsPackage = checkPublishPackage('@luma/icons', packageDirs.icons)
 const corePackage = checkPublishPackage('@luma/core', packageDirs.core)
+const chartsPackage = checkPublishPackage('@luma/charts', packageDirs.charts)
 const compatPackage = checkPublishPackage('@luma/vben-compat', packageDirs.vbenCompat)
 const createPackage = checkPublishPackage('create-luma-admin', packageDirs.createLumaAdmin)
 
@@ -131,6 +133,11 @@ const compatAllDependencies = getDependencyNames(compatPackage, [
   'peerDependencies',
   'optionalDependencies',
 ])
+const chartsAllDependencies = getDependencyNames(chartsPackage, [
+  'dependencies',
+  'peerDependencies',
+  'optionalDependencies',
+])
 
 assert(!iconsAllDependencies.has('@luma/core'), '@luma/icons 不能依赖 @luma/core')
 assert(!iconsAllDependencies.has('@luma/vben-compat'), '@luma/icons 不能依赖 @luma/vben-compat')
@@ -139,22 +146,27 @@ assert(hasDependency(corePackage, 'dependencies', '@luma/icons'), '@luma/core �
 assert(hasDependency(corePackage, 'peerDependencies', 'element-plus'), '@luma/core 应把 element-plus 放在 peerDependencies')
 assert(!hasDependency(corePackage, 'dependencies', 'element-plus'), '@luma/core 不能把 element-plus 放在 dependencies')
 assert(!coreAllDependencies.has('@luma/vben-compat'), '@luma/core 不能依赖 @luma/vben-compat')
+assert(!coreAllDependencies.has('@luma/charts'), '@luma/core 不能依赖 @luma/charts')
 
 assert(hasDependency(compatPackage, 'dependencies', '@luma/core'), '@luma/vben-compat 应依赖 @luma/core')
 assert(!compatAllDependencies.has('element-plus'), '@luma/vben-compat 不应直接依赖 element-plus')
+
+assert(hasDependency(chartsPackage, 'peerDependencies', 'echarts'), '@luma/charts 应把 echarts 放在 peerDependencies')
+assert(!hasDependency(chartsPackage, 'dependencies', 'echarts'), '@luma/charts 不能把 echarts 放在 dependencies')
+assert(!chartsAllDependencies.has('@luma/core'), '@luma/charts 不应依赖 @luma/core')
 
 for (const dependencyName of coreAllDependencies) {
   assert(!/^@intlify\//.test(dependencyName), `@luma/core 不能默认依赖 ${dependencyName}`)
 }
 
-for (const forbiddenName of ['vue-i18n', 'vxe-table', 'vxe-pc-ui', 'xe-utils']) {
+for (const forbiddenName of ['echarts', 'vue-echarts', 'vue-i18n', 'vxe-table', 'vxe-pc-ui', 'xe-utils']) {
   assert(!coreAllDependencies.has(forbiddenName), `@luma/core 不能默认依赖 ${forbiddenName}`)
 }
 
 /***********************源码边界*********************/
 const coreForbiddenMatches = findTextMatches(
   join(packageDirs.core, 'src'),
-  /@luma\/vben-compat|vue-i18n|@intlify\/|vxe-table|vxe-pc-ui|xe-utils/,
+  /@luma\/vben-compat|@luma\/charts|vue-i18n|@intlify\/|vxe-table|vxe-pc-ui|xe-utils|vue-echarts|from 'echarts'/,
 )
 
 for (const match of coreForbiddenMatches) {

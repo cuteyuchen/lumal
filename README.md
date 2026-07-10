@@ -77,6 +77,10 @@ Vben 常用写法兼容层，只用于降低迁移成本。
 
 新页面优先使用 Luma 原生 API；旧项目迁移时再使用兼容层。
 
+### `@luma/charts`
+
+可选图表包，基于 ECharts 与 vue-echarts 封装 `LumaChart`、`LumaChartPanel`、`useChartResize`。ECharts、vue-echarts 作为 peer dependency，不进入 `@luma/core` 默认依赖，符合 Luma mini 定位。
+
 ### `create-luma-admin`
 
 脚手架包，用于创建基于 Luma 包的后台项目模板。

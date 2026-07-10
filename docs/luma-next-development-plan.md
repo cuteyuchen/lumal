@@ -187,14 +187,14 @@ corepack pnpm --filter luma-admin build
 **源参考：** `src/components/chart/`
 **落点：** 新建 `packages/charts/`（包名 `@luma/charts`）。
 
-- [ ] 建包：`package.json` / `tsconfig.json` / `vite.config.ts`，ECharts 设为 **peer dependency**。
-- [ ] `LumaChart`（基础图表组件）。
-- [ ] `LumaChartPanel`（带标题/工具条的面板）。
-- [ ] `useChartResize`（容器自适应）。
-- [ ] 确认 `pnpm-workspace.yaml` 的 `packages/*` 覆盖新包。
-- [ ] 更新根 `package.json` 构建脚本、`docs/package-boundaries.md`、`scripts/check-release-boundaries.mjs`（确保 core 不依赖 charts/ECharts）。
-- [ ] 包级测试。
-- [ ] **用真实包替换 admin `ChartView.vue` / `ChartPanelView.vue` 的本地占位。**
+- [x] 建包：`package.json` / `tsconfig.json` / `vite.config.ts`，ECharts、vue-echarts 设为 **peer dependency**（vite external，不进产物）。
+- [x] `LumaChart`（基础图表组件，透传 ECharts options，接入 useChartResize，延迟渲染）。
+- [x] `LumaChartPanel`（带标题/操作插槽/loading/空状态的面板，图表区/表格区宽度 CSS 变量）。
+- [x] `useChartResize`（ResizeObserver + window resize 容器自适应）。
+- [x] `pnpm-workspace.yaml` 的 `packages/*` 覆盖新包（已生效）。
+- [x] 更新根 `package.json` build/typecheck/test/pack 脚本、`docs/package-boundaries.md`、`scripts/check-release-boundaries.mjs`（断言 core 不依赖 charts/ECharts、charts echarts 为 peer）。
+- [x] 包级测试（`panel-style` + `chart-panel`）。
+- [x] **用真实包替换 admin `ChartView.vue` / `ChartPanelView.vue` 的本地占位**（bar + line 图，admin 侧按需注册 ECharts 模块）。
 
 **验证：**
 ```bash

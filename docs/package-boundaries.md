@@ -8,6 +8,7 @@ Luma 按职责拆包，兼容层不能反向污染核心包。
 - `@luma/core` 可以依赖 `@luma/icons`。
 - `@luma/vben-compat` 可以依赖 `@luma/core`。
 - `@luma/core` 不能依赖 `@luma/vben-compat`。
+- `@luma/charts` 独立可选包，不依赖 `@luma/core`；`@luma/core` 也不能依赖 `@luma/charts`。
 
 ## 初版约束
 
@@ -15,6 +16,8 @@ Luma 按职责拆包，兼容层不能反向污染核心包。
 - Element Plus 必须保持为 `@luma/core` 的 peer dependency，不能放进普通 dependencies。
 - `@luma/core` 默认不引入多语言。
 - `@luma/core` 默认不依赖 VXE。
+- `@luma/core` 默认不依赖 ECharts / vue-echarts，图表能力由 `@luma/charts` 单独承载。
+- `@luma/charts` 必须把 `echarts`、`vue-echarts` 作为 peer dependency，不能放进普通 dependencies。
 - `@luma/icons` 必须能独立构建。
 - 业务接口、业务路由、业务 store 不进入包源码。
 - `apps/*` 只作为消费方验证，通过 workspace 包依赖使用 `@luma/*`，不直接 alias 到 `packages/*/src`。
@@ -29,4 +32,4 @@ Luma 按职责拆包，兼容层不能反向污染核心包。
 corepack pnpm release:boundaries
 ```
 
-这个脚本会检查包发布字段、依赖方向、Element Plus peer dependency、core 中禁止默认引入的 i18n/VXE 标识，以及示例应用是否绕过包名直连 `packages/*/src`。
+这个脚本会检查包发布字段、依赖方向、Element Plus / ECharts peer dependency、core 中禁止默认引入的 i18n/VXE/ECharts 标识，以及示例应用是否绕过包名直连 `packages/*/src`。
