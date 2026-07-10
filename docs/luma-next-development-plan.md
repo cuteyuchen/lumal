@@ -151,32 +151,32 @@ corepack pnpm --filter luma-admin build
 **源参考：** `src/composables/{usePagination,useDictMap,useDeleteConfirm,usePersistentState}.ts`
 **落点：** 新建 `packages/core/src/composables/` + `exports`，package `exports` 增加 `./composables`。
 
-- [ ] `usePagination`
-- [ ] `useConfirmAction`（参考 `useDeleteConfirm`）
-- [ ] `usePersistentState`
-- [ ] `useDictionaryMap`（参考 `useDictMap`）
-- [ ] `useSelection`
-- [ ] `useFullscreen`
-- [ ] 各自单测。
-- [ ] **用真实子入口替换 admin `ComposablesView.vue` 的本地占位。**
+- [x] `usePagination`（对齐 Luma 标准 `{ items, total }`，可通过 parser 适配）
+- [x] `useConfirmAction`（确认交互可注入，不默认依赖 Element Plus）
+- [x] `usePersistentState`（依赖 utils StorageAccessor）
+- [x] `useDictionaryMap`（复用 dictionary 模块，从 composables 子入口再导出）
+- [x] `useSelection`
+- [x] `useFullscreen`（不支持环境静默降级）
+- [x] 各自单测（`tests/composables.test.ts`）。
+- [x] **用真实子入口替换 admin `ComposablesView.vue` 的本地占位（usePagination + useSelection）。**
 
 ### 5.2 `@luma/core/utils`
 
 **源参考：** `src/utils/{clone,color,common,download,object,path,storage,withInstall,form}.ts`
 **落点：** 新建 `packages/core/src/utils/` + package `exports` 的 `./utils`。
 
-- [ ] `cloneDeep`、`joinPath`、`omitUndefined`、`serializeQuery`、`downloadBlob`、`createStorage`、`withInstall`。
-- [ ] 标准库/原生能直接解决的不封装。
-- [ ] 单测。
-- [ ] **用真实子入口替换 admin `UtilsView.vue` 的本地占位。**
+- [x] `cloneDeep`、`cloneTree`、`joinPath`、`omitUndefined`、`serializeQuery`、`downloadBlob` / `downloadFile`、`createStorage`、`withInstall`。
+- [x] 标准库/原生能直接解决的不封装（未迁移业务色值、手机号脱敏等）。
+- [x] 单测（`tests/utils.test.ts`）。
+- [x] **用真实子入口替换 admin `UtilsView.vue` 的本地占位。**
 
 ### 5.3 `@luma/core/directives`
 
 **源参考：** `src/directives/v-permission.ts`
 **落点：** 新增 `./directives` 子入口，复用现有 `permission/directive.ts`。
 
-- [ ] 导出 `v-authority`，`v-permission` 作为兼容别名。
-- [ ] 单测。
+- [x] 导出 `createAuthorityDirective`（`v-authority`）与 `registerAuthorityDirectives`（同时注册 `v-authority` + 兼容别名 `v-permission`）。
+- [x] 单测（`tests/directives.test.ts`）。
 
 ---
 

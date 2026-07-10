@@ -1,28 +1,28 @@
 <script setup lang="ts">
 import { LumaInfoTable, LumaPage } from '@luma/core/components'
+import {
+  cloneDeep,
+  joinPath,
+  omitUndefined,
+  serializeQuery,
+} from '@luma/core/utils'
 
-/***********************工具函数*********************/
-function formatDate(value: Date): string {
-  return new Intl.DateTimeFormat('zh-CN', {
-    dateStyle: 'medium',
-  }).format(value)
-}
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat('zh-CN').format(value)
-}
+/***********************工具函数演示*********************/
+const source = { filters: { status: 1 }, name: 'Luma', tags: ['admin', 'mini'] }
+const cloned = cloneDeep(source)
 
 const utilityItems = [
-  { label: '日期格式化', value: formatDate(new Date('2026-07-09T00:00:00+08:00')) },
-  { label: '数字格式化', value: formatNumber(123456) },
-  { label: '设计原则', value: '纯工具函数不伪装成 composable' },
+  { label: 'cloneDeep', value: `${JSON.stringify(cloned)}（独立引用：${cloned !== source}）` },
+  { label: 'joinPath', value: joinPath('/system/', '/user/', 'list') },
+  { label: 'omitUndefined', value: JSON.stringify(omitUndefined({ a: 1, b: undefined, c: 'x' })) },
+  { label: 'serializeQuery', value: serializeQuery({ ids: [1, 2], keyword: 'Luma' }) },
 ]
 </script>
 
 <template>
   <main class="luma-admin-example">
-    <LumaPage title="Utils" description="示例使用浏览器标准 API，避免在 core 中堆小型项目不需要的工具集合。">
-      <LumaInfoTable :items="utilityItems" :columns="3" label-width="88px" />
+    <LumaPage title="Utils" description="消费 @luma/core/utils 子入口，演示 cloneDeep、joinPath、omitUndefined、serializeQuery。">
+      <LumaInfoTable :items="utilityItems" :columns="2" label-width="120px" />
     </LumaPage>
   </main>
 </template>

@@ -35,10 +35,20 @@
       "import": "./dist/auth.js",
       "require": "./dist/auth.cjs"
     },
+    "./composables": {
+      "types": "./dist/src/composables/index.d.ts",
+      "import": "./dist/composables.js",
+      "require": "./dist/composables.cjs"
+    },
     "./dictionary": {
       "types": "./dist/src/dictionary/index.d.ts",
       "import": "./dist/dictionary.js",
       "require": "./dist/dictionary.cjs"
+    },
+    "./directives": {
+      "types": "./dist/src/directives/index.d.ts",
+      "import": "./dist/directives.js",
+      "require": "./dist/directives.cjs"
     },
     "./layout": {
       "types": "./dist/src/layout/index.d.ts",
@@ -64,6 +74,11 @@
       "types": "./dist/src/theme/index.d.ts",
       "import": "./dist/theme.js",
       "require": "./dist/theme.cjs"
+    },
+    "./utils": {
+      "types": "./dist/src/utils/index.d.ts",
+      "import": "./dist/utils.js",
+      "require": "./dist/utils.cjs"
     },
     "./style.css": "./dist/core.css",
     "./theme-chalk/index.scss": "./theme-chalk/index.scss"
