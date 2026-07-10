@@ -1,7 +1,9 @@
 import type { IconDefinition } from '@luma/icons'
 import { createLumaAdmin } from '@luma/core'
+import { registerAuthorityDirectives } from '@luma/core/directives'
 import App from './App.vue'
 import { router } from './router'
+import { permissionStore } from './services/permission'
 import { mockDictionaryFetcher } from './views/examples/dictionary'
 import './echarts'
 import '@luma/core/theme-chalk/index.scss'
@@ -100,5 +102,8 @@ createLumaAdmin({
   },
   icons: {
     localSvg: localIcons,
+  },
+  setup({ app }) {
+    registerAuthorityDirectives(app, permissionStore)
   },
 }).mount('#app')

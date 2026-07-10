@@ -295,7 +295,7 @@
 - [x] mock 角色和权限关系，角色持有权限码。
 - [x] 登录后根据用户角色计算权限集合，并同步到 `permissionStore`。
 - [x] 菜单配置使用标准 `meta.authority` 字段，不使用 `permissions` 和 `dictType`。
-- [ ] 系统管理页面的按钮使用 `v-authority` 控制。
+- [x] 系统管理页面的按钮使用 `v-authority` 控制。
 - [x] 测试 admin/operator/guest 三种权限下侧边栏菜单输出。
 - [x] 测试无权限访问 `/system/user` 进入 `/403`。
 
@@ -321,11 +321,11 @@
 
 **任务：**
 
-- [ ] 使用 `LumaCrudTable` 实现用户查询、列表、创建、编辑、删除。
-- [ ] 字段包括：用户名、昵称、角色、状态、手机号、创建时间。
-- [ ] 状态和角色字段使用字典或角色 API options。
-- [ ] 新增、编辑、删除按钮分别受 `system:user:create`、`system:user:update`、`system:user:delete` 控制。
-- [ ] mock API 保持内存数据可变，页面操作后刷新列表。
+- [x] 使用 `LumaCrudTable` 实现用户查询、列表、创建、编辑、删除。
+- [x] 字段包括：用户名、昵称、角色、状态、手机号、创建时间。
+- [x] 状态和角色字段使用字典或角色 API options。
+- [x] 新增、编辑、删除按钮分别受 `system:user:create`、`system:user:update`、`system:user:delete` 控制。
+- [x] mock API 保持内存数据可变，页面操作后刷新列表。
 
 ### 4.2 角色管理
 
@@ -335,11 +335,11 @@
 
 **任务：**
 
-- [ ] 使用 `LumaCrudTable` 实现角色查询、列表、创建、编辑、删除。
-- [ ] 字段包括：角色名称、角色编码、状态、说明。
-- [ ] 提供“授权”按钮，打开权限树弹窗。
-- [ ] 权限树基于菜单和按钮权限生成。
-- [ ] 授权保存后更新 mock 角色权限关系。
+- [x] 使用 `LumaCrudTable` 实现角色查询、列表、创建、编辑、删除。
+- [x] 字段包括：角色名称、角色编码、状态、说明。
+- [x] 提供“授权”按钮，打开权限树弹窗。
+- [x] 权限树基于菜单和按钮权限生成。
+- [x] 授权保存后更新 mock 角色权限关系。
 
 ### 4.3 菜单管理
 
@@ -349,11 +349,11 @@
 
 **任务：**
 
-- [ ] 使用 `LumaSchemaTable` 展示菜单树。
-- [ ] 支持目录、菜单、按钮三类节点。
-- [ ] 字段包括：标题、路径、组件、图标、权限码、排序、是否隐藏。
-- [ ] 创建和编辑使用 `LumaSchemaForm`。
-- [ ] 保存后更新 mock 菜单树，并提示重新登录或刷新权限。
+- [x] 使用 `LumaSchemaTable` 展示菜单树。
+- [x] 支持目录、菜单、按钮三类节点。
+- [x] 字段包括：标题、路径、组件、图标、权限码、排序、是否隐藏。
+- [x] 创建和编辑使用 `LumaSchemaForm`。
+- [x] 保存后更新 mock 菜单树，并提示重新登录或刷新权限。
 
 ### 4.4 字典管理
 
@@ -363,11 +363,11 @@
 
 **任务：**
 
-- [ ] 左侧字典类型列表，右侧字典项表格。
-- [ ] 字典类型字段：名称、编码、状态、说明。
-- [ ] 字典项字段：标签、值、颜色、排序、状态。
-- [ ] 保存字典项后更新 `installDictionary` 使用的 mock fetcher 数据源。
-- [ ] 示例页和系统页能读到更新后的字典项。
+- [x] 左侧字典类型列表，右侧字典项表格。
+- [x] 字典类型字段：名称、编码、状态、说明。
+- [x] 字典项字段：标签、值、颜色、排序、状态。
+- [x] 保存字典项后更新 `installDictionary` 使用的 mock fetcher 数据源。
+- [x] 示例页和系统页能读到更新后的字典项。
 
 ### 4.5 系统配置
 
@@ -377,9 +377,9 @@
 
 **任务：**
 
-- [ ] 使用 `LumaSchemaForm` 展示应用配置。
-- [ ] 包含应用名称、默认布局、默认主题色、是否启用 tabbar、是否启用页面动画。
-- [ ] 保存后更新应用偏好默认值，当前会话立即生效。
+- [x] 使用 `LumaSchemaForm` 展示应用配置。
+- [x] 包含应用名称、默认布局、默认主题色、是否启用 tabbar、是否启用页面动画。
+- [x] 保存后更新应用偏好默认值，当前会话立即生效。
 
 **阶段验收：**
 
@@ -403,10 +403,10 @@
 
 **任务：**
 
-- [ ] 将 `views/examples/dictionary.ts` 迁移为 `mock/system.ts` 中的 `dictionaryTypes` 和 `dictionaryItems`。
-- [ ] `mockDictionaryFetcher` 从系统字典数据源读取。
-- [ ] 表单、表格、CRUD 示例统一使用 `dictionary: 'status'`、`dictionary: 'priority'`。
-- [ ] 字典管理保存后清理或刷新字典缓存。
+- [x] 将 `views/examples/dictionary.ts` 迁移为 `mock/system.ts` 中的 `dictionaryTypes` 和 `dictionaryItems`。
+- [x] `mockDictionaryFetcher` 从系统字典数据源读取。
+- [x] 表单、表格、CRUD 示例统一使用 `dictionary: 'status'`、`dictionary: 'priority'`。
+- [x] 字典管理保存后清理或刷新字典缓存。
 - [ ] 增加“颜色标签”渲染示例，验证字典项 color 字段。
 
 **验收：**

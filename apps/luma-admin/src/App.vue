@@ -17,14 +17,15 @@ import {
   createAdminTabs,
 } from './router'
 import {
+  adminAppName,
+  adminPreferences,
   applyAdminPreferences,
-  createAdminPreferences,
 } from './services/preferences'
 import { currentUser, logout } from './services/session'
 
 /***********************基础状态*********************/
-const title = 'Luma Admin'
-const preferences = shallowRef(createAdminPreferences())
+const title = adminAppName
+const preferences = adminPreferences
 const settingsVisible = shallowRef(false)
 const resolvedThemeMode = shallowRef<ResolvedThemeMode>('light')
 

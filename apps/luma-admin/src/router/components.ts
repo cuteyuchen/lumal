@@ -15,7 +15,11 @@ import ServicesView from '../views/examples/ServicesView.vue'
 import ThemeSettingsView from '../views/examples/ThemeSettingsView.vue'
 import UtilsView from '../views/examples/UtilsView.vue'
 import ProjectView from '../views/project/ProjectView.vue'
-import SystemPlaceholderView from '../views/system/SystemPlaceholderView.vue'
+import ConfigView from '../views/system/ConfigView.vue'
+import DictView from '../views/system/DictView.vue'
+import MenuView from '../views/system/MenuView.vue'
+import RoleView from '../views/system/RoleView.vue'
+import UserView from '../views/system/UserView.vue'
 
 /***********************组件映射*********************/
 const routeComponents: Record<string, RouteRecordRaw['component']> = {
@@ -35,11 +39,11 @@ const routeComponents: Record<string, RouteRecordRaw['component']> = {
   'examples/theme-settings': ThemeSettingsView,
   'examples/utils': UtilsView,
   'project/index': ProjectView,
-  'system/config': SystemPlaceholderView,
-  'system/dict': SystemPlaceholderView,
-  'system/menu': SystemPlaceholderView,
-  'system/role': SystemPlaceholderView,
-  'system/user': SystemPlaceholderView,
+  'system/config': ConfigView,
+  'system/dict': DictView,
+  'system/menu': MenuView,
+  'system/role': RoleView,
+  'system/user': UserView,
 }
 
 /***********************组件解析*********************/

@@ -7,7 +7,7 @@ import { elementPlusStubs } from '../../../packages/core/tests/helpers/element-p
 import App from '../src/App.vue'
 import AppSettingsDrawer from '../src/components/app/AppSettingsDrawer.vue'
 import { createAdminRouter } from '../src/router'
-import { createAdminPreferences } from '../src/services/preferences'
+import { createAdminPreferences, resetAdminSystemConfig } from '../src/services/preferences'
 import { login, logout } from '../src/services/session'
 
 const LayoutStub = defineComponent({
@@ -74,6 +74,7 @@ const DrawerStub = defineComponent({
 
 describe('app shell', () => {
   afterEach(async () => {
+    resetAdminSystemConfig()
     await logout()
   })
 

@@ -112,6 +112,9 @@ export async function mockLogin(payload: AdminLoginRequest): Promise<AdminLoginR
 
   return {
     token: `mock-token-${account.key}`,
-    user: cloneUser(account.user),
+    user: cloneUser({
+      ...account.user,
+      permissions: resolveRolePermissions(account.user.roles),
+    }),
   }
 }

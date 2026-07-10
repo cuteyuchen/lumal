@@ -151,17 +151,22 @@ const [, gridApi] = useVbenVxeGrid({
 - `apps/luma-admin` 作为唯一原生示例和验证入口。
 - 删除独立 playground，后续示例统一进入 admin 路由体系中验证。
 
-已经完成并提交的增强阶段：
+已经完成的增强阶段：
 
 - Schema Form 增强：支持 `create/edit/view` 模式、更多控件、校验、布局、权限、字典、插槽和公开方法。
 - Schema Table 增强：支持 selection、index、loading、pagination、列隐藏、列权限、Element Plus 透传、字典回显和操作列插槽。
 - CRUD Table 增强：支持标准 `dataSource`、远程加载、分页、查询、新增、查看、编辑、删除、批量删除、loading、error 和标准响应 `{ items, total }`。
+- 权限、动态路由、Auth、Request、主题布局、composables、utils、directives 和独立 charts 包能力补齐。
+- `luma-admin` 登录、登出、角色权限、全局主题设置和三种导航布局闭环。
+- 系统管理基座：用户、角色授权、菜单树、字典类型/字典项和系统配置页面。
+- 应用级可变 Mock API：用户、角色、菜单、字典数据均支持真实增删改查和测试重置。
 
 当前正在推进的阶段：
 
-- 阶段 2：权限和动态路由体系升级。
-- 当前工作区已有路由相关草稿改动：菜单字段显式映射、动态路由注册器、对应测试。
-- 后续还需要继续补齐 `meta.authority` 权限守卫、登录守卫、白名单、403/404 兜底、动态菜单过滤、首个可访问菜单解析、admin 中的完整路由权限示例。
+- 对照 `E:\project\gr-framework` 重构 Admin 应用壳和视觉层级。
+- 优化菜单分组、顶部导航、侧边导航和标签页的职责边界，避免重复导航。
+- 修正主题与布局设置入口、内容容器、间距、背景、表格和表单样式。
+- 完成字典颜色标签展示，并继续接入后端菜单 API、动态路由注册和重置。
 
 ## 后续开发目标
 
@@ -297,14 +302,13 @@ git status --short --branch
 git diff --stat
 ```
 
-当前分支可能存在阶段 2 的未提交路由改动，请不要直接重置。后续开发应优先继续完成“权限和动态路由体系升级”，并在通过测试后提交中文 commit。
+后续开发应优先处理 `luma-admin` 应用壳与 `gr-framework` 的体验差距。每个一级阶段完成后先执行完整验证，再使用 Conventional Commits 规范和中文描述提交。
 
-推荐阶段 2 的验证命令：
+推荐验证命令：
 
 ```bash
-corepack pnpm exec vitest run --config vitest.config.ts packages/core/tests/router.test.ts packages/core/tests/permission.test.ts
-corepack pnpm --filter @luma/core typecheck
-corepack pnpm --filter @luma/core build
+corepack pnpm test
+corepack pnpm typecheck
 corepack pnpm --filter luma-admin build
 corepack pnpm lint
 corepack pnpm release:boundaries

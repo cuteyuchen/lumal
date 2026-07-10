@@ -27,7 +27,7 @@ export const adminPermissionCodes = {
 } as const
 
 /***********************角色权限*********************/
-export const mockRolePermissions: Record<AdminRoleCode, string[]> = {
+const initialRolePermissions: Record<AdminRoleCode, string[]> = {
   admin: [
     adminPermissionCodes.dashboardView,
     adminPermissionCodes.systemUserList,
@@ -65,6 +65,35 @@ export const mockRolePermissions: Record<AdminRoleCode, string[]> = {
   ],
 }
 
+export const mockRolePermissions: Record<string, string[]> = cloneRolePermissions(initialRolePermissions)
+
+function cloneRolePermissions(source: Record<string, string[]>): Record<string, string[]> {
+  return Object.fromEntries(
+    Object.entries(source).map(([role, permissions]) => [role, [...permissions]]),
+  )
+}
+
 export function resolveRolePermissions(roles: AdminRoleCode[]): string[] {
   return Array.from(new Set(roles.flatMap(role => mockRolePermissions[role] ?? [])))
+}
+
+export function getMockRolePermissions(role: string): string[] {
+  return [...(mockRolePermissions[role] ?? [])]
+}
+
+export function setMockRolePermissions(role: string, permissions: string[]): void {
+  mockRolePermissions[role] = Array.from(new Set(
+    permissions.map(permission => permission.trim()).filter(Boolean),
+  ))
+}
+
+export function deleteMockRolePermissions(role: string): void {
+  delete mockRolePermissions[role]
+}
+
+export function resetMockRolePermissions(): void {
+  Object.keys(mockRolePermissions).forEach((role) => {
+    delete mockRolePermissions[role]
+  })
+  Object.assign(mockRolePermissions, cloneRolePermissions(initialRolePermissions))
 }

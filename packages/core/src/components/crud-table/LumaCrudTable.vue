@@ -289,15 +289,16 @@ defineExpose({
     >
       <template v-if="hasToolbar || $slots.actions" #actions>
         <div class="luma-crud-table__toolbar">
-          <ElButton
-            v-if="hasForm"
-            type="primary"
-            native-type="button"
-            data-action="create"
-            @click="openCreate"
-          >
-            {{ createText }}
-          </ElButton>
+          <slot v-if="hasForm" name="create-action" :open-create="openCreate">
+            <ElButton
+              type="primary"
+              native-type="button"
+              data-action="create"
+              @click="openCreate"
+            >
+              {{ createText }}
+            </ElButton>
+          </slot>
           <ElButton
             v-if="selection"
             native-type="button"

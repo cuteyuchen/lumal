@@ -12,6 +12,12 @@ describe('luma admin style entry', () => {
     expect(mainTs).toContain('import \'./styles.scss\'')
   })
 
+  it('会注册 authority 与 permission 应用级权限指令', async () => {
+    const mainTs = await readFile(join(process.cwd(), 'src/main.ts'), 'utf8')
+
+    expect(mainTs).toContain('registerAuthorityDirectives(app, permissionStore)')
+  })
+
   it('会在应用壳中启用路由动画和缓存示例', async () => {
     const appVue = await readFile(join(process.cwd(), 'src/App.vue'), 'utf8')
 

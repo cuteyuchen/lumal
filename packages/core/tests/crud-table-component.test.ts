@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-import { nextTick } from 'vue'
+import { h, nextTick } from 'vue'
 import { LumaCrudTable } from '../src/components/crud-table'
 import { LumaPagination } from '../src/components/pagination'
 import { LumaSchemaForm } from '../src/components/schema-form'
@@ -51,6 +51,42 @@ describe('luma crud table', () => {
     expect(wrapper.findComponent(LumaSchemaTable).exists()).toBe(true)
     expect(wrapper.findComponent(LumaPagination).exists()).toBe(true)
     expect(wrapper.findAllComponents({ name: 'ElButton' })).toHaveLength(2)
+  })
+
+  it('允许应用通过 create-action 插槽替换默认新增按钮', async () => {
+    const wrapper = mount(LumaCrudTable, {
+      global: {
+        stubs: elementPlusStubs,
+      },
+      props: {
+        columns: [
+          {
+            field: 'name',
+            label: '名称',
+          },
+        ],
+        formSchemas: [
+          {
+            field: 'name',
+            label: '名称',
+          },
+        ],
+        rows: [],
+      },
+      slots: {
+        'create-action': (slotProps: { openCreate: () => void }) => h('button', {
+          class: 'custom-create',
+          onClick: slotProps.openCreate,
+        }, '新增用户'),
+      },
+    })
+
+    expect(wrapper.find('[data-action="create"]').exists()).toBe(false)
+    expect(wrapper.find('.custom-create').text()).toBe('新增用户')
+
+    await wrapper.find('.custom-create').trigger('click')
+
+    expect(wrapper.find('.el-dialog').attributes('data-title')).toBe('新增')
   })
 
   it('点击搜索会触发 search 并携带查询模型', async () => {
