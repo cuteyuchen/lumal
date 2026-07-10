@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createRequestClient, RequestError } from '../src/request'
+import {
+  createRequestClient,
+  createStandardResponseParser,
+  parseStandardResponse,
+  RequestError,
+} from '../src/request'
 
 function createJsonResponse(data: unknown, init?: ResponseInit): Response {
   return new Response(JSON.stringify(data), {
@@ -126,5 +131,120 @@ describe('create request client', () => {
       status: 401,
     })
     expect(onSessionExpired).toHaveBeenCalledTimes(2)
+  })
+
+  it('会串行触发 onRequest 与 onResponse 生命周期钩子并注入 requestId', async () => {
+    const onRequest = vi.fn()
+    const fetchMock = vi.fn(async () => createJsonResponse({ ok: true }))
+
+    const client = createRequestClient({
+      baseURL: 'https://api.example.com',
+      fetch: fetchMock,
+      onRequest,
+      requestId: () => 'req-123',
+      requestIdHeader: 'X-Request-Id',
+    })
+
+    await client.get('/ping')
+
+    const [, init] = fetchMock.mock.calls[0] ?? []
+    const headers = new Headers(init?.headers)
+
+    expect(headers.get('X-Request-Id')).toBe('req-123')
+    expect(onRequest).toHaveBeenCalledWith(expect.objectContaining({
+      requestId: 'req-123',
+      url: 'https://api.example.com/ping',
+    }))
+  })
+
+  it('网络错误会触发 onRequestError，响应错误会触发 onResponseError', async () => {
+    const onRequestError = vi.fn()
+    const onResponseError = vi.fn()
+
+    const networkClient = createRequestClient({
+      fetch: vi.fn(async () => {
+        throw new Error('network down')
+      }),
+      onRequestError,
+    })
+    await expect(networkClient.get('/a')).rejects.toThrow('network down')
+    expect(onRequestError).toHaveBeenCalledTimes(1)
+
+    const errorClient = createRequestClient({
+      fetch: vi.fn(async () => createJsonResponse({ message: 'boom' }, { status: 500 })),
+      onResponseError,
+    })
+    await expect(errorClient.get('/b')).rejects.toBeInstanceOf(RequestError)
+    expect(onResponseError).toHaveBeenCalledTimes(1)
+  })
+
+  it('开启缓存后同一 GET 只请求一次', async () => {
+    const fetchMock = vi.fn(async () => createJsonResponse({ value: 1 }))
+    const client = createRequestClient({
+      baseURL: 'https://api.example.com',
+      fetch: fetchMock,
+    })
+
+    const first = await client.get('/config', { cache: { enabled: true } })
+    const second = await client.get('/config', { cache: { enabled: true } })
+
+    expect(first).toEqual({ value: 1 })
+    expect(second).toEqual({ value: 1 })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('upload 会以 multipart/form-data 提交文件与附加字段', async () => {
+    const fetchMock = vi.fn(async () => createJsonResponse({ ok: true }))
+    const client = createRequestClient({
+      baseURL: 'https://api.example.com',
+      fetch: fetchMock,
+    })
+
+    const file = new Blob(['hello'], { type: 'text/plain' })
+    await client.upload('/files', file, {
+      data: { category: 'doc' },
+      fileField: 'attachment',
+    })
+
+    const [, init] = fetchMock.mock.calls[0] ?? []
+
+    expect(init?.method).toBe('POST')
+    expect(init?.body).toBeInstanceOf(FormData)
+    const formData = init?.body as FormData
+    expect(formData.get('category')).toBe('doc')
+    expect(formData.get('attachment')).toBeInstanceOf(Blob)
+  })
+})
+
+describe('parse standard response', () => {
+  it('成功状态码返回 data，失败状态码抛错', () => {
+    expect(parseStandardResponse({ code: 0, data: { id: 1 } })).toEqual({ id: 1 })
+    expect(() => parseStandardResponse({ code: 500, message: '服务异常' })).toThrow('服务异常')
+  })
+
+  it('无 code 字段视为非标准包装，原样返回', () => {
+    expect(parseStandardResponse({ id: 1 })).toEqual({ id: 1 })
+  })
+
+  it('支持自定义字段映射与成功码集合', () => {
+    const result = parseStandardResponse(
+      { status: 'OK', payload: { id: 2 } },
+      {
+        fieldNames: { code: 'status', data: 'payload' },
+        successCodes: ['OK'],
+      },
+    )
+
+    expect(result).toEqual({ id: 2 })
+  })
+
+  it('createStandardResponseParser 可直接用作 onResponse', async () => {
+    const fetchMock = vi.fn(async () => createJsonResponse({ code: 0, data: { name: 'Luma' } }))
+    const client = createRequestClient({
+      fetch: fetchMock,
+      onResponse: createStandardResponseParser(),
+    })
+
+    await expect(client.get('/profile')).resolves.toEqual({ name: 'Luma' })
   })
 })

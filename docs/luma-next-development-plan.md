@@ -86,28 +86,28 @@ corepack pnpm --filter luma-admin build
 **源参考：** `src/services/auth/{session,storage,redirect,session-expired}.ts`
 **落点：** 新建 `packages/core/src/auth/`，在 `packages/core/package.json` 的 `exports` 增加 `./auth`。
 
-- [ ] token storage：`getStoredToken` / `setStoredToken` / `clearStoredToken`，key 可配置，默认 `luma:token`。
-- [ ] 可替换 storage：`createTokenStorage(storage, key)`，支持注入 `localStorage` / `sessionStorage` / 自定义。
-- [ ] 登录跳转解析：`resolveLoginRedirect(currentPath, options)`。
-- [ ] session expired handler：`registerSessionExpiredHandler` / `clearSessionExpiredHandler`。
-- [ ] 聚合 API：`createAuthSession({ tokenKey, storage, onSessionExpired })`，返回 token 读写 + logout hook。
-- [ ] 不绑定具体登录接口/字段。
-- [ ] `packages/core/tests/auth.test.ts`。
+- [x] token storage：`getStoredToken` / `setStoredToken` / `clearStoredToken`，key 可配置，默认 `luma:token`。
+- [x] 可替换 storage：`createTokenStorage(storage, key)`，支持注入 `localStorage` / `sessionStorage` / 自定义；无 Web Storage 环境内存兜底。
+- [x] 登录跳转解析：`resolveLoginRedirect(currentPath, options)`。
+- [x] session expired handler：`registerSessionExpiredHandler` / `clearSessionExpiredHandler` / `handleSessionExpired`。
+- [x] 聚合 API：`createAuthSession({ tokenKey, storage, onSessionExpired, redirect })`，返回 token 读写 + isAuthenticated + logout + resolveRedirect。
+- [x] 不绑定具体登录接口/字段。
+- [x] `packages/core/tests/auth.test.ts`（storage、redirect、session、聚合、过期注册表）。
 
 ### 3.2 Request 进阶
 
 **源参考：** `src/services/request/{cache,standard,presets,defaults,api-types}.ts`
 **落点：** 扩展 `packages/core/src/request/`
 
-- [ ] 完整生命周期 hooks：`onRequest` / `onRequestError` / `onResponse` / `onResponseError`（当前仅 `onResponse`）。
-- [ ] upload 支持（`FormData` / 进度回调）。
-- [ ] request id 注入。
-- [ ] cache hooks（参考 `createStandardRequestCache`，显式启用）。
-- [ ] 标准响应解析 helper（参考 `standard.ts`，显式启用、可关闭）。
-- [ ] 保留 fetch client 为默认，Axios 仅作可选 adapter，不进默认依赖。
-- [ ] `packages/core/tests/request.test.ts` 补齐新增能力。
+- [x] 完整生命周期 hooks：`onRequest` / `onRequestError` / `onResponse` / `onResponseError`（网络错误走 onRequestError，响应非 2xx 走 onResponseError）。
+- [x] upload 支持（`FormData`、单/多文件、附加字段）。
+- [x] request id 注入（`requestId` 布尔或自定义函数，`requestIdHeader` 可配）。
+- [x] cache hooks（`createRequestCache` 内存实现，逐请求 `cache.enabled` 显式启用，可注入自定义存储）。
+- [x] 标准响应解析 helper（`parseStandardResponse` / `createStandardResponseParser`，显式启用、字段可映射、无 code 字段时原样返回）。
+- [x] 保留 fetch client 为默认，未引入 Axios 依赖。
+- [x] `packages/core/tests/request-client.test.ts` 补齐新增能力。
 
-**验收：** 可配置 token 注入、会话过期跳转、上传、重复提交拦截、可选缓存；默认响应解析可关闭以适配非标准后端。
+**验收：** 可配置 token 注入、会话过期、上传、重复提交拦截、可选缓存、requestId；默认响应解析可关闭以适配非标准后端。✅
 
 ---
 

@@ -30,6 +30,11 @@
       "import": "./dist/components.js",
       "require": "./dist/components.cjs"
     },
+    "./auth": {
+      "types": "./dist/src/auth/index.d.ts",
+      "import": "./dist/auth.js",
+      "require": "./dist/auth.cjs"
+    },
     "./dictionary": {
       "types": "./dist/src/dictionary/index.d.ts",
       "import": "./dist/dictionary.js",

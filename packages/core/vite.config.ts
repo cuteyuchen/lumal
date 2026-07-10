@@ -12,6 +12,7 @@ export default defineConfig({
     lib: {
       entry: {
         index: resolve(packageRoot, 'src/index.ts'),
+        auth: resolve(packageRoot, 'src/auth/index.ts'),
         components: resolve(packageRoot, 'src/exports/components.ts'),
         dictionary: resolve(packageRoot, 'src/dictionary/index.ts'),
         layout: resolve(packageRoot, 'src/layout/index.ts'),
