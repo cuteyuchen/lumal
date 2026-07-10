@@ -76,6 +76,11 @@ await framework.mount('#app')
 - `LumaIconPicker`
 - `LumaIconPickerDialog`
 
+### Page 与 Page Layout
+
+- `LumaPage` 支持 `fill`、`noPadding` 和 `contentClass`，用于普通卡片页或填充式滚动页面。
+- `LumaPageLayout` 使用查询、工具栏、内容、分页四区结构；`fill` 控制高度填充，`contentScrollable` 控制内容区滚动，`surface` 控制分区表面样式。
+
 ### Schema Form
 
 ```vue
@@ -84,14 +89,23 @@ import type { SchemaFormItem, SchemaFormMode, SchemaFormModel } from '@luma/core
 import { LumaSchemaForm } from '@luma/core/components'
 import { shallowRef } from 'vue'
 
-const model = shallowRef<SchemaFormModel>({})
+interface ProjectForm {
+  enabled: boolean
+  name: string
+  score: number
+  status: string
+}
+
+const model = shallowRef<SchemaFormModel<ProjectForm>>({})
 const mode = shallowRef<SchemaFormMode>('edit')
 
-const schemas: SchemaFormItem[] = [
+const schemas: SchemaFormItem<ProjectForm>[] = [
   {
     field: 'name',
     label: '名称',
     component: 'input',
+    editDisabled: true,
+    prepend: '项目',
     rules: [{ required: true, message: '请输入名称' }],
   },
   {
@@ -112,6 +126,8 @@ const schemas: SchemaFormItem[] = [
       min: 0,
       max: 100,
     },
+    formatter: value => `${String(value ?? 0)} 分`,
+    suffix: '分',
   },
 ]
 </script>
@@ -136,7 +152,7 @@ const schemas: SchemaFormItem[] = [
 </template>
 ```
 
-`LumaSchemaForm` 当前支持 `create`、`edit`、`view` 三种模式。`view` 模式会把字段置为只读并隐藏操作区。
+`LumaSchemaForm` 支持 `create`、`edit`、`view` 三种模式。`view` 模式使用文本语义展示格式化结果，不再渲染一组禁用输入框。
 
 内置控件包括：`input`、`textarea`、`select`、`number`、`switch`、`date`、`datetime`、`daterange`、`radio`、`checkbox`、`tree-select`、`upload`、`hidden`。
 
@@ -146,12 +162,15 @@ const schemas: SchemaFormItem[] = [
 - `label`：表单标签。
 - `component`：内置控件类型。
 - `dictionary`：从字典上下文加载 options。
-- `options`：静态 options。
+- `options`：数组或 `Ref` options。
 - `rules`：Element Plus 表单校验规则。
 - `span` / `columns` / `labelWidth`：控制布局。
 - `hidden` / `disabled` / `readonly`：支持布尔值或 `(context) => boolean`。
-- `authority`：结合 `canAccess` 控制字段权限。
-- `componentProps`：透传给底层 Element Plus 控件。
+- `editDisabled`：仅编辑模式禁用。
+- `authority` / `readonlyAuthority`：结合 `canAccess` 控制隐藏或只读权限。
+- `formatter`：查看模式格式化。
+- `prepend` / `append` / `prefix` / `suffix`：复合输入内容。
+- `componentProps`：按 `component` 精确映射到对应 Element Plus props。
 
 字段插槽命名规则：
 
@@ -163,14 +182,20 @@ const schemas: SchemaFormItem[] = [
 
 ```vue
 <script setup lang="ts">
-import type { SchemaTableColumn, SchemaTablePaginationChangePayload, SchemaTableRow } from '@luma/core/components'
+import type { SchemaTableColumn, SchemaTablePaginationChangePayload } from '@luma/core/components'
 import { LumaSchemaTable } from '@luma/core/components'
 import { shallowRef } from 'vue'
 
 const page = shallowRef(1)
 const pageSize = shallowRef(10)
 
-const columns: SchemaTableColumn[] = [
+interface ProjectRow {
+  id: number
+  name: string
+  status: string
+}
+
+const columns: SchemaTableColumn<ProjectRow>[] = [
   {
     field: 'name',
     label: '名称',
@@ -181,12 +206,12 @@ const columns: SchemaTableColumn[] = [
   { field: 'status', label: '状态', dictionary: 'status' },
 ]
 
-const rows: SchemaTableRow[] = [
+const rows: ProjectRow[] = [
   { id: 1, name: 'Luma', status: 'enabled' },
 ]
 
-function handleSelectionChange(rows: SchemaTableRow[]) {
-  console.log(rows)
+function handleSelectionChange(rows: ProjectRow[], rowKeys: Array<string | number>) {
+  console.log(rows, rowKeys)
 }
 
 function handlePageChange(payload: SchemaTablePaginationChangePayload) {
@@ -204,12 +229,17 @@ function handlePageChange(payload: SchemaTablePaginationChangePayload) {
     row-key="id"
     selection
     show-index
+    show-column-settings
     pagination
     :total="36"
     :table-props="{ border: true, stripe: true }"
     @selection-change="handleSelectionChange"
     @page-change="handlePageChange"
   >
+    <template #table-name="{ value }">
+      <strong>{{ value }}</strong>
+    </template>
+
     <template #actions="{ row }">
       <button type="button">
         {{ row.name }}
@@ -221,15 +251,21 @@ function handlePageChange(payload: SchemaTablePaginationChangePayload) {
 
 `LumaSchemaTable` 支持：
 
-- `selection`：渲染选择列，并通过 `selection-change` 返回选中行。
+- `selection`：渲染选择列，并通过 `selection-change(rows, rowKeys)` 同时返回选中行和主键。
 - `showIndex`：渲染序号列。
+- `showColumnSettings`：显示可键盘操作的列设置。
+- `defaultExpandAll` / `treeProps`：树表配置，同时兼容旧 `tableProps` 写法。
+- `autoResize`：使用 `ResizeObserver` 自动执行表格布局。
+- `scaleColumnWidth`：关闭时忽略配置宽度并使用流式列宽；不依赖全局 viewport 转换。
+- `columnResizable`：控制 Element Plus 列宽拖动。
 - `loading`：表格加载状态。
 - `pagination` / `total` / `pageSizes`：内部分页，配合 `v-model:page` 和 `v-model:page-size`。
-- `hidden` / `authority`：控制列隐藏和权限。
+- `hidden` / `authority`：控制列隐藏和权限；函数形式按行决定单元格显示。
 - `componentProps`：透传给底层 `ElTableColumn`。
 - `tableProps`：透传给底层 `ElTable`。
 - `rowClassName` / `cellClassName` / `headerCellClassName`：行、单元格和表头 class。
 - `actions` 插槽：追加操作列。
+- `table-${field}` 插槽：接管指定字段；移动端操作列自动切换为“更多”入口。
 - 字典项包含 `color` 时渲染“颜色点 + 文本”标签；颜色不作为唯一状态信息。
 
 复杂表格或自定义渲染可以复用公开 helper：
