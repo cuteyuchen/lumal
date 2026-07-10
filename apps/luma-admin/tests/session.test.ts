@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
+import { permissionStore } from '../src/router'
 import {
   adminSession,
   currentUser,
@@ -6,7 +7,6 @@ import {
   login,
   logout,
 } from '../src/services/session'
-import { permissionStore } from '../src/router'
 
 describe('admin session service', () => {
   afterEach(async () => {

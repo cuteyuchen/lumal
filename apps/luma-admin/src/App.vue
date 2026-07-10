@@ -20,6 +20,7 @@ import {
   applyAdminPreferences,
   createAdminPreferences,
 } from './services/preferences'
+import { currentUser, logout } from './services/session'
 
 /***********************基础状态*********************/
 const title = 'Luma Admin'
@@ -30,6 +31,7 @@ const resolvedThemeMode = shallowRef<ResolvedThemeMode>('light')
 /***********************路由状态*********************/
 const route = useRoute()
 const router = useRouter()
+const isPublicLayout = computed(() => route.meta.layout === 'public')
 
 /***********************偏好状态*********************/
 watch(
@@ -63,6 +65,7 @@ const tabs = computed(() => preferences.value.tabbar.enable ? createAdminTabs(ro
 const routeViewKey = computed(() => route.fullPath)
 const sidebarWidth = computed(() => `${preferences.value.sidebar.width}px`)
 const routeViewCache = computed(() => preferences.value.tabbar.enable && preferences.value.tabbar.cache)
+const userName = computed(() => currentUser.value?.name ?? '未登录')
 const activePath = computed({
   get: () => route.path,
   set: (path: string) => {
@@ -89,6 +92,14 @@ function handlePreferencesChange(): void {
   // 偏好变化由 watch 统一应用到 DOM，这里保留事件入口便于后续持久化。
 }
 
+async function handleLogout(): Promise<void> {
+  await logout()
+
+  if (route.path !== '/login') {
+    await router.push('/login')
+  }
+}
+
 /***********************导航事件*********************/
 function handleMenuSelect(path: string): void {
   activePath.value = path
@@ -105,7 +116,19 @@ function handleTabChange(path: string): void {
 </script>
 
 <template>
+  <LumaRouterView
+    v-if="isPublicLayout"
+    :view-key="routeViewKey"
+    :progress="preferences.transition.progress"
+    :loading="preferences.transition.loading"
+    :cache="false"
+    :cache-max="preferences.tabbar.maxCount"
+    :transition="preferences.transition.enable"
+    :transition-name="preferences.transition.name"
+  />
+
   <LumaLayout
+    v-else
     v-model:collapsed="collapsed"
     v-model:active-tab-path="activePath"
     :title="title"
@@ -122,7 +145,8 @@ function handleTabChange(path: string): void {
     <template #headerActions>
       <AppHeaderActions
         :resolved-theme-mode="resolvedThemeMode"
-        user-name="管理员"
+        :user-name="userName"
+        @logout="handleLogout"
         @open-settings="handleOpenSettings"
         @toggle-theme="handleToggleTheme"
       />

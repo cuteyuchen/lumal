@@ -215,26 +215,28 @@
 - `apps/luma-admin/src/mock/auth.ts`
 - `apps/luma-admin/src/api/auth.ts`
 - `apps/luma-admin/tests/session.test.ts`
+- `apps/luma-admin/tests/login-view.test.ts`
 
 **修改文件：**
 
 - `apps/luma-admin/src/router/index.ts`
 - `apps/luma-admin/src/App.vue`
 - `apps/luma-admin/src/main.ts`
+- `apps/luma-admin/src/components/app/AppHeaderActions.vue`
 
 **任务：**
 
-- [ ] 使用 `@luma/core/auth` 的 `createAuthSession` 管理 token。
-- [ ] mock 三类账号：
+- [x] 使用 `@luma/core/auth` 的 `createAuthSession` 管理 token。
+- [x] mock 三类账号：
   - `admin`：拥有系统管理全部权限。
   - `operator`：拥有工作台、项目、字典查看、示例查看权限。
   - `guest`：仅能访问工作台和部分示例。
-- [ ] 登录页提供账号选择、用户名、密码输入，第一版 mock 校验即可。
-- [ ] 登录成功写入 token 和当前用户快照。
-- [ ] 登出清理 token、权限、角色，并跳转 `/login`。
-- [ ] `setupPermissionGuard` 开启 `isAuthenticated`、`loginPath`、`whiteList`、`requireLoginByDefault`。
-- [ ] `/login` 使用 public layout，不显示后台壳。
-- [ ] 登录后按 redirect 参数回跳，缺省跳第一个可访问菜单。
+- [x] 登录页提供账号选择、用户名、密码输入，第一版 mock 校验即可。
+- [x] 登录成功写入 token 和当前用户快照。
+- [x] 登出清理 token、权限、角色，并跳转 `/login`。
+- [x] `setupPermissionGuard` 开启 `isAuthenticated`、`loginPath`、`whiteList`、`requireLoginByDefault`。
+- [x] `/login` 使用 public layout，不显示后台壳。
+- [x] 登录后按 redirect 参数回跳，缺省跳第一个可访问菜单。
 
 **验收：**
 
@@ -255,6 +257,7 @@
 - `apps/luma-admin/src/services/permission.ts`
 - `apps/luma-admin/src/router/routes.ts`
 - `apps/luma-admin/src/router/components.ts`
+- `apps/luma-admin/src/views/system/SystemPlaceholderView.vue`
 
 **修改文件：**
 
@@ -287,14 +290,14 @@
 
 **任务：**
 
-- [ ] 把现有 `adminRouteRecords` 拆到 `router/routes.ts`。
-- [ ] 把 `resolveRouteComponent` 拆到 `router/components.ts`。
-- [ ] mock 角色和权限关系，角色持有权限码。
-- [ ] 登录后根据用户角色计算权限集合，并同步到 `permissionStore`。
-- [ ] 菜单配置使用标准 `meta.authority` 字段，不使用 `permissions` 和 `dictType`。
+- [x] 把现有 `adminRouteRecords` 拆到 `router/routes.ts`。
+- [x] 把 `resolveRouteComponent` 拆到 `router/components.ts`。
+- [x] mock 角色和权限关系，角色持有权限码。
+- [x] 登录后根据用户角色计算权限集合，并同步到 `permissionStore`。
+- [x] 菜单配置使用标准 `meta.authority` 字段，不使用 `permissions` 和 `dictType`。
 - [ ] 系统管理页面的按钮使用 `v-authority` 控制。
-- [ ] 测试 admin/operator/guest 三种权限下侧边栏菜单输出。
-- [ ] 测试无权限访问 `/system/user` 进入 `/403`。
+- [x] 测试 admin/operator/guest 三种权限下侧边栏菜单输出。
+- [x] 测试无权限访问 `/system/user` 进入 `/403`。
 
 **验收：**
 

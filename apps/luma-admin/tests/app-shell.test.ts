@@ -98,7 +98,7 @@ describe('app shell', () => {
     })
 
     expect(wrapper.find('.layout-stub').attributes('data-title')).toBe('Luma Admin')
-    expect(wrapper.find('.layout-stub').attributes('data-top-menu-count')).toBe('2')
+    expect(wrapper.find('.layout-stub').attributes('data-top-menu-count')).toBe('4')
     expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('13')
     expect(wrapper.find('.layout-stub').attributes('data-sidebar-width')).toBe('248px')
     expect(wrapper.find('[data-action="open-settings"]').exists()).toBe(true)
@@ -140,7 +140,7 @@ describe('app shell', () => {
     wrapper.findComponent(AppSettingsDrawer).vm.$emit('update:preferences', topNavPreferences)
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.find('.layout-stub').attributes('data-top-menu-count')).toBe('2')
+    expect(wrapper.find('.layout-stub').attributes('data-top-menu-count')).toBe('4')
     expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('0')
   })
 

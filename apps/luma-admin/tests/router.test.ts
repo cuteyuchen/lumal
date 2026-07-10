@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory } from 'vue-router'
 import {
-  adminRouteRecords,
   createAdminRouter,
   createAdminSidebarMenus,
   permissionStore,
 } from '../src/router'
+import { adminRouteRecords } from '../src/router/routes'
 import { adminSession, login, logout } from '../src/services/session'
 
 describe('luma admin router', () => {
@@ -16,6 +16,7 @@ describe('luma admin router', () => {
   it('示例路由配置使用标准 meta.authority 字段', () => {
     const examplesRoute = adminRouteRecords.find(route => route.path === '/examples')
     const projectRoute = adminRouteRecords.find(route => route.path === '/project')
+    const systemRoute = adminRouteRecords.find(route => route.path === '/system')
 
     expect(adminRouteRecords[0]).toMatchObject({
       path: '/dashboard',
@@ -31,6 +32,28 @@ describe('luma admin router', () => {
         title: '功能示例',
       },
     })
+    expect(systemRoute).toMatchObject({
+      path: '/system',
+      meta: {
+        title: '系统管理',
+      },
+    })
+    expect(systemRoute?.children).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        path: 'user',
+        meta: expect.objectContaining({
+          authority: ['system:user:list'],
+          title: '用户管理',
+        }),
+      }),
+      expect.objectContaining({
+        path: 'dict',
+        meta: expect.objectContaining({
+          authority: ['system:dict:list'],
+          title: '字典管理',
+        }),
+      }),
+    ]))
     expect(examplesRoute?.children).toEqual(expect.arrayContaining([
       expect.objectContaining({
         path: 'overview',
@@ -51,9 +74,8 @@ describe('luma admin router', () => {
     expect(JSON.stringify(adminRouteRecords)).not.toContain('"dictType"')
   })
 
-  it('会按当前权限生成可访问侧边栏菜单', () => {
-    permissionStore.setPermissions(['dashboard:view', 'examples:view', 'examples:dictionary'])
-    permissionStore.setRoles(['admin'])
+  it('admin 会看到系统管理全量菜单', async () => {
+    await login('admin')
 
     expect(createAdminSidebarMenus()).toEqual([
       {
@@ -61,6 +83,43 @@ describe('luma admin router', () => {
         icon: 'app:dashboard',
         path: '/dashboard',
         title: '工作台',
+      },
+      {
+        children: [
+          {
+            children: [],
+            icon: 'app:user',
+            path: '/system/user',
+            title: '用户管理',
+          },
+          {
+            children: [],
+            icon: 'app:role',
+            path: '/system/role',
+            title: '角色管理',
+          },
+          {
+            children: [],
+            icon: 'app:menu',
+            path: '/system/menu',
+            title: '菜单管理',
+          },
+          {
+            children: [],
+            icon: 'app:dict',
+            path: '/system/dict',
+            title: '字典管理',
+          },
+          {
+            children: [],
+            icon: 'app:settings',
+            path: '/system/config',
+            title: '系统配置',
+          },
+        ],
+        icon: 'app:system',
+        path: '/system',
+        title: '系统管理',
       },
       {
         children: [
@@ -147,7 +206,38 @@ describe('luma admin router', () => {
         path: '/examples',
         title: '功能示例',
       },
+      {
+        children: [],
+        icon: 'app:dashboard',
+        path: '/project',
+        title: '项目管理',
+      },
     ])
+  })
+
+  it('operator 只能看到字典系统菜单、项目和示例字典能力', async () => {
+    await login('operator')
+
+    const menus = createAdminSidebarMenus()
+    const systemMenu = menus.find(menu => menu.path === '/system')
+
+    expect(menus.map(menu => menu.path)).toEqual(['/dashboard', '/system', '/examples', '/project'])
+    expect(systemMenu?.children.map(menu => menu.path)).toEqual(['/system/dict'])
+  })
+
+  it('guest 只能看到工作台和基础示例菜单', async () => {
+    await login('guest')
+
+    const menus = createAdminSidebarMenus()
+    const examplesMenu = menus.find(menu => menu.path === '/examples')
+
+    expect(menus.map(menu => menu.path)).toEqual(['/dashboard', '/examples'])
+    expect(examplesMenu?.children.map(menu => menu.path)).not.toContain('/examples/dictionary')
+    expect(examplesMenu?.children.map(menu => menu.path)).toEqual(expect.arrayContaining([
+      '/examples/overview',
+      '/examples/theme-settings',
+      '/examples/services',
+    ]))
   })
 
   it('未登录访问后台页面会跳转到登录页并携带 redirect', async () => {
@@ -210,6 +300,17 @@ describe('luma admin router', () => {
     const router = createAdminRouter(createMemoryHistory())
 
     await router.push('/project')
+    await router.isReady()
+
+    expect(router.currentRoute.value.path).toBe('/403')
+  })
+
+  it('operator 无用户管理权限时访问系统用户路由会跳转到 403', async () => {
+    await login('operator')
+
+    const router = createAdminRouter(createMemoryHistory())
+
+    await router.push('/system/user')
     await router.isReady()
 
     expect(router.currentRoute.value.path).toBe('/403')

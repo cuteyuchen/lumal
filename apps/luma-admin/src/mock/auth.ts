@@ -1,10 +1,13 @@
+import type { AdminRoleCode } from './permission'
+import { resolveRolePermissions } from './permission'
+
 export type AdminAccountKey = 'admin' | 'guest' | 'operator'
 
 export interface AdminUser {
   id: string
   name: string
   permissions: string[]
-  roles: string[]
+  roles: AdminRoleCode[]
   username: string
 }
 
@@ -31,45 +34,6 @@ interface MockAccount extends AdminAccountPreset {
   user: AdminUser
 }
 
-/***********************权限常量*********************/
-const adminPermissions = [
-  'dashboard:view',
-  'system:user:list',
-  'system:user:create',
-  'system:user:update',
-  'system:user:delete',
-  'system:role:list',
-  'system:role:create',
-  'system:role:update',
-  'system:role:delete',
-  'system:role:authorize',
-  'system:menu:list',
-  'system:menu:create',
-  'system:menu:update',
-  'system:menu:delete',
-  'system:dict:list',
-  'system:dict:create',
-  'system:dict:update',
-  'system:dict:delete',
-  'system:config:view',
-  'project:list',
-  'examples:view',
-  'examples:dictionary',
-]
-
-const operatorPermissions = [
-  'dashboard:view',
-  'project:list',
-  'system:dict:list',
-  'examples:view',
-  'examples:dictionary',
-]
-
-const guestPermissions = [
-  'dashboard:view',
-  'examples:view',
-]
-
 /***********************账号数据*********************/
 export const mockAccounts: Record<AdminAccountKey, MockAccount> = {
   admin: {
@@ -81,7 +45,7 @@ export const mockAccounts: Record<AdminAccountKey, MockAccount> = {
     user: {
       id: '1',
       name: '超级管理员',
-      permissions: adminPermissions,
+      permissions: resolveRolePermissions(['admin']),
       roles: ['admin'],
       username: 'admin',
     },
@@ -95,7 +59,7 @@ export const mockAccounts: Record<AdminAccountKey, MockAccount> = {
     user: {
       id: '2',
       name: '运营人员',
-      permissions: operatorPermissions,
+      permissions: resolveRolePermissions(['operator']),
       roles: ['operator'],
       username: 'operator',
     },
@@ -109,7 +73,7 @@ export const mockAccounts: Record<AdminAccountKey, MockAccount> = {
     user: {
       id: '3',
       name: '访客账号',
-      permissions: guestPermissions,
+      permissions: resolveRolePermissions(['guest']),
       roles: ['guest'],
       username: 'guest',
     },

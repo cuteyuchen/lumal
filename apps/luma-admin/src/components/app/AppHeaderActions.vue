@@ -13,6 +13,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
+  logout: []
   openSettings: []
   toggleTheme: []
 }>()
@@ -27,6 +28,10 @@ function handleToggleTheme(): void {
 
 function handleOpenSettings(): void {
   emit('openSettings')
+}
+
+function handleLogout(): void {
+  emit('logout')
 }
 </script>
 
@@ -53,6 +58,16 @@ function handleOpenSettings(): void {
     </ElButton>
 
     <span class="luma-admin-header-actions__user">{{ userName }}</span>
+
+    <ElButton
+      circle
+      text
+      title="退出登录"
+      data-action="logout"
+      @click="handleLogout"
+    >
+      <LumaIcon name="app:logout" :size="16" />
+    </ElButton>
   </div>
 </template>
 
