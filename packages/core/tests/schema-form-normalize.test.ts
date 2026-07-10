@@ -47,4 +47,50 @@ describe('schema form normalize', () => {
       keyword: '用户输入',
     })
   })
+
+  it('会归一化布局、状态函数和组件透传配置', () => {
+    const schemas = normalizeSchemaFormItems([
+      {
+        component: 'number',
+        componentProps: {
+          min: 1,
+        },
+        defaultValue: 1,
+        disabled: context => context.mode === 'view',
+        field: 'sort',
+        label: '排序',
+        readonly: context => context.model.locked === true,
+        span: 2,
+      },
+      {
+        component: 'switch',
+        field: 'enabled',
+        label: '启用',
+        props: {
+          activeText: '启用',
+        },
+      },
+    ], {
+      mode: 'view',
+      model: {
+        locked: true,
+      },
+    })
+
+    expect(schemas[0]).toMatchObject({
+      component: 'number',
+      componentProps: {
+        min: 1,
+      },
+      disabled: true,
+      readonly: true,
+      span: 2,
+    })
+    expect(schemas[1]).toMatchObject({
+      component: 'switch',
+      componentProps: {
+        activeText: '启用',
+      },
+    })
+  })
 })

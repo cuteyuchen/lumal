@@ -145,6 +145,13 @@ button {
   min-width: 0;
 }
 
+.luma-admin-example__side-panel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-width: 0;
+}
+
 .luma-admin-example__chart {
   display: grid;
   gap: 14px;

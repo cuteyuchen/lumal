@@ -63,26 +63,84 @@ createLumaAdmin({
 
 ```vue
 <script setup lang="ts">
-import type { SchemaFormItem, SchemaFormModel } from '@luma/core/components'
+import type { SchemaFormItem, SchemaFormMode, SchemaFormModel } from '@luma/core/components'
 import { LumaSchemaForm } from '@luma/core/components'
 import { shallowRef } from 'vue'
 
 const model = shallowRef<SchemaFormModel>({})
+const mode = shallowRef<SchemaFormMode>('edit')
 
 const schemas: SchemaFormItem[] = [
-  { field: 'name', label: '名称', component: 'input' },
+  {
+    field: 'name',
+    label: '名称',
+    component: 'input',
+    rules: [{ required: true, message: '请输入名称' }],
+  },
   {
     field: 'status',
     label: '状态',
     dictionary: 'status',
   },
+  {
+    field: 'enabled',
+    label: '启用',
+    component: 'switch',
+  },
+  {
+    field: 'score',
+    label: '评分',
+    component: 'number',
+    componentProps: {
+      min: 0,
+      max: 100,
+    },
+  },
 ]
 </script>
 
 <template>
-  <LumaSchemaForm v-model="model" :schemas="schemas" show-actions />
+  <LumaSchemaForm
+    v-model="model"
+    :columns="2"
+    label-width="92px"
+    :mode="mode"
+    :schemas="schemas"
+    show-actions
+  >
+    <template #prefix-name>
+      <span>前缀</span>
+    </template>
+
+    <template #suffix-name>
+      <span>后缀</span>
+    </template>
+  </LumaSchemaForm>
 </template>
 ```
+
+`LumaSchemaForm` 当前支持 `create`、`edit`、`view` 三种模式。`view` 模式会把字段置为只读并隐藏操作区。
+
+内置控件包括：`input`、`textarea`、`select`、`number`、`switch`、`date`、`datetime`、`daterange`、`radio`、`checkbox`、`tree-select`、`upload`、`hidden`。
+
+字段配置推荐使用：
+
+- `field`：模型字段名。
+- `label`：表单标签。
+- `component`：内置控件类型。
+- `dictionary`：从字典上下文加载 options。
+- `options`：静态 options。
+- `rules`：Element Plus 表单校验规则。
+- `span` / `columns` / `labelWidth`：控制布局。
+- `hidden` / `disabled` / `readonly`：支持布尔值或 `(context) => boolean`。
+- `authority`：结合 `canAccess` 控制字段权限。
+- `componentProps`：透传给底层 Element Plus 控件。
+
+字段插槽命名规则：
+
+- `field-${field}`：完全接管该字段渲染。
+- `prefix-${field}`：字段控件前置内容。
+- `suffix-${field}`：字段控件后置内容。
 
 ### CRUD Table
 

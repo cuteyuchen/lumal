@@ -27,9 +27,19 @@ export const elementPlusStubs = {
   ElForm: defineComponent({
     name: 'ElForm',
     props: {
+      disabled: Boolean,
+      labelPosition: String,
+      labelWidth: [String, Number],
       model: Object,
+      rules: Object,
     },
-    template: '<form class="el-form" @submit.prevent="$emit(\'submit\')"><slot /></form>',
+    methods: {
+      resetFields() {},
+      async validate() {
+        return true
+      },
+    },
+    template: '<form class="el-form" :data-label-width="labelWidth" @submit.prevent="$emit(\'submit\', $event)"><slot /></form>',
   }),
   ElFormItem: defineComponent({
     name: 'ElFormItem',
@@ -37,8 +47,47 @@ export const elementPlusStubs = {
       label: String,
       prop: String,
       required: Boolean,
+      rules: [Array, Object],
     },
     template: '<div class="el-form-item" :data-field="prop"><label>{{ label }}</label><slot /></div>',
+  }),
+  ElCheckbox: defineComponent({
+    name: 'ElCheckbox',
+    props: {
+      disabled: Boolean,
+      label: [String, Number, Boolean],
+      value: [String, Number, Boolean],
+    },
+    template: '<label class="el-checkbox"><input type="checkbox" :disabled="disabled" :value="value ?? label"><slot /></label>',
+  }),
+  ElCheckboxGroup: defineComponent({
+    name: 'ElCheckboxGroup',
+    props: {
+      disabled: Boolean,
+      modelValue: Array,
+      name: String,
+    },
+    emits: ['update:modelValue'],
+    template: '<div class="el-checkbox-group" :data-name="name"><slot /></div>',
+  }),
+  ElCol: defineComponent({
+    name: 'ElCol',
+    props: {
+      span: Number,
+    },
+    template: '<div class="el-col" :data-span="span"><slot /></div>',
+  }),
+  ElDatePicker: defineComponent({
+    name: 'ElDatePicker',
+    props: {
+      disabled: Boolean,
+      modelValue: [String, Number, Array],
+      name: String,
+      placeholder: String,
+      type: String,
+    },
+    emits: ['update:modelValue'],
+    template: '<input class="el-date-editor" :disabled="disabled" :name="name" :placeholder="placeholder" :type="type || \'date\'" :value="Array.isArray(modelValue) ? modelValue.join(\',\') : modelValue ?? \'\'" @input="$emit(\'update:modelValue\', $event.target.value)">',
   }),
   ElInput: defineComponent({
     name: 'ElInput',
@@ -74,6 +123,20 @@ export const elementPlusStubs = {
         @input="$emit('update:modelValue', $event.target.value)"
       >
     `,
+  }),
+  ElInputNumber: defineComponent({
+    name: 'ElInputNumber',
+    props: {
+      disabled: Boolean,
+      max: Number,
+      min: Number,
+      modelValue: Number,
+      name: String,
+      placeholder: String,
+      step: Number,
+    },
+    emits: ['update:modelValue'],
+    template: '<input class="el-input-number" :disabled="disabled" :max="max" :min="min" :name="name" :placeholder="placeholder" type="number" :value="modelValue ?? \'\'" @input="$emit(\'update:modelValue\', Number($event.target.value))">',
   }),
   ElMain: defineComponent({
     name: 'ElMain',
@@ -178,12 +241,48 @@ export const elementPlusStubs = {
       </select>
     `,
   }),
+  ElRadio: defineComponent({
+    name: 'ElRadio',
+    props: {
+      disabled: Boolean,
+      label: [String, Number, Boolean],
+      value: [String, Number, Boolean],
+    },
+    template: '<option :disabled="disabled" :value="value ?? label"><slot /></option>',
+  }),
+  ElRadioGroup: defineComponent({
+    name: 'ElRadioGroup',
+    props: {
+      disabled: Boolean,
+      modelValue: [String, Number, Boolean],
+      name: String,
+    },
+    emits: ['update:modelValue'],
+    template: '<select class="el-radio-group" :disabled="disabled" :name="name" :value="modelValue ?? \'\'" @change="$emit(\'update:modelValue\', $event.target.value)"><slot /></select>',
+  }),
+  ElRow: defineComponent({
+    name: 'ElRow',
+    props: {
+      gutter: Number,
+    },
+    template: '<div class="el-row" :data-gutter="gutter"><slot /></div>',
+  }),
   ElSubMenu: defineComponent({
     name: 'ElSubMenu',
     props: {
       index: String,
     },
     template: '<section class="el-sub-menu" :data-menu-path="index"><slot name="title" /><slot /></section>',
+  }),
+  ElSwitch: defineComponent({
+    name: 'ElSwitch',
+    props: {
+      disabled: Boolean,
+      modelValue: Boolean,
+      name: String,
+    },
+    emits: ['update:modelValue'],
+    template: '<input class="el-switch" :disabled="disabled" :name="name" type="checkbox" :checked="modelValue" @change="$emit(\'update:modelValue\', $event.target.checked)">',
   }),
   ElTable: defineComponent({
     name: 'ElTable',
@@ -236,5 +335,26 @@ export const elementPlusStubs = {
         <slot />
       </div>
     `,
+  }),
+  ElTreeSelect: defineComponent({
+    name: 'ElTreeSelect',
+    props: {
+      data: Array,
+      disabled: Boolean,
+      modelValue: [String, Number, Boolean, Array],
+      name: String,
+      placeholder: String,
+    },
+    emits: ['update:modelValue'],
+    template: '<select class="el-tree-select" :disabled="disabled" :name="name" :value="modelValue ?? \'\'" @change="$emit(\'update:modelValue\', $event.target.value)"><option v-for="item in data" :key="item.value" :value="item.value">{{ item.label }}</option></select>',
+  }),
+  ElUpload: defineComponent({
+    name: 'ElUpload',
+    props: {
+      action: String,
+      disabled: Boolean,
+      limit: Number,
+    },
+    template: '<div class="el-upload" :data-action="action" :data-limit="limit"><slot /></div>',
   }),
 }

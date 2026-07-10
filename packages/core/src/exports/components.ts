@@ -35,11 +35,16 @@ export {
 } from '../components/schema-form'
 export type {
   NormalizedSchemaFormItem,
+  SchemaFormAuthority,
   SchemaFormComponentType,
+  SchemaFormContext,
   SchemaFormItem,
+  SchemaFormMode,
   SchemaFormModel,
   SchemaFormOption,
   SchemaFormOptionValue,
+  SchemaFormRule,
+  SchemaFormStateResolver,
 } from '../components/schema-form'
 export {
   LumaSchemaTable,

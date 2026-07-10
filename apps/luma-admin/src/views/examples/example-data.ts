@@ -38,10 +38,17 @@ export const exampleQuerySchemas: SchemaFormItem[] = [
 
 export const exampleFormSchemas: SchemaFormItem[] = [
   {
+    component: 'hidden',
+    field: 'id',
+    label: 'ID',
+  },
+  {
     component: 'input',
     field: 'name',
     label: '名称',
+    placeholder: '请输入项目名称',
     required: true,
+    rules: [{ required: true, message: '请输入名称', trigger: 'blur' }],
   },
   {
     dictionary: 'status',
@@ -49,9 +56,77 @@ export const exampleFormSchemas: SchemaFormItem[] = [
     label: '状态',
   },
   {
+    component: 'radio',
+    dictionary: 'priority',
+    field: 'priority',
+    label: '优先级',
+  },
+  {
+    component: 'number',
+    componentProps: {
+      max: 100,
+      min: 0,
+      step: 5,
+    },
+    field: 'score',
+    label: '评分',
+  },
+  {
+    component: 'switch',
+    field: 'enabled',
+    label: '启用',
+  },
+  {
+    component: 'checkbox',
+    field: 'tags',
+    label: '标签',
+    options: [
+      { label: '表单', value: 'form' },
+      { label: '表格', value: 'table' },
+      { label: '权限', value: 'access' },
+    ],
+  },
+  {
+    component: 'date',
+    field: 'activeDate',
+    label: '生效日期',
+  },
+  {
+    component: 'daterange',
+    field: 'availableRange',
+    label: '有效范围',
+  },
+  {
+    component: 'tree-select',
+    componentProps: {
+      data: [
+        {
+          children: [
+            { label: '示例页面', value: 'examples' },
+            { label: '系统设置', value: 'settings' },
+          ],
+          label: '根节点',
+          value: 'root',
+        },
+      ],
+    },
+    field: 'parentId',
+    label: '上级节点',
+  },
+  {
+    component: 'upload',
+    componentProps: {
+      action: '#',
+      limit: 1,
+    },
+    field: 'attachment',
+    label: '附件',
+  },
+  {
     component: 'textarea',
     field: 'remark',
     label: '备注',
+    span: 24,
   },
 ]
 
