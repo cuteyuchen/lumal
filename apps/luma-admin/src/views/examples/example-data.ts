@@ -133,6 +133,9 @@ export const exampleFormSchemas: SchemaFormItem[] = [
 /***********************表格数据*********************/
 export const exampleTableColumns: SchemaTableColumn[] = [
   {
+    componentProps: {
+      minWidth: 160,
+    },
     field: 'name',
     label: '名称',
   },
@@ -148,17 +151,24 @@ export const exampleTableColumns: SchemaTableColumn[] = [
     label: '优先级',
     width: 120,
   },
+  {
+    field: 'internalCode',
+    hidden: true,
+    label: '内部编码',
+  },
 ]
 
 export const exampleTableRows: SchemaTableRow[] = [
   {
     id: 'example-1',
+    internalCode: 'LUMA-001',
     name: '字典标准响应',
     priority: 'high',
     status: 'enabled',
   },
   {
     id: 'example-2',
+    internalCode: 'LUMA-002',
     name: '表格自动回显',
     priority: 'normal',
     status: 'disabled',

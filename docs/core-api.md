@@ -142,6 +142,78 @@ const schemas: SchemaFormItem[] = [
 - `prefix-${field}`：字段控件前置内容。
 - `suffix-${field}`：字段控件后置内容。
 
+### Schema Table
+
+```vue
+<script setup lang="ts">
+import type { SchemaTableColumn, SchemaTablePaginationChangePayload, SchemaTableRow } from '@luma/core/components'
+import { LumaSchemaTable } from '@luma/core/components'
+import { shallowRef } from 'vue'
+
+const page = shallowRef(1)
+const pageSize = shallowRef(10)
+
+const columns: SchemaTableColumn[] = [
+  {
+    field: 'name',
+    label: '名称',
+    componentProps: {
+      minWidth: 160,
+    },
+  },
+  { field: 'status', label: '状态', dictionary: 'status' },
+]
+
+const rows: SchemaTableRow[] = [
+  { id: 1, name: 'Luma', status: 'enabled' },
+]
+
+function handleSelectionChange(rows: SchemaTableRow[]) {
+  console.log(rows)
+}
+
+function handlePageChange(payload: SchemaTablePaginationChangePayload) {
+  page.value = payload.page
+  pageSize.value = payload.pageSize
+}
+</script>
+
+<template>
+  <LumaSchemaTable
+    v-model:page="page"
+    v-model:page-size="pageSize"
+    :columns="columns"
+    :rows="rows"
+    row-key="id"
+    selection
+    show-index
+    pagination
+    :total="36"
+    :table-props="{ border: true, stripe: true }"
+    @selection-change="handleSelectionChange"
+    @page-change="handlePageChange"
+  >
+    <template #actions="{ row }">
+      <button type="button">
+        {{ row.name }}
+      </button>
+    </template>
+  </LumaSchemaTable>
+</template>
+```
+
+`LumaSchemaTable` 支持：
+
+- `selection`：渲染选择列，并通过 `selection-change` 返回选中行。
+- `showIndex`：渲染序号列。
+- `loading`：表格加载状态。
+- `pagination` / `total` / `pageSizes`：内部分页，配合 `v-model:page` 和 `v-model:page-size`。
+- `hidden` / `authority`：控制列隐藏和权限。
+- `componentProps`：透传给底层 `ElTableColumn`。
+- `tableProps`：透传给底层 `ElTable`。
+- `rowClassName` / `cellClassName` / `headerCellClassName`：行、单元格和表头 class。
+- `actions` 插槽：追加操作列。
+
 ### CRUD Table
 
 ```vue

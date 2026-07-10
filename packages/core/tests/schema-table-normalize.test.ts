@@ -37,4 +37,34 @@ describe('schema table normalize', () => {
     expect(columns[0]?.align).toBe('left')
     expect(columns[0]?.emptyText).toBe('-')
   })
+
+  it('会按权限和状态函数归一化列配置', () => {
+    const columns = normalizeSchemaTableColumns([
+      {
+        authority: 'project:read',
+        componentProps: {
+          minWidth: 160,
+        },
+        field: 'name',
+        hidden: context => context.rows.length === 0,
+        label: '名称',
+      },
+      {
+        authority: 'project:secret',
+        field: 'secret',
+        label: '密级',
+      },
+    ], {
+      canAccess: authority => authority !== 'project:secret',
+      rows: [],
+    })
+
+    expect(columns[0]).toMatchObject({
+      componentProps: {
+        minWidth: 160,
+      },
+      renderable: false,
+    })
+    expect(columns[1]?.renderable).toBe(false)
+  })
 })

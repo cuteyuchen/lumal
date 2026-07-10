@@ -287,15 +287,26 @@ export const elementPlusStubs = {
   ElTable: defineComponent({
     name: 'ElTable',
     props: {
+      border: Boolean,
+      cellClassName: [String, Function],
       data: {
         default: () => [],
         type: Array,
       },
       emptyText: String,
+      headerCellClassName: [String, Function],
       rowKey: [String, Function],
+      rowClassName: [String, Function],
+      stripe: Boolean,
+    },
+    emits: ['selection-change'],
+    methods: {
+      clearSelection() {},
+      doLayout() {},
+      toggleRowSelection() {},
     },
     template: `
-      <div class="el-table">
+      <div class="el-table" v-bind="$attrs">
         <slot />
         <div v-if="data.length === 0" class="el-table__empty-text">{{ emptyText }}</div>
       </div>
@@ -306,11 +317,14 @@ export const elementPlusStubs = {
     props: {
       align: String,
       formatter: Function,
+      fixed: [String, Boolean],
       label: String,
+      minWidth: [String, Number],
       prop: String,
+      type: String,
       width: [String, Number],
     },
-    template: '<span class="el-table-column" :data-field="prop">{{ label }}</span>',
+    template: '<span class="el-table-column" :data-field="prop" :data-type="type"><slot :row="{ id: \'stub-row\' }" :$index="0" />{{ label }}</span>',
   }),
   ElTabPane: defineComponent({
     name: 'ElTabPane',

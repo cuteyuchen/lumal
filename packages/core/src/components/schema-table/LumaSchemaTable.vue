@@ -1,28 +1,76 @@
 <script setup lang="ts">
 import type { TableInstance } from 'element-plus'
 import type { DictionaryLabelValue } from '../../dictionary'
-import type { NormalizedSchemaTableColumn, SchemaTableColumn, SchemaTableRow } from './types'
-import { ElTable, ElTableColumn } from 'element-plus'
+import type {
+  NormalizedSchemaTableColumn,
+  SchemaTableAuthority,
+  SchemaTableClassName,
+  SchemaTableColumn,
+  SchemaTablePaginationChangePayload,
+  SchemaTableRow,
+} from './types'
+import { ElLoading, ElTable, ElTableColumn } from 'element-plus'
 import { computed, useTemplateRef } from 'vue'
 import { getDictionaryLabel, useDictionaryMap } from '../../dictionary'
+import { LumaPagination } from '../pagination'
 import { normalizeSchemaTableColumns } from './normalize'
 
 /***********************属性定义*********************/
 const props = withDefaults(defineProps<{
+  actionLabel?: string
+  actionWidth?: number | string
+  canAccess?: (authority: SchemaTableAuthority) => boolean
+  cellClassName?: SchemaTableClassName
   columns: SchemaTableColumn[]
-  rows?: SchemaTableRow[]
-  rowKey?: string | ((row: SchemaTableRow, index: number) => string | number)
   emptyText?: string
+  headerCellClassName?: SchemaTableClassName
+  indexLabel?: string
+  indexWidth?: number | string
+  loading?: boolean
+  pageSizes?: number[]
+  pagination?: boolean
+  rowClassName?: SchemaTableClassName
+  rowKey?: string | ((row: SchemaTableRow, index: number) => string | number)
+  rows?: SchemaTableRow[]
+  selection?: boolean
+  showIndex?: boolean
+  tableProps?: Record<string, unknown>
+  total?: number
 }>(), {
-  rows: () => [],
+  actionLabel: '操作',
+  actionWidth: 160,
   emptyText: '暂无数据',
+  indexLabel: '#',
+  indexWidth: 64,
+  loading: false,
+  pageSizes: () => [10, 20, 50, 100],
+  pagination: false,
+  rows: () => [],
+  selection: false,
+  showIndex: false,
+  tableProps: () => ({}),
+  total: 0,
 })
+
+const emit = defineEmits<{
+  pageChange: [payload: SchemaTablePaginationChangePayload]
+  selectionChange: [rows: SchemaTableRow[]]
+}>()
+
+const page = defineModel<number>('page', { default: 1 })
+const pageSize = defineModel<number>('pageSize', { default: 10 })
+
+/***********************本地指令*********************/
+const vLoading = ElLoading.directive
 
 /***********************模板引用*********************/
 const tableRef = useTemplateRef<TableInstance>('tableRef')
 
 /***********************列状态*********************/
-const normalizedColumns = computed(() => normalizeSchemaTableColumns(props.columns))
+const normalizedColumns = computed(() => normalizeSchemaTableColumns(props.columns, {
+  canAccess: props.canAccess,
+  rows: props.rows,
+}))
 
 const renderableColumns = computed(() => normalizedColumns.value.filter(column => column.renderable))
 
@@ -42,6 +90,9 @@ const elementRowKey = computed(() => {
     return String(rowKey(row, index))
   }
 })
+
+/***********************分页状态*********************/
+const showPagination = computed(() => props.pagination && props.total > 0)
 
 /***********************表格取值*********************/
 function resolveColumnOptions(column: NormalizedSchemaTableColumn) {
@@ -96,36 +147,105 @@ function createColumnFormatter(column: NormalizedSchemaTableColumn) {
   }
 }
 
+/***********************事件处理*********************/
+function handleSelectionChange(rows: SchemaTableRow[]): void {
+  emit('selectionChange', rows)
+}
+
+function handlePageChange(payload: SchemaTablePaginationChangePayload): void {
+  emit('pageChange', payload)
+}
+
 /***********************公开方法*********************/
 defineExpose({
+  clearSelection: () => tableRef.value?.clearSelection?.(),
+  doLayout: () => tableRef.value?.doLayout?.(),
   getTableElement: () => tableRef.value?.$el as HTMLElement | undefined,
   getTableInstance: () => tableRef.value,
+  toggleRowSelection: (row: SchemaTableRow, selected?: boolean) => tableRef.value?.toggleRowSelection?.(row, selected),
 })
 </script>
 
 <template>
-  <ElTable
-    ref="tableRef"
-    class="luma-schema-table"
-    :data="rows"
-    :row-key="elementRowKey"
-    :empty-text="emptyText"
-  >
-    <ElTableColumn
-      v-for="column in renderableColumns"
-      :key="column.field"
-      :prop="column.field"
-      :label="column.label"
-      :align="column.align"
-      :width="column.width"
-      :formatter="createColumnFormatter(column)"
-      :data-field="column.field"
-    />
-  </ElTable>
+  <div class="luma-schema-table">
+    <ElTable
+      ref="tableRef"
+      v-loading="loading"
+      v-bind="tableProps"
+      class="luma-schema-table__body"
+      :data="rows"
+      :row-key="elementRowKey"
+      :empty-text="emptyText"
+      :row-class-name="rowClassName"
+      :cell-class-name="cellClassName"
+      :header-cell-class-name="headerCellClassName"
+      :data-loading="loading"
+      @selection-change="handleSelectionChange"
+    >
+      <ElTableColumn
+        v-if="selection"
+        type="selection"
+        width="48"
+      />
+
+      <ElTableColumn
+        v-if="showIndex"
+        type="index"
+        :label="indexLabel"
+        :width="indexWidth"
+      />
+
+      <ElTableColumn
+        v-for="column in renderableColumns"
+        :key="column.field"
+        v-bind="column.componentProps"
+        :prop="column.field"
+        :label="column.label"
+        :align="column.align"
+        :width="column.width"
+        :formatter="createColumnFormatter(column)"
+        :data-field="column.field"
+      />
+
+      <ElTableColumn
+        v-if="$slots.actions"
+        fixed="right"
+        :label="actionLabel"
+        :width="actionWidth"
+        data-field="actions"
+      >
+        <template #default="{ row, $index }">
+          <slot name="actions" :row="row" :index="$index" />
+        </template>
+      </ElTableColumn>
+    </ElTable>
+
+    <div v-if="showPagination" class="luma-schema-table__pagination">
+      <LumaPagination
+        v-model:page="page"
+        v-model:page-size="pageSize"
+        :total="total"
+        :page-sizes="pageSizes"
+        @change="handlePageChange"
+      />
+    </div>
+  </div>
 </template>
 
 <style scoped lang="scss">
 .luma-schema-table {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
   width: 100%;
+}
+
+.luma-schema-table__body {
+  width: 100%;
+}
+
+.luma-schema-table__pagination {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

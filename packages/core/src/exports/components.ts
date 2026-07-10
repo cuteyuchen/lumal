@@ -52,9 +52,14 @@ export {
 export type {
   NormalizedSchemaTableColumn,
   SchemaTableAlign,
+  SchemaTableAuthority,
   SchemaTableCellFormatter,
+  SchemaTableClassName,
   SchemaTableColumn,
+  SchemaTableContext,
+  SchemaTablePaginationChangePayload,
   SchemaTableRow,
+  SchemaTableStateResolver,
 } from '../components/schema-table'
 export {
   LumaIcon,
