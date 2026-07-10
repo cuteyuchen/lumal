@@ -11,14 +11,13 @@ import {
 
 /***********************字典状态*********************/
 const queryModel = shallowRef(createExampleQueryModel())
-const { options, loading, error } = useDictionary('status')
+const { status: statusOptions } = useDictionary('status')
 
 const statusItems = computed(() => [
   { label: '标准字段', value: 'dictionary' },
   { label: '标准响应', value: '{ items: DictionaryOption[] }' },
-  { label: '加载状态', value: loading.value ? 'loading' : 'ready' },
-  { label: '异常信息', value: error.value },
-  { label: '启用回显', value: getDictionaryLabel(options.value, 'enabled') },
+  { label: '选项数量', value: statusOptions.value.length },
+  { label: '启用回显', value: getDictionaryLabel(statusOptions.value, 'enabled') },
 ])
 </script>
 

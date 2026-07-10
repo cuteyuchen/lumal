@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { TableInstance } from 'element-plus'
-import type { DictionaryLabelValue } from '../../dictionary'
 import type {
   NormalizedSchemaTableColumn,
   SchemaTableAuthority,
@@ -11,8 +10,10 @@ import type {
 } from './types'
 import { ElLoading, ElTable, ElTableColumn } from 'element-plus'
 import { computed, useTemplateRef } from 'vue'
-import { getDictionaryLabel, useDictionaryMap } from '../../dictionary'
+import { useDictionaryMap } from '../../dictionary'
 import { LumaPagination } from '../pagination'
+import { resolveSchemaTableCellDisplay } from './cell'
+import LumaSchemaTableCell from './LumaSchemaTableCell.vue'
 import { normalizeSchemaTableColumns } from './normalize'
 
 /***********************属性定义*********************/
@@ -105,45 +106,13 @@ function resolveColumnOptions(column: NormalizedSchemaTableColumn) {
   return dictionary ? dictionaryMap.value[dictionary] ?? [] : []
 }
 
-function isDictionaryLabelValue(value: unknown): value is DictionaryLabelValue {
-  if (value === undefined || value === null) {
-    return true
-  }
-
-  if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
-    return true
-  }
-
-  return Array.isArray(value)
-    && value.every(item =>
-      typeof item === 'boolean' || typeof item === 'number' || typeof item === 'string',
-    )
-}
-
-function formatCellText(row: SchemaTableRow, column: NormalizedSchemaTableColumn, index: number): string {
-  const rawValue = row[column.field]
-  const formattedValue = column.formatter?.(rawValue, row, index) ?? rawValue
-
-  if (formattedValue === undefined || formattedValue === null || formattedValue === '') {
-    return column.emptyText
-  }
-
-  if (column.formatter) {
-    return String(formattedValue)
-  }
-
-  const options = resolveColumnOptions(column)
-
-  if (options.length > 0 && isDictionaryLabelValue(formattedValue)) {
-    return getDictionaryLabel(options, formattedValue)
-  }
-
-  return String(formattedValue)
+function resolveCellDisplay(row: SchemaTableRow, column: NormalizedSchemaTableColumn, index: number) {
+  return resolveSchemaTableCellDisplay(row, column, index, resolveColumnOptions(column))
 }
 
 function createColumnFormatter(column: NormalizedSchemaTableColumn) {
   return (row: SchemaTableRow, _column: unknown, _cellValue: unknown, index: number): string => {
-    return formatCellText(row, column, index)
+    return resolveCellDisplay(row, column, index).text
   }
 }
 
@@ -205,7 +174,11 @@ defineExpose({
         :width="column.width"
         :formatter="createColumnFormatter(column)"
         :data-field="column.field"
-      />
+      >
+        <template #default="{ row, $index }">
+          <LumaSchemaTableCell :display="resolveCellDisplay(row, column, $index)" />
+        </template>
+      </ElTableColumn>
 
       <ElTableColumn
         v-if="$slots.actions"

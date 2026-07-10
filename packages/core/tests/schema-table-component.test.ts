@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import { h, nextTick } from 'vue'
+import { defineComponent, h, nextTick } from 'vue'
 import { LumaSchemaTable } from '../src/components/schema-table'
 import { createDictionaryStore, dictionaryContextKey } from '../src/dictionary'
 import { elementPlusStubs } from './helpers/element-plus-stubs'
@@ -122,6 +122,71 @@ describe('luma schema table', () => {
       | undefined
 
     expect(formatter?.(rows[0], {}, ['enabled', 'disabled'], 0)).toBe('启用, 停用')
+  })
+
+  it('字典项包含颜色时会渲染带文本的颜色标签', async () => {
+    const rows = [
+      {
+        id: 'row-1',
+        status: ['enabled', 'disabled'],
+      },
+    ]
+    const store = createDictionaryStore({
+      fetcher: async () => ({
+        items: [
+          { color: '#16a34a', label: '启用', value: 'enabled' },
+          { color: '#94a3b8', label: '停用', value: 'disabled' },
+        ],
+      }),
+    })
+    const TableColumnStub = defineComponent({
+      name: 'ElTableColumn',
+      setup(_props, { slots }) {
+        return () => h('div', { class: 'el-table-column' }, slots.default?.({
+          $index: 0,
+          row: rows[0],
+        }))
+      },
+    })
+    const TagStub = defineComponent({
+      name: 'ElTag',
+      template: '<span class="el-tag"><slot /></span>',
+    })
+
+    const wrapper = mount(LumaSchemaTable, {
+      global: {
+        provide: {
+          [dictionaryContextKey as symbol]: {
+            store,
+          },
+        },
+        stubs: {
+          ...elementPlusStubs,
+          ElTableColumn: TableColumnStub,
+          ElTag: TagStub,
+        },
+      },
+      props: {
+        columns: [
+          {
+            dictionary: 'status',
+            field: 'status',
+            label: '状态',
+          },
+        ],
+        rowKey: 'id',
+        rows,
+      },
+    })
+
+    await Promise.resolve()
+    await wrapper.vm.$nextTick()
+
+    const tags = wrapper.findAll('.luma-schema-table__dictionary-tag')
+
+    expect(tags.map(tag => tag.text())).toEqual(['启用', '停用'])
+    expect(tags[0]?.attributes('style')).toContain('--luma-dictionary-color: #16a34a')
+    expect(wrapper.findAll('.luma-schema-table__dictionary-dot')).toHaveLength(2)
   })
 
   it('会渲染选择列、序号列、分页、透传属性并转发交互事件', async () => {

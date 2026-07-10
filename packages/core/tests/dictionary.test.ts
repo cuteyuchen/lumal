@@ -10,11 +10,11 @@ describe('dictionary runtime', () => {
   it('只按标准 items 响应解析字典选项', () => {
     expect(normalizeDictionaryOptions({
       items: [
-        { label: '启用', value: 'enabled' },
+        { color: '#16a34a', label: '启用', value: 'enabled' },
         { disabled: true, label: '停用', value: 'disabled' },
       ],
     })).toEqual([
-      { label: '启用', value: 'enabled' },
+      { color: '#16a34a', label: '启用', value: 'enabled' },
       { disabled: true, label: '停用', value: 'disabled' },
     ])
 
