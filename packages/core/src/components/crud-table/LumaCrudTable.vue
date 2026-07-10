@@ -3,23 +3,48 @@ import type { PaginationChangePayload } from '../pagination'
 import type { SchemaFormModel } from '../schema-form'
 import type { SchemaTableRow } from '../schema-table'
 import type {
-  CrudFetchResult,
   CrudFormMode,
+  CrudStateResolver,
   CrudTableProps,
   CrudTableResetPayload,
   CrudTableSearchPayload,
 } from './types'
-import { ElButton, ElDialog } from 'element-plus'
+import { ElButton, ElDialog, ElMessageBox } from 'element-plus'
 import { computed, shallowRef, useTemplateRef, watch } from 'vue'
 import { LumaPage } from '../page'
 import { LumaPagination } from '../pagination'
-import { LumaSchemaForm, normalizeSchemaFormItems, resolveSchemaFormInitialModel } from '../schema-form'
+import { LumaSchemaForm } from '../schema-form'
 import { LumaSchemaTable } from '../schema-table'
+import { useCrudData } from './useCrudData'
+import { useCrudDialog } from './useCrudDialog'
+import { useCrudQuery } from './useCrudQuery'
+import { useCrudSelection } from './useCrudSelection'
 
-/***********************属性定义*********************/
+interface SchemaFormExpose {
+  getFormElement: () => HTMLFormElement | undefined
+  getFormInstance: () => unknown
+  getValues: () => SchemaFormModel
+  resetFields: () => void
+  setMode: (mode: CrudFormMode) => void
+  setValues: (value: SchemaFormModel) => void
+  validate: () => Promise<boolean>
+}
+
+interface SchemaTableExpose {
+  clearSelection: () => void
+  doLayout: () => void
+  getSelectedRowKeys: () => Array<number | string>
+  getSelectedRows: () => SchemaTableRow[]
+  getTableElement: () => HTMLElement | undefined
+  getTableInstance: () => unknown
+}
+
+/***********************属性与事件*********************/
 const props = withDefaults(defineProps<CrudTableProps>(), {
   rows: () => [],
   querySchemas: () => [],
+  formSchemas: () => [],
+  columns: () => [],
   total: 0,
   pageSizes: () => [10, 20, 50, 100],
   pagination: true,
@@ -29,7 +54,6 @@ const props = withDefaults(defineProps<CrudTableProps>(), {
   resetText: '重置',
   createText: '新增',
   batchDeleteText: '批量删除',
-  formSchemas: () => [],
   selection: false,
   confirmRemove: () => true,
 })
@@ -38,348 +62,375 @@ const emit = defineEmits<{
   (event: 'search', payload: CrudTableSearchPayload): void
   (event: 'reset', payload: CrudTableResetPayload): void
   (event: 'pageChange', payload: PaginationChangePayload): void
+  (event: 'export', payload: { query: SchemaFormModel, selectedRows: SchemaTableRow[] }): void
+  (event: 'operationError', error: unknown): void
 }>()
 
-const queryModel = defineModel<SchemaFormModel>('queryModel', {
-  default: () => ({}),
-})
-
+const queryModel = defineModel<SchemaFormModel>('queryModel', { default: () => ({}) })
 const page = defineModel<number>('page', { default: 1 })
 const pageSize = defineModel<number>('pageSize', { default: 10 })
 
 /***********************模板引用*********************/
 const crudRef = useTemplateRef<HTMLElement>('crudRef')
+const queryFormRef = useTemplateRef<SchemaFormExpose>('queryFormRef')
+const dialogFormRef = useTemplateRef<SchemaFormExpose>('dialogFormRef')
+const tableRef = useTemplateRef<SchemaTableExpose>('tableRef')
 
-/***********************远程数据状态*********************/
-const remoteRows = shallowRef<SchemaTableRow[]>([])
-const remoteTotal = shallowRef(0)
-const internalLoading = shallowRef(false)
-const tableError = shallowRef('')
+/***********************兼容配置归一化*********************/
+const resolvedQuerySchemas = computed(() => props.query?.schemas ?? props.querySchemas)
+const resolvedColumns = computed(() => props.table?.columns ?? props.columns)
+const resolvedRowKey = computed(() => props.table?.rowKey ?? props.rowKey)
+const resolvedSelection = computed(() => props.table?.selection ?? props.selection)
+const resolvedEmptyText = computed(() => props.table?.emptyText ?? props.emptyText)
+const queryColumns = computed(() => Math.max(1, props.query?.columns ?? 3))
+const queryCollapsible = computed(() => props.query?.collapsible ?? false)
+const queryDefaultCollapsed = computed(() => props.query?.defaultCollapsed ?? true)
+const queryCollapsedRows = computed(() => Math.max(1, props.query?.collapsedRows ?? 1))
+const paginationEnabled = computed(() => typeof props.pagination === 'object'
+  ? props.pagination.enabled !== false
+  : props.pagination)
+const resolvedPageSizes = computed(() => typeof props.pagination === 'object'
+  ? props.pagination.pageSizes ?? props.pageSizes
+  : props.pageSizes)
 
-/***********************查询状态*********************/
-const hasQuery = computed(() => props.querySchemas.length > 0)
+const hasQuery = computed(() => resolvedQuerySchemas.value.length > 0)
 const hasForm = computed(() => props.formSchemas.length > 0)
-const hasToolbar = computed(() =>
-  hasForm.value || props.selection || Boolean(props.dataSource),
-)
+const showCreate = computed(() => hasForm.value && props.toolbar?.create !== false)
+const showBatchDelete = computed(() => resolvedSelection.value && props.toolbar?.batchDelete !== false)
+const showRefresh = computed(() => Boolean(props.dataSource) && props.toolbar?.refresh !== false)
+const showExport = computed(() => props.toolbar?.export === true)
+const hasToolbar = computed(() => showCreate.value || showBatchDelete.value || showRefresh.value || showExport.value)
 
-const queryDefaultModel = computed(() => {
-  const normalizedSchemas = normalizeSchemaFormItems(props.querySchemas)
-  return resolveSchemaFormInitialModel(normalizedSchemas)
+/***********************组合状态*********************/
+const dataSource = computed(() => props.dataSource)
+const operationLoading = shallowRef(false)
+
+const data = useCrudData({
+  dataSource,
+  loading: computed(() => props.loading),
+  page,
+  pageSize,
+  queryModel,
+  rows: computed(() => props.rows),
+  total: computed(() => props.total),
 })
 
-/***********************弹窗表单状态*********************/
-const dialogVisible = shallowRef(false)
-const formMode = shallowRef<CrudFormMode>('create')
-const formModel = shallowRef<SchemaFormModel>({})
-const editingRow = shallowRef<SchemaTableRow>()
+const queryState = useCrudQuery({
+  collapsedRows: queryCollapsedRows,
+  collapsible: queryCollapsible,
+  columns: queryColumns,
+  defaultCollapsed: queryDefaultCollapsed,
+  model: queryModel,
+  schemas: resolvedQuerySchemas,
+})
+
+const selectionState = useCrudSelection()
+const dialogState = useCrudDialog({ dataSource, afterSave: data.load })
+const currentLoading = computed(() => data.currentLoading.value || operationLoading.value)
+const showPagination = computed(() => paginationEnabled.value && data.currentTotal.value > 0)
 
 const dialogTitle = computed(() => {
   const titles: Record<CrudFormMode, string> = {
-    create: props.createText,
-    edit: '编辑',
-    view: '查看',
+    create: props.dialog?.createTitle ?? props.toolbar?.createText ?? props.createText,
+    edit: props.dialog?.editTitle ?? '编辑',
+    view: props.dialog?.viewTitle ?? '查看',
   }
-
-  return titles[formMode.value]
+  return titles[dialogState.mode.value]
 })
-
-/***********************表格状态*********************/
-const currentRows = computed(() => props.dataSource ? remoteRows.value : props.rows)
-const currentTotal = computed(() => props.dataSource ? remoteTotal.value : props.total)
-const currentLoading = computed(() => props.loading || internalLoading.value)
-const selectedRows = shallowRef<SchemaTableRow[]>([])
-
-/***********************分页状态*********************/
-const showPagination = computed(() => props.pagination && currentTotal.value > 0)
-
-/***********************响应解析*********************/
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function parseFetchResult(response: unknown): CrudFetchResult {
-  if (props.dataSource?.parseResponse) {
-    return props.dataSource.parseResponse(response)
-  }
-
-  if (!isRecord(response) || !Array.isArray(response.items) || typeof response.total !== 'number') {
-    return {
-      items: [],
-      total: 0,
-    }
-  }
-
-  return {
-    items: response.items as SchemaTableRow[],
-    total: response.total,
-  }
-}
-
-/***********************数据加载*********************/
-function loadData(): Promise<void> {
-  if (!props.dataSource) {
-    return Promise.resolve()
-  }
-
-  internalLoading.value = true
-  tableError.value = ''
-
-  return props.dataSource.fetch({
-    page: page.value,
-    pageSize: pageSize.value,
-    query: { ...queryModel.value },
-  }).then((response) => {
-    const result = parseFetchResult(response)
-    remoteRows.value = result.items
-    remoteTotal.value = result.total
-  }).catch((error: unknown) => {
-    tableError.value = error instanceof Error ? error.message : String(error)
-    remoteRows.value = []
-    remoteTotal.value = 0
-  }).finally(() => {
-    internalLoading.value = false
-  })
-}
 
 watch(
   () => props.dataSource,
-  () => {
-    void loadData()
-  },
+  () => void data.load(),
   { immediate: true },
 )
+watch([page, pageSize], () => void data.load())
 
-watch([page, pageSize], () => {
-  void loadData()
-})
-
-/***********************事件处理*********************/
+/***********************查询与工具栏*********************/
 function handleSearchClick(): void {
-  emit('search', {
-    ...queryModel.value,
-  })
-
+  emit('search', { ...queryModel.value })
   if (page.value === 1) {
-    void loadData()
-    return
+    void data.load()
   }
-
-  page.value = 1
+  else {
+    page.value = 1
+  }
 }
 
 function handleResetClick(): void {
-  const nextModel = {
-    ...queryDefaultModel.value,
-  }
-  queryModel.value = nextModel
+  const nextModel = queryState.reset()
+  queryFormRef.value?.resetFields()
   emit('reset', nextModel)
-
   if (page.value === 1) {
-    void loadData()
-    return
+    void data.load()
   }
+  else {
+    page.value = 1
+  }
+}
 
-  page.value = 1
+function handleExportClick(): void {
+  emit('export', {
+    query: { ...queryModel.value },
+    selectedRows: [...selectionState.selectedRows.value],
+  })
 }
 
 function handlePageChange(payload: PaginationChangePayload): void {
   emit('pageChange', payload)
 }
 
-function handleSelectionChange(rows: SchemaTableRow[]): void {
-  selectedRows.value = rows
+/***********************行操作与弹窗*********************/
+function isActionVisible(
+  resolver: CrudStateResolver | undefined,
+  fallback: boolean,
+  row: SchemaTableRow,
+  index: number,
+): boolean {
+  if (typeof resolver === 'function') {
+    return resolver(row, index)
+  }
+  return resolver ?? fallback
 }
 
 function openCreate(): void {
-  formMode.value = 'create'
-  editingRow.value = undefined
-  formModel.value = {}
-  dialogVisible.value = true
+  dialogState.open('create')
 }
 
 function openEdit(row: SchemaTableRow): void {
-  formMode.value = 'edit'
-  editingRow.value = row
-  formModel.value = { ...row }
-  dialogVisible.value = true
+  dialogState.open('edit', row)
 }
 
 function openView(row: SchemaTableRow): void {
-  formMode.value = 'view'
-  editingRow.value = row
-  formModel.value = { ...row }
-  dialogVisible.value = true
+  dialogState.open('view', row)
 }
 
-function handleFormSubmit(model: SchemaFormModel): void {
-  const source = props.dataSource
-
-  if (!source) {
-    dialogVisible.value = false
+async function handleFormSubmit(model: SchemaFormModel): Promise<void> {
+  const valid = await dialogFormRef.value?.validate()
+  if (valid === false) {
     return
   }
+  const saved = await dialogState.submit(model)
+  if (!saved && dialogState.error.value) {
+    emit('operationError', new Error(dialogState.error.value))
+  }
+}
 
-  const task = formMode.value === 'edit' && editingRow.value
-    ? source.update?.(editingRow.value, model)
-    : source.create?.(model)
+async function confirmRows(rows: SchemaTableRow[]): Promise<boolean> {
+  return props.confirmRemove(rows)
+}
 
-  void Promise.resolve(task).then(() => {
-    dialogVisible.value = false
-    return loadData()
+async function runMutation(task: () => Promise<unknown>): Promise<boolean> {
+  operationLoading.value = true
+  try {
+    await task()
+    selectionState.clear()
+    tableRef.value?.clearSelection()
+    await data.load()
+    return true
+  }
+  catch (error) {
+    emit('operationError', error)
+    return false
+  }
+  finally {
+    operationLoading.value = false
+  }
+}
+
+async function removeRow(row: SchemaTableRow): Promise<void> {
+  const remove = props.dataSource?.remove
+  if (!remove || !await confirmRows([row])) {
+    return
+  }
+  await runMutation(() => remove(row))
+}
+
+async function removeSelectedRows(): Promise<void> {
+  const rows = [...selectionState.selectedRows.value]
+  if (rows.length === 0 || !await confirmRows(rows)) {
+    return
+  }
+  await runMutation(() => props.dataSource?.removeMany
+    ? props.dataSource.removeMany(rows)
+    : Promise.all(rows.map(row => props.dataSource?.remove?.(row))))
+}
+
+async function requestDialogClose(): Promise<boolean> {
+  if (dialogState.saving.value) {
+    return false
+  }
+  if (!dialogState.dirty.value) {
+    return true
+  }
+  if (props.dialog?.confirmClose) {
+    return props.dialog.confirmClose({
+      mode: dialogState.mode.value,
+      model: dialogState.model.value,
+      row: dialogState.editingRow.value,
+    })
+  }
+  try {
+    await ElMessageBox.confirm('表单内容尚未保存，确定关闭吗？', '关闭确认', {
+      cancelButtonText: '继续编辑',
+      confirmButtonText: '关闭',
+      type: 'warning',
+    })
+    return true
+  }
+  catch {
+    return false
+  }
+}
+
+function handleDialogBeforeClose(done: () => void): void {
+  void requestDialogClose().then((allowed) => {
+    if (allowed) {
+      done()
+    }
   })
-}
-
-function confirmRows(rows: SchemaTableRow[]): Promise<boolean> {
-  return Promise.resolve(props.confirmRemove(rows))
-}
-
-function removeRow(row: SchemaTableRow): Promise<void> {
-  if (!props.dataSource?.remove) {
-    return Promise.resolve()
-  }
-
-  return confirmRows([row]).then((confirmed) => {
-    if (!confirmed) {
-      return undefined
-    }
-
-    return props.dataSource?.remove?.(row)
-  }).then(() => loadData())
-}
-
-function removeSelectedRows(): Promise<void> {
-  const rows = selectedRows.value
-
-  if (rows.length === 0) {
-    return Promise.resolve()
-  }
-
-  return confirmRows(rows).then((confirmed) => {
-    if (!confirmed) {
-      return undefined
-    }
-
-    if (props.dataSource?.removeMany) {
-      return props.dataSource.removeMany(rows)
-    }
-
-    return Promise.all(rows.map(row => props.dataSource?.remove?.(row)))
-  }).then(() => loadData())
 }
 
 /***********************公开方法*********************/
 defineExpose({
+  clearSelection: () => {
+    selectionState.clear()
+    tableRef.value?.clearSelection()
+  },
   getCrudElement: () => crudRef.value,
+  getDialogForm: () => dialogFormRef.value,
+  getQueryForm: () => queryFormRef.value,
+  getSelectedRowKeys: () => [...selectionState.selectedRowKeys.value],
+  getSelectedRows: () => [...selectionState.selectedRows.value],
+  getTable: () => tableRef.value,
+  isLoading: () => currentLoading.value,
   openCreate,
   openEdit,
   openView,
-  reload: loadData,
+  reload: data.load,
   removeRow,
   removeSelectedRows,
+  toggleQuery: queryState.toggle,
 })
 </script>
 
 <template>
   <div ref="crudRef" class="luma-crud-table">
-    <LumaPage
-      :title="title"
-      :description="description"
-      :loading="currentLoading"
-    >
+    <LumaPage :title="title" :description="description" :loading="currentLoading">
       <template v-if="hasToolbar || $slots.actions" #actions>
         <div class="luma-crud-table__toolbar">
-          <slot v-if="hasForm" name="create-action" :open-create="openCreate">
-            <ElButton
-              type="primary"
-              native-type="button"
-              data-action="create"
-              @click="openCreate"
-            >
-              {{ createText }}
+          <slot v-if="showCreate" name="create-action" :open-create="openCreate">
+            <ElButton type="primary" native-type="button" data-action="create" @click="openCreate">
+              {{ toolbar?.createText ?? createText }}
             </ElButton>
           </slot>
           <ElButton
-            v-if="selection"
+            v-if="showBatchDelete"
             native-type="button"
             data-action="batch-remove"
-            :disabled="selectedRows.length === 0"
+            :disabled="selectionState.selectedRows.value.length === 0 || operationLoading"
             @click="removeSelectedRows"
           >
-            {{ batchDeleteText }}
+            {{ toolbar?.batchDeleteText ?? batchDeleteText }}
+          </ElButton>
+          <ElButton v-if="showRefresh" native-type="button" data-action="refresh" @click="data.load">
+            {{ toolbar?.refreshText ?? '刷新' }}
           </ElButton>
           <ElButton
-            v-if="dataSource"
+            v-if="showExport"
             native-type="button"
-            data-action="refresh"
-            @click="loadData"
+            data-action="export"
+            @click="handleExportClick"
           >
-            刷新
+            {{ toolbar?.exportText ?? '导出' }}
           </ElButton>
           <slot name="actions" />
         </div>
       </template>
 
       <div v-if="hasQuery" class="luma-crud-table__query">
-        <LumaSchemaForm v-model="queryModel" :schemas="querySchemas" />
+        <LumaSchemaForm
+          ref="queryFormRef"
+          v-model="queryModel"
+          :schemas="queryState.visibleSchemas.value"
+          :columns="queryColumns"
+          :label-width="query?.labelWidth ?? 'auto'"
+        />
         <div class="luma-crud-table__query-actions">
-          <ElButton
-            type="primary"
-            native-type="button"
-            data-action="search"
-            @click="handleSearchClick"
-          >
-            {{ searchText }}
+          <ElButton type="primary" native-type="button" data-action="search" @click="handleSearchClick">
+            {{ query?.searchText ?? searchText }}
+          </ElButton>
+          <ElButton native-type="button" data-action="reset" @click="handleResetClick">
+            {{ query?.resetText ?? resetText }}
           </ElButton>
           <ElButton
+            v-if="queryState.canCollapse.value"
             native-type="button"
-            data-action="reset"
-            @click="handleResetClick"
+            data-action="toggle-query"
+            :aria-expanded="String(!queryState.collapsed.value)"
+            @click="queryState.toggle"
           >
-            {{ resetText }}
+            {{ queryState.collapsed.value ? '展开' : '收起' }}
           </ElButton>
         </div>
       </div>
 
-      <div v-if="tableError" class="luma-crud-table__error">
-        {{ tableError }}
+      <div v-if="data.error.value" class="luma-crud-table__error" role="alert">
+        <span>{{ data.error.value }}</span>
+        <ElButton native-type="button" data-action="retry" @click="data.load">
+          重试
+        </ElButton>
       </div>
 
       <div class="luma-crud-table__body">
         <LumaSchemaTable
-          :columns="columns"
-          :rows="currentRows"
-          :row-key="rowKey"
-          :empty-text="emptyText"
+          ref="tableRef"
+          :columns="resolvedColumns"
+          :rows="data.currentRows.value"
+          :row-key="resolvedRowKey"
+          :empty-text="resolvedEmptyText"
           :loading="currentLoading"
-          :selection="selection"
-          @selection-change="handleSelectionChange"
+          :selection="resolvedSelection"
+          :show-column-settings="table?.showColumnSettings"
+          :auto-resize="table?.autoResize ?? true"
+          :action-width="table?.actionWidth"
+          @selection-change="selectionState.update"
         >
-          <template v-if="hasForm || dataSource?.remove || $slots['row-actions']" #actions="{ row, index }">
-            <slot name="row-actions" :row="row" :index="index">
+          <template
+            v-if="hasForm || dataSource?.remove || $slots['row-actions']"
+            #actions="{ row, index }"
+          >
+            <slot
+              name="row-actions"
+              :row="row"
+              :index="index"
+              :open-view="openView"
+              :open-edit="openEdit"
+              :remove-row="removeRow"
+            >
               <ElButton
-                v-if="hasForm"
+                v-if="isActionVisible(actions?.view, hasForm, row, index)"
                 native-type="button"
                 data-action="view"
                 @click="openView(row)"
               >
-                查看
+                {{ actions?.viewText ?? '查看' }}
               </ElButton>
               <ElButton
-                v-if="hasForm"
+                v-if="isActionVisible(actions?.edit, hasForm, row, index)"
                 native-type="button"
                 data-action="edit"
                 @click="openEdit(row)"
               >
-                编辑
+                {{ actions?.editText ?? '编辑' }}
               </ElButton>
               <ElButton
-                v-if="dataSource?.remove"
+                v-if="isActionVisible(actions?.remove, Boolean(dataSource?.remove), row, index)"
+                type="danger"
                 native-type="button"
                 data-action="remove"
                 @click="removeRow(row)"
               >
-                删除
+                {{ actions?.removeText ?? '删除' }}
               </ElButton>
             </slot>
           </template>
@@ -394,20 +445,34 @@ defineExpose({
         <LumaPagination
           v-model:page="page"
           v-model:page-size="pageSize"
-          :total="currentTotal"
-          :page-sizes="pageSizes"
+          :total="data.currentTotal.value"
+          :page-sizes="resolvedPageSizes"
           @change="handlePageChange"
         />
       </div>
     </LumaPage>
 
-    <ElDialog v-model="dialogVisible" :title="dialogTitle">
+    <ElDialog
+      v-model="dialogState.visible.value"
+      :title="dialogTitle"
+      :width="dialog?.width"
+      :close-on-click-modal="dialog?.closeOnClickModal ?? false"
+      :destroy-on-close="dialog?.destroyOnClose ?? true"
+      :before-close="handleDialogBeforeClose"
+    >
+      <div v-if="dialogState.error.value" class="luma-crud-table__dialog-error" role="alert">
+        {{ dialogState.error.value }}
+      </div>
       <LumaSchemaForm
-        v-model="formModel"
-        :mode="formMode"
+        ref="dialogFormRef"
+        v-model="dialogState.model.value"
+        :mode="dialogState.mode.value"
         :schemas="formSchemas"
+        :columns="2"
+        :disabled="dialogState.saving.value"
+        :submit-loading="dialogState.saving.value"
         show-actions
-        submit-text="保存"
+        :submit-text="dialog?.submitText ?? '保存'"
         @submit="handleFormSubmit"
       />
     </ElDialog>
@@ -421,42 +486,63 @@ defineExpose({
 
 .luma-crud-table__query {
   display: grid;
-  gap: 12px;
-  padding-bottom: 16px;
+  gap: var(--luma-space-3, 12px);
+  padding-bottom: var(--luma-space-4, 16px);
   border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
-.luma-crud-table__query-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
+.luma-crud-table__query-actions,
 .luma-crud-table__toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--luma-space-2, 8px);
   align-items: center;
 }
 
-.luma-crud-table__error {
+.luma-crud-table__query-actions {
+  justify-content: flex-end;
+}
+
+.luma-crud-table__error,
+.luma-crud-table__dialog-error {
+  display: flex;
+  gap: var(--luma-space-3, 12px);
+  align-items: center;
+  justify-content: space-between;
   padding: 10px 12px;
   border: 1px solid var(--el-color-danger-light-7);
-  border-radius: 8px;
+  border-radius: var(--el-border-radius-base);
   color: var(--el-color-danger-dark-2);
   background: var(--el-color-danger-light-9);
 }
 
-.luma-crud-table__body {
-  min-width: 0;
-}
-
+.luma-crud-table__body,
 .luma-crud-table__extra {
   min-width: 0;
 }
 
 .luma-crud-table__pagination {
-  padding-top: 16px;
+  padding-top: var(--luma-space-4, 16px);
   border-top: 1px solid var(--el-border-color-lighter);
+}
+
+.luma-crud-table__dialog-error {
+  margin-bottom: var(--luma-space-4, 16px);
+}
+
+@media (max-width: 768px) {
+  .luma-crud-table__query-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .luma-crud-table__query-actions :deep(.el-button) {
+    min-height: 44px;
+    margin-left: 0;
+  }
+
+  .luma-crud-table__toolbar :deep(.el-button) {
+    min-height: 44px;
+  }
 }
 </style>

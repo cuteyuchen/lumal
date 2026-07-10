@@ -25,6 +25,22 @@ const page = shallowRef(1)
 const pageSize = shallowRef(10)
 const message = shallowRef('等待 CRUD 操作')
 const rows = shallowRef<SchemaTableRow[]>([...exampleTableRows])
+const queryConfig = {
+  collapsible: true,
+  collapsedRows: 1,
+  columns: 2,
+  defaultCollapsed: true,
+  schemas: exampleQuerySchemas,
+}
+const tableConfig = {
+  columns: exampleTableColumns,
+  rowKey: 'id',
+  selection: true,
+  showColumnSettings: true,
+}
+const toolbarConfig = {
+  export: true,
+}
 
 /***********************远程数据源*********************/
 function filterRows(params: CrudFetchParams): CrudFetchResult {
@@ -93,6 +109,12 @@ function handleReset(payload: CrudTableResetPayload): void {
 function handlePageChange(payload: PaginationChangePayload): void {
   message.value = `分页：第 ${payload.page} 页 / ${payload.pageSize} 条`
 }
+
+function handleExport(payload: { selectedRows: SchemaTableRow[] }): void {
+  message.value = payload.selectedRows.length > 0
+    ? `准备导出已选 ${payload.selectedRows.length} 条数据`
+    : '准备按当前查询条件导出'
+}
 </script>
 
 <template>
@@ -104,14 +126,14 @@ function handlePageChange(payload: PaginationChangePayload): void {
       title="CRUD Table"
       :description="message"
       :data-source="dataSource"
-      :query-schemas="exampleQuerySchemas"
       :form-schemas="exampleCrudFormSchemas"
-      :columns="exampleTableColumns"
-      row-key="id"
-      selection
+      :query="queryConfig"
+      :table="tableConfig"
+      :toolbar="toolbarConfig"
       @search="handleSearch"
       @reset="handleReset"
       @page-change="handlePageChange"
+      @export="handleExport"
     />
   </main>
 </template>

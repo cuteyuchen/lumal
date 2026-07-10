@@ -107,6 +107,16 @@ const columns: SchemaTableColumn[] = [
   { dictionary: 'status', field: 'status', label: '状态', width: 100 },
   { field: 'description', label: '说明', width: 320 },
 ]
+const queryConfig = {
+  collapsible: true,
+  columns: 3,
+  schemas: querySchemas,
+}
+const tableConfig = {
+  columns,
+  rowKey: 'id',
+  showColumnSettings: true,
+}
 
 /***********************数据适配*********************/
 function toRoleRecord(row: SchemaTableRow): SystemRoleRecord {
@@ -236,12 +246,11 @@ onMounted(() => {
       v-model:page-size="pageSize"
       title="角色管理"
       description="维护角色基础信息并通过权限树分配菜单和按钮权限。"
-      :columns="columns"
       :confirm-remove="confirmRemove"
       :data-source="dataSource"
       :form-schemas="formSchemas"
-      :query-schemas="querySchemas"
-      row-key="id"
+      :query="queryConfig"
+      :table="tableConfig"
     >
       <template #create-action="{ openCreate }">
         <ElButton

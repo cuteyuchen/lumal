@@ -107,6 +107,16 @@ const columns = computed<SchemaTableColumn[]>(() => [
   { field: 'phone', label: '手机号', width: 150 },
   { field: 'createdAt', label: '创建时间', width: 130 },
 ])
+const queryConfig = computed(() => ({
+  collapsible: true,
+  columns: 3,
+  schemas: querySchemas.value,
+}))
+const tableConfig = computed(() => ({
+  columns: columns.value,
+  rowKey: 'id',
+  showColumnSettings: true,
+}))
 
 /***********************数据适配*********************/
 function toUserRecord(row: SchemaTableRow): SystemUserRecord {
@@ -192,12 +202,11 @@ onMounted(() => {
       v-model:page-size="pageSize"
       title="用户管理"
       description="维护后台账号、角色与启用状态；当前示例使用应用级可变 Mock API。"
-      :columns="columns"
       :confirm-remove="confirmRemove"
       :data-source="dataSource"
       :form-schemas="formSchemas"
-      :query-schemas="querySchemas"
-      row-key="id"
+      :query="queryConfig"
+      :table="tableConfig"
     >
       <template #create-action="{ openCreate }">
         <ElButton

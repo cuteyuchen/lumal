@@ -1,12 +1,19 @@
 export { default as LumaCrudTable } from './LumaCrudTable.vue'
 export type {
+  CrudActionsConfig,
   CrudDataSource,
+  CrudDialogConfig,
   CrudFetchParams,
   CrudFetchResult,
   CrudFormMode,
+  CrudPaginationConfig,
+  CrudQueryConfig,
+  CrudStateResolver,
+  CrudTableConfig,
   CrudTablePageChangePayload,
   CrudTableProps,
   CrudTableQueryModel,
   CrudTableResetPayload,
   CrudTableSearchPayload,
+  CrudToolbarConfig,
 } from './types'

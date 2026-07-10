@@ -27,10 +27,10 @@ const ButtonStub = defineComponent({
 const CrudTableStub = defineComponent({
   name: 'LumaCrudTable',
   props: {
-    columns: Array,
     dataSource: Object,
     formSchemas: Array,
-    querySchemas: Array,
+    query: Object,
+    table: Object,
   },
   setup(_, { expose, slots }) {
     const openCreate = vi.fn()
@@ -77,12 +77,12 @@ describe('system user view', () => {
     await flushPromises()
 
     const crudTable = wrapper.findComponent(CrudTableStub)
-    const columns = crudTable.props('columns') as { field: string }[]
-    const querySchemas = crudTable.props('querySchemas') as { field: string }[]
+    const table = crudTable.props('table') as { columns: { field: string }[], showColumnSettings: boolean }
+    const query = crudTable.props('query') as { schemas: { field: string }[] }
     const formSchemas = crudTable.props('formSchemas') as { field: string }[]
     const dataSource = crudTable.props('dataSource') as Record<string, unknown>
 
-    expect(columns.map(column => column.field)).toEqual([
+    expect(table.columns.map(column => column.field)).toEqual([
       'username',
       'nickname',
       'role',
@@ -90,7 +90,8 @@ describe('system user view', () => {
       'phone',
       'createdAt',
     ])
-    expect(querySchemas.map(schema => schema.field)).toEqual(['keyword', 'role', 'status'])
+    expect(query.schemas.map(schema => schema.field)).toEqual(['keyword', 'role', 'status'])
+    expect(table.showColumnSettings).toBe(true)
     expect(formSchemas.map(schema => schema.field)).toEqual(['username', 'nickname', 'role', 'status', 'phone'])
     expect(Object.keys(dataSource).sort()).toEqual(['create', 'fetch', 'remove', 'update'])
   })

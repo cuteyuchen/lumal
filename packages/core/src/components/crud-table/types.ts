@@ -35,18 +35,82 @@ export interface CrudDataSource<
 
 export type CrudFormMode = 'create' | 'edit' | 'view'
 
+export type CrudStateResolver<Row extends SchemaTableRow = SchemaTableRow>
+  = boolean | ((row: Row, index: number) => boolean)
+
+export interface CrudQueryConfig {
+  schemas?: SchemaFormItem[]
+  columns?: number
+  collapsible?: boolean
+  defaultCollapsed?: boolean
+  collapsedRows?: number
+  labelWidth?: number | string
+  searchText?: string
+  resetText?: string
+}
+
+export interface CrudTableConfig {
+  columns?: SchemaTableColumn[]
+  rowKey?: string | ((row: SchemaTableRow, index: number) => string | number)
+  selection?: boolean
+  showColumnSettings?: boolean
+  autoResize?: boolean
+  actionWidth?: number | string
+  emptyText?: string
+}
+
+export interface CrudToolbarConfig {
+  create?: boolean
+  batchDelete?: boolean
+  refresh?: boolean
+  export?: boolean
+  createText?: string
+  batchDeleteText?: string
+  refreshText?: string
+  exportText?: string
+}
+
+export interface CrudActionsConfig<Row extends SchemaTableRow = SchemaTableRow> {
+  view?: CrudStateResolver<Row>
+  edit?: CrudStateResolver<Row>
+  remove?: CrudStateResolver<Row>
+  viewText?: string
+  editText?: string
+  removeText?: string
+}
+
+export interface CrudDialogConfig<Row extends SchemaTableRow = SchemaTableRow> {
+  width?: number | string
+  createTitle?: string
+  editTitle?: string
+  viewTitle?: string
+  submitText?: string
+  closeOnClickModal?: boolean
+  destroyOnClose?: boolean
+  confirmClose?: (context: {
+    mode: CrudFormMode
+    model: Partial<Row>
+    row?: Row
+  }) => boolean | Promise<boolean>
+}
+
+export interface CrudPaginationConfig {
+  enabled?: boolean
+  pageSizes?: number[]
+}
+
 export interface CrudTableProps {
   title?: string
   description?: string
   querySchemas?: SchemaFormItem[]
   formSchemas?: SchemaFormItem[]
-  columns: SchemaTableColumn[]
+  columns?: SchemaTableColumn[]
   dataSource?: CrudDataSource
   rows?: SchemaTableRow[]
   rowKey?: string | ((row: SchemaTableRow, index: number) => string | number)
   total?: number
   pageSizes?: number[]
-  pagination?: boolean
+  pagination?: boolean | CrudPaginationConfig
   loading?: boolean
   emptyText?: string
   searchText?: string
@@ -55,4 +119,9 @@ export interface CrudTableProps {
   batchDeleteText?: string
   selection?: boolean
   confirmRemove?: (rows: SchemaTableRow[]) => boolean | Promise<boolean>
+  query?: CrudQueryConfig
+  table?: CrudTableConfig
+  toolbar?: CrudToolbarConfig
+  actions?: CrudActionsConfig
+  dialog?: CrudDialogConfig
 }

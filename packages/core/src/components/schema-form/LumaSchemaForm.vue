@@ -44,6 +44,7 @@ const props = withDefaults(defineProps<{
   labelWidth?: number | string
   mode?: SchemaFormMode
   schemas: SchemaFormItem<T>[]
+  submitLoading?: boolean
   submitText?: string
   showActions?: boolean
 }>(), {
@@ -51,6 +52,7 @@ const props = withDefaults(defineProps<{
   disabled: false,
   labelPosition: 'right',
   mode: 'create',
+  submitLoading: false,
   submitText: '提交',
   showActions: false,
 })
@@ -513,7 +515,7 @@ defineExpose({
     </ElRow>
 
     <div v-if="showActions && activeMode !== 'view'" class="luma-schema-form__actions">
-      <ElButton type="primary" native-type="submit">
+      <ElButton type="primary" native-type="submit" :loading="submitLoading" :disabled="submitLoading">
         {{ submitText }}
       </ElButton>
     </div>

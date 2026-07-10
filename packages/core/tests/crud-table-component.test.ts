@@ -395,10 +395,126 @@ describe('luma crud table', () => {
     await api.removeRow(row)
     expect(dataSource.remove).toHaveBeenCalledWith(row)
 
-    wrapper.findComponent(LumaSchemaTable).vm.$emit('selectionChange', [row])
+    wrapper.findComponent(LumaSchemaTable).vm.$emit('selectionChange', [row], ['row-1'])
     await nextTick()
     await wrapper.find('[data-action="batch-remove"]').trigger('click')
     await flushPromises()
     expect(dataSource.removeMany).toHaveBeenCalledWith([row])
+  })
+
+  it('支持配置对象、查询折叠、列设置和导出事件', async () => {
+    const wrapper = mount(LumaCrudTable, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        query: {
+          collapsible: true,
+          collapsedRows: 1,
+          columns: 2,
+          defaultCollapsed: true,
+          schemas: [
+            { component: 'input', field: 'keyword', label: '关键词' },
+            { component: 'select', field: 'status', label: '状态' },
+            { component: 'input', field: 'owner', label: '负责人' },
+          ],
+        },
+        table: {
+          columns: [{ field: 'name', label: '名称' }],
+          rowKey: 'id',
+          selection: true,
+          showColumnSettings: true,
+        },
+        toolbar: { export: true },
+        rows: [{ id: 'row-1', name: 'Luma' }],
+      },
+    })
+
+    expect(wrapper.findAll('.luma-schema-form__item')).toHaveLength(2)
+    expect(wrapper.find('.luma-schema-table__column-settings').exists()).toBe(true)
+
+    await wrapper.find('[data-action="toggle-query"]').trigger('click')
+    expect(wrapper.findAll('.luma-schema-form__item')).toHaveLength(3)
+
+    wrapper.findComponent(LumaSchemaTable).vm.$emit('selectionChange', [{ id: 'row-1', name: 'Luma' }], ['row-1'])
+    await wrapper.find('[data-action="export"]').trigger('click')
+
+    expect(wrapper.emitted('export')?.[0]).toEqual([{
+      query: {},
+      selectedRows: [{ id: 'row-1', name: 'Luma' }],
+    }])
+    const api = wrapper.vm as unknown as {
+      getSelectedRowKeys: () => Array<string | number>
+    }
+    expect(api.getSelectedRowKeys()).toEqual(['row-1'])
+  })
+
+  it('支持按行控制默认操作按钮', async () => {
+    const wrapper = mount(LumaCrudTable, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        actions: {
+          edit: false,
+          remove: row => row.id !== 'stub-row',
+          viewText: '详情',
+        },
+        columns: [{ field: 'name', label: '名称' }],
+        dataSource: {
+          fetch: vi.fn().mockResolvedValue({ items: [], total: 0 }),
+          remove: vi.fn().mockResolvedValue({}),
+        },
+        formSchemas: [{ field: 'name', label: '名称' }],
+      },
+    })
+
+    await flushPromises()
+    expect(wrapper.find('[data-action="view"]').text()).toBe('详情')
+    expect(wrapper.find('[data-action="edit"]').exists()).toBe(false)
+    expect(wrapper.find('[data-action="remove"]').exists()).toBe(false)
+  })
+
+  it('请求失败后显示错误并允许重试恢复', async () => {
+    const fetch = vi.fn()
+      .mockRejectedValueOnce(new Error('列表加载失败'))
+      .mockResolvedValueOnce({ items: [{ id: 'row-1', name: '恢复成功' }], total: 1 })
+    const wrapper = mount(LumaCrudTable, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        columns: [{ field: 'name', label: '名称' }],
+        dataSource: { fetch },
+      },
+    })
+
+    await flushPromises()
+    expect(wrapper.find('.luma-crud-table__error').text()).toContain('列表加载失败')
+
+    await wrapper.find('[data-action="retry"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('.luma-crud-table__error').exists()).toBe(false)
+    expect(wrapper.findComponent(LumaSchemaTable).props('rows')).toEqual([{ id: 'row-1', name: '恢复成功' }])
+  })
+
+  it('保存失败时保留弹窗并恢复可提交状态', async () => {
+    const wrapper = mount(LumaCrudTable, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        columns: [{ field: 'name', label: '名称' }],
+        dataSource: {
+          create: vi.fn().mockRejectedValue(new Error('保存失败')),
+          fetch: vi.fn().mockResolvedValue({ items: [], total: 0 }),
+        },
+        formSchemas: [{ field: 'name', label: '名称' }],
+      },
+    })
+    const api = wrapper.vm as unknown as { openCreate: () => void, isLoading: () => boolean }
+
+    api.openCreate()
+    await nextTick()
+    wrapper.findAllComponents(LumaSchemaForm).at(-1)?.vm.$emit('submit', { name: '新项目' })
+    await flushPromises()
+    await flushPromises()
+
+    expect(wrapper.find('.el-dialog').exists()).toBe(true)
+    expect(wrapper.find('.luma-crud-table__dialog-error').text()).toContain('保存失败')
+    expect(api.isLoading()).toBe(false)
+    expect(wrapper.emitted('operationError')).toHaveLength(1)
   })
 })
