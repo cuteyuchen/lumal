@@ -172,6 +172,7 @@ for (const match of appSourceAliasMatches) {
 
 const oldNameMatches = findTextMatches(rootDir, oldNamePattern, new Set([
   'LUMA_DEVELOPMENT_PLAN.md',
+  'docs/luma-next-development-plan.md',
   'docs/release-checklist.md',
   'scripts/check-release-boundaries.mjs',
 ]))

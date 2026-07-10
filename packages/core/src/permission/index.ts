@@ -16,6 +16,7 @@ export type {
   PermissionDirective,
   PermissionDirectiveOptions,
   PermissionGuardOptions,
+  PermissionGuardResult,
   PermissionRequirement,
   PermissionRouteLike,
   PermissionRouteMeta,

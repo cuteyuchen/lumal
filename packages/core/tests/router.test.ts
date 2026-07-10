@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import { createMemoryHistory, createRouter } from 'vue-router'
 import {
+  createGlobComponentResolver,
   createRouteRecords,
+  createRouteRegistry,
   createSidebarMenus,
+  createTopMenus,
   findFirstAccessibleMenu,
   normalizeMenuNodes,
   normalizeMenuRecords,
@@ -61,6 +65,58 @@ describe('router menu helpers', () => {
       title: '项目管理',
     })
     expect(menus[2]?.visible).toBe(false)
+  })
+
+  it('会按字段映射归一化非标准菜单记录', () => {
+    const menus = normalizeMenuRecords([
+      {
+        childrenItems: [
+          {
+            menuTitle: '概览',
+            routePath: 'overview',
+          },
+        ],
+        componentName: 'examples/index',
+        hiddenFlag: false,
+        menuTitle: '功能示例',
+        orderIndex: 2,
+        permissionCodes: ['examples:view'],
+        roleCodes: ['admin'],
+        routeName: 'Examples',
+        routePath: '/examples',
+      },
+    ], {
+      fieldNames: {
+        authority: 'permissionCodes',
+        children: 'childrenItems',
+        component: 'componentName',
+        hideInMenu: 'hiddenFlag',
+        name: 'routeName',
+        order: 'orderIndex',
+        path: 'routePath',
+        roles: 'roleCodes',
+        title: 'menuTitle',
+      },
+    })
+
+    expect(menus).toEqual([
+      expect.objectContaining({
+        authority: ['examples:view'],
+        children: [
+          expect.objectContaining({
+            path: '/examples/overview',
+            title: '概览',
+          }),
+        ],
+        component: 'examples/index',
+        name: 'Examples',
+        path: '/examples',
+        permissions: ['examples:view'],
+        roles: ['admin'],
+        title: '功能示例',
+        visible: true,
+      }),
+    ])
   })
 
   it('会基于标准 meta 字段生成路由和侧边栏菜单', () => {
@@ -226,6 +282,31 @@ describe('router menu helpers', () => {
     ])
   })
 
+  it('会注册并重置动态路由', () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [],
+    })
+    const registry = createRouteRegistry(router)
+    const routes = createRouteRecords(normalizeMenuRecords([
+      {
+        path: '/dynamic',
+        name: 'Dynamic',
+        meta: {
+          title: '动态页面',
+        },
+      },
+    ]))
+
+    registry.register(routes)
+
+    expect(router.hasRoute('Dynamic')).toBe(true)
+
+    registry.reset()
+
+    expect(router.hasRoute('Dynamic')).toBe(false)
+  })
+
   it('会生成侧边栏菜单并过滤隐藏项', () => {
     const sidebarMenus = createSidebarMenus(normalizeMenuNodes([
       {
@@ -350,5 +431,79 @@ describe('router menu helpers', () => {
     })
 
     expect(firstMenu?.path).toBe('/system/dict')
+  })
+
+  it('会将外链字段贯穿归一化、路由记录和侧边栏菜单', () => {
+    const menus = normalizeMenuRecords([
+      {
+        path: '/docs',
+        name: 'Docs',
+        externalLink: 'https://example.com/docs',
+        meta: {
+          title: '外部文档',
+          icon: 'app:link',
+        },
+      },
+    ])
+
+    expect(menus[0]?.externalLink).toBe('https://example.com/docs')
+
+    const routes = createRouteRecords(menus)
+    expect(routes[0]?.meta.externalLink).toBe('https://example.com/docs')
+
+    const sidebarMenus = createSidebarMenus(menus)
+    expect(sidebarMenus[0]?.externalLink).toBe('https://example.com/docs')
+  })
+
+  it('会按 meta.topMenu 拆分顶部菜单，未标记时回退为全部可访问一级菜单', () => {
+    const menus = normalizeMenuRecords([
+      {
+        path: '/dashboard',
+        name: 'Dashboard',
+        meta: { title: '工作台', topMenu: true },
+      },
+      {
+        path: '/system',
+        name: 'System',
+        meta: { title: '系统管理' },
+      },
+    ])
+
+    expect(createTopMenus(menus).map(menu => menu.path)).toEqual(['/dashboard'])
+
+    const withoutTopFlag = normalizeMenuRecords([
+      {
+        path: '/dashboard',
+        name: 'Dashboard',
+        meta: { title: '工作台' },
+      },
+      {
+        path: '/system',
+        name: 'System',
+        meta: { title: '系统管理' },
+      },
+    ])
+
+    expect(createTopMenus(withoutTopFlag).map(menu => menu.path)).toEqual(['/dashboard', '/system'])
+  })
+
+  it('会用 glob 模块表把组件字符串解析为懒加载组件', () => {
+    const userLoader = () => Promise.resolve({ default: 'UserView' })
+    const dashboardLoader = () => Promise.resolve({ default: 'DashboardView' })
+    const fallback = () => Promise.resolve({ default: 'NotFound' })
+    const resolver = createGlobComponentResolver({
+      fallback,
+      modules: {
+        '../views/system/user.vue': userLoader,
+        '../views/dashboard/index.vue': dashboardLoader,
+      },
+    })
+
+    expect(resolver('system/user')).toBe(userLoader)
+    expect(resolver('dashboard')).toBe(dashboardLoader)
+    // 命中同一候选路径返回缓存的同一个 loader
+    expect(resolver('system/user.vue')).toBe(userLoader)
+    // 未命中任何候选回退到 fallback
+    expect(resolver('missing/page')).toBe(fallback)
   })
 })

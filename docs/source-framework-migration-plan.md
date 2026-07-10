@@ -71,6 +71,12 @@
 - 构建插件与 resolver 能力。
 - 更完整的图标内置资产和运行时能力。
 
+> **接力状态更新（2026-07-10）：** 组件三件套（Schema Form / Table / CRUD）已增强完成。阶段 2「动态权限路由」正在进行（`packages/core/src/router/` 为草稿，权限守卫闭环、外链、403/404、动态注册与重置尚未完成）。阶段 3 及之后（Auth、Request 进阶、主题面板、TopNav、composables/utils/directives 子入口、charts 包）尚未开始。
+>
+> 需注意：`apps/luma-admin` 中的 `ComposablesView`、`UtilsView`、`ChartView`、`ChartPanelView`、`ThemeSettingsView` 目前是**页面内本地占位实现**，并未消费真正的 `@luma/core` 子入口能力，不能视为对应能力已完成。
+>
+> 具体逐项任务与源框架参考路径见 [后续开发计划](luma-next-development-plan.md)。
+
 ## 阶段 1：组件三件套能力补齐
 
 ### 1.1 Schema Form

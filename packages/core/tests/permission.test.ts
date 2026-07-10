@@ -90,4 +90,60 @@ describe('permission guard', () => {
       },
     })).toBe(true)
   })
+
+  it('登录页与白名单路径始终放行', () => {
+    const store = createPermissionStore({ permissions: [] })
+    const beforeEach = vi.fn()
+
+    setupPermissionGuard({ beforeEach }, store, {
+      isAuthenticated: () => false,
+      loginPath: '/login',
+      requireLoginByDefault: true,
+      whiteList: ['/about'],
+    })
+
+    const guard = beforeEach.mock.calls[0]?.[0]
+
+    expect(guard({ path: '/login', meta: {} })).toBe(true)
+    expect(guard({ path: '/about', meta: {} })).toBe(true)
+  })
+
+  it('未登录访问需要登录的路由会携带原始路径跳转登录页', () => {
+    const store = createPermissionStore({ permissions: [] })
+    const beforeEach = vi.fn()
+
+    setupPermissionGuard({ beforeEach }, store, {
+      isAuthenticated: () => false,
+      redirectQueryKey: 'redirect',
+      requireLoginByDefault: true,
+    })
+
+    const guard = beforeEach.mock.calls[0]?.[0]
+
+    expect(guard({
+      path: '/system/user',
+      fullPath: '/system/user?tab=1',
+      meta: {},
+    })).toEqual({
+      path: '/login',
+      query: { redirect: '/system/user?tab=1' },
+    })
+  })
+
+  it('已登录后按 meta.requireLogin === false 免登录放行', () => {
+    const store = createPermissionStore({ permissions: ['dashboard:view'] })
+    const beforeEach = vi.fn()
+
+    setupPermissionGuard({ beforeEach }, store, {
+      isAuthenticated: () => false,
+      requireLoginByDefault: true,
+    })
+
+    const guard = beforeEach.mock.calls[0]?.[0]
+
+    expect(guard({
+      path: '/public',
+      meta: { requireLogin: false },
+    })).toBe(true)
+  })
 })
