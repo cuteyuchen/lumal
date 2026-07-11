@@ -441,6 +441,7 @@ layout 只负责后台壳层结构和交互，不请求业务数据。
 
 - `normalizeMenuNodes`
 - `createRouteRecords`
+- `createRouteRegistry`
 - `createSidebarMenus`
 - `findFirstAccessibleMenu`
 
@@ -461,6 +462,15 @@ const menus = createSidebarMenus(normalizeMenuNodes(menuNodes), {
   hasPermission: permissions => permissionStore.hasPermission(permissions, 'every'),
   hasRole: roles => permissionStore.hasRole(roles, 'every'),
 })
+```
+
+菜单节点可通过 `meta.externalTarget` 指定外链打开策略：`_blank` 表示新窗口，`_self` 表示由应用在当前后台壳中承载。`createRouteRegistry` 负责记录动态注册的具名路由，并提供 `reset()` 在登出或会话失效时统一移除：
+
+```ts
+const registry = createRouteRegistry(router)
+
+registry.register(createRouteRecords(normalizeMenuNodes(menuNodes)))
+registry.reset()
 ```
 
 ## Permission
