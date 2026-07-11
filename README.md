@@ -41,6 +41,7 @@ createLumaAdmin({
 | `packages/core` | 安装器、布局、路由、权限、请求、主题、字典和核心组件 |
 | `packages/charts` | 可选 ECharts 面板与自适应能力 |
 | `packages/vben-compat` | 常用旧项目写法到 Luma 原生 API 的迁移层 |
+| `packages/vite` | 组件 resolver、工作区 alias 和可选 Devtools 配置助手 |
 | `packages/create-luma-admin` | 轻量后台项目脚手架 |
 | `apps/luma-admin` | 原生 Admin 集成、系统管理示例和浏览器验收入口 |
 | `apps/vben-compat-demo` | 兼容层构建示例 |
@@ -55,21 +56,23 @@ createLumaAdmin({
 @luma/vben-compat  ←  apps/vben-compat-demo
 
 @luma/charts  ←  apps/luma-admin
+@luma/vite    →  Vite 配置与构建辅助
 create-luma-admin  →  生成消费公开包入口的应用
 ```
 
 ## 当前稳定能力
 
-- Element Plus 驱动的后台应用壳、顶部导航、侧边导航和基础标签页。
-- 标准菜单模型、权限过滤、路由记录生成和登录守卫。
-- 明暗主题、主题色、布局偏好和设置面板基线。
+- Element Plus 驱动的三种桌面布局、移动抽屉菜单和完整标签页工作流。
+- 后端菜单加载、权限过滤、动态路由、403/404、外链和登出重置闭环。
+- 明暗/系统主题、布局与标签偏好持久化、重置、导出和设置抽屉。
 - 字典上下文、标准 `{ items }` 响应、字段映射与颜色标签回显。
 - `LumaSchemaForm`、`LumaSchemaTable`、`LumaCrudTable`、页面与分页组件。
-- fetch 请求客户端、Token 注入、响应处理和会话过期回调。
+- fetch 请求客户端、统一错误、接口适配、Token 刷新单飞和安全重放。
 - 用户、角色、菜单、字典和系统配置 Mock CRUD 页面。
-- 独立图标包、可选图表包、迁移兼容层和项目脚手架。
+- 响应式图标系统、图表工作流、迁移兼容层、Vite 助手和后台脚手架。
+- Playwright 关键流程验收、明确 vendor 分包和发布产物体积门禁。
 
-正在进行的全量重构、阶段状态和最终验收标准统一维护在 [开发路线图](docs/development-roadmap.md)。
+全量重构已完成，阶段实施记录和最终验收结果统一维护在 [开发路线图](docs/development-roadmap.md)。
 
 ## 标准模型与适配原则
 
@@ -93,9 +96,12 @@ pnpm typecheck
 pnpm build
 pnpm admin:build
 pnpm compat:build
+pnpm test:e2e
 pnpm lint
 pnpm release:boundaries
+pnpm release:artifacts
 pnpm pack:dry-run
+pnpm release:check
 ```
 
 构建任务会清理并重建 `dist`，组合执行时保持串行，避免消费方在产物重建过程中读取到不完整声明。

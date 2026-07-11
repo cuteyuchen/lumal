@@ -8,6 +8,12 @@
 - 工作区版本：`0.0.0`。
 - 当前分支：`master`。
 - 当前已知最近提交：
+  - `1d66b01 chore(release): 完成发布前质量检查`
+  - `9996f05 perf(compat): 优化兼容示例依赖分包`
+  - `a2af23f test(admin): 补充后台关键流程验收`
+  - `92bec49 perf(admin): 优化路由与依赖分包`
+  - `575b3c2 feat(scaffold): 升级轻量后台基座模板`
+  - `14b12fc docs(project): 更新阶段九实施记录`
   - `4f7aba6 test(repo): 同步发布包名检查`
   - `95ca1dd feat(vite): 增加按需引入与开发辅助`
   - `a6a36da feat(compat): 同步核心组件兼容能力`
@@ -51,7 +57,7 @@
 | 7 Request/Auth 与适配层 | 已完成 | `5e00157` |
 | 8 Admin 系统页面 | 已完成 | `8ecba31` |
 | 9 图标、图表、兼容与 Vite | 已完成 | `96d4d3a`、`4ce169e`、`a6a36da`、`95ca1dd`、`4f7aba6` |
-| 10 脚手架、性能与发布 | 待开始 | - |
+| 10 脚手架、性能与发布 | 已完成 | `575b3c2`、`92bec49`、`a2af23f`、`1d66b01`、`9996f05` |
 
 ## 产品目标
 
@@ -257,7 +263,7 @@ Token 刷新规则：
 
 验收：375/768/1024/1440px、三种布局、固定标签、缓存、刷新、键盘、焦点和 reduced-motion。
 
-验收结果：Core 135 项、Admin 54 项测试通过；Core 类型检查和构建、Admin 生产构建、全仓库 Lint、发布边界与 `git diff --check` 通过。浏览器验证三种桌面布局、标签右键与批量关闭、键盘切换、内容最大化、移动抽屉、遮罩关闭、375/768/1024/1440px 无页面级横向溢出，以及 reduced-motion 降级均通过。Admin 当前大包警告保留至阶段 10 统一分包处理。
+验收结果：Core 135 项、Admin 54 项测试通过；Core 类型检查和构建、Admin 生产构建、全仓库 Lint、发布边界与 `git diff --check` 通过。浏览器验证三种桌面布局、标签右键与批量关闭、键盘切换、内容最大化、移动抽屉、遮罩关闭、375/768/1024/1440px 无页面级横向溢出，以及 reduced-motion 降级均通过。阶段 10 已完成最终分包优化。
 
 提交：
 
@@ -273,7 +279,7 @@ Token 刷新规则：
 - 完成精确类型、表单增强、列设置、树表、字段插槽、选择 key 和 resize。
 - 表格仅在组件内部横向滚动，窄屏操作列改为更多菜单。
 
-验收结果：Core 139 项、Admin 54 项测试通过；全仓库类型检查、Core/Admin 构建、Lint、发布边界和差异检查通过。浏览器验证 375/768/1024/1440px 表单单列/两列/多列响应式、查看态格式化、编辑禁用、复合输入、列设置、树表、字段插槽、选择主键、深色主题、移动端内部横向滚动和操作列“更多”入口；页面无全局横向溢出，控制台无错误或警告。Admin 大包警告继续保留至阶段 10 分包处理。
+验收结果：Core 139 项、Admin 54 项测试通过；全仓库类型检查、Core/Admin 构建、Lint、发布边界和差异检查通过。浏览器验证 375/768/1024/1440px 表单单列/两列/多列响应式、查看态格式化、编辑禁用、复合输入、列设置、树表、字段插槽、选择主键、深色主题、移动端内部横向滚动和操作列“更多”入口；页面无全局横向溢出，控制台无错误或警告。阶段 10 已完成最终分包优化。
 
 提交：`2bb2a4e refactor(core): 重构页面与 Schema 组件`。
 
@@ -288,7 +294,7 @@ Token 刷新规则：
 - 公开查询表单、弹窗表单、表格、选择主键、选择行、加载状态、布局切换和 reload 等方法。
 - 用户、角色与 CRUD 示例已切换为新配置对象，异常接口字段仍由应用数据源适配，不进入组件。
 
-验收结果：Core 143 项、Admin 54 项测试通过；Core 类型检查和构建、Admin 生产构建、Lint、发布边界与差异检查通过。浏览器验证新增、编辑、查询折叠、导出、深色主题及 375/768/1024/1440px 响应式；四档均无页面级横向溢出，窄屏表格保持内部滚动并切换“更多”操作入口，控制台无错误或警告。Admin 约 1.67 MB 主包警告继续保留至阶段 10 分包处理。
+验收结果：Core 143 项、Admin 54 项测试通过；Core 类型检查和构建、Admin 生产构建、Lint、发布边界与差异检查通过。浏览器验证新增、编辑、查询折叠、导出、深色主题及 375/768/1024/1440px 响应式；四档均无页面级横向溢出，窄屏表格保持内部滚动并切换“更多”操作入口，控制台无错误或警告。阶段 10 已完成最终分包优化。
 
 提交：`145a005 refactor(core): 重构 CRUD 表格工作流`。
 
@@ -301,7 +307,7 @@ Token 刷新规则：
 
 实施结果：Admin 静态路由只保留登录、根路由、403、404 与 catch-all；登录后通过菜单 API 加载标准菜单，使用 `createRouteRegistry` 动态注册页面路由。首次访问深层地址时会等待同一个初始化 Promise，并在注册完成后重新解析原地址；未知地址进入独立 404。外链支持 `_blank` 新窗口与 `_self` 站内 iframe 两种策略。会话清理会同步重置权限、菜单、动态路由和标签。
 
-验收结果：Core 143 项、Admin 59 项测试通过；Core 与 Admin 类型检查、构建、Lint、发布边界和差异检查通过。浏览器验证 admin/operator/guest 三种账号、深层地址刷新、403、404、iframe、新窗口外链，以及 375/768/1024/1440px 四档无页面级横向溢出；控制台无错误或警告。现有构建大包警告保留至阶段 10 分包处理。
+验收结果：Core 143 项、Admin 59 项测试通过；Core 与 Admin 类型检查、构建、Lint、发布边界和差异检查通过。浏览器验证 admin/operator/guest 三种账号、深层地址刷新、403、404、iframe、新窗口外链，以及 375/768/1024/1440px 四档无页面级横向溢出；控制台无错误或警告。阶段 10 已完成最终分包优化。
 
 提交：`5e233e3 feat(router): 完成后端菜单与动态路由闭环`。
 
@@ -316,7 +322,7 @@ Token 刷新规则：
 
 Admin 新增集中 adapter，`statusCode/result/resultMsg`、`access_token/refresh_token/expire_time`、`records/totalNum`、`menuName/authCode/url` 等异常字段不进入 Core 或页面组件。Services 页面展示业务会话码识别、Token 刷新、GET 重放、分页转换和错误分类。浏览器验收期间同时修复了 mixed-nav flat 顶部菜单重复 vnode key，提交为 `e5f7923`。
 
-验收结果：全仓库测试通过（Core 153 项、Admin 62 项），全包类型检查、Core/Admin 构建、Lint、发布边界和差异检查通过。浏览器实测 Services 请求经过 2 次 fetch 后成功，显示“已单飞刷新并重放”；375/768/1024/1440px 无页面级横向溢出，最终控制台 0 error / 0 warning。现有 Admin 大包警告继续保留至阶段 10 分包处理。
+验收结果：全仓库测试通过（Core 153 项、Admin 62 项），全包类型检查、Core/Admin 构建、Lint、发布边界和差异检查通过。浏览器实测 Services 请求经过 2 次 fetch 后成功，显示“已单飞刷新并重放”；375/768/1024/1440px 无页面级横向溢出，最终控制台 0 error / 0 warning。阶段 10 已完成最终分包优化。
 
 提交：`5e00157 feat(request): 完善接口适配与会话刷新`。
 
@@ -331,7 +337,7 @@ Admin 新增集中 adapter，`statusCode/result/resultMsg`、`access_token/refre
 
 Dashboard 已调整为后台工作台，展示用户、角色、菜单、字典指标、最近用户和权限感知快捷入口；示例总览改为按公开包入口组织的 API 能力索引，不再重复宣传文案。
 
-验收结果：全仓库测试、全包类型检查、Core/Admin 构建、Lint、发布边界与差异检查通过；Admin 61 项测试通过。浏览器验证工作台、菜单页、系统配置页和全局设置抽屉；375/768/1024/1440px 无页面级横向溢出，控制台 0 error / 0 warning。Admin 大包警告继续保留至阶段 10。
+验收结果：全仓库测试、全包类型检查、Core/Admin 构建、Lint、发布边界与差异检查通过；Admin 61 项测试通过。浏览器验证工作台、菜单页、系统配置页和全局设置抽屉；375/768/1024/1440px 无页面级横向溢出，控制台 0 error / 0 warning。阶段 10 已完成最终分包优化。
 
 提交：`8ecba31 feat(admin): 完善系统管理与核心服务示例`。
 
@@ -352,7 +358,7 @@ Vben 兼容层同步 number、switch、date/datetime/daterange、radio、checkbo
 
 新增独立 `@luma/vite` 包，提供 Luma 组件 resolver、工作区源码/产物 alias 和调用方注入式 Devtools 接线。该包无强制运行时依赖，不包含全局 viewport 转换，并已纳入根级构建、类型检查、测试、打包和发布边界。
 
-验收结果：全仓库测试通过，其中脚本 6 项、Icons 12 项、Core 153 项、Charts 7 项、Compat 12 项、Vite 4 项、脚手架 2 项、Admin 61 项；全仓库类型检查、对应包构建、Admin 生产构建、兼容示例构建、根级全包构建、Lint、发布边界和 `@luma/vite` pack dry-run 通过。浏览器验证 Chart Panel 的查询、表格切换、失败提示和重试入口；375px 下无页面级横向溢出，控制台 0 error / 0 warning。Admin 与兼容示例的 500 KB 警告保留至阶段 10 统一分包。
+验收结果：全仓库测试通过，其中脚本 6 项、Icons 12 项、Core 153 项、Charts 7 项、Compat 12 项、Vite 4 项、脚手架 2 项、Admin 61 项；全仓库类型检查、对应包构建、Admin 生产构建、兼容示例构建、根级全包构建、Lint、发布边界和 `@luma/vite` pack dry-run 通过。浏览器验证 Chart Panel 的查询、表格切换、失败提示和重试入口；375px 下无页面级横向溢出，控制台 0 error / 0 warning。阶段 10 已消除 Admin 与兼容示例的 500 KB 警告。
 
 提交：
 
@@ -364,18 +370,27 @@ Vben 兼容层同步 number、switch、date/datetime/daterange、radio、checkbo
 
 ### 阶段 10：脚手架、性能与最终发布
 
+状态：已完成。
+
 - 脚手架生成登录、工作台、权限菜单、403/404 和全局设置。
 - 路由和重型依赖分包，消除 500 KB 主包警告。
 - 增加登录、布局、标签、动态菜单、CRUD 和会话过期 E2E。
 - 更新 API、迁移和发布文档并执行完整发布检查。
 
+实施结果：脚手架已升级为可直接启动的轻量后台基座，包含中文 Element Plus、登录与会话、权限菜单、工作台、受保护页面、403/404、全局设置和请求示例，但不生成完整系统管理业务。Admin 页面改为路由级动态导入，并将 Element Plus、ECharts、Luma 和其他依赖拆为明确 vendor chunk；兼容示例同步完成依赖分包。
+
+新增 5 项 Chromium E2E，覆盖登录与动态菜单、403/404/退出、标签与设置持久化、用户查询/新增、会话凭据失效，并验证 375px 不存在页面级横向溢出。`release:artifacts` 会检查必要产物、vendor 命名和 500 KB 单块上限。
+
+最终验收结果：完整 `pnpm release:check` 连续两次通过且无大包警告。测试包括脚本 6 项、Icons 12 项、Core 153 项、Charts 7 项、Compat 12 项、Vite 4 项、脚手架 2 项、Admin 61 项和 E2E 5 项；全仓库 Lint、发布边界、类型检查、构建、Admin/Compat 构建、发布产物检查及六个发布包 dry-run 全部通过。Admin 主入口约 91 KB，最大 JavaScript vendor 块为 152,672 bytes。
+
 提交：
 
-- `feat(scaffold): 升级轻量后台基座模板`
-- `perf(admin): 优化路由与依赖分包`
-- `test(admin): 补充后台关键流程验收`
-- `docs(project): 同步最终 API 与发布说明`
-- `chore(release): 完成发布前质量检查`
+- `575b3c2 feat(scaffold): 升级轻量后台基座模板`
+- `92bec49 perf(admin): 优化路由与依赖分包`
+- `a2af23f test(admin): 补充后台关键流程验收`
+- `1d66b01 chore(release): 完成发布前质量检查`
+- `9996f05 perf(compat): 优化兼容示例依赖分包`
+- `docs(project): 同步最终 API 与发布说明`（本次文档收口提交）
 
 ## 验收门禁
 
@@ -399,15 +414,10 @@ pnpm release:boundaries
 最终串行执行：
 
 ```bash
-pnpm test
-pnpm typecheck
-pnpm build
-pnpm admin:build
-pnpm compat:build
-pnpm lint
-pnpm release:boundaries
-pnpm pack:dry-run
+pnpm release:check
 ```
+
+该命令串行包含 Lint、发布边界、全部测试、类型检查、全包构建、Admin/Compat 构建、发布产物检查、Playwright E2E 和六个发布包 dry-run。
 
 浏览器矩阵：
 

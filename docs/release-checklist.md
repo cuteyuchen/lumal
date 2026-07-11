@@ -17,6 +17,8 @@ rg -n "guiren|gr-framework|GrFramework|GSchemaForm|GSchemaTable|GCrudTable|GPage
 - Element Plus 保持为 `@luma/core` 的 peer dependency，Luma 不从零重写基础 UI 控件。
 - `@luma/core` 不默认依赖 VXE。
 - `@luma/core` 不默认引入多语言运行时。
+- `@luma/charts` 将 ECharts 和 vue-echarts 保持为 peer dependency。
+- `@luma/vite` 不引入强制运行时依赖。
 
 ## 验证命令
 
@@ -38,7 +40,7 @@ pnpm release:boundaries
 pnpm release:names
 ```
 
-这个命令只验证 `@luma/icons`、`@luma/core`、`@luma/vben-compat`、`create-luma-admin` 当前是否能在 registry 查询到；它不能证明发布账号拥有或可创建 `@luma` scope。
+这个命令验证 `@luma/icons`、`@luma/core`、`@luma/charts`、`@luma/vben-compat`、`@luma/vite`、`create-luma-admin` 是否能在 registry 查询到；它不能证明发布账号拥有或可创建 `@luma` scope。
 
 拆开执行时也必须保持串行：
 
@@ -50,6 +52,9 @@ pnpm typecheck
 pnpm build
 pnpm admin:build
 pnpm compat:build
+pnpm release:artifacts
+pnpm test:e2e
+pnpm pack:dry-run
 ```
 
 ## 发包 dry-run
@@ -65,6 +70,7 @@ pnpm --filter @luma/icons pack --dry-run
 pnpm --filter @luma/core pack --dry-run
 pnpm --filter @luma/charts pack --dry-run
 pnpm --filter @luma/vben-compat pack --dry-run
+pnpm --filter @luma/vite pack --dry-run
 pnpm --filter create-luma-admin pack --dry-run
 ```
 
@@ -76,6 +82,13 @@ pnpm --filter create-luma-admin pack --dry-run
 - `create-luma-admin` 包含 `dist/cli.js` 和 `dist/index.js`。
 - 不包含 `apps/*`。
 - 不包含本地日志、IDE 文件和构建缓存。
+
+## 浏览器与产物检查
+
+- Chromium E2E 覆盖登录与动态菜单、403/404/退出、标签和设置持久化、用户查询/新增、会话凭据失效。
+- 移动端流程验证 375px 下不存在页面级横向溢出。
+- `release:artifacts` 检查必要构建产物、`vendor-echarts`、`vendor-element-plus`、`vendor-luma` 分包和 500 KB 单块上限。
+- 当前完整 `release:check` 已通过，Admin 最大 JavaScript 块为 152,672 bytes。
 
 ## 文档检查
 
