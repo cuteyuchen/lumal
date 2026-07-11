@@ -1,4 +1,5 @@
 import type { AdminRoleCode } from './permission'
+import { createAdminResponseTransport, createAdminSessionTransport } from '../api/adapters'
 import { resolveRolePermissions } from './permission'
 
 export type AdminAccountKey = 'admin' | 'guest' | 'operator'
@@ -109,19 +110,14 @@ export async function mockLogin(payload: AdminLoginRequest): Promise<Record<stri
 }
 
 function createAuthResponse(account: MockAccount): Record<string, unknown> {
-  return {
-    result: {
-      access_token: `mock-token-${account.key}-${Date.now()}`,
-      expire_time: String(Date.now() + 30 * 60 * 1000),
-      refresh_token: `mock-refresh-${account.key}`,
-      user: cloneUser({
-        ...account.user,
-        permissions: resolveRolePermissions(account.user.roles),
-      }),
-    },
-    resultMsg: 'ok',
-    statusCode: '0000',
-  }
+  return createAdminSessionTransport({
+    accessToken: `mock-token-${account.key}-${Date.now()}`,
+    expiresAt: Date.now() + 30 * 60 * 1000,
+    refreshToken: `mock-refresh-${account.key}`,
+  }, cloneUser({
+    ...account.user,
+    permissions: resolveRolePermissions(account.user.roles),
+  }))
 }
 
 export async function mockRefreshSession(refreshToken: string): Promise<Record<string, unknown>> {
@@ -129,11 +125,10 @@ export async function mockRefreshSession(refreshToken: string): Promise<Record<s
   const account = mockAccounts[accountKey]
 
   if (!account || refreshToken !== `mock-refresh-${accountKey}`) {
-    return {
-      result: null,
-      resultMsg: '刷新凭据已失效',
-      statusCode: 'AUTH_EXPIRED',
-    }
+    return createAdminResponseTransport(null, {
+      code: 'AUTH_EXPIRED',
+      message: '刷新凭据已失效',
+    })
   }
 
   return createAuthResponse(account)

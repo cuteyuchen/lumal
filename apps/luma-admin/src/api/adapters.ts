@@ -28,6 +28,77 @@ const companyMenuFieldNames: MenuRecordFieldNames = {
   title: 'menuName',
 }
 
+interface AdminTransportResponseOptions {
+  code?: string
+  message?: string
+}
+
+export interface AdminTransportMenuInput {
+  authority?: string[]
+  children?: AdminTransportMenuInput[]
+  component?: string
+  externalLink?: string
+  externalTarget?: '_blank' | '_self'
+  hidden?: boolean
+  icon?: string
+  name: string
+  order?: number
+  path: string
+  redirect?: string
+  title: string
+  type?: string
+}
+
+export function createAdminResponseTransport<TData>(
+  data: TData,
+  options: AdminTransportResponseOptions = {},
+): Record<string, unknown> {
+  return {
+    result: data,
+    resultMsg: options.message ?? 'ok',
+    statusCode: options.code ?? '0000',
+  }
+}
+
+export function createAdminSessionTransport(
+  session: AuthSessionData,
+  user: AdminUser,
+): Record<string, unknown> {
+  return createAdminResponseTransport({
+    access_token: session.accessToken,
+    expire_time: session.expiresAt === undefined ? undefined : String(session.expiresAt),
+    refresh_token: session.refreshToken,
+    user,
+  })
+}
+
+export function createAdminPageTransport<TItem>(items: TItem[], total: string | number): Record<string, unknown> {
+  return {
+    records: items,
+    totalNum: total,
+  }
+}
+
+export function createAdminMenuTransport(record: AdminTransportMenuInput): Record<string, unknown> {
+  return {
+    authCode: record.authority,
+    menuIcon: record.icon,
+    menuName: record.title,
+    menuType: record.type,
+    meta: {
+      externalTarget: record.externalTarget,
+      hideInMenu: record.hidden,
+    },
+    nodes: record.children?.map(createAdminMenuTransport),
+    redirect: record.redirect,
+    routeName: record.name,
+    routePath: record.path,
+    sortNo: record.order,
+    url: record.externalLink,
+    viewPath: record.component,
+  }
+}
+
 export function parseAdminResponse<TData>(response: unknown): TData {
   return parseStandardResponse<unknown, TData>(response as Record<string, unknown>, companyResponseOptions)
 }

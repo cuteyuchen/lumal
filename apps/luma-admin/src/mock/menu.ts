@@ -1,28 +1,28 @@
+import type { AdminTransportMenuInput } from '../api/adapters'
 import type { SystemMenuRecord } from './system'
+import { createAdminMenuTransport, createAdminResponseTransport } from '../api/adapters'
 import { mockFetchSystemMenus } from './system'
 
-function toCompanyMenu(record: SystemMenuRecord): Record<string, unknown> {
+function toCompanyMenu(record: SystemMenuRecord): AdminTransportMenuInput {
   const children = record.children?.filter(child => child.type !== 'button').map(toCompanyMenu)
   const authority = record.permissions?.length
     ? record.permissions
     : record.permission ? [record.permission] : undefined
 
   return {
-    authCode: authority,
-    menuIcon: record.icon,
-    menuName: record.title,
-    menuType: record.type,
-    meta: {
-      externalTarget: record.externalTarget,
-      hideInMenu: record.hidden,
-    },
-    nodes: children,
+    authority,
+    children,
+    component: record.component,
+    externalLink: record.externalLink,
+    externalTarget: record.externalTarget,
+    hidden: record.hidden,
+    icon: record.icon,
+    name: record.name || record.id,
+    order: record.order,
+    path: record.path,
     redirect: record.redirect,
-    routeName: record.name || record.id,
-    routePath: record.path,
-    sortNo: record.order,
-    url: record.externalLink,
-    viewPath: record.component,
+    title: record.title,
+    type: record.type,
   }
 }
 
@@ -30,9 +30,7 @@ function toCompanyMenu(record: SystemMenuRecord): Record<string, unknown> {
 export async function mockLoadAdminMenus(): Promise<Record<string, unknown>> {
   const menus = await mockFetchSystemMenus()
 
-  return {
-    result: menus.filter(menu => menu.type !== 'button').map(toCompanyMenu),
-    resultMsg: 'ok',
-    statusCode: '0000',
-  }
+  return createAdminResponseTransport(
+    menus.filter(menu => menu.type !== 'button').map(toCompanyMenu).map(createAdminMenuTransport),
+  )
 }

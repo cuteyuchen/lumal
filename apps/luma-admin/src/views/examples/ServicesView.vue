@@ -4,17 +4,18 @@ import { LumaInfoTable, LumaPage } from '@luma/core/components'
 import { RequestError } from '@luma/core/request'
 import { ElButton } from 'element-plus'
 import { computed, shallowRef } from 'vue'
-import { parseAdminPageResponse } from '../../api/adapters'
+import {
+  createAdminPageTransport,
+  createAdminResponseTransport,
+  parseAdminPageResponse,
+} from '../../api/adapters'
 import { createAdminRequestClient } from '../../services/request'
 import { adminSession } from '../../services/session'
 import { mockDictionaryFetcher } from './dictionary'
 
 interface ServiceResult {
   name: string
-  page: {
-    records: Array<{ enabled: string, id: string }>
-    totalNum: string
-  }
+  page: unknown
   status: string
 }
 
@@ -61,25 +62,17 @@ function createLifecycleFetcher(expiredToken: string): typeof fetch {
     const authorization = new Headers(init?.headers).get('Authorization')
 
     if (authorization === `Bearer ${expiredToken}`) {
-      return createJsonResponse({
-        result: null,
-        resultMsg: '访问凭据已过期',
-        statusCode: 'AUTH_EXPIRED',
-      })
+      return createJsonResponse(createAdminResponseTransport(null, {
+        code: 'AUTH_EXPIRED',
+        message: '访问凭据已过期',
+      }))
     }
 
-    return createJsonResponse({
-      result: {
-        name: 'Luma Request',
-        page: {
-          records: [{ enabled: '1', id: '1' }],
-          totalNum: '1',
-        },
-        status: 'ok',
-      },
-      resultMsg: 'ok',
-      statusCode: '0000',
-    })
+    return createJsonResponse(createAdminResponseTransport({
+      name: 'Luma Request',
+      page: createAdminPageTransport([{ enabled: '1', id: '1' }], '1'),
+      status: 'ok',
+    }))
   }
 }
 
