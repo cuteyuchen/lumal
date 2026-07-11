@@ -8,18 +8,25 @@ export {
   RequestError,
 } from './error'
 export type {
+  RequestErrorKind,
   RequestErrorOptions,
 } from './error'
 export {
   createStandardResponseParser,
+  parsePageResult,
   parseStandardResponse,
 } from './standard'
 export type {
+  ApiEnvelope,
+  PageResult,
+  PageResultFieldNames,
+  ParsePageResultOptions,
   ParseStandardResponseOptions,
   StandardResponse,
   StandardResponseFieldNames,
 } from './standard'
 export type {
+  RequestAuthRefreshOptions,
   RequestBeforeContext,
   RequestCache,
   RequestCacheOptions,

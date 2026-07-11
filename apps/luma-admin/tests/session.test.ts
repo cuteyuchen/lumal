@@ -17,6 +17,7 @@ describe('admin session service', () => {
     const user = await login('admin')
 
     expect(adminSession.getToken()).toContain('admin')
+    expect(adminSession.getRefreshToken()).toBe('mock-refresh-admin')
     expect(isAuthenticated()).toBe(true)
     expect(currentUser.value).toMatchObject({
       name: '超级管理员',

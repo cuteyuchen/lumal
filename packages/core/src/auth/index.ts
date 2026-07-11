@@ -1,3 +1,4 @@
+export { parseAuthSession } from './adapter'
 export { createAuthSession } from './createAuthSession'
 export { resolveLoginRedirect } from './redirect'
 export {
@@ -14,7 +15,10 @@ export {
 export { createTokenStorage } from './storage'
 export type {
   AuthSession,
+  AuthSessionData,
+  AuthSessionFieldNames,
   AuthSessionOptions,
+  ParseAuthSessionOptions,
   RedirectOptions,
   SessionExpiredHandler,
   TokenStorage,

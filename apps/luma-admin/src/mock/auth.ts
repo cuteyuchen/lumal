@@ -17,11 +17,6 @@ export interface AdminLoginRequest {
   username: string
 }
 
-export interface AdminLoginResult {
-  token: string
-  user: AdminUser
-}
-
 export interface AdminAccountPreset {
   description: string
   key: AdminAccountKey
@@ -102,7 +97,7 @@ function resolveAccount(payload: AdminLoginRequest): MockAccount | undefined {
   return Object.values(mockAccounts).find(account => account.username === payload.username)
 }
 
-export async function mockLogin(payload: AdminLoginRequest): Promise<AdminLoginResult> {
+export async function mockLogin(payload: AdminLoginRequest): Promise<Record<string, unknown>> {
   const account = resolveAccount(payload)
   const password = payload.password || 'luma123'
 
@@ -110,11 +105,36 @@ export async function mockLogin(payload: AdminLoginRequest): Promise<AdminLoginR
     throw new Error('账号或密码不正确')
   }
 
+  return createAuthResponse(account)
+}
+
+function createAuthResponse(account: MockAccount): Record<string, unknown> {
   return {
-    token: `mock-token-${account.key}`,
-    user: cloneUser({
-      ...account.user,
-      permissions: resolveRolePermissions(account.user.roles),
-    }),
+    result: {
+      access_token: `mock-token-${account.key}-${Date.now()}`,
+      expire_time: String(Date.now() + 30 * 60 * 1000),
+      refresh_token: `mock-refresh-${account.key}`,
+      user: cloneUser({
+        ...account.user,
+        permissions: resolveRolePermissions(account.user.roles),
+      }),
+    },
+    resultMsg: 'ok',
+    statusCode: '0000',
   }
+}
+
+export async function mockRefreshSession(refreshToken: string): Promise<Record<string, unknown>> {
+  const accountKey = refreshToken.replace(/^mock-refresh-/, '') as AdminAccountKey
+  const account = mockAccounts[accountKey]
+
+  if (!account || refreshToken !== `mock-refresh-${accountKey}`) {
+    return {
+      result: null,
+      resultMsg: '刷新凭据已失效',
+      statusCode: 'AUTH_EXPIRED',
+    }
+  }
+
+  return createAuthResponse(account)
 }

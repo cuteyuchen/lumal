@@ -1,15 +1,34 @@
 import type { LumaMenuRecord } from '@luma/core/router'
 import { adminRouteRecords } from '../router/routes'
 
-function cloneMenu(record: LumaMenuRecord): LumaMenuRecord {
+function toCompanyMenu(record: LumaMenuRecord): Record<string, unknown> {
+  const meta = record.meta ?? {}
+
   return {
-    ...record,
-    children: record.children?.map(cloneMenu),
-    meta: record.meta ? { ...record.meta } : undefined,
+    authCode: meta.authority,
+    menuIcon: meta.icon,
+    menuName: meta.title,
+    meta: {
+      ...meta,
+      authority: undefined,
+      icon: undefined,
+      order: undefined,
+      title: undefined,
+    },
+    nodes: record.children?.map(toCompanyMenu),
+    routeName: record.name,
+    routePath: record.path,
+    sortNo: meta.order,
+    url: record.externalLink,
+    viewPath: record.component,
   }
 }
 
 /***********************菜单接口模拟*********************/
-export async function mockLoadAdminMenus(): Promise<LumaMenuRecord[]> {
-  return adminRouteRecords.map(cloneMenu)
+export async function mockLoadAdminMenus(): Promise<Record<string, unknown>> {
+  return {
+    result: adminRouteRecords.map(toCompanyMenu),
+    resultMsg: 'ok',
+    statusCode: '0000',
+  }
 }

@@ -1,4 +1,4 @@
-import type { AuthSession, AuthSessionOptions, TokenStorage } from './types'
+import type { AuthSession, AuthSessionData, AuthSessionOptions, TokenStorage } from './types'
 import { resolveLoginRedirect } from './redirect'
 import { createTokenStorage } from './storage'
 
@@ -45,17 +45,69 @@ function resolveStorage(storage?: Storage): Storage {
  */
 export function createAuthSession(options: AuthSessionOptions = {}): AuthSession {
   const key = options.tokenKey ?? 'luma:token'
-  const tokenStorage: TokenStorage = createTokenStorage(resolveStorage(options.storage), key)
+  const storage = resolveStorage(options.storage)
+  const tokenStorage: TokenStorage = createTokenStorage(storage, key)
+  const refreshTokenStorage = createTokenStorage(storage, options.refreshTokenKey ?? `${key}:refresh`)
+  const expiresAtKey = options.expiresAtKey ?? `${key}:expires-at`
+
+  function clearToken(): void {
+    tokenStorage.clearToken()
+    refreshTokenStorage.clearToken()
+    storage.removeItem(expiresAtKey)
+  }
+
+  function getSession(): AuthSessionData | null {
+    const accessToken = tokenStorage.getToken()
+
+    if (!accessToken) {
+      return null
+    }
+
+    const refreshToken = refreshTokenStorage.getToken()
+    const rawExpiresAt = storage.getItem(expiresAtKey)
+    const expiresAt = rawExpiresAt === null ? undefined : Number(rawExpiresAt)
+
+    return {
+      accessToken,
+      ...(refreshToken ? { refreshToken } : {}),
+      ...(expiresAt !== undefined && Number.isFinite(expiresAt) ? { expiresAt } : {}),
+    }
+  }
+
+  function setSession(session: AuthSessionData): void {
+    if (!session.accessToken) {
+      clearToken()
+      return
+    }
+
+    tokenStorage.setToken(session.accessToken)
+    refreshTokenStorage.setToken(session.refreshToken ?? '')
+
+    if (session.expiresAt === undefined) {
+      storage.removeItem(expiresAtKey)
+    }
+    else {
+      storage.setItem(expiresAtKey, String(session.expiresAt))
+    }
+  }
+
+  function setToken(token: string): void {
+    clearToken()
+    tokenStorage.setToken(token)
+  }
 
   async function handleSessionExpired(): Promise<void> {
-    tokenStorage.clearToken()
+    clearToken()
     await options.onSessionExpired?.()
   }
 
   return {
     getToken: () => tokenStorage.getToken(),
-    setToken: token => tokenStorage.setToken(token),
-    clearToken: () => tokenStorage.clearToken(),
+    getRefreshToken: () => refreshTokenStorage.getToken(),
+    getSession,
+    setToken,
+    setSession,
+    clearToken,
     isAuthenticated: () => Boolean(tokenStorage.getToken()),
     handleSessionExpired,
     logout: handleSessionExpired,

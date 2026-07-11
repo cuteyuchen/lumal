@@ -112,9 +112,9 @@ async function readResponseData(response: Response): Promise<unknown> {
   return response.text()
 }
 
-async function applyToken(headers: Headers, options: RequestClientOptions): Promise<void> {
+async function applyToken(headers: Headers, options: RequestClientOptions): Promise<string | undefined> {
   if (headers.has('Authorization') || !options.getToken) {
-    return
+    return undefined
   }
 
   const token = await options.getToken()
@@ -122,6 +122,32 @@ async function applyToken(headers: Headers, options: RequestClientOptions): Prom
   if (token) {
     headers.set('Authorization', `${options.tokenPrefix ?? 'Bearer'} ${token}`)
   }
+
+  return token
+}
+
+function isReplayableBody(body: RequestOptions['body']): boolean {
+  return typeof ReadableStream === 'undefined' || !(body instanceof ReadableStream)
+}
+
+function canReplayAfterAuthRefresh(method: RequestMethod, options: RequestOptions): boolean {
+  return !new Headers(options.headers).has('Authorization')
+    && (method === 'GET' || options.retryOnAuthRefresh === true)
+    && isReplayableBody(options.body)
+}
+
+function normalizeFetchError(error: unknown, signal?: AbortSignal): RequestError {
+  if (error instanceof RequestError) {
+    return error
+  }
+
+  const cancelled = signal?.aborted === true
+    || (typeof DOMException !== 'undefined' && error instanceof DOMException && error.name === 'AbortError')
+
+  return new RequestError(cancelled ? '请求已取消' : '网络连接失败', {
+    kind: cancelled ? 'cancelled' : 'network',
+    originalError: error,
+  })
 }
 
 /***********************请求标识*********************/
@@ -145,25 +171,13 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
   const fetcher = clientOptions.fetch ?? globalThis.fetch
   const pendingKeys = new Set<string>()
   const defaultCache: RequestCache = clientOptions.cache ?? createRequestCache()
+  let refreshPromise: Promise<void> | undefined
+  let sessionExpiredNotified = false
 
   async function request<TResult = unknown>(url: string, options: RequestOptions = {}): Promise<TResult> {
     const method = options.method ?? 'GET'
     const resolvedUrl = appendQuery(joinBaseURL(clientOptions.baseURL, url), options.query)
-    const headers = new Headers(options.headers)
-
-    await applyToken(headers, clientOptions)
-
     const requestId = resolveRequestId(clientOptions)
-    if (requestId) {
-      headers.set(clientOptions.requestIdHeader ?? 'X-Request-Id', requestId)
-    }
-
-    const init: RequestInit = {
-      headers,
-      method,
-      signal: options.signal,
-    }
-    init.body = resolveBody(method, options.body, headers)
 
     // 缓存命中优先返回（仅在逐请求显式启用时生效）
     const cacheConfig = options.cache
@@ -175,32 +189,71 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
       return cache.get(cacheKey) as TResult
     }
 
-    const duplicateKey = `${method}:${resolvedUrl}:${typeof init.body === 'string' ? init.body : ''}`
+    const duplicateHeaders = new Headers(options.headers)
+    const duplicateBody = resolveBody(method, options.body, duplicateHeaders)
+    const duplicateKey = `${method}:${resolvedUrl}:${typeof duplicateBody === 'string' ? duplicateBody : ''}`
 
     if (clientOptions.duplicateSubmit && pendingKeys.has(duplicateKey)) {
       throw new RequestError('Duplicate request', {
         code: 'DUPLICATE_REQUEST',
+        kind: 'duplicate',
       })
     }
 
     pendingKeys.add(duplicateKey)
 
-    await clientOptions.onRequest?.({ init, requestId, url: resolvedUrl })
-
     try {
+      return await executeRequest<TResult>(0)
+    }
+    finally {
+      pendingKeys.delete(duplicateKey)
+    }
+
+    async function executeRequest<TValue>(attempt: number): Promise<TValue> {
+      const headers = new Headers(options.headers)
+      const usedToken = await applyToken(headers, clientOptions)
+
+      if (requestId) {
+        headers.set(clientOptions.requestIdHeader ?? 'X-Request-Id', requestId)
+      }
+
+      const init: RequestInit = {
+        body: resolveBody(method, options.body, headers),
+        headers,
+        method,
+        signal: options.signal,
+      }
+
+      await clientOptions.onRequest?.({ init, requestId, url: resolvedUrl })
+
       let response: Response
 
       try {
         response = await fetcher(resolvedUrl, init)
       }
       catch (error) {
-        // 网络层错误：区别于响应错误，走 onRequestError
-        await clientOptions.onRequestError?.({ error, init, requestId, url: resolvedUrl })
-        throw error
+        const requestError = normalizeFetchError(error, options.signal)
+        await clientOptions.onRequestError?.({ error: requestError, init, requestId, url: resolvedUrl })
+        throw requestError
       }
 
-      const data = await readResponseData(response)
+      let data: unknown
+      try {
+        data = await readResponseData(response)
+      }
+      catch (error) {
+        const requestError = new RequestError('响应数据解析失败', {
+          kind: 'http',
+          originalError: error,
+          response,
+          status: response.status,
+        })
+        await notifyResponseError(requestError, init, response)
+        throw requestError
+      }
+
       const context: RequestContext = {
+        attempt,
         data,
         init,
         requestId,
@@ -209,39 +262,113 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
       }
 
       if (response.status === 401) {
-        await clientOptions.onSessionExpired?.(context)
+        return handleSessionError(new RequestError(response.statusText || '会话已过期', {
+          data,
+          kind: 'session',
+          response,
+          status: response.status,
+        }), context, usedToken, attempt)
       }
 
       if (!response.ok) {
         const responseError = new RequestError(response.statusText || `HTTP ${response.status}`, {
           data,
+          kind: 'http',
           response,
           status: response.status,
         })
-
-        await clientOptions.onResponseError?.({
-          error: responseError,
-          init,
-          requestId,
-          response,
-          url: resolvedUrl,
-        })
-
+        await notifyResponseError(responseError, init, response)
         throw responseError
       }
 
-      const result = clientOptions.onResponse
-        ? await clientOptions.onResponse<TResult>(context)
-        : (data as TResult)
+      try {
+        const result = clientOptions.onResponse
+          ? await clientOptions.onResponse<TValue>(context)
+          : (data as TValue)
 
-      if (cacheEnabled) {
-        cache.set(cacheKey, result)
+        sessionExpiredNotified = false
+        if (cacheEnabled) {
+          cache.set(cacheKey, result)
+        }
+
+        return result
+      }
+      catch (error) {
+        if (error instanceof RequestError && error.kind === 'session') {
+          return handleSessionError(error, context, usedToken, attempt)
+        }
+
+        const responseError = error instanceof RequestError
+          ? error
+          : new RequestError(error instanceof Error ? error.message : '业务响应处理失败', {
+              data,
+              kind: 'business',
+              originalError: error,
+              response,
+              status: response.status,
+            })
+        await notifyResponseError(responseError, init, response)
+        throw responseError
+      }
+    }
+
+    async function handleSessionError<TValue>(
+      error: RequestError,
+      context: RequestContext,
+      usedToken: string | undefined,
+      attempt: number,
+    ): Promise<TValue> {
+      const replayAllowed = attempt === 0
+        && canReplayAfterAuthRefresh(method, options)
+        && Boolean(clientOptions.authRefresh)
+
+      if (replayAllowed) {
+        const currentToken = await clientOptions.getToken?.()
+
+        if (usedToken && currentToken && currentToken !== usedToken) {
+          return executeRequest<TValue>(attempt + 1)
+        }
+
+        try {
+          if (!refreshPromise) {
+            refreshPromise = clientOptions.authRefresh!.refresh(context).finally(() => {
+              refreshPromise = undefined
+            })
+          }
+
+          await refreshPromise
+          sessionExpiredNotified = false
+          return executeRequest<TValue>(attempt + 1)
+        }
+        catch (refreshError) {
+          error = new RequestError(error.message, {
+            code: error.code,
+            data: error.data,
+            kind: 'session',
+            originalError: refreshError,
+            response: error.response,
+            status: error.status,
+          })
+        }
       }
 
-      return result
+      if (!sessionExpiredNotified) {
+        sessionExpiredNotified = true
+        await clientOptions.onSessionExpired?.(context)
+      }
+
+      await notifyResponseError(error, context.init, context.response)
+      throw error
     }
-    finally {
-      pendingKeys.delete(duplicateKey)
+
+    async function notifyResponseError(error: RequestError, init: RequestInit, response: Response): Promise<void> {
+      await clientOptions.onResponseError?.({
+        error,
+        init,
+        requestId,
+        response,
+        url: resolvedUrl,
+      })
     }
   }
 

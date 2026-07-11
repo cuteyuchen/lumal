@@ -13,7 +13,6 @@ import {
   createRouteRegistry,
   createSidebarMenus,
   findFirstAccessibleMenu,
-  normalizeMenuRecords,
 } from '@luma/core/router'
 import { shallowRef } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
@@ -78,7 +77,7 @@ export async function ensureAdminRoutes(targetRouter: Router): Promise<void> {
 
   if (!runtime.initializing) {
     runtime.initializing = (async () => {
-      const menus = normalizeMenuRecords(await loadAdminMenus())
+      const menus = await loadAdminMenus()
       const routes = createRouteRecords(menus, {
         componentResolver: resolveRouteComponent,
       })

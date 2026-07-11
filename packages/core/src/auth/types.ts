@@ -8,6 +8,26 @@ export interface TokenStorage {
   clearToken: () => void
 }
 
+export interface AuthSessionData {
+  accessToken: string
+  refreshToken?: string
+  expiresAt?: number
+}
+
+export interface AuthSessionFieldNames {
+  accessToken?: string
+  refreshToken?: string
+  expiresAt?: string
+}
+
+export interface ParseAuthSessionOptions {
+  fieldNames?: AuthSessionFieldNames
+  /** 在字段映射前处理多层嵌套响应。 */
+  parseResponse?: (response: unknown) => unknown
+  /** 对标准会话做最终归一。 */
+  transform?: (session: AuthSessionData) => AuthSessionData
+}
+
 /***********************登录跳转*********************/
 export interface RedirectOptions {
   /** 登录页路径，默认 `/login`。 */
@@ -23,6 +43,8 @@ export type SessionExpiredHandler = () => void | Promise<void>
 export interface AuthSessionOptions {
   /** token 存储键名，默认 `luma:token`。 */
   tokenKey?: string
+  refreshTokenKey?: string
+  expiresAtKey?: string
   /** 底层存储，默认使用 localStorage；SSR 或测试可注入自定义 storage。 */
   storage?: Storage
   /** 会话过期回调（清 token、重置 store、跳转登录等由应用注入）。 */
@@ -34,8 +56,11 @@ export interface AuthSessionOptions {
 export interface AuthSession {
   /** 读取当前 token。 */
   getToken: () => string
+  getRefreshToken: () => string
+  getSession: () => AuthSessionData | null
   /** 写入 token，空值等价于清除。 */
   setToken: (token: string) => void
+  setSession: (session: AuthSessionData) => void
   /** 清除 token。 */
   clearToken: () => void
   /** 是否已登录（存在非空 token）。 */

@@ -6,6 +6,8 @@ export type RequestQuery = Record<string, RequestQueryValue | RequestQueryValue[
 
 /***********************请求上下文*********************/
 export interface RequestContext<TData = unknown> {
+  /** 当前发送次数，首次为 0，认证刷新后的重放为 1。 */
+  attempt: number
   data: TData
   init: RequestInit
   response: Response
@@ -54,6 +56,8 @@ export interface RequestCacheOptions {
 
 /***********************客户端选项*********************/
 export interface RequestClientOptions<TData = unknown> {
+  /** 认证刷新配置；仅会对允许重放的请求执行一次。 */
+  authRefresh?: RequestAuthRefreshOptions<TData>
   baseURL?: string
   duplicateSubmit?: boolean
   fetch?: typeof fetch
@@ -78,9 +82,16 @@ export interface RequestOptions {
   headers?: HeadersInit
   method?: RequestMethod
   query?: RequestQuery
+  /** 写请求是否允许在认证刷新成功后重放，默认 false；GET 默认允许。 */
+  retryOnAuthRefresh?: boolean
   signal?: AbortSignal
   /** 逐请求缓存配置。 */
   cache?: RequestCacheOptions
+}
+
+export interface RequestAuthRefreshOptions<TData = unknown> {
+  /** 刷新访问凭据。并发过期请求共享同一个 Promise。 */
+  refresh: (context: RequestContext<TData>) => Promise<void>
 }
 
 export interface RequestUploadOptions extends Omit<RequestOptions, 'body' | 'method'> {

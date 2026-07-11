@@ -134,7 +134,7 @@ export function isAuthenticated(): boolean {
 export async function login(payload: AdminAccountKey | AdminLoginRequest): Promise<AdminUser> {
   const result = await loginAdmin(normalizeLoginPayload(payload))
 
-  adminSession.setToken(result.token)
+  adminSession.setSession(result.session)
   currentUserState.value = result.user
   writeStoredUser(result.user)
   syncSessionAccess(result.user)

@@ -5,6 +5,7 @@ import {
   createTokenStorage,
   DEFAULT_TOKEN_STORAGE_KEY,
   getStoredToken,
+  parseAuthSession,
   registerSessionExpiredHandler,
   resolveLoginRedirect,
   setStoredToken,
@@ -95,6 +96,31 @@ describe('create auth session', () => {
     expect(session.isAuthenticated()).toBe(false)
   })
 
+  it('会持久化标准会话并一次清除访问与刷新凭据', () => {
+    const session = createAuthSession({ storage: createMemoryStorage() })
+    session.setSession({
+      accessToken: 'access-1',
+      expiresAt: 1893456000000,
+      refreshToken: 'refresh-1',
+    })
+
+    expect(session.getToken()).toBe('access-1')
+    expect(session.getRefreshToken()).toBe('refresh-1')
+    expect(session.getSession()).toEqual({
+      accessToken: 'access-1',
+      expiresAt: 1893456000000,
+      refreshToken: 'refresh-1',
+    })
+
+    session.clearToken()
+    expect(session.getSession()).toBeNull()
+    expect(session.getRefreshToken()).toBe('')
+
+    session.setSession({ accessToken: '', refreshToken: 'stale-refresh' })
+    expect(session.getSession()).toBeNull()
+    expect(session.getRefreshToken()).toBe('')
+  })
+
   it('会话过期与登出会清 token 并触发回调', async () => {
     const onSessionExpired = vi.fn()
     const session = createAuthSession({
@@ -130,6 +156,29 @@ describe('create auth session', () => {
     })
 
     expect(session.resolveRedirect('/dashboard')).toBe('/auth/login?next=%2Fdashboard')
+  })
+})
+
+describe('auth session adapter', () => {
+  it('支持多层响应、字段映射与数字字符串过期时间', () => {
+    expect(parseAuthSession({
+      result: {
+        access_token: 'access-1',
+        expire_time: '1893456000000',
+        refresh_token: 'refresh-1',
+      },
+    }, {
+      fieldNames: {
+        accessToken: 'access_token',
+        expiresAt: 'expire_time',
+        refreshToken: 'refresh_token',
+      },
+      parseResponse: response => (response as { result: unknown }).result,
+    })).toEqual({
+      accessToken: 'access-1',
+      expiresAt: 1893456000000,
+      refreshToken: 'refresh-1',
+    })
   })
 })
 

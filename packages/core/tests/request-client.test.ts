@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   createRequestClient,
   createStandardResponseParser,
+  parsePageResult,
   parseStandardResponse,
   RequestError,
 } from '../src/request'
@@ -112,7 +113,7 @@ describe('create request client', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
-  it('状态码 401 时会触发会话过期回调并抛出 RequestError', async () => {
+  it('状态码 401 时会触发一次会话过期回调并抛出 session 错误', async () => {
     const onSessionExpired = vi.fn()
     const fetchMock = vi.fn(async () => createJsonResponse({
       message: 'Unauthorized',
@@ -128,9 +129,101 @@ describe('create request client', () => {
 
     await expect(client.get('/profile')).rejects.toBeInstanceOf(RequestError)
     await expect(client.get('/profile')).rejects.toMatchObject({
+      kind: 'session',
       status: 401,
     })
-    expect(onSessionExpired).toHaveBeenCalledTimes(2)
+    expect(onSessionExpired).toHaveBeenCalledTimes(1)
+  })
+
+  it('并发 401 只刷新一次，并使用新 token 各重放一次 GET', async () => {
+    let token = 'expired-token'
+    let resolveRefresh: (() => void) | undefined
+    const refresh = vi.fn(() => new Promise<void>((resolve) => {
+      resolveRefresh = () => {
+        token = 'fresh-token'
+        resolve()
+      }
+    }))
+    const fetchMock = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
+      const authorization = new Headers(init?.headers).get('Authorization')
+      return authorization === 'Bearer fresh-token'
+        ? createJsonResponse({ ok: true })
+        : createJsonResponse({ message: 'expired' }, { status: 401 })
+    })
+    const client = createRequestClient({
+      authRefresh: { refresh },
+      fetch: fetchMock,
+      getToken: () => token,
+    })
+
+    const first = client.get('/profile')
+    const second = client.get('/permissions')
+
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledTimes(1))
+    resolveRefresh?.()
+
+    await expect(Promise.all([first, second])).resolves.toEqual([{ ok: true }, { ok: true }])
+    expect(fetchMock).toHaveBeenCalledTimes(4)
+  })
+
+  it('写请求默认不重放，显式开启后最多重放一次', async () => {
+    let token = 'expired-token'
+    const refresh = vi.fn(async () => {
+      token = 'fresh-token'
+    })
+    const fetchMock = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
+      const authorization = new Headers(init?.headers).get('Authorization')
+      return authorization === 'Bearer fresh-token'
+        ? createJsonResponse({ saved: true })
+        : createJsonResponse({ message: 'expired' }, { status: 401 })
+    })
+    const client = createRequestClient({
+      authRefresh: { refresh },
+      fetch: fetchMock,
+      getToken: () => token,
+    })
+
+    await expect(client.post('/projects', { body: { name: 'Luma' } })).rejects.toMatchObject({
+      kind: 'session',
+    })
+    expect(refresh).not.toHaveBeenCalled()
+
+    await expect(client.post('/projects', {
+      body: { name: 'Luma' },
+      retryOnAuthRefresh: true,
+    })).resolves.toEqual({ saved: true })
+    expect(refresh).toHaveBeenCalledTimes(1)
+  })
+
+  it('显式 Authorization 请求不会进入自动刷新流程', async () => {
+    const refresh = vi.fn(async () => {})
+    const client = createRequestClient({
+      authRefresh: { refresh },
+      fetch: vi.fn(async () => createJsonResponse({ message: 'expired' }, { status: 401 })),
+      getToken: () => 'managed-token',
+    })
+
+    await expect(client.get('/external', {
+      headers: { Authorization: 'Bearer external-token' },
+    })).rejects.toMatchObject({ kind: 'session' })
+    expect(refresh).not.toHaveBeenCalled()
+  })
+
+  it('刷新后仍为 401 时不会再次刷新', async () => {
+    const refresh = vi.fn(async () => {})
+    const onSessionExpired = vi.fn()
+    const fetchMock = vi.fn(async () => createJsonResponse({ message: 'expired' }, { status: 401 }))
+    const client = createRequestClient({
+      authRefresh: { refresh },
+      fetch: fetchMock,
+      getToken: () => 'same-token',
+      onSessionExpired,
+    })
+
+    await expect(client.get('/profile')).rejects.toMatchObject({ kind: 'session' })
+    expect(refresh).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(onSessionExpired).toHaveBeenCalledTimes(1)
   })
 
   it('会串行触发 onRequest 与 onResponse 生命周期钩子并注入 requestId', async () => {
@@ -167,7 +260,7 @@ describe('create request client', () => {
       }),
       onRequestError,
     })
-    await expect(networkClient.get('/a')).rejects.toThrow('network down')
+    await expect(networkClient.get('/a')).rejects.toMatchObject({ kind: 'network' })
     expect(onRequestError).toHaveBeenCalledTimes(1)
 
     const errorClient = createRequestClient({
@@ -176,6 +269,20 @@ describe('create request client', () => {
     })
     await expect(errorClient.get('/b')).rejects.toBeInstanceOf(RequestError)
     expect(onResponseError).toHaveBeenCalledTimes(1)
+  })
+
+  it('取消请求会归类为 cancelled', async () => {
+    const controller = new AbortController()
+    controller.abort()
+    const client = createRequestClient({
+      fetch: vi.fn(async () => {
+        throw new DOMException('aborted', 'AbortError')
+      }),
+    })
+
+    await expect(client.get('/cancelled', { signal: controller.signal })).rejects.toMatchObject({
+      kind: 'cancelled',
+    })
   })
 
   it('开启缓存后同一 GET 只请求一次', async () => {
@@ -222,6 +329,19 @@ describe('parse standard response', () => {
     expect(() => parseStandardResponse({ code: 500, message: '服务异常' })).toThrow('服务异常')
   })
 
+  it('业务错误与会话错误会生成统一 RequestError.kind', () => {
+    expect(() => parseStandardResponse({ code: 500, message: '服务异常' })).toThrow(RequestError)
+
+    try {
+      parseStandardResponse({ code: 'AUTH_EXPIRED', message: '登录过期' }, {
+        sessionExpiredCodes: ['AUTH_EXPIRED'],
+      })
+    }
+    catch (error) {
+      expect(error).toMatchObject({ code: 'AUTH_EXPIRED', kind: 'session' })
+    }
+  })
+
   it('无 code 字段视为非标准包装，原样返回', () => {
     expect(parseStandardResponse({ id: 1 })).toEqual({ id: 1 })
   })
@@ -246,5 +366,31 @@ describe('parse standard response', () => {
     })
 
     await expect(client.get('/profile')).resolves.toEqual({ name: 'Luma' })
+  })
+})
+
+describe('parse page result', () => {
+  it('支持多层响应、异常分页字段和类型漂移转换', () => {
+    const result = parsePageResult<{ enabled: boolean, id: number }>({
+      payload: {
+        count: '2',
+        records: [
+          { enabled: '1', id: '1' },
+          { enabled: '0', id: '2' },
+        ],
+      },
+    }, {
+      fieldNames: { items: 'records', total: 'count' },
+      parseResponse: response => (response as { payload: unknown }).payload,
+      transform: item => ({
+        enabled: (item as { enabled: string }).enabled === '1',
+        id: Number((item as { id: string }).id),
+      }),
+    })
+
+    expect(result).toEqual({
+      items: [{ enabled: true, id: 1 }, { enabled: false, id: 2 }],
+      total: 2,
+    })
   })
 })

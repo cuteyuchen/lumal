@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { parseAdminPageResponse } from '../src/api/adapters'
 import { loginAdmin } from '../src/api/auth'
+import { loadAdminMenus } from '../src/api/menu'
 import {
   createDictionaryItem,
   createDictionaryType,
@@ -181,6 +183,33 @@ describe('system mock api', () => {
       adminPermissionCodes.dashboardView,
       adminPermissionCodes.projectList,
     ])
+    expect(result.session).toMatchObject({
+      accessToken: expect.stringContaining('mock-token-guest'),
+      refreshToken: 'mock-refresh-guest',
+    })
+  })
+
+  it('公司分页和菜单异常字段只通过 adapter 转为标准模型', async () => {
+    expect(parseAdminPageResponse({
+      result: {
+        records: [{ enabled: '1', id: '7' }],
+        totalNum: '1',
+      },
+      resultMsg: 'ok',
+      statusCode: '0000',
+    }, item => ({
+      enabled: (item as { enabled: string }).enabled === '1',
+      id: Number((item as { id: string }).id),
+    }))).toEqual({
+      items: [{ enabled: true, id: 7 }],
+      total: 1,
+    })
+
+    const menus = await loadAdminMenus()
+    expect(menus[0]).toMatchObject({
+      path: '/dashboard',
+      title: '工作台',
+    })
   })
 
   it('保护内置角色不被删除', async () => {
