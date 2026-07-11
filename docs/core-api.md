@@ -351,14 +351,14 @@ const dataSource: CrudDataSource = {
 }
 ```
 
-`dataSource` 可选动作包括 `create`、`update`、`remove`、`removeMany`。配置 `formSchemas` 后，组件会提供新增、查看、编辑弹窗；配置 `selection` 后会提供批量删除入口。删除前可通过 `confirmRemove(rows)` 接入应用自己的确认逻辑。
+`dataSource` 可选动作包括 `create`、`update`、`remove`、`removeMany`。配置 `formSchemas` 后，组件会提供新增、查看、编辑弹窗；配置 `selection` 后会提供批量删除入口。删除确认推荐通过 `actions.confirmRemove` 集中配置，可传函数、文案配置或 `false`（跳过确认）；旧的顶层 `confirmRemove(rows)` 保留兼容。
 
 推荐使用六个配置对象组织复杂页面：
 
 - `query`：schemas、列数、折叠、label width 和查询文案。
 - `table`：columns、rowKey、selection、列设置、自动 resize 和操作列宽度。
 - `toolbar`：新增、批量删除、刷新、导出及对应文案。
-- `actions`：查看、编辑、删除的行级显示函数和文案。
+- `actions`：查看、编辑、删除的行级显示函数、文案和删除确认策略。
 - `dialog`：标题、宽度、提交文案和脏表单关闭确认。
 - `pagination`：开关和 page sizes。
 
@@ -433,7 +433,15 @@ createLumaAdmin({
 - `LumaContent`
 - `LumaRouterView`
 
-layout 只负责后台壳层结构和交互，不请求业务数据。
+layout 只负责后台壳层结构和交互，不请求业务数据。`LumaLayout` 默认保持受控模式；启用 `route-driven` 后会从当前 Vue Router 路由创建访问标签，并支持：
+
+- `route-tab-filter` / `route-tab-resolver`：过滤并解析路由标签。
+- `fixed-tabs`：注入不可关闭的固定标签。
+- `tab-max-count`：限制标签数量并优先保留固定标签。
+- `tab-fallback-path`：关闭当前或全部可关闭标签后的回退地址。
+- `getTabs()` / `resetTabs()`：读取和重置路由驱动标签。
+
+路由驱动模式仍会触发现有 `tab-change`、`tab-remove`、`tab-refresh` 和批量关闭事件，便于应用补充埋点或刷新视图；路由切换和标签集合由 Layout 维护。
 
 ## Router
 
