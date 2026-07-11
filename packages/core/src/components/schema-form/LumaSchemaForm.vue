@@ -106,14 +106,24 @@ function getInputValue(field: string): string | number {
   return value == null ? '' : String(value)
 }
 
-function getSelectValue(field: string): boolean | number | string {
+function getSelectValue(field: string): Array<boolean | number | string> | boolean | number | string {
   const value = normalizedModel.value[field]
+
+  if (Array.isArray(value)) {
+    return value.filter((item): item is boolean | number | string =>
+      typeof item === 'boolean' || typeof item === 'number' || typeof item === 'string')
+  }
 
   if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
     return value
   }
 
   return ''
+}
+
+function getScalarSelectValue(field: string): boolean | number | string {
+  const value = getSelectValue(field)
+  return Array.isArray(value) ? value[0] ?? '' : value
 }
 
 function getNumberValue(field: string): number | undefined {
@@ -423,7 +433,7 @@ defineExpose({
             <ElRadioGroup
               v-else-if="schema.component === 'radio'"
               v-bind="resolveComponentProps(schema)"
-              :model-value="getSelectValue(schema.field)"
+              :model-value="getScalarSelectValue(schema.field)"
               :name="schema.field"
               :disabled="isFieldDisabled(schema)"
               @update:model-value="updateFieldValue(schema.field, $event)"
@@ -525,15 +535,33 @@ defineExpose({
 <style scoped lang="scss">
 .luma-schema-form {
   display: grid;
-  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  gap: 18px;
 }
 
 .luma-schema-form__row {
   min-width: 0;
+  row-gap: 18px;
 }
 
 .luma-schema-form__item {
+  width: 100%;
   margin-bottom: 0;
+}
+
+.luma-schema-form__item :deep(.el-form-item__content) {
+  min-width: 0;
+}
+
+.luma-schema-form__item :deep(.el-input),
+.luma-schema-form__item :deep(.el-input-number),
+.luma-schema-form__item :deep(.el-select),
+.luma-schema-form__item :deep(.el-cascader),
+.luma-schema-form__item :deep(.el-date-editor),
+.luma-schema-form__item :deep(.el-tree-select) {
+  width: 100%;
+  min-width: 0;
 }
 
 .luma-schema-form__readonly-value {
@@ -545,6 +573,8 @@ defineExpose({
 
 .luma-schema-form__actions {
   display: flex;
+  padding-top: 16px;
+  border-top: 1px solid var(--el-border-color-lighter);
   justify-content: flex-end;
 }
 

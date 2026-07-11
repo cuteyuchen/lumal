@@ -254,6 +254,27 @@ describe('luma schema form', () => {
     expect(wrapper.emitted('submit')).toBeUndefined()
   })
 
+  it('多选 Select 会保留数组模型用于编辑回显', () => {
+    const wrapper = mount(LumaSchemaForm, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        modelValue: { roles: ['admin', 'operator'] },
+        schemas: [{
+          component: 'select',
+          componentProps: { multiple: true },
+          field: 'roles',
+          label: '角色',
+          options: [
+            { label: '管理员', value: 'admin' },
+            { label: '操作员', value: 'operator' },
+          ],
+        }],
+      },
+    })
+
+    expect(wrapper.findComponent({ name: 'ElSelect' }).props('modelValue')).toEqual(['admin', 'operator'])
+  })
+
   it('编辑模式支持 editDisabled、复合输入文本和 Ref options', async () => {
     const { ref } = await import('vue')
     const options = ref([{ label: '启用', value: 'enabled' }])

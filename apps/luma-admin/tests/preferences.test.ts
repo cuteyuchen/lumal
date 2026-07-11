@@ -26,10 +26,14 @@ describe('luma admin preferences', () => {
       app: {
         layout: 'mixed-nav',
       },
+      header: {
+        menuAlign: 'center',
+        menuMaxWidth: 1120,
+      },
       sidebar: {
         collapsed: false,
         enable: true,
-        width: 248,
+        width: 280,
       },
       tabbar: {
         cache: true,
@@ -39,6 +43,7 @@ describe('luma admin preferences', () => {
       theme: {
         colorPrimary: '#1677ff',
         mode: 'system',
+        radiusScale: 0.75,
       },
       transition: {
         enable: true,

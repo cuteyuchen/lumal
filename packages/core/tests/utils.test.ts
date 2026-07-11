@@ -4,9 +4,12 @@ import {
   cloneDeep,
   cloneTree,
   createStorage,
+  isBlobResponse,
   joinPath,
+  maskPhone,
   omitUndefined,
   serializeQuery,
+  withAlpha,
   withInstall,
 } from '../src/utils'
 
@@ -68,6 +71,24 @@ describe('utils serializeQuery', () => {
     })
 
     expect(result).toBe('filter%5Bstatus%5D=1&ids=1&ids=2&keyword=Luma')
+  })
+})
+
+describe('utils display & color', () => {
+  it('withAlpha 会把标准主题色转换为 rgba 并约束透明度', () => {
+    expect(withAlpha('#1677ff', 0.25)).toBe('rgba(22, 119, 255, 0.25)')
+    expect(withAlpha('#1677ff', 2)).toBe('rgba(22, 119, 255, 1)')
+    expect(withAlpha('var(--el-color-primary)', 0.5)).toBe('var(--el-color-primary)')
+  })
+
+  it('maskPhone 会保留手机号前三位和后四位', () => {
+    expect(maskPhone('13800138000')).toBe('138****8000')
+    expect(maskPhone('1234567')).toBe('1234567')
+  })
+
+  it('isBlobResponse 会区分 JSON 错误体与文件内容', async () => {
+    await expect(isBlobResponse({ text: async () => JSON.stringify({ message: 'error' }) })).resolves.toBe(false)
+    await expect(isBlobResponse({ text: async () => 'plain file content' })).resolves.toBe(true)
   })
 })
 

@@ -2,6 +2,12 @@ import type { DictionaryOption } from '@luma/core/dictionary'
 import type { LumaMenuRecord } from '@luma/core/router'
 import { adminRouteRecords } from '../router/routes'
 import {
+  resetMockAccountPassword,
+  resetMockAccounts,
+  updateMockAccountRoles,
+  updateMockAccountStatus,
+} from './auth'
+import {
   adminPermissionCodes,
   deleteMockRolePermissions,
   getMockRolePermissions,
@@ -16,14 +22,18 @@ export interface SystemUserRecord {
   id: string
   nickname: string
   phone: string
+  /** @deprecated 使用 roles；保留给现有消费页面兼容。 */
   role: string
+  roles: string[]
   status: SystemUserStatus
   username: string
 }
 
 export interface SystemUserQuery {
   keyword?: string
+  /** @deprecated 使用 roles；保留旧调用兼容。 */
   role?: string
+  roles?: string
   status?: SystemUserStatus | ''
 }
 
@@ -41,9 +51,15 @@ export interface SystemUserListResult {
 export interface SaveSystemUserInput {
   nickname?: unknown
   phone?: unknown
+  /** @deprecated 使用 roles；保留旧调用兼容。 */
   role?: unknown
+  roles?: unknown
   status?: unknown
   username?: unknown
+}
+
+export interface SystemUserPasswordResetResult {
+  temporaryPassword: string
 }
 
 export type SystemRoleStatus = SystemUserStatus
@@ -77,6 +93,30 @@ export interface SaveSystemRoleInput {
   code?: unknown
   description?: unknown
   name?: unknown
+  status?: unknown
+}
+
+export interface SystemOrganizationRecord {
+  children?: SystemOrganizationRecord[]
+  code: string
+  email: string
+  id: string
+  leader: string
+  name: string
+  order: number
+  parentId: string
+  phone: string
+  status: SystemUserStatus
+}
+
+export interface SaveSystemOrganizationInput {
+  code?: unknown
+  email?: unknown
+  leader?: unknown
+  name?: unknown
+  order?: unknown
+  parentId?: unknown
+  phone?: unknown
   status?: unknown
 }
 
@@ -118,6 +158,8 @@ export interface SaveSystemMenuInput {
   name?: unknown
   parentId?: unknown
   path?: unknown
+  permissions?: unknown
+  /** @deprecated 使用 permissions；保留旧调用兼容。 */
   permission?: unknown
   redirect?: unknown
   title?: unknown
@@ -165,6 +207,7 @@ const initialSystemUsers: SystemUserRecord[] = [
     nickname: '超级管理员',
     phone: '13800138001',
     role: 'admin',
+    roles: ['admin'],
     status: 'enabled',
     username: 'admin',
   },
@@ -174,6 +217,7 @@ const initialSystemUsers: SystemUserRecord[] = [
     nickname: '运营人员',
     phone: '13800138002',
     role: 'operator',
+    roles: ['operator'],
     status: 'enabled',
     username: 'operator',
   },
@@ -183,6 +227,7 @@ const initialSystemUsers: SystemUserRecord[] = [
     nickname: '访客账号',
     phone: '13800138003',
     role: 'guest',
+    roles: ['guest'],
     status: 'enabled',
     username: 'guest',
   },
@@ -192,6 +237,7 @@ const initialSystemUsers: SystemUserRecord[] = [
     nickname: '项目管理员',
     phone: '13800138004',
     role: 'operator',
+    roles: ['operator'],
     status: 'enabled',
     username: 'project-admin',
   },
@@ -201,6 +247,7 @@ const initialSystemUsers: SystemUserRecord[] = [
     nickname: '审计访客',
     phone: '13800138005',
     role: 'guest',
+    roles: ['guest'],
     status: 'disabled',
     username: 'audit-guest',
   },
@@ -210,6 +257,7 @@ const initialSystemUsers: SystemUserRecord[] = [
     nickname: '内容运营',
     phone: '13800138006',
     role: 'operator',
+    roles: ['operator'],
     status: 'enabled',
     username: 'content-operator',
   },
@@ -262,6 +310,9 @@ const initialPermissionMenuSeed: SystemMenuRecord[] = [
           { component: '', hidden: true, icon: '', id: 'button-user-create', order: 1, parentId: 'menu-user', path: '', permission: adminPermissionCodes.systemUserCreate, title: '新增用户', type: 'button' },
           { component: '', hidden: true, icon: '', id: 'button-user-update', order: 2, parentId: 'menu-user', path: '', permission: adminPermissionCodes.systemUserUpdate, title: '编辑用户', type: 'button' },
           { component: '', hidden: true, icon: '', id: 'button-user-delete', order: 3, parentId: 'menu-user', path: '', permission: adminPermissionCodes.systemUserDelete, title: '删除用户', type: 'button' },
+          { component: '', hidden: true, icon: '', id: 'button-user-status', order: 4, parentId: 'menu-user', path: '', permission: adminPermissionCodes.systemUserStatus, title: '启停用户', type: 'button' },
+          { component: '', hidden: true, icon: '', id: 'button-user-assign-roles', order: 5, parentId: 'menu-user', path: '', permission: adminPermissionCodes.systemUserAssignRoles, title: '分配角色', type: 'button' },
+          { component: '', hidden: true, icon: '', id: 'button-user-reset-password', order: 6, parentId: 'menu-user', path: '', permission: adminPermissionCodes.systemUserResetPassword, title: '重置密码', type: 'button' },
         ],
         component: 'system/user',
         hidden: false,
@@ -272,6 +323,23 @@ const initialPermissionMenuSeed: SystemMenuRecord[] = [
         path: 'user',
         permission: adminPermissionCodes.systemUserList,
         title: '用户管理',
+        type: 'menu',
+      },
+      {
+        children: [
+          { component: '', hidden: true, icon: '', id: 'button-organization-create', order: 1, parentId: 'menu-organization', path: '', permission: adminPermissionCodes.systemOrganizationCreate, title: '新增机构', type: 'button' },
+          { component: '', hidden: true, icon: '', id: 'button-organization-update', order: 2, parentId: 'menu-organization', path: '', permission: adminPermissionCodes.systemOrganizationUpdate, title: '编辑机构', type: 'button' },
+          { component: '', hidden: true, icon: '', id: 'button-organization-delete', order: 3, parentId: 'menu-organization', path: '', permission: adminPermissionCodes.systemOrganizationDelete, title: '删除机构', type: 'button' },
+        ],
+        component: 'system/organization',
+        hidden: false,
+        icon: 'app:organization',
+        id: 'menu-organization',
+        order: 4,
+        parentId: 'menu-system',
+        path: 'organization',
+        permission: adminPermissionCodes.systemOrganizationList,
+        title: '机构管理',
         type: 'menu',
       },
       {
@@ -319,11 +387,28 @@ const initialPermissionMenuSeed: SystemMenuRecord[] = [
         hidden: false,
         icon: 'app:dict',
         id: 'menu-dict',
-        order: 4,
+        order: 5,
         parentId: 'menu-system',
         path: 'dict',
         permission: adminPermissionCodes.systemDictList,
-        title: '字典管理',
+        title: '字典分类',
+        type: 'menu',
+      },
+      {
+        children: [
+          { component: '', hidden: true, icon: '', id: 'button-dict-item-create', order: 1, parentId: 'menu-dict-item', path: '', permission: adminPermissionCodes.systemDictCreate, title: '新增字典项', type: 'button' },
+          { component: '', hidden: true, icon: '', id: 'button-dict-item-update', order: 2, parentId: 'menu-dict-item', path: '', permission: adminPermissionCodes.systemDictUpdate, title: '编辑字典项', type: 'button' },
+          { component: '', hidden: true, icon: '', id: 'button-dict-item-delete', order: 3, parentId: 'menu-dict-item', path: '', permission: adminPermissionCodes.systemDictDelete, title: '删除字典项', type: 'button' },
+        ],
+        component: 'system/dict-item',
+        hidden: false,
+        icon: 'app:dict',
+        id: 'menu-dict-item',
+        order: 6,
+        parentId: 'menu-system',
+        path: 'dict-item',
+        permission: adminPermissionCodes.systemDictList,
+        title: '字典项',
         type: 'menu',
       },
       {
@@ -331,7 +416,7 @@ const initialPermissionMenuSeed: SystemMenuRecord[] = [
         hidden: false,
         icon: 'app:settings',
         id: 'menu-config',
-        order: 5,
+        order: 7,
         parentId: 'menu-system',
         path: 'config',
         permission: adminPermissionCodes.systemConfigView,
@@ -343,7 +428,7 @@ const initialPermissionMenuSeed: SystemMenuRecord[] = [
     hidden: false,
     icon: 'app:system',
     id: 'menu-system',
-    order: 2,
+    order: 99,
     parentId: '',
     path: '/system',
     permission: '',
@@ -464,6 +549,68 @@ const initialSystemMenus = createSystemMenusFromRoutes(
   collectButtonSeeds(initialPermissionMenuSeed),
 )
 
+const initialSystemOrganizations: SystemOrganizationRecord[] = [
+  {
+    children: [
+      {
+        children: [
+          {
+            code: 'platform-front-end',
+            email: 'frontend@luma.dev',
+            id: 'organization-3',
+            leader: '林晓',
+            name: '前端研发组',
+            order: 1,
+            parentId: 'organization-2',
+            phone: '010-80000003',
+            status: 'enabled',
+          },
+          {
+            code: 'platform-back-end',
+            email: 'backend@luma.dev',
+            id: 'organization-4',
+            leader: '周宁',
+            name: '服务端研发组',
+            order: 2,
+            parentId: 'organization-2',
+            phone: '010-80000004',
+            status: 'enabled',
+          },
+        ],
+        code: 'platform-rd',
+        email: 'rd@luma.dev',
+        id: 'organization-2',
+        leader: '陈屿',
+        name: '平台研发中心',
+        order: 1,
+        parentId: 'organization-1',
+        phone: '010-80000002',
+        status: 'enabled',
+      },
+      {
+        code: 'product-operation',
+        email: 'operation@luma.dev',
+        id: 'organization-5',
+        leader: '叶青',
+        name: '产品运营中心',
+        order: 2,
+        parentId: 'organization-1',
+        phone: '010-80000005',
+        status: 'enabled',
+      },
+    ],
+    code: 'luma-headquarters',
+    email: 'admin@luma.dev',
+    id: 'organization-1',
+    leader: '顾言',
+    name: 'Luma 总部',
+    order: 1,
+    parentId: '',
+    phone: '010-80000001',
+    status: 'enabled',
+  },
+]
+
 const initialDictionaryTypes: SystemDictionaryTypeRecord[] = [
   {
     code: 'status',
@@ -494,17 +641,30 @@ let systemRoles = cloneRoles(initialSystemRoles)
 let nextSystemRoleId = initialSystemRoles.length + 1
 let systemMenus = cloneMenus(initialSystemMenus)
 let nextSystemMenuId = 1
+let systemOrganizations = cloneOrganizations(initialSystemOrganizations)
+let nextSystemOrganizationId = 6
 let dictionaryTypes = cloneDictionaryTypes(initialDictionaryTypes)
 let nextDictionaryTypeId = initialDictionaryTypes.length + 1
 let dictionaryItems = cloneDictionaryItems(initialDictionaryItems)
 let nextDictionaryItemId = initialDictionaryItems.length + 1
 
 function cloneUser(user: SystemUserRecord): SystemUserRecord {
-  return { ...user }
+  return { ...user, roles: [...user.roles] }
 }
 
 function cloneUsers(users: SystemUserRecord[]): SystemUserRecord[] {
   return users.map(cloneUser)
+}
+
+function cloneOrganization(organization: SystemOrganizationRecord): SystemOrganizationRecord {
+  return {
+    ...organization,
+    children: organization.children ? cloneOrganizations(organization.children) : undefined,
+  }
+}
+
+function cloneOrganizations(organizations: SystemOrganizationRecord[]): SystemOrganizationRecord[] {
+  return organizations.map(cloneOrganization)
 }
 
 function cloneRole(role: SystemRoleRecord): SystemRoleRecord {
@@ -519,6 +679,9 @@ function cloneMenu(menu: SystemMenuRecord): SystemMenuRecord {
   return {
     ...menu,
     children: menu.children ? cloneMenus(menu.children) : undefined,
+    permissions: menu.permissions?.length
+      ? [...menu.permissions]
+      : menu.permission ? [menu.permission] : [],
   }
 }
 
@@ -538,14 +701,15 @@ function normalizeText(value: unknown): string {
   return String(value ?? '').trim()
 }
 
-function normalizeRole(value: unknown): string {
-  const role = normalizeText(value)
+function normalizeRoles(value: unknown): string[] {
+  const values = Array.isArray(value) ? value : [value]
+  const roles = Array.from(new Set(values.map(normalizeText).filter(Boolean)))
 
-  if (systemRoles.some(item => item.code === role)) {
-    return role
+  if (roles.length === 0 || roles.some(role => !systemRoles.some(item => item.code === role))) {
+    throw new Error('请选择有效角色')
   }
 
-  throw new Error('请选择有效角色')
+  return roles
 }
 
 function normalizeStatus(value: unknown): SystemUserStatus {
@@ -559,6 +723,7 @@ function normalizeStatus(value: unknown): SystemUserStatus {
 function resolveUserInput(input: SaveSystemUserInput): Omit<SystemUserRecord, 'createdAt' | 'id'> {
   const username = normalizeText(input.username)
   const nickname = normalizeText(input.nickname)
+  const roles = normalizeRoles(input.roles ?? input.role)
 
   if (!username) {
     throw new Error('用户名不能为空')
@@ -571,7 +736,8 @@ function resolveUserInput(input: SaveSystemUserInput): Omit<SystemUserRecord, 'c
   return {
     nickname,
     phone: normalizeText(input.phone),
-    role: normalizeRole(input.role),
+    role: roles[0],
+    roles,
     status: normalizeStatus(input.status),
     username,
   }
@@ -617,6 +783,121 @@ function assertRoleCodeAvailable(code: string, excludedId?: string): void {
   }
 }
 
+function findOrganizationById(
+  organizations: SystemOrganizationRecord[],
+  id: string,
+): SystemOrganizationRecord | undefined {
+  for (const organization of organizations) {
+    if (organization.id === id) {
+      return organization
+    }
+
+    const child = organization.children
+      ? findOrganizationById(organization.children, id)
+      : undefined
+    if (child) {
+      return child
+    }
+  }
+
+  return undefined
+}
+
+function organizationContains(organization: SystemOrganizationRecord, id: string): boolean {
+  return organization.id === id
+    || Boolean(organization.children?.some(child => organizationContains(child, id)))
+}
+
+function resolveOrganizationInput(
+  input: SaveSystemOrganizationInput,
+  currentId?: string,
+): Omit<SystemOrganizationRecord, 'children' | 'id'> {
+  const code = normalizeText(input.code)
+  const name = normalizeText(input.name)
+  const parentId = normalizeText(input.parentId)
+
+  if (!name) {
+    throw new Error('机构名称不能为空')
+  }
+
+  if (!/^[a-z][a-z0-9-]*$/.test(code)) {
+    throw new Error('机构编码只能包含小写字母、数字和连字符')
+  }
+
+  if (parentId) {
+    const parent = findOrganizationById(systemOrganizations, parentId)
+    if (!parent) {
+      throw new Error('上级机构不存在')
+    }
+    if (currentId) {
+      const current = findOrganizationById(systemOrganizations, currentId)
+      if (current && organizationContains(current, parentId)) {
+        throw new Error('不能将机构移动到自身或其下级')
+      }
+    }
+  }
+
+  const duplicated = flattenOrganizations(systemOrganizations)
+    .some(organization => organization.id !== currentId && organization.code === code)
+  if (duplicated) {
+    throw new Error('机构编码已存在')
+  }
+
+  return {
+    code,
+    email: normalizeText(input.email),
+    leader: normalizeText(input.leader),
+    name,
+    order: Number.isFinite(Number(input.order)) ? Number(input.order) : 0,
+    parentId,
+    phone: normalizeText(input.phone),
+    status: normalizeStatus(input.status),
+  }
+}
+
+function flattenOrganizations(
+  organizations: SystemOrganizationRecord[],
+): SystemOrganizationRecord[] {
+  return organizations.flatMap(organization => [
+    organization,
+    ...flattenOrganizations(organization.children ?? []),
+  ])
+}
+
+function insertOrganization(
+  organizations: SystemOrganizationRecord[],
+  organization: SystemOrganizationRecord,
+): SystemOrganizationRecord[] {
+  if (!organization.parentId) {
+    return [...organizations, organization]
+  }
+
+  return organizations.map(item => item.id === organization.parentId
+    ? { ...item, children: [...(item.children ?? []), organization] }
+    : { ...item, children: item.children ? insertOrganization(item.children, organization) : undefined })
+}
+
+function removeOrganization(
+  organizations: SystemOrganizationRecord[],
+  id: string,
+): SystemOrganizationRecord[] {
+  return organizations
+    .filter(organization => organization.id !== id)
+    .map(organization => ({
+      ...organization,
+      children: organization.children ? removeOrganization(organization.children, id) : undefined,
+    }))
+}
+
+function sortOrganizations(organizations: SystemOrganizationRecord[]): SystemOrganizationRecord[] {
+  return [...organizations]
+    .sort((left, right) => left.order - right.order)
+    .map(organization => ({
+      ...organization,
+      children: organization.children ? sortOrganizations(organization.children) : undefined,
+    }))
+}
+
 function normalizeMenuType(value: unknown): SystemMenuType {
   if (value === 'button' || value === 'directory' || value === 'menu') {
     return value
@@ -632,8 +913,10 @@ function resolveMenuInput(input: SaveSystemMenuInput): Omit<SystemMenuRecord, 'c
   const path = type === 'button' ? '' : normalizeText(input.path)
   const component = type === 'menu' ? normalizeText(input.component) : ''
   const externalLink = type === 'menu' ? normalizeText(input.externalLink) : ''
-  const permissionText = normalizeText(input.permission)
-  const permissions = permissionText.split(',').map(item => item.trim()).filter(Boolean)
+  const permissionValues = Array.isArray(input.permissions)
+    ? input.permissions
+    : normalizeText(input.permissions ?? input.permission).split(',')
+  const permissions = Array.from(new Set(permissionValues.map(normalizeText).filter(Boolean)))
 
   if (!title) {
     throw new Error('菜单标题不能为空')
@@ -718,26 +1001,34 @@ function createPermissionTreeFromMenus(
   menus: SystemMenuRecord[],
   seenPermissions = new Set<string>(),
 ): SystemPermissionTreeNode[] {
-  return menus.flatMap((menu) => {
+  return menus.flatMap((menu): SystemPermissionTreeNode[] => {
     const children = menu.children ? createPermissionTreeFromMenus(menu.children, seenPermissions) : []
+    const permissions = menu.permissions?.length
+      ? menu.permissions
+      : menu.permission ? [menu.permission] : []
+    const permissionNodes = permissions
+      .filter(permission => !seenPermissions.has(permission))
+      .map((permission, index) => {
+        seenPermissions.add(permission)
+        return {
+          id: permission,
+          label: index === 0 ? menu.title : `${menu.title}（${permission}）`,
+          permission,
+        }
+      })
 
-    if (menu.permission && seenPermissions.has(menu.permission)) {
-      return children
-    }
-
-    if (menu.permission) {
-      seenPermissions.add(menu.permission)
-    }
-
-    if (!menu.permission && children.length === 0) {
+    if (permissionNodes.length === 0 && children.length === 0) {
       return []
     }
 
+    if (permissionNodes.length === 1) {
+      return [{ ...permissionNodes[0], ...(children.length > 0 ? { children } : {}) }]
+    }
+
     return [{
-      ...(children.length > 0 ? { children } : {}),
-      id: menu.permission || `group:${menu.id}`,
+      children: [...permissionNodes, ...children],
+      id: `group:${menu.id}`,
       label: menu.title,
-      ...(menu.permission ? { permission: menu.permission } : {}),
     }]
   })
 }
@@ -803,7 +1094,7 @@ function assertDictionaryValueAvailable(typeCode: string, value: string, exclude
 
 export async function mockFetchSystemUsers(params: SystemUserListParams): Promise<SystemUserListResult> {
   const keyword = normalizeText(params.query?.keyword).toLowerCase()
-  const role = params.query?.role || ''
+  const role = params.query?.roles || params.query?.role || ''
   const status = params.query?.status || ''
   const page = Math.max(1, Number(params.page) || 1)
   const pageSize = Math.max(1, Number(params.pageSize) || 10)
@@ -811,7 +1102,7 @@ export async function mockFetchSystemUsers(params: SystemUserListParams): Promis
     const matchesKeyword = keyword
       ? [user.username, user.nickname, user.phone].some(value => value.toLowerCase().includes(keyword))
       : true
-    const matchesRole = role ? user.role === role : true
+    const matchesRole = role ? user.roles.includes(role) : true
     const matchesStatus = status ? user.status === status : true
 
     return matchesKeyword && matchesRole && matchesStatus
@@ -856,12 +1147,62 @@ export async function mockUpdateSystemUser(id: string, input: SaveSystemUserInpu
     ...normalized,
   }
   systemUsers = systemUsers.map(user => user.id === id ? updatedUser : user)
+  updateMockAccountRoles(updatedUser.username, updatedUser.roles)
+  updateMockAccountStatus(updatedUser.username, updatedUser.status === 'enabled')
 
   return cloneUser(updatedUser)
 }
 
+export async function mockUpdateSystemUserStatus(
+  id: string,
+  status: SystemUserStatus,
+): Promise<SystemUserRecord> {
+  const user = systemUsers.find(item => item.id === id)
+
+  if (!user) {
+    throw new Error('用户不存在')
+  }
+
+  const updatedUser = { ...user, status: normalizeStatus(status) }
+  systemUsers = systemUsers.map(item => item.id === id ? updatedUser : item)
+  updateMockAccountStatus(updatedUser.username, updatedUser.status === 'enabled')
+  return cloneUser(updatedUser)
+}
+
+export async function mockUpdateSystemUserRoles(
+  id: string,
+  roles: string[],
+): Promise<SystemUserRecord> {
+  const user = systemUsers.find(item => item.id === id)
+
+  if (!user) {
+    throw new Error('用户不存在')
+  }
+
+  const normalizedRoles = normalizeRoles(roles)
+  const updatedUser = { ...user, role: normalizedRoles[0], roles: normalizedRoles }
+  systemUsers = systemUsers.map(item => item.id === id ? updatedUser : item)
+  updateMockAccountRoles(updatedUser.username, normalizedRoles)
+  return cloneUser(updatedUser)
+}
+
+export async function mockResetSystemUserPassword(id: string): Promise<SystemUserPasswordResetResult> {
+  if (!systemUsers.some(user => user.id === id)) {
+    throw new Error('用户不存在')
+  }
+
+  const user = systemUsers.find(item => item.id === id)!
+  const temporaryPassword = 'Luma@123456'
+  resetMockAccountPassword(user.username, temporaryPassword)
+  return { temporaryPassword }
+}
+
 export async function mockDeleteSystemUser(id: string): Promise<void> {
-  systemUsers = systemUsers.filter(user => user.id !== id)
+  const user = systemUsers.find(item => item.id === id)
+  systemUsers = systemUsers.filter(item => item.id !== id)
+  if (user) {
+    updateMockAccountStatus(user.username, false)
+  }
 }
 
 export async function mockFetchSystemRoleOptions(): Promise<DictionaryOption[]> {
@@ -942,7 +1283,7 @@ export async function mockDeleteSystemRole(id: string): Promise<void> {
     throw new Error('内置角色不能删除')
   }
 
-  if (systemUsers.some(user => user.role === role.code)) {
+  if (systemUsers.some(user => user.roles.includes(role.code))) {
     throw new Error('该角色仍有关联用户，不能删除')
   }
 
@@ -959,8 +1300,65 @@ export async function mockFetchSystemRolePermissions(roleCode: string): Promise<
 }
 
 export async function mockUpdateSystemRolePermissions(roleCode: string, permissions: string[]): Promise<string[]> {
+  if (!systemRoles.some(role => role.code === roleCode)) {
+    throw new Error('角色不存在')
+  }
+
   setMockRolePermissions(roleCode, permissions)
   return getMockRolePermissions(roleCode)
+}
+
+export async function mockFetchSystemOrganizations(): Promise<SystemOrganizationRecord[]> {
+  return cloneOrganizations(sortOrganizations(systemOrganizations))
+}
+
+export async function mockCreateSystemOrganization(
+  input: SaveSystemOrganizationInput,
+): Promise<SystemOrganizationRecord> {
+  const normalized = resolveOrganizationInput(input)
+  const organization: SystemOrganizationRecord = {
+    ...normalized,
+    id: `organization-${nextSystemOrganizationId++}`,
+  }
+  systemOrganizations = sortOrganizations(insertOrganization(systemOrganizations, organization))
+
+  return cloneOrganization(organization)
+}
+
+export async function mockUpdateSystemOrganization(
+  id: string,
+  input: SaveSystemOrganizationInput,
+): Promise<SystemOrganizationRecord> {
+  const current = findOrganizationById(systemOrganizations, id)
+
+  if (!current) {
+    throw new Error('机构不存在')
+  }
+
+  const normalized = resolveOrganizationInput({ ...current, ...input }, id)
+  const updated: SystemOrganizationRecord = {
+    ...current,
+    ...normalized,
+    children: current.children,
+  }
+  const withoutCurrent = removeOrganization(systemOrganizations, id)
+  systemOrganizations = sortOrganizations(insertOrganization(withoutCurrent, updated))
+
+  return cloneOrganization(updated)
+}
+
+export async function mockDeleteSystemOrganization(id: string): Promise<void> {
+  const organization = findOrganizationById(systemOrganizations, id)
+
+  if (!organization) {
+    return
+  }
+
+  if (organization.children?.length) {
+    throw new Error('请先删除或移动下级机构')
+  }
+
+  systemOrganizations = removeOrganization(systemOrganizations, id)
 }
 
 export async function mockFetchSystemMenus(): Promise<SystemMenuRecord[]> {
@@ -1137,6 +1535,7 @@ export async function mockFetchDictionaryOptions(dictionary: string): Promise<Di
 export function resetMockSystemUsers(): void {
   systemUsers = cloneUsers(initialSystemUsers)
   nextSystemUserId = initialSystemUsers.length + 1
+  resetMockAccounts()
 }
 
 export function resetMockSystemRoles(): void {
@@ -1148,6 +1547,11 @@ export function resetMockSystemRoles(): void {
 export function resetMockSystemMenus(): void {
   systemMenus = cloneMenus(initialSystemMenus)
   nextSystemMenuId = 1
+}
+
+export function resetMockSystemOrganizations(): void {
+  systemOrganizations = cloneOrganizations(initialSystemOrganizations)
+  nextSystemOrganizationId = 6
 }
 
 export function resetMockDictionaries(): void {

@@ -66,6 +66,7 @@ defineExpose({
 <style scoped lang="scss">
 .luma-page {
   position: relative;
+  box-sizing: border-box;
   display: grid;
   gap: 16px;
   min-width: 0;

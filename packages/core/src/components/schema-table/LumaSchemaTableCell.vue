@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { SchemaTableCellDisplay, SchemaTableDictionaryTag } from './cell'
-import { ElTag } from 'element-plus'
 
 defineProps<{
   display: SchemaTableCellDisplay
@@ -15,12 +14,10 @@ function createTagStyle(tag: SchemaTableDictionaryTag): Record<string, string> |
 
 <template>
   <div v-if="display.tags.length" class="luma-schema-table__dictionary-tags">
-    <ElTag
+    <span
       v-for="tag in display.tags"
       :key="tag.key"
       class="luma-schema-table__dictionary-tag"
-      effect="plain"
-      size="small"
       :style="createTagStyle(tag)"
     >
       <span
@@ -29,7 +26,7 @@ function createTagStyle(tag: SchemaTableDictionaryTag): Record<string, string> |
         aria-hidden="true"
       />
       <span>{{ tag.label }}</span>
-    </ElTag>
+    </span>
   </div>
   <span v-else>{{ display.text }}</span>
 </template>
@@ -44,14 +41,20 @@ function createTagStyle(tag: SchemaTableDictionaryTag): Record<string, string> |
 }
 
 .luma-schema-table__dictionary-tag {
-  gap: 5px;
+  display: inline-flex;
+  min-height: 24px;
+  gap: 6px;
+  padding: 2px 8px;
+  align-items: center;
   max-width: 100%;
+  border: 1px solid;
+  border-radius: 999px;
   border-color: color-mix(
     in srgb,
     var(--luma-dictionary-color, var(--el-border-color)) 32%,
     var(--el-border-color-lighter)
   );
-  color: var(--el-text-color-regular);
+  color: color-mix(in srgb, var(--luma-dictionary-color, var(--el-text-color-regular)) 82%, var(--el-text-color-primary));
   background: color-mix(
     in srgb,
     var(--luma-dictionary-color, var(--el-fill-color)) 10%,

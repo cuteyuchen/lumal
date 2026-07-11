@@ -6,33 +6,41 @@ import {
   createDictionaryItem,
   createDictionaryType,
   createSystemMenu,
+  createSystemOrganization,
   createSystemRole,
   createSystemUser,
   deleteDictionaryItem,
   deleteDictionaryType,
   deleteSystemMenu,
+  deleteSystemOrganization,
   deleteSystemRole,
   deleteSystemUser,
   fetchDictionaryItems,
   fetchDictionaryOptions,
   fetchDictionaryTypes,
   fetchSystemMenus,
+  fetchSystemOrganizations,
   fetchSystemPermissionTree,
   fetchSystemRoleOptions,
   fetchSystemRolePermissions,
   fetchSystemRoles,
   fetchSystemUsers,
+  resetSystemUserPassword,
   updateDictionaryItem,
   updateDictionaryType,
   updateSystemMenu,
+  updateSystemOrganization,
   updateSystemRole,
   updateSystemRolePermissions,
   updateSystemUser,
+  updateSystemUserRoles,
+  updateSystemUserStatus,
 } from '../src/api/system'
 import { adminPermissionCodes } from '../src/mock/permission'
 import {
   resetMockDictionaries,
   resetMockSystemMenus,
+  resetMockSystemOrganizations,
   resetMockSystemRoles,
   resetMockSystemUsers,
 } from '../src/mock/system'
@@ -41,6 +49,7 @@ describe('system mock api', () => {
   beforeEach(() => {
     resetMockDictionaries()
     resetMockSystemMenus()
+    resetMockSystemOrganizations()
     resetMockSystemRoles()
     resetMockSystemUsers()
   })
@@ -48,6 +57,7 @@ describe('system mock api', () => {
   afterEach(() => {
     resetMockDictionaries()
     resetMockSystemMenus()
+    resetMockSystemOrganizations()
     resetMockSystemRoles()
     resetMockSystemUsers()
   })
@@ -77,7 +87,7 @@ describe('system mock api', () => {
     const created = await createSystemUser({
       nickname: '测试用户',
       phone: '13900139000',
-      role: 'guest',
+      roles: ['guest'],
       status: 'enabled',
       username: 'test-user',
     })
@@ -91,12 +101,12 @@ describe('system mock api', () => {
 
     const updated = await updateSystemUser(created.id, {
       nickname: '测试用户（已更新）',
-      role: 'operator',
+      roles: ['operator', 'guest'],
       status: 'disabled',
     })
     expect(updated).toMatchObject({
       nickname: '测试用户（已更新）',
-      role: 'operator',
+      roles: ['operator', 'guest'],
       status: 'disabled',
       username: 'test-user',
     })
@@ -113,7 +123,7 @@ describe('system mock api', () => {
   it('拒绝重复用户名并提供角色选项', async () => {
     await expect(createSystemUser({
       nickname: '重复管理员',
-      role: 'admin',
+      roles: ['admin'],
       username: 'admin',
     })).rejects.toThrow('用户名已存在')
 
@@ -122,6 +132,30 @@ describe('system mock api', () => {
       { label: '运营人员', value: 'operator' },
       { label: '访客', value: 'guest' },
     ])
+  })
+
+  it('支持用户启停、角色分配和密码重置并同步到登录账号', async () => {
+    await updateSystemUserRoles('user-2', ['operator', 'guest'])
+    const roleUpdated = await fetchSystemUsers({
+      page: 1,
+      pageSize: 10,
+      query: { keyword: 'operator' },
+    })
+    expect(roleUpdated.items.find(user => user.id === 'user-2')?.roles).toEqual(['operator', 'guest'])
+
+    await updateSystemUserStatus('user-2', 'disabled')
+    await expect(loginAdmin({ password: 'luma123', username: 'operator' })).rejects.toThrow('账号已停用')
+
+    await updateSystemUserStatus('user-2', 'enabled')
+    const resetResult = await resetSystemUserPassword('user-2')
+    expect(resetResult.temporaryPassword).toBe('Luma@123456')
+    await expect(loginAdmin({ password: 'luma123', username: 'operator' })).rejects.toThrow('账号或密码不正确')
+    const loginResult = await loginAdmin({ password: resetResult.temporaryPassword, username: 'operator' })
+    expect(loginResult.user.roles).toEqual(['operator', 'guest'])
+    expect(loginResult.user.permissions).toEqual(expect.arrayContaining([
+      adminPermissionCodes.systemDictUpdate,
+      adminPermissionCodes.examplesView,
+    ]))
   })
 
   it('支持角色 CRUD 和基于菜单、按钮生成的权限树', async () => {
@@ -216,6 +250,47 @@ describe('system mock api', () => {
     await expect(deleteSystemRole('role-1')).rejects.toThrow('内置角色不能删除')
   })
 
+  it('支持机构树的新增、移动、编辑和受保护删除', async () => {
+    const created = await createSystemOrganization({
+      code: 'quality-center',
+      email: 'quality@luma.dev',
+      leader: '沈言',
+      name: '质量中心',
+      order: 3,
+      parentId: 'organization-1',
+      phone: '010-80000006',
+      status: 'enabled',
+    })
+    const child = await createSystemOrganization({
+      code: 'quality-automation',
+      name: '自动化测试组',
+      order: 1,
+      parentId: created.id,
+      status: 'enabled',
+    })
+
+    await expect(deleteSystemOrganization(created.id)).rejects.toThrow('请先删除或移动下级机构')
+    await updateSystemOrganization(child.id, {
+      name: '质量工程组',
+      parentId: 'organization-2',
+      status: 'disabled',
+    })
+
+    let organizations = await fetchSystemOrganizations()
+    expect(findOrganization(organizations, child.id)).toMatchObject({
+      name: '质量工程组',
+      parentId: 'organization-2',
+      status: 'disabled',
+    })
+    await expect(updateSystemOrganization('organization-1', {
+      parentId: 'organization-2',
+    })).rejects.toThrow('不能将机构移动到自身或其下级')
+
+    await deleteSystemOrganization(created.id)
+    organizations = await fetchSystemOrganizations()
+    expect(findOrganization(organizations, created.id)).toBeUndefined()
+  })
+
   it('支持目录、菜单、按钮树的创建、编辑和删除', async () => {
     const directory = await createSystemMenu({
       order: 10,
@@ -230,14 +305,14 @@ describe('system mock api', () => {
       order: 1,
       parentId: directory.id,
       path: 'index',
-      permission: 'audit:list',
+      permissions: ['audit:list'],
       title: '审计日志',
       type: 'menu',
     })
     const button = await createSystemMenu({
       order: 1,
       parentId: menu.id,
-      permission: 'audit:export',
+      permissions: ['audit:export'],
       title: '导出审计日志',
       type: 'button',
     })
@@ -259,13 +334,13 @@ describe('system mock api', () => {
     await updateSystemMenu(menu.id, {
       component: 'audit/index',
       path: 'index',
-      permission: 'audit:view',
+      permissions: ['audit:view'],
       title: '审计记录',
       type: 'menu',
     })
     menus = await fetchSystemMenus()
     expect(findMenu(menus, menu.id)).toMatchObject({
-      permission: 'audit:view',
+      permissions: ['audit:view'],
       title: '审计记录',
     })
     runtimeMenus = await loadAdminMenus()
@@ -347,9 +422,26 @@ function findMenu(menus: Awaited<ReturnType<typeof fetchSystemMenus>>, id: strin
   return undefined
 }
 
+function findOrganization(
+  organizations: Awaited<ReturnType<typeof fetchSystemOrganizations>>,
+  id: string,
+): Awaited<ReturnType<typeof fetchSystemOrganizations>>[number] | undefined {
+  for (const organization of organizations) {
+    if (organization.id === id) {
+      return organization
+    }
+    const child = organization.children ? findOrganization(organization.children, id) : undefined
+    if (child) {
+      return child
+    }
+  }
+
+  return undefined
+}
+
 function findPermission(tree: Awaited<ReturnType<typeof fetchSystemPermissionTree>>, permission: string) {
   for (const node of tree) {
-    if (node.permission === permission) {
+    if (node.permissions.includes(permission)) {
       return node
     }
     const child = node.children ? findPermission(node.children, permission) : undefined

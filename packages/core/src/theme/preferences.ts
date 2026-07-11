@@ -12,28 +12,28 @@ const SYSTEM_THEME_QUERY = '(prefers-color-scheme: dark)'
 export function createDefaultPreferences(defaults: LumaPreferencesDefaults = {}): LumaPreferences {
   const builtin: LumaPreferences = {
     app: {
-      layout: 'sidebar-nav',
+      layout: 'mixed-nav',
     },
     header: {
-      menuAlign: 'left',
-      menuMaxWidth: 960,
+      menuAlign: 'center',
+      menuMaxWidth: 1120,
     },
     sidebar: {
       collapsed: false,
       enable: true,
-      width: 220,
+      width: 280,
     },
     tabbar: {
       cache: true,
       enable: true,
-      maxCount: 0,
+      maxCount: 8,
       showIcon: true,
       showMaximize: true,
     },
     theme: {
       colorPrimary: '#1677ff',
       mode: 'system',
-      radiusScale: 0.5,
+      radiusScale: 0.75,
     },
     transition: {
       enable: true,

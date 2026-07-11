@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { loginAsAdmin, openTopMenu, resetBrowserState } from './helpers'
+import { loginAs, loginAsAdmin, openTopMenu, resetBrowserState } from './helpers'
 
 test('登录后加载权限菜单并正确处理 403、404 与退出', async ({ page }) => {
   await resetBrowserState(page)
@@ -30,4 +30,17 @@ test('admin 可以在动态菜单间导航', async ({ page }) => {
   await page.getByRole('menuitem', { name: '角色管理', exact: true }).click()
   await expect(page).toHaveURL(/#\/system\/role$/)
   await expect(page.getByRole('heading', { name: '角色管理' })).toBeVisible()
+})
+
+test('operator 和 guest 按各自权限加载动态菜单', async ({ page }) => {
+  await loginAs(page, 'operator')
+  await openTopMenu(page, '系统管理')
+  await expect(page.getByRole('menuitem', { name: '字典分类', exact: true })).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: '字典项', exact: true })).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: '用户管理', exact: true })).toHaveCount(0)
+
+  await page.getByRole('button', { name: '退出登录' }).click()
+  await loginAs(page, 'guest')
+  await expect(page.getByRole('menuitem', { name: '系统管理', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('menuitem', { name: '工作台', exact: true })).toBeVisible()
 })

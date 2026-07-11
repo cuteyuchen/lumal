@@ -10,11 +10,13 @@ const props = withDefaults(defineProps<{
   height?: string
   mobileOnlyToggle?: boolean
   sidebarEnabled?: boolean
+  toggleAfterTitle?: boolean
 }>(), {
   collapsed: false,
-  height: '56px',
+  height: '64px',
   mobileOnlyToggle: false,
   sidebarEnabled: true,
+  toggleAfterTitle: false,
 })
 
 const emit = defineEmits<{
@@ -42,10 +44,17 @@ defineExpose({
 <template>
   <ElHeader ref="headerRef" class="luma-header" :height="height">
     <div class="luma-header__left">
+      <slot name="logo">
+        <span v-if="title" class="luma-header__title">{{ title }}</span>
+      </slot>
+
       <ElButton
         v-if="sidebarEnabled"
         class="luma-header__toggle"
-        :class="{ 'is-mobile-only': mobileOnlyToggle }"
+        :class="{
+          'is-after-title': toggleAfterTitle,
+          'is-mobile-only': mobileOnlyToggle,
+        }"
         text
         :aria-label="toggleLabel"
         data-action="toggle-sidebar"
@@ -55,10 +64,6 @@ defineExpose({
           <path d="M4 7h16M4 12h16M4 17h16" />
         </svg>
       </ElButton>
-
-      <slot name="logo">
-        <span v-if="title" class="luma-header__title">{{ title }}</span>
-      </slot>
     </div>
 
     <nav v-if="$slots.navigation" class="luma-header__navigation" aria-label="主导航">
@@ -94,10 +99,17 @@ defineExpose({
 }
 
 .luma-header__toggle {
+  order: -1;
   flex: none;
   width: 44px;
   height: 44px;
   margin-left: -8px;
+}
+
+.luma-header__toggle.is-after-title {
+  order: initial;
+  margin-right: -8px;
+  margin-left: 0;
 }
 
 .luma-header__toggle.is-mobile-only {

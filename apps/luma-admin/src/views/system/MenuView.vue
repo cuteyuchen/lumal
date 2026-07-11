@@ -46,7 +46,12 @@ const columns: SchemaTableColumn[] = [
   { field: 'component', label: '组件', width: 160 },
   { field: 'externalLink', label: '外链', width: 180 },
   { field: 'icon', label: '图标', width: 130 },
-  { field: 'permission', label: '权限码', width: 190 },
+  {
+    field: 'permissions',
+    formatter: value => Array.isArray(value) ? value.join(', ') : '',
+    label: '权限码',
+    width: 220,
+  },
   { field: 'order', label: '排序', width: 80 },
   {
     field: 'hidden',
@@ -167,7 +172,7 @@ const formSchemas = computed<SchemaFormItem[]>(() => [
   },
   {
     component: 'input',
-    field: 'permission',
+    field: 'permissions',
     label: '权限码',
     placeholder: '多个权限码使用英文逗号分隔',
     span: 12,
@@ -215,7 +220,7 @@ function toMenuInput(model: SchemaFormModel): SaveSystemMenuInput {
     order: model.order,
     parentId: model.parentId,
     path: model.path,
-    permission: model.permission,
+    permissions: model.permissions,
     redirect: model.redirect,
     title: model.title,
     type: model.type,
@@ -243,7 +248,7 @@ function openEdit(row: SchemaTableRow): void {
   editingMenu.value = menu
   formModel.value = {
     ...menu,
-    permission: menu.permissions?.join(', ') || menu.permission,
+    permissions: menu.permissions.join(', '),
   }
   operationError.value = ''
   dialogVisible.value = true
@@ -363,7 +368,7 @@ onMounted(() => {
       </LumaSchemaTable>
     </LumaPage>
 
-    <ElDialog v-model="dialogVisible" :title="dialogTitle" width="720px">
+    <ElDialog v-model="dialogVisible" append-to-body class="luma-admin-dialog" :title="dialogTitle" width="720px">
       <ElAlert
         v-if="operationError"
         class="luma-admin-page__operation-error"

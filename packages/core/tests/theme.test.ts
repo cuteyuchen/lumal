@@ -103,12 +103,12 @@ describe('theme runtime', () => {
 
     expect(preferences).toMatchObject({
       app: {
-        layout: 'sidebar-nav',
+        layout: 'mixed-nav',
       },
       theme: {
         colorPrimary: '#22c55e',
         mode: 'dark',
-        radiusScale: 0.5,
+        radiusScale: 0.75,
       },
       transition: {
         enable: true,
@@ -145,7 +145,9 @@ describe('theme runtime', () => {
     expect(element.style.getPropertyValue('--luma-color-primary')).toBe('#16a34a')
     expect(element.style.getPropertyValue('--el-color-primary')).toBe('#16a34a')
     expect(element.style.getPropertyValue('--luma-radius-scale')).toBe('0.75')
-    expect(element.style.getPropertyValue('--luma-sidebar-width')).toBe('220px')
+    expect(element.style.getPropertyValue('--luma-header-height')).toBe('64px')
+    expect(element.style.getPropertyValue('--luma-tabbar-height')).toBe('40px')
+    expect(element.style.getPropertyValue('--luma-sidebar-width')).toBe('280px')
   })
 
   it('偏好 Store 会持久化、重置并清理损坏缓存', () => {

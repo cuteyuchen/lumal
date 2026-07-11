@@ -74,7 +74,10 @@ function handleReset(nextPreferences: LumaPreferences): void {
 }
 
 .luma-admin-settings-drawer .el-drawer__body {
-  padding: 24px;
+  height: calc(100% - 64px);
+  min-height: 0;
+  padding: 20px 24px 24px;
+  overflow: hidden;
 }
 
 @media (max-width: 640px) {

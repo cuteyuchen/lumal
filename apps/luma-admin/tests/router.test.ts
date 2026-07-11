@@ -49,10 +49,24 @@ describe('luma admin router', () => {
         }),
       }),
       expect.objectContaining({
+        path: 'organization',
+        meta: expect.objectContaining({
+          authority: ['system:organization:list'],
+          title: '机构管理',
+        }),
+      }),
+      expect.objectContaining({
         path: 'dict',
         meta: expect.objectContaining({
           authority: ['system:dict:list'],
-          title: '字典管理',
+          title: '字典分类',
+        }),
+      }),
+      expect.objectContaining({
+        path: 'dict-item',
+        meta: expect.objectContaining({
+          authority: ['system:dict:list'],
+          title: '字典项',
         }),
       }),
     ]))
@@ -87,43 +101,6 @@ describe('luma admin router', () => {
         icon: 'app:dashboard',
         path: '/dashboard',
         title: '工作台',
-      },
-      {
-        children: [
-          {
-            children: [],
-            icon: 'app:user',
-            path: '/system/user',
-            title: '用户管理',
-          },
-          {
-            children: [],
-            icon: 'app:role',
-            path: '/system/role',
-            title: '角色管理',
-          },
-          {
-            children: [],
-            icon: 'app:menu',
-            path: '/system/menu',
-            title: '菜单管理',
-          },
-          {
-            children: [],
-            icon: 'app:dict',
-            path: '/system/dict',
-            title: '字典管理',
-          },
-          {
-            children: [],
-            icon: 'app:settings',
-            path: '/system/config',
-            title: '系统配置',
-          },
-        ],
-        icon: 'app:system',
-        path: '/system',
-        title: '系统管理',
       },
       {
         children: [
@@ -220,6 +197,20 @@ describe('luma admin router', () => {
         path: '/resources',
         title: '外部资源',
       }),
+      {
+        children: [
+          { children: [], icon: 'app:user', path: '/system/user', title: '用户管理' },
+          { children: [], icon: 'app:role', path: '/system/role', title: '角色管理' },
+          { children: [], icon: 'app:menu', path: '/system/menu', title: '菜单管理' },
+          { children: [], icon: 'app:organization', path: '/system/organization', title: '机构管理' },
+          { children: [], icon: 'app:dict', path: '/system/dict', title: '字典分类' },
+          { children: [], icon: 'app:dict', path: '/system/dict-item', title: '字典项' },
+          { children: [], icon: 'app:settings', path: '/system/config', title: '系统配置' },
+        ],
+        icon: 'app:system',
+        path: '/system',
+        title: '系统管理',
+      },
     ])
   })
 
@@ -231,8 +222,8 @@ describe('luma admin router', () => {
     const menus = createAdminSidebarMenus(router)
     const systemMenu = menus.find(menu => menu.path === '/system')
 
-    expect(menus.map(menu => menu.path)).toEqual(['/dashboard', '/system', '/examples', '/project', '/resources'])
-    expect(systemMenu?.children.map(menu => menu.path)).toEqual(['/system/dict'])
+    expect(menus.map(menu => menu.path)).toEqual(['/dashboard', '/examples', '/project', '/resources', '/system'])
+    expect(systemMenu?.children.map(menu => menu.path)).toEqual(['/system/dict', '/system/dict-item'])
   })
 
   it('guest 只能看到工作台和基础示例菜单', async () => {
@@ -307,6 +298,17 @@ describe('luma admin router', () => {
 
     expect(router.currentRoute.value.fullPath).toBe('/system/user?source=refresh')
     expect(router.currentRoute.value.name).toBe('SystemUser')
+  })
+
+  it('机构管理深层地址可注册并恢复', async () => {
+    await login('admin')
+    const router = createAdminRouter(createMemoryHistory())
+
+    await router.push('/system/organization?source=refresh')
+    await router.isReady()
+
+    expect(router.currentRoute.value.fullPath).toBe('/system/organization?source=refresh')
+    expect(router.currentRoute.value.name).toBe('SystemOrganization')
   })
 
   it('未知地址会进入独立 404 页面', async () => {

@@ -82,7 +82,7 @@ function patchScore(): void {
         </button>
       </div>
 
-      <div class="luma-admin-example__two-columns">
+      <div class="luma-admin-example__two-columns luma-schema-form-demo">
         <LumaSchemaForm
           v-model="formModel"
           :columns="2"
@@ -102,3 +102,16 @@ function patchScore(): void {
     </LumaPage>
   </main>
 </template>
+
+<style scoped lang="scss">
+.luma-schema-form-demo {
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.7fr);
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .luma-schema-form-demo {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

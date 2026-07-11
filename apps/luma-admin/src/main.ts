@@ -53,6 +53,12 @@ const localIcons: IconDefinition[] = [
     svgText: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 5h16v2H4V5Zm0 6h16v2H4v-2Zm0 6h10v2H4v-2Z"/></svg>',
   },
   {
+    key: 'app:organization',
+    label: '机构',
+    source: 'local-svg',
+    svgText: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 3h4v4h-4V3ZM4 17h4v4H4v-4Zm12 0h4v4h-4v-4ZM5 9h6v3H7v3H5V9Zm8 0h6v6h-2v-3h-4V9Zm-2-1h2v10h-2V8Z"/></svg>',
+  },
+  {
     key: 'app:dict',
     label: '字典',
     source: 'local-svg',

@@ -15,7 +15,7 @@ const sampleMenu = {
   order: 1,
   parentId: 'menu-system',
   path: 'user',
-  permission: adminPermissionCodes.systemUserList,
+  permissions: [adminPermissionCodes.systemUserList],
   title: '用户管理',
   type: 'menu',
 }
@@ -123,7 +123,7 @@ describe('system menu view', () => {
       'component',
       'externalLink',
       'icon',
-      'permission',
+      'permissions',
       'order',
       'hidden',
     ])
@@ -166,7 +166,7 @@ describe('system menu view', () => {
       'externalLink',
       'externalTarget',
       'icon',
-      'permission',
+      'permissions',
       'hidden',
     ])
   })

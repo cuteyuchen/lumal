@@ -16,8 +16,10 @@ import UtilsView from '../views/examples/UtilsView.vue'
 import ProjectView from '../views/project/ProjectView.vue'
 import ExternalFrameView from '../views/shared/ExternalFrameView.vue'
 import ConfigView from '../views/system/ConfigView.vue'
-import DictView from '../views/system/DictView.vue'
+import DictionaryItemView from '../views/system/DictionaryItemView.vue'
+import DictionaryTypeView from '../views/system/DictionaryTypeView.vue'
 import MenuView from '../views/system/MenuView.vue'
+import OrganizationView from '../views/system/OrganizationView.vue'
 import RoleView from '../views/system/RoleView.vue'
 import UserView from '../views/system/UserView.vue'
 
@@ -40,8 +42,10 @@ const routeComponents: Record<string, RouteRecordRaw['component']> = {
   'project/index': ProjectView,
   'shared/external-frame': ExternalFrameView,
   'system/config': ConfigView,
-  'system/dict': DictView,
+  'system/dict': DictionaryTypeView,
+  'system/dict-item': DictionaryItemView,
   'system/menu': MenuView,
+  'system/organization': OrganizationView,
   'system/role': RoleView,
   'system/user': UserView,
 }

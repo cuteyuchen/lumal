@@ -313,6 +313,18 @@ function handleDialogBeforeClose(done: () => void): void {
   })
 }
 
+function closeDialog(): void {
+  void requestDialogClose().then((allowed) => {
+    if (allowed) {
+      dialogState.visible.value = false
+    }
+  })
+}
+
+function submitDialog(): void {
+  void handleFormSubmit(dialogState.model.value)
+}
+
 /***********************公开方法*********************/
 defineExpose({
   clearSelection: () => {
@@ -338,7 +350,7 @@ defineExpose({
 
 <template>
   <div ref="crudRef" class="luma-crud-table">
-    <LumaPage :title="title" :description="description" :loading="currentLoading">
+    <LumaPage class="luma-crud-table__page" :title="title" :description="description" :loading="currentLoading">
       <template v-if="hasToolbar || $slots.actions" #actions>
         <div class="luma-crud-table__toolbar">
           <slot v-if="showCreate" name="create-action" :open-create="openCreate">
@@ -377,6 +389,7 @@ defineExpose({
           :schemas="queryState.visibleSchemas.value"
           :columns="queryColumns"
           :label-width="query?.labelWidth ?? 'auto'"
+          class="luma-crud-table__query-form"
         />
         <div class="luma-crud-table__query-actions">
           <ElButton type="primary" native-type="button" data-action="search" @click="handleSearchClick">
@@ -478,10 +491,11 @@ defineExpose({
     <ElDialog
       v-model="dialogState.visible.value"
       :title="dialogTitle"
-      :width="dialog?.width"
+      :width="dialog?.width ?? 'min(920px, calc(100vw - 32px))'"
       :close-on-click-modal="dialog?.closeOnClickModal ?? false"
       :destroy-on-close="dialog?.destroyOnClose ?? true"
       :before-close="handleDialogBeforeClose"
+      class="luma-crud-table__dialog"
     >
       <div v-if="dialogState.error.value" class="luma-crud-table__dialog-error" role="alert">
         {{ dialogState.error.value }}
@@ -494,24 +508,60 @@ defineExpose({
         :columns="2"
         :disabled="dialogState.saving.value"
         :submit-loading="dialogState.saving.value"
-        show-actions
-        :submit-text="dialog?.submitText ?? '保存'"
+        :show-actions="false"
         @submit="handleFormSubmit"
       />
+      <template #footer>
+        <div class="luma-crud-table__dialog-footer">
+          <ElButton native-type="button" @click="closeDialog">
+            {{ dialogState.mode.value === 'view' ? '关闭' : '取消' }}
+          </ElButton>
+          <ElButton
+            v-if="dialogState.mode.value !== 'view'"
+            type="primary"
+            native-type="button"
+            :loading="dialogState.saving.value"
+            @click="submitDialog"
+          >
+            {{ dialog?.submitText ?? '保存' }}
+          </ElButton>
+        </div>
+      </template>
     </ElDialog>
   </div>
 </template>
 
 <style scoped lang="scss">
 .luma-crud-table {
+  width: 100%;
   min-width: 0;
+}
+
+.luma-crud-table__page {
+  overflow: hidden;
+}
+
+.luma-crud-table__page :deep(.luma-page__body) {
+  display: grid;
+  gap: 16px;
 }
 
 .luma-crud-table__query {
   display: grid;
   gap: var(--luma-space-3, 12px);
-  padding-bottom: var(--luma-space-4, 16px);
-  border-bottom: 1px solid var(--el-border-color-lighter);
+  padding: 16px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: calc(8px * var(--luma-radius-scale, 1));
+  background: var(--el-fill-color-extra-light);
+}
+
+.luma-crud-table__query-form :deep(.luma-schema-form__row) {
+  row-gap: 14px;
+}
+
+.luma-crud-table__query-form :deep(.el-form-item__label) {
+  color: var(--el-text-color-regular);
+  font-weight: 500;
 }
 
 .luma-crud-table__query-actions,
@@ -541,7 +591,12 @@ defineExpose({
 
 .luma-crud-table__body,
 .luma-crud-table__extra {
+  width: 100%;
   min-width: 0;
+}
+
+.luma-crud-table__body {
+  padding-top: 4px;
 }
 
 .luma-crud-table__pagination {
@@ -551,6 +606,27 @@ defineExpose({
 
 .luma-crud-table__dialog-error {
   margin-bottom: var(--luma-space-4, 16px);
+}
+
+.luma-crud-table__dialog-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+:global(.luma-crud-table__dialog .el-dialog__header) {
+  margin-right: 0;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+:global(.luma-crud-table__dialog .el-dialog__body) {
+  padding: 24px;
+}
+
+:global(.luma-crud-table__dialog .el-dialog__footer) {
+  padding: 16px 24px;
+  border-top: 1px solid var(--el-border-color-lighter);
 }
 
 @media (max-width: 768px) {

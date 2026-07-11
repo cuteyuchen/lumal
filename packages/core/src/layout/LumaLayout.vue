@@ -55,9 +55,9 @@ const props = withDefaults(defineProps<{
   collapsedSidebarWidth: '64px',
   headerMenuAlign: 'left',
   headerMenuMaxWidth: '100%',
-  headerHeight: '56px',
+  headerHeight: '64px',
   menus: () => [],
-  sidebarWidth: '220px',
+  sidebarWidth: '280px',
   showTabIcons: true,
   showTabMaximize: true,
   fixedTabs: () => [],
@@ -311,6 +311,7 @@ defineExpose({
       :height="headerHeight"
       :mobile-only-toggle="!hasSidebar && hasTopMenus"
       :sidebar-enabled="hasSidebar || hasTopMenus"
+      :toggle-after-title="hasSidebar && !isMobileViewport"
       @toggle-collapse="handleToggleCollapse"
     >
       <template v-if="$slots.logo" #logo>

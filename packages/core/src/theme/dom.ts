@@ -78,7 +78,7 @@ function applyElementPlusThemeVariables(
 /***********************布局变量*********************/
 function applyLayoutThemeVariables(element: HTMLElement, preferences: LumaPreferences): void {
   element.style.setProperty('--luma-sidebar-width', `${preferences.sidebar.width}px`)
-  element.style.setProperty('--luma-header-height', '56px')
+  element.style.setProperty('--luma-header-height', '64px')
   element.style.setProperty('--luma-tabbar-height', '40px')
   element.style.setProperty('--luma-page-gutter', '20px')
 }

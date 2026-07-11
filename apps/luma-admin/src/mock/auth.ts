@@ -1,4 +1,3 @@
-import type { AdminRoleCode } from './permission'
 import { createAdminResponseTransport, createAdminSessionTransport } from '../api/adapters'
 import { resolveRolePermissions } from './permission'
 
@@ -8,7 +7,7 @@ export interface AdminUser {
   id: string
   name: string
   permissions: string[]
-  roles: AdminRoleCode[]
+  roles: string[]
   username: string
 }
 
@@ -27,6 +26,7 @@ export interface AdminAccountPreset {
 }
 
 interface MockAccount extends AdminAccountPreset {
+  enabled: boolean
   user: AdminUser
 }
 
@@ -34,6 +34,7 @@ interface MockAccount extends AdminAccountPreset {
 export const mockAccounts: Record<AdminAccountKey, MockAccount> = {
   admin: {
     description: '拥有系统管理、项目和示例区全部访问能力',
+    enabled: true,
     key: 'admin',
     label: '超级管理员',
     password: 'luma123',
@@ -47,7 +48,8 @@ export const mockAccounts: Record<AdminAccountKey, MockAccount> = {
     },
   },
   operator: {
-    description: '负责项目和字典维护，可访问常用能力示例',
+    description: '负责项目、字典和常用运营工作，不具备系统管理权限',
+    enabled: true,
     key: 'operator',
     label: '运营人员',
     password: 'luma123',
@@ -61,7 +63,8 @@ export const mockAccounts: Record<AdminAccountKey, MockAccount> = {
     },
   },
   guest: {
-    description: '只保留工作台和基础示例访问能力',
+    description: '仅可访问工作台和基础示例，无系统管理操作权限',
+    enabled: true,
     key: 'guest',
     label: '访客账号',
     password: 'luma123',
@@ -77,7 +80,7 @@ export const mockAccounts: Record<AdminAccountKey, MockAccount> = {
 }
 
 export const adminAccountOptions: AdminAccountPreset[] = Object.values(mockAccounts).map((account) => {
-  const { user: _user, ...preset } = account
+  const { enabled: _enabled, user: _user, ...preset } = account
   return preset
 })
 
@@ -106,6 +109,10 @@ export async function mockLogin(payload: AdminLoginRequest): Promise<Record<stri
     throw new Error('账号或密码不正确')
   }
 
+  if (!account.enabled) {
+    throw new Error('账号已停用')
+  }
+
   return createAuthResponse(account)
 }
 
@@ -132,4 +139,41 @@ export async function mockRefreshSession(refreshToken: string): Promise<Record<s
   }
 
   return createAuthResponse(account)
+}
+
+export function updateMockAccountStatus(username: string, enabled: boolean): void {
+  const account = Object.values(mockAccounts).find(item => item.username === username)
+  if (account) {
+    account.enabled = enabled
+  }
+}
+
+export function updateMockAccountRoles(username: string, roles: string[]): void {
+  const account = Object.values(mockAccounts).find(item => item.username === username)
+  if (account) {
+    account.user.roles = [...roles]
+    account.user.permissions = resolveRolePermissions(roles)
+  }
+}
+
+export function resetMockAccountPassword(username: string, password: string): void {
+  const account = Object.values(mockAccounts).find(item => item.username === username)
+  if (account) {
+    account.password = password
+  }
+}
+
+export function resetMockAccounts(): void {
+  const defaults: Record<AdminAccountKey, string[]> = {
+    admin: ['admin'],
+    guest: ['guest'],
+    operator: ['operator'],
+  }
+
+  Object.values(mockAccounts).forEach((account) => {
+    account.enabled = true
+    account.password = 'luma123'
+    account.user.roles = [...defaults[account.key]]
+    account.user.permissions = resolveRolePermissions(account.user.roles)
+  })
 }

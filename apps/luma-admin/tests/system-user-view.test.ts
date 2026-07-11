@@ -12,6 +12,7 @@ const sampleUser = {
   nickname: '超级管理员',
   phone: '13800138001',
   role: 'admin',
+  roles: ['admin'],
   status: 'enabled',
   username: 'admin',
 }
@@ -85,14 +86,14 @@ describe('system user view', () => {
     expect(table.columns.map(column => column.field)).toEqual([
       'username',
       'nickname',
-      'role',
+      'roles',
       'status',
       'phone',
       'createdAt',
     ])
-    expect(query.schemas.map(schema => schema.field)).toEqual(['keyword', 'role', 'status'])
+    expect(query.schemas.map(schema => schema.field)).toEqual(['keyword', 'roles', 'status'])
     expect(table.showColumnSettings).toBe(true)
-    expect(formSchemas.map(schema => schema.field)).toEqual(['username', 'nickname', 'role', 'status', 'phone'])
+    expect(formSchemas.map(schema => schema.field)).toEqual(['username', 'nickname', 'roles', 'status', 'phone'])
     expect(Object.keys(dataSource).sort()).toEqual(['create', 'fetch', 'remove', 'update'])
   })
 
@@ -103,6 +104,9 @@ describe('system user view', () => {
     expect(wrapper.find('[data-action="view-user"]').attributes('style')).toBeUndefined()
     expect(wrapper.find('[data-action="create-user"]').attributes('style')).toContain('display: none')
     expect(wrapper.find('[data-action="edit-user"]').attributes('style')).toContain('display: none')
+    expect(wrapper.find('[data-action="toggle-user-status"]').attributes('style')).toContain('display: none')
+    expect(wrapper.find('[data-action="assign-user-roles"]').attributes('style')).toContain('display: none')
+    expect(wrapper.find('[data-action="reset-user-password"]').attributes('style')).toContain('display: none')
     expect(wrapper.find('[data-action="delete-user"]').attributes('style')).toContain('display: none')
   })
 
@@ -112,6 +116,9 @@ describe('system user view', () => {
 
     expect(wrapper.find('[data-action="create-user"]').attributes('style')).toBeUndefined()
     expect(wrapper.find('[data-action="edit-user"]').attributes('style')).toBeUndefined()
+    expect(wrapper.find('[data-action="toggle-user-status"]').attributes('style')).toBeUndefined()
+    expect(wrapper.find('[data-action="assign-user-roles"]').attributes('style')).toBeUndefined()
+    expect(wrapper.find('[data-action="reset-user-password"]').attributes('style')).toBeUndefined()
     expect(wrapper.find('[data-action="delete-user"]').attributes('style')).toBeUndefined()
   })
 })
@@ -122,5 +129,8 @@ function resolveUserPermissions(): string[] {
     adminPermissionCodes.systemUserCreate,
     adminPermissionCodes.systemUserUpdate,
     adminPermissionCodes.systemUserDelete,
+    adminPermissionCodes.systemUserStatus,
+    adminPermissionCodes.systemUserAssignRoles,
+    adminPermissionCodes.systemUserResetPassword,
   ]
 }

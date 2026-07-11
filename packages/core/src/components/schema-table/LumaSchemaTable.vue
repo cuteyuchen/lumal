@@ -102,6 +102,10 @@ const renderableColumns = computed(() => normalizedColumns.value.filter(column =
   column.renderable && !hiddenColumnFields.value.has(String(column.field)),
 ))
 const configurableColumns = computed(() => normalizedColumns.value.filter(column => column.renderable))
+const flexibleColumnField = computed(() => [...renderableColumns.value]
+  .reverse()
+  .find(column => !column.fixed)
+  ?.field)
 
 const { dictionaryMap } = useDictionaryMap(() =>
   normalizedColumns.value.map(column => column.dictionary ?? column.dictType),
@@ -166,11 +170,18 @@ function resolveColumnMinWidth(column: NormalizedSchemaTableColumn<T>): number |
   if (!props.scaleColumnWidth) {
     return undefined
   }
-  return column.minWidth ?? column.componentProps.minWidth as number | string | undefined
+  const minWidth = column.minWidth ?? column.componentProps.minWidth as number | string | undefined
+  if (column.field === flexibleColumnField.value) {
+    return minWidth ?? column.width ?? column.componentProps.width as number | string | undefined
+  }
+  return minWidth
 }
 
 function resolveColumnWidth(column: NormalizedSchemaTableColumn<T>): number | string | undefined {
-  return props.scaleColumnWidth ? column.width : undefined
+  if (!props.scaleColumnWidth || column.field === flexibleColumnField.value) {
+    return undefined
+  }
+  return column.width
 }
 
 function resolveRowKey(row: T, index: number): string | number | undefined {
@@ -230,19 +241,25 @@ defineExpose({
 <template>
   <div ref="containerRef" class="luma-schema-table">
     <div v-if="showColumnSettings" class="luma-schema-table__toolbar">
-      <details class="luma-schema-table__column-settings">
-        <summary>列设置</summary>
-        <div class="luma-schema-table__column-options">
-          <ElCheckbox
-            v-for="column in configurableColumns"
-            :key="String(column.field)"
-            :model-value="!hiddenColumnFields.has(String(column.field))"
-            @update:model-value="toggleColumnVisible(String(column.field))"
-          >
-            {{ column.label }}
-          </ElCheckbox>
-        </div>
-      </details>
+      <div class="luma-schema-table__column-settings">
+        <details>
+          <summary class="luma-schema-table__column-settings-trigger" aria-label="列设置" title="列设置">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v4H4zM14 15h6v4h-6z" />
+            </svg>
+          </summary>
+          <div class="luma-schema-table__column-options">
+            <ElCheckbox
+              v-for="column in configurableColumns"
+              :key="String(column.field)"
+              :model-value="!hiddenColumnFields.has(String(column.field))"
+              @update:model-value="toggleColumnVisible(String(column.field))"
+            >
+              {{ column.label }}
+            </ElCheckbox>
+          </div>
+        </details>
+      </div>
     </div>
 
     <div class="luma-schema-table__scroll">
@@ -343,35 +360,53 @@ defineExpose({
   justify-content: flex-end;
 }
 
+.luma-schema-table__column-options {
+  position: absolute;
+  z-index: var(--luma-z-dropdown);
+  top: calc(100% + 8px);
+  right: 0;
+  display: flex;
+  width: max-content;
+  min-width: 200px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--el-border-radius-base);
+  background: var(--el-bg-color-overlay);
+  box-shadow: var(--luma-shadow-base);
+}
+
 .luma-schema-table__column-settings {
   position: relative;
 }
 
-.luma-schema-table__column-settings > summary {
-  min-height: 36px;
-  padding: 7px 12px;
+.luma-schema-table__column-settings-trigger svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.luma-schema-table__column-settings-trigger {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: 1px solid var(--el-border-color);
-  border-radius: var(--el-border-radius-base);
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
   color: var(--el-text-color-regular);
   background: var(--el-fill-color-blank);
   cursor: pointer;
   list-style: none;
 }
 
-.luma-schema-table__column-options {
-  position: absolute;
-  z-index: var(--luma-z-dropdown);
-  top: calc(100% + 8px);
-  right: 0;
-  display: grid;
-  width: max-content;
-  min-width: 180px;
-  gap: 8px;
-  padding: 12px;
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: var(--el-border-radius-base);
-  background: var(--el-bg-color-overlay);
-  box-shadow: var(--luma-shadow-base);
+.luma-schema-table__column-settings-trigger::-webkit-details-marker {
+  display: none;
 }
 
 .luma-schema-table__scroll {
@@ -423,9 +458,9 @@ defineExpose({
     gap: 12px;
   }
 
-  .luma-schema-table__column-settings > summary {
+  .luma-schema-table__column-settings-trigger {
     min-height: 44px;
-    padding: 11px 14px;
+    min-width: 44px;
   }
 
   .luma-schema-table__pagination {

@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<{
   collapsed: false,
   collapsedWidth: '64px',
   menus: () => [],
-  width: '220px',
+  width: '280px',
 })
 
 const emit = defineEmits<{
@@ -97,5 +97,21 @@ defineExpose({
 .luma-sidebar__menu :deep(.el-menu-item.is-active) {
   font-weight: 600;
   background: var(--el-color-primary-light-9);
+}
+
+.luma-sidebar__menu.el-menu--collapse :deep(.el-menu-item),
+.luma-sidebar__menu.el-menu--collapse :deep(.el-sub-menu__title) {
+  justify-content: center;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+
+.luma-sidebar__menu.el-menu--collapse :deep(.luma-sidebar-menu-item__icon) {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  align-items: center;
+  justify-content: center;
 }
 </style>

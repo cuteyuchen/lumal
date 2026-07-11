@@ -195,9 +195,7 @@ const actionsConfig = {
 /***********************角色授权*********************/
 function collectPermissionCodes(nodes: SystemPermissionTreeNode[], result = new Set<string>()): Set<string> {
   nodes.forEach((node) => {
-    if (node.permission) {
-      result.add(node.permission)
-    }
+    node.permissions.forEach(permission => result.add(permission))
     if (node.children) {
       collectPermissionCodes(node.children, result)
     }
@@ -328,6 +326,8 @@ onMounted(() => {
 
     <ElDialog
       v-model="authorizationVisible"
+      append-to-body
+      class="luma-admin-dialog"
       :title="`角色授权：${authorizingRole?.name ?? ''}`"
       width="560px"
     >

@@ -60,7 +60,41 @@ button {
 
 .luma-admin-page {
   box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
   padding: 0;
+}
+
+.luma-admin-page > .luma-page {
+  width: 100%;
+}
+
+.luma-admin-dialog .el-dialog__header {
+  margin-right: 0;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.luma-admin-dialog .el-dialog__body {
+  padding: 24px;
+}
+
+.luma-admin-dialog .el-dialog__footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--el-border-color-lighter);
+}
+
+@media (max-width: 768px) {
+  .luma-admin-dialog {
+    width: calc(100vw - 24px) !important;
+  }
+
+  .luma-admin-dialog .el-dialog__header,
+  .luma-admin-dialog .el-dialog__body,
+  .luma-admin-dialog .el-dialog__footer {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
 }
 
 .luma-admin-page__list {

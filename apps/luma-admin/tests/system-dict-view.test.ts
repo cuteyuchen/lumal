@@ -5,25 +5,11 @@ import { defineComponent, h, nextTick } from 'vue'
 import { adminPermissionCodes } from '../src/mock/permission'
 import { resetMockDictionaries } from '../src/mock/system'
 import { permissionStore } from '../src/services/permission'
-import DictView from '../src/views/system/DictView.vue'
+import DictionaryItemView from '../src/views/system/DictionaryItemView.vue'
+import DictionaryTypeView from '../src/views/system/DictionaryTypeView.vue'
 
-const sampleType = {
-  code: 'status',
-  description: '后台通用状态',
-  id: 'dict-type-1',
-  name: '通用状态',
-  status: 'enabled',
-}
-
-const sampleItem = {
-  color: '#16a34a',
-  id: 'dict-item-1',
-  label: '启用',
-  order: 1,
-  status: 'enabled',
-  typeCode: 'status',
-  value: 'enabled',
-}
+const sampleType = { code: 'status', description: '通用状态', id: 'type-1', name: '状态', status: 'enabled' }
+const sampleItem = { color: '#16a34a', id: 'item-1', label: '启用', order: 1, status: 'enabled', typeCode: 'status', value: 'enabled' }
 
 const ButtonStub = defineComponent({
   name: 'ElButton',
@@ -32,66 +18,43 @@ const ButtonStub = defineComponent({
     return () => h('button', attrs, slots.default?.())
   },
 })
-
 const PageStub = defineComponent({
   name: 'LumaPage',
   setup(_, { slots }) {
-    return () => h('section', { class: 'page-stub' }, slots.default?.())
+    return () => h('section', [slots.actions?.(), slots.default?.()])
   },
 })
-
 const TableStub = defineComponent({
   name: 'LumaSchemaTable',
-  props: {
-    columns: Array,
-    rows: Array,
-  },
+  props: { columns: Array },
   setup(props, { slots }) {
-    return () => {
-      const firstField = (props.columns?.[0] as { field?: string } | undefined)?.field
-      const row = firstField === 'name' ? sampleType : sampleItem
-      return h('div', { 'class': 'table-stub', 'data-table': firstField }, slots.actions?.({ index: 0, row }))
-    }
+    return () => h('div', { class: 'table-stub' }, slots.actions?.({ row: (props.columns?.[0] as { field?: string })?.field === 'name' ? sampleType : sampleItem }))
   },
 })
-
 const DialogStub = defineComponent({
   name: 'ElDialog',
-  props: {
-    modelValue: Boolean,
-    title: String,
-  },
+  props: { modelValue: Boolean },
   setup(props, { slots }) {
-    return () => props.modelValue
-      ? h('section', { 'class': 'dialog-stub', 'data-title': props.title }, slots.default?.())
-      : null
+    return () => props.modelValue ? h('section', slots.default?.()) : null
   },
 })
-
 const FormStub = defineComponent({
   name: 'LumaSchemaForm',
-  props: {
-    schemas: Array,
-  },
+  props: { schemas: Array },
   setup() {
-    return () => h('form', { class: 'form-stub' })
+    return () => h('form')
   },
 })
 
-async function flushPromises(): Promise<void> {
-  await Promise.resolve()
-  await nextTick()
-}
-
-function mountDictView() {
-  return mount(DictView, {
+function mountView(component: typeof DictionaryItemView | typeof DictionaryTypeView) {
+  return mount(component, {
     global: {
-      directives: {
-        authority: createAuthorityDirective(permissionStore),
-      },
+      directives: { authority: createAuthorityDirective(permissionStore) },
       stubs: {
         ElButton: ButtonStub,
         ElDialog: DialogStub,
+        ElOption: true,
+        ElSelect: true,
         LumaPage: PageStub,
         LumaSchemaForm: FormStub,
         LumaSchemaTable: TableStub,
@@ -100,9 +63,19 @@ function mountDictView() {
   })
 }
 
-describe('system dictionary view', () => {
+async function flushPromises(): Promise<void> {
+  await Promise.resolve()
+  await nextTick()
+}
+
+describe('system dictionary views', () => {
   beforeEach(() => {
-    permissionStore.clear()
+    permissionStore.setPermissions([
+      adminPermissionCodes.systemDictList,
+      adminPermissionCodes.systemDictCreate,
+      adminPermissionCodes.systemDictUpdate,
+      adminPermissionCodes.systemDictDelete,
+    ])
     resetMockDictionaries()
   })
 
@@ -111,19 +84,18 @@ describe('system dictionary view', () => {
     resetMockDictionaries()
   })
 
-  it('使用左右双表展示字典类型和字典项', async () => {
-    permissionStore.setPermissions(resolveDictionaryPermissions())
-    const wrapper = mountDictView()
+  it('将字典分类与字典项拆分为独立页面', async () => {
+    const typeWrapper = mountView(DictionaryTypeView)
+    const itemWrapper = mountView(DictionaryItemView)
     await flushPromises()
 
-    const tables = wrapper.findAllComponents(TableStub)
-    expect(tables).toHaveLength(2)
-    expect((tables[0].props('columns') as { field: string }[]).map(column => column.field)).toEqual([
+    expect((typeWrapper.findComponent(TableStub).props('columns') as { field: string }[]).map(item => item.field)).toEqual([
       'name',
       'code',
+      'description',
       'status',
     ])
-    expect((tables[1].props('columns') as { field: string }[]).map(column => column.field)).toEqual([
+    expect((itemWrapper.findComponent(TableStub).props('columns') as { field: string }[]).map(item => item.field)).toEqual([
       'label',
       'value',
       'color',
@@ -132,36 +104,20 @@ describe('system dictionary view', () => {
     ])
   })
 
-  it('使用 v-authority 控制字典类型和字典项操作', () => {
-    permissionStore.setPermissions([adminPermissionCodes.systemDictList])
-    const wrapper = mountDictView()
-
-    expect(wrapper.find('[data-action="create-dictionary-type"]').attributes('style')).toContain('display: none')
-    expect(wrapper.find('[data-action="create-dictionary-item"]').attributes('style')).toContain('display: none')
-    expect(wrapper.find('[data-action="edit-dictionary-type"]').attributes('style')).toContain('display: none')
-    expect(wrapper.find('[data-action="delete-dictionary-type"]').attributes('style')).toContain('display: none')
-    expect(wrapper.find('[data-action="edit-dictionary-item"]').attributes('style')).toContain('display: none')
-    expect(wrapper.find('[data-action="delete-dictionary-item"]').attributes('style')).toContain('display: none')
-  })
-
-  it('提供字典类型和字典项编辑表单', async () => {
-    permissionStore.setPermissions(resolveDictionaryPermissions())
-    const wrapper = mountDictView()
-
-    await wrapper.find('[data-action="create-dictionary-type"]').trigger('click')
-    await nextTick()
-    let form = wrapper.findComponent(FormStub)
-    expect((form.props('schemas') as { field: string }[]).map(schema => schema.field)).toEqual([
+  it('两个页面分别提供对应编辑表单', async () => {
+    const typeWrapper = mountView(DictionaryTypeView)
+    await typeWrapper.find('[data-action="create-dictionary-type"]').trigger('click')
+    expect((typeWrapper.findComponent(FormStub).props('schemas') as { field: string }[]).map(item => item.field)).toEqual([
       'name',
       'code',
       'status',
       'description',
     ])
 
-    await wrapper.find('[data-action="create-dictionary-item"]').trigger('click')
-    await nextTick()
-    form = wrapper.findAllComponents(FormStub).at(-1)!
-    expect((form.props('schemas') as { field: string }[]).map(schema => schema.field)).toEqual([
+    const itemWrapper = mountView(DictionaryItemView)
+    await flushPromises()
+    await itemWrapper.find('[data-action="create-dictionary-item"]').trigger('click')
+    expect((itemWrapper.findComponent(FormStub).props('schemas') as { field: string }[]).map(item => item.field)).toEqual([
       'label',
       'value',
       'color',
@@ -170,12 +126,3 @@ describe('system dictionary view', () => {
     ])
   })
 })
-
-function resolveDictionaryPermissions(): string[] {
-  return [
-    adminPermissionCodes.systemDictList,
-    adminPermissionCodes.systemDictCreate,
-    adminPermissionCodes.systemDictUpdate,
-    adminPermissionCodes.systemDictDelete,
-  ]
-}

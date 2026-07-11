@@ -15,6 +15,10 @@ export const adminPermissionCodes = {
   systemMenuDelete: 'system:menu:delete',
   systemMenuList: 'system:menu:list',
   systemMenuUpdate: 'system:menu:update',
+  systemOrganizationCreate: 'system:organization:create',
+  systemOrganizationDelete: 'system:organization:delete',
+  systemOrganizationList: 'system:organization:list',
+  systemOrganizationUpdate: 'system:organization:update',
   systemRoleAuthorize: 'system:role:authorize',
   systemRoleCreate: 'system:role:create',
   systemRoleDelete: 'system:role:delete',
@@ -22,7 +26,10 @@ export const adminPermissionCodes = {
   systemRoleUpdate: 'system:role:update',
   systemUserCreate: 'system:user:create',
   systemUserDelete: 'system:user:delete',
+  systemUserAssignRoles: 'system:user:assign-roles',
   systemUserList: 'system:user:list',
+  systemUserResetPassword: 'system:user:reset-password',
+  systemUserStatus: 'system:user:status',
   systemUserUpdate: 'system:user:update',
 } as const
 
@@ -34,6 +41,9 @@ const initialRolePermissions: Record<AdminRoleCode, string[]> = {
     adminPermissionCodes.systemUserCreate,
     adminPermissionCodes.systemUserUpdate,
     adminPermissionCodes.systemUserDelete,
+    adminPermissionCodes.systemUserStatus,
+    adminPermissionCodes.systemUserAssignRoles,
+    adminPermissionCodes.systemUserResetPassword,
     adminPermissionCodes.systemRoleList,
     adminPermissionCodes.systemRoleCreate,
     adminPermissionCodes.systemRoleUpdate,
@@ -43,6 +53,10 @@ const initialRolePermissions: Record<AdminRoleCode, string[]> = {
     adminPermissionCodes.systemMenuCreate,
     adminPermissionCodes.systemMenuUpdate,
     adminPermissionCodes.systemMenuDelete,
+    adminPermissionCodes.systemOrganizationList,
+    adminPermissionCodes.systemOrganizationCreate,
+    adminPermissionCodes.systemOrganizationUpdate,
+    adminPermissionCodes.systemOrganizationDelete,
     adminPermissionCodes.systemDictList,
     adminPermissionCodes.systemDictCreate,
     adminPermissionCodes.systemDictUpdate,
@@ -56,6 +70,8 @@ const initialRolePermissions: Record<AdminRoleCode, string[]> = {
     adminPermissionCodes.dashboardView,
     adminPermissionCodes.projectList,
     adminPermissionCodes.systemDictList,
+    adminPermissionCodes.systemDictCreate,
+    adminPermissionCodes.systemDictUpdate,
     adminPermissionCodes.examplesView,
     adminPermissionCodes.examplesDictionary,
   ],
@@ -73,7 +89,7 @@ function cloneRolePermissions(source: Record<string, string[]>): Record<string, 
   )
 }
 
-export function resolveRolePermissions(roles: AdminRoleCode[]): string[] {
+export function resolveRolePermissions(roles: string[]): string[] {
   return Array.from(new Set(roles.flatMap(role => mockRolePermissions[role] ?? [])))
 }
 

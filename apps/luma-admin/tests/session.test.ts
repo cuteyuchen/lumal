@@ -57,10 +57,13 @@ describe('admin session service', () => {
       'dashboard:view',
       'project:list',
       'system:dict:list',
+      'system:dict:create',
+      'system:dict:update',
       'examples:view',
       'examples:dictionary',
     ]))
     expect(operator.permissions).not.toContain('system:user:list')
+    expect(operator.permissions).not.toContain('system:dict:delete')
 
     await logout()
 

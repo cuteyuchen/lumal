@@ -49,14 +49,36 @@ export const adminRouteRecords: LumaMenuRecord[] = [
         },
       },
       {
+        component: 'system/organization',
+        name: 'SystemOrganization',
+        path: 'organization',
+        meta: {
+          authority: ['system:organization:list'],
+          icon: 'app:organization',
+          order: 4,
+          title: '机构管理',
+        },
+      },
+      {
         component: 'system/dict',
         name: 'SystemDict',
         path: 'dict',
         meta: {
           authority: ['system:dict:list'],
           icon: 'app:dict',
-          order: 4,
-          title: '字典管理',
+          order: 5,
+          title: '字典分类',
+        },
+      },
+      {
+        component: 'system/dict-item',
+        name: 'SystemDictItem',
+        path: 'dict-item',
+        meta: {
+          authority: ['system:dict:list'],
+          icon: 'app:dict',
+          order: 6,
+          title: '字典项',
         },
       },
       {
@@ -66,7 +88,7 @@ export const adminRouteRecords: LumaMenuRecord[] = [
         meta: {
           authority: ['system:config:view'],
           icon: 'app:settings',
-          order: 5,
+          order: 7,
           title: '系统配置',
         },
       },
@@ -76,7 +98,7 @@ export const adminRouteRecords: LumaMenuRecord[] = [
     redirect: '/system/user',
     meta: {
       icon: 'app:system',
-      order: 2,
+      order: 99,
       title: '系统管理',
     },
   },

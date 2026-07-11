@@ -99,6 +99,7 @@ export const exampleFormSchemas: SchemaFormItem[] = [
     component: 'daterange',
     field: 'availableRange',
     label: '有效范围',
+    span: 24,
   },
   {
     component: 'tree-select',

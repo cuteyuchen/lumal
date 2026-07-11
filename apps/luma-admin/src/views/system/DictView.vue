@@ -13,8 +13,7 @@ import type {
   SystemDictionaryTypeRecord,
 } from '../../api/system'
 import { LumaPage, LumaSchemaForm, LumaSchemaTable } from '@luma/core/components'
-import { getActiveDictionaryContext } from '@luma/core/dictionary'
-import { ElButton, ElDialog, ElMessage, ElMessageBox } from 'element-plus'
+import { ElAlert, ElButton, ElDialog, ElMessage, ElMessageBox } from 'element-plus'
 import { computed, onMounted, shallowRef } from 'vue'
 import {
   createDictionaryItem,
@@ -27,12 +26,15 @@ import {
   updateDictionaryType,
 } from '../../api/system'
 import { adminPermissionCodes } from '../../mock/permission'
+import { refreshAdminDictionaryCache } from '../../services/dictionary'
 
 /***********************页面状态*********************/
 const dictionaryTypes = shallowRef<SystemDictionaryTypeRecord[]>([])
 const dictionaryItems = shallowRef<SystemDictionaryItemRecord[]>([])
 const selectedTypeCode = shallowRef('')
 const loading = shallowRef(false)
+const cacheRefreshing = shallowRef(false)
+const cacheError = shallowRef('')
 
 const typeDialogVisible = shallowRef(false)
 const typeFormMode = shallowRef<SchemaFormMode>('create')
@@ -140,12 +142,21 @@ async function selectType(row: SchemaTableRow): Promise<void> {
   await loadItems()
 }
 
-async function refreshDictionaryCache(typeCode: string, reload = true): Promise<void> {
-  const store = getActiveDictionaryContext()?.store
-  store?.removeDictionary(typeCode)
+async function refreshDictionaryCache(typeCode: string, reload = true, notify = false): Promise<void> {
+  cacheRefreshing.value = true
+  cacheError.value = ''
 
-  if (reload) {
-    await store?.loadDictionary(typeCode)
+  try {
+    const refreshed = await refreshAdminDictionaryCache(typeCode, { reload })
+    if (notify) {
+      ElMessage.success(refreshed ? '字典缓存已刷新' : '当前环境未安装字典上下文，无需刷新')
+    }
+  }
+  catch (error) {
+    cacheError.value = error instanceof Error ? error.message : '字典缓存刷新失败'
+  }
+  finally {
+    cacheRefreshing.value = false
   }
 }
 
@@ -281,6 +292,14 @@ onMounted(() => {
       description="统一维护字典类型和字典项，保存后会刷新全局字典缓存。"
       :loading="loading"
     >
+      <ElAlert
+        v-if="cacheError"
+        class="luma-admin-page__operation-error"
+        :title="cacheError"
+        type="error"
+        show-icon
+        :closable="false"
+      />
       <div class="luma-dictionary-manager">
         <section class="luma-dictionary-manager__types">
           <header class="luma-dictionary-manager__header">
@@ -327,16 +346,28 @@ onMounted(() => {
               <strong>字典项</strong>
               <span>{{ selectedType?.name ?? '请选择字典类型' }}</span>
             </div>
-            <ElButton
-              v-authority="adminPermissionCodes.systemDictCreate"
-              type="primary"
-              native-type="button"
-              data-action="create-dictionary-item"
-              :disabled="!selectedTypeCode"
-              @click="openCreateItem"
-            >
-              新增字典项
-            </ElButton>
+            <div class="luma-dictionary-manager__actions">
+              <ElButton
+                v-authority="adminPermissionCodes.systemDictUpdate"
+                native-type="button"
+                data-action="refresh-dictionary-cache"
+                :disabled="!selectedTypeCode"
+                :loading="cacheRefreshing"
+                @click="refreshDictionaryCache(selectedTypeCode, true, true)"
+              >
+                刷新缓存
+              </ElButton>
+              <ElButton
+                v-authority="adminPermissionCodes.systemDictCreate"
+                type="primary"
+                native-type="button"
+                data-action="create-dictionary-item"
+                :disabled="!selectedTypeCode"
+                @click="openCreateItem"
+              >
+                新增字典项
+              </ElButton>
+            </div>
           </header>
           <LumaSchemaTable :columns="itemColumns" :rows="itemRows" row-key="id" action-width="150">
             <template #actions="{ row }">
@@ -414,6 +445,11 @@ onMounted(() => {
   margin-left: 8px;
   color: var(--el-text-color-secondary);
   font-size: 13px;
+}
+
+.luma-dictionary-manager__actions {
+  display: flex;
+  gap: 8px;
 }
 
 @media (max-width: 1100px) {

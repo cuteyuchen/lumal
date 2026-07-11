@@ -3,6 +3,13 @@ export {
   cloneTree,
 } from './clone'
 export {
+  withAlpha,
+} from './color'
+export {
+  isBlobResponse,
+  maskPhone,
+} from './display'
+export {
   downloadBlob,
   downloadFile,
 } from './download'
