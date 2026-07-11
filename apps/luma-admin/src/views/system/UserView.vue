@@ -186,6 +186,10 @@ async function confirmRemove(rows: SchemaTableRow[]): Promise<boolean> {
   }
 }
 
+const actionsConfig = {
+  confirmRemove,
+}
+
 onMounted(() => {
   void fetchSystemRoleOptions().then((options) => {
     roleOptions.value = options
@@ -202,7 +206,7 @@ onMounted(() => {
       v-model:page-size="pageSize"
       title="用户管理"
       description="维护后台账号、角色与启用状态；当前示例使用应用级可变 Mock API。"
-      :confirm-remove="confirmRemove"
+      :actions="actionsConfig"
       :data-source="dataSource"
       :form-schemas="formSchemas"
       :query="queryConfig"

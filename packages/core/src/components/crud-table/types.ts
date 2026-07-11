@@ -38,6 +38,18 @@ export type CrudFormMode = 'create' | 'edit' | 'view'
 export type CrudStateResolver<Row extends SchemaTableRow = SchemaTableRow>
   = boolean | ((row: Row, index: number) => boolean)
 
+export interface CrudRemoveConfirmOptions<Row extends SchemaTableRow = SchemaTableRow> {
+  cancelButtonText?: string
+  confirmButtonText?: string
+  message?: string | ((rows: Row[]) => string)
+  title?: string
+}
+
+export type CrudRemoveConfirm<Row extends SchemaTableRow = SchemaTableRow>
+  = | false
+    | CrudRemoveConfirmOptions<Row>
+    | ((rows: Row[]) => boolean | Promise<boolean>)
+
 export interface CrudQueryConfig {
   schemas?: SchemaFormItem[]
   columns?: number
@@ -77,6 +89,7 @@ export interface CrudActionsConfig<Row extends SchemaTableRow = SchemaTableRow> 
   viewText?: string
   editText?: string
   removeText?: string
+  confirmRemove?: CrudRemoveConfirm<Row>
 }
 
 export interface CrudDialogConfig<Row extends SchemaTableRow = SchemaTableRow> {

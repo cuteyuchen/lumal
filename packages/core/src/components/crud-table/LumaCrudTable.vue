@@ -55,7 +55,6 @@ const props = withDefaults(defineProps<CrudTableProps>(), {
   createText: '新增',
   batchDeleteText: '批量删除',
   selection: false,
-  confirmRemove: () => true,
 })
 
 const emit = defineEmits<{
@@ -216,7 +215,31 @@ async function handleFormSubmit(model: SchemaFormModel): Promise<void> {
 }
 
 async function confirmRows(rows: SchemaTableRow[]): Promise<boolean> {
-  return props.confirmRemove(rows)
+  const confirmRemove = props.actions?.confirmRemove ?? props.confirmRemove
+
+  if (confirmRemove === false) {
+    return true
+  }
+
+  if (typeof confirmRemove === 'function') {
+    return confirmRemove(rows)
+  }
+
+  const message = typeof confirmRemove?.message === 'function'
+    ? confirmRemove.message(rows)
+    : confirmRemove?.message ?? `确定删除选中的 ${rows.length} 条数据吗？`
+
+  try {
+    await ElMessageBox.confirm(message, confirmRemove?.title ?? '删除确认', {
+      cancelButtonText: confirmRemove?.cancelButtonText ?? '取消',
+      confirmButtonText: confirmRemove?.confirmButtonText ?? '删除',
+      type: 'warning',
+    })
+    return true
+  }
+  catch {
+    return false
+  }
 }
 
 async function runMutation(task: () => Promise<unknown>): Promise<boolean> {

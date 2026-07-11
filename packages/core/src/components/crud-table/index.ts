@@ -8,6 +8,8 @@ export type {
   CrudFormMode,
   CrudPaginationConfig,
   CrudQueryConfig,
+  CrudRemoveConfirm,
+  CrudRemoveConfirmOptions,
   CrudStateResolver,
   CrudTableConfig,
   CrudTablePageChangePayload,

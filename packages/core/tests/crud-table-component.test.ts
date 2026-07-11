@@ -360,6 +360,9 @@ describe('luma crud table', () => {
             label: '名称',
           },
         ],
+        actions: {
+          confirmRemove: false,
+        },
         dataSource,
         formSchemas: [
           {
@@ -400,6 +403,35 @@ describe('luma crud table', () => {
     await wrapper.find('[data-action="batch-remove"]').trigger('click')
     await flushPromises()
     expect(dataSource.removeMany).toHaveBeenCalledWith([row])
+  })
+
+  it('删除确认优先使用 actions 配置并可阻止数据变更', async () => {
+    const row = { id: 'row-1', name: 'Luma' }
+    const confirmRemove = vi.fn().mockResolvedValue(false)
+    const remove = vi.fn().mockResolvedValue({})
+    const legacyConfirmRemove = vi.fn().mockResolvedValue(true)
+    const wrapper = mount(LumaCrudTable, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        actions: { confirmRemove },
+        columns: [{ field: 'name', label: '名称' }],
+        confirmRemove: legacyConfirmRemove,
+        dataSource: {
+          fetch: vi.fn().mockResolvedValue({ items: [row], total: 1 }),
+          remove,
+        },
+      },
+    })
+
+    await flushPromises()
+    const api = wrapper.vm as unknown as {
+      removeRow: (row: Record<string, unknown>) => Promise<void>
+    }
+    await api.removeRow(row)
+
+    expect(confirmRemove).toHaveBeenCalledWith([row])
+    expect(legacyConfirmRemove).not.toHaveBeenCalled()
+    expect(remove).not.toHaveBeenCalled()
   })
 
   it('支持配置对象、查询折叠、列设置和导出事件', async () => {

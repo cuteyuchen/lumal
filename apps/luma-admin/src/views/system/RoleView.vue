@@ -188,6 +188,10 @@ async function confirmRemove(rows: SchemaTableRow[]): Promise<boolean> {
   }
 }
 
+const actionsConfig = {
+  confirmRemove,
+}
+
 /***********************角色授权*********************/
 function collectPermissionCodes(nodes: SystemPermissionTreeNode[], result = new Set<string>()): Set<string> {
   nodes.forEach((node) => {
@@ -271,7 +275,7 @@ onMounted(() => {
       v-model:page-size="pageSize"
       title="角色管理"
       description="维护角色基础信息并通过权限树分配菜单和按钮权限。"
-      :confirm-remove="confirmRemove"
+      :actions="actionsConfig"
       :data-source="dataSource"
       :form-schemas="formSchemas"
       :query="queryConfig"
