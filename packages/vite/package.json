@@ -1,0 +1,36 @@
+{
+  "name": "@luma/vite",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Luma Vite component resolver, workspace aliases and optional devtools helpers.",
+  "license": "MIT",
+  "keywords": [
+    "luma",
+    "vite",
+    "vue",
+    "resolver"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/src/index.d.ts",
+  "files": [
+    "README.md",
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build --config vite.config.ts && tsc -p tsconfig.json --emitDeclarationOnly && node ../../scripts/clean-package-dist.mjs dist",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --config ../../vitest.config.ts tests"
+  }
+}

@@ -173,6 +173,8 @@ importers:
         specifier: ^3.5.0
         version: 3.5.39(typescript@6.0.3)
 
+  packages/vite: {}
+
 packages:
 
   '@acemir/cssom@0.9.31':

@@ -11,6 +11,7 @@ const packageDirs = {
   core: join(rootDir, 'packages/core'),
   charts: join(rootDir, 'packages/charts'),
   vbenCompat: join(rootDir, 'packages/vben-compat'),
+  vite: join(rootDir, 'packages/vite'),
 }
 
 const oldNamePattern = /guiren|gr-framework|GrFramework|GSchemaForm|GSchemaTable|GCrudTable|GPage|GPagination/
@@ -110,6 +111,7 @@ const iconsPackage = checkPublishPackage('@luma/icons', packageDirs.icons)
 const corePackage = checkPublishPackage('@luma/core', packageDirs.core)
 const chartsPackage = checkPublishPackage('@luma/charts', packageDirs.charts)
 const compatPackage = checkPublishPackage('@luma/vben-compat', packageDirs.vbenCompat)
+const vitePackage = checkPublishPackage('@luma/vite', packageDirs.vite)
 const createPackage = checkPublishPackage('create-luma-admin', packageDirs.createLumaAdmin)
 
 assert(corePackage.files?.includes('theme-chalk'), '@luma/core files 未包含 theme-chalk')
@@ -138,6 +140,11 @@ const chartsAllDependencies = getDependencyNames(chartsPackage, [
   'peerDependencies',
   'optionalDependencies',
 ])
+const viteAllDependencies = getDependencyNames(vitePackage, [
+  'dependencies',
+  'peerDependencies',
+  'optionalDependencies',
+])
 
 assert(!iconsAllDependencies.has('@luma/core'), '@luma/icons 不能依赖 @luma/core')
 assert(!iconsAllDependencies.has('@luma/vben-compat'), '@luma/icons 不能依赖 @luma/vben-compat')
@@ -154,6 +161,7 @@ assert(!compatAllDependencies.has('element-plus'), '@luma/vben-compat 不应直�
 assert(hasDependency(chartsPackage, 'peerDependencies', 'echarts'), '@luma/charts 应把 echarts 放在 peerDependencies')
 assert(!hasDependency(chartsPackage, 'dependencies', 'echarts'), '@luma/charts 不能把 echarts 放在 dependencies')
 assert(!chartsAllDependencies.has('@luma/core'), '@luma/charts 不应依赖 @luma/core')
+assert(viteAllDependencies.size === 0, '@luma/vite 不应引入强制运行时依赖')
 
 for (const dependencyName of coreAllDependencies) {
   assert(!/^@intlify\//.test(dependencyName), `@luma/core 不能默认依赖 ${dependencyName}`)
@@ -175,7 +183,7 @@ for (const match of coreForbiddenMatches) {
 
 const appSourceAliasMatches = findTextMatches(
   join(rootDir, 'apps'),
-  /\.\.\/\.\.\/packages|packages\/(?:icons|core|vben-compat)\/src|packages\\(?:icons|core|vben-compat)\\src/,
+  /\.\.\/\.\.\/packages|packages\/(?:icons|core|vben-compat|vite)\/src|packages\\(?:icons|core|vben-compat|vite)\\src/,
 )
 
 for (const match of appSourceAliasMatches) {

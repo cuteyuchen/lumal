@@ -11,7 +11,9 @@ const defaultRegistry = 'https://registry.npmjs.org'
 const publishPackageJsonPaths = [
   'packages/icons/package.json',
   'packages/core/package.json',
+  'packages/charts/package.json',
   'packages/vben-compat/package.json',
+  'packages/vite/package.json',
   'packages/create-luma-admin/package.json',
 ]
 
