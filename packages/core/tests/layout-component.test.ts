@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import { defineComponent } from 'vue'
+import { createMemoryHistory, createRouter } from 'vue-router'
 import {
   LumaContent,
   LumaHeader,
@@ -165,6 +166,52 @@ describe('luma layout', () => {
     expect(wrapper.findComponent(LumaTopNav).props('mode')).toBe('flat')
     expect(wrapper.find('[data-menu-path="/system"]').exists()).toBe(true)
     expect(wrapper.findComponent(LumaSidebar).props('menus')).toEqual(menus[1]!.children)
+  })
+
+  it('路由驱动模式会解析访问标签、限制数量并在关闭后进入 fallback', async () => {
+    const originalScrollIntoView = Element.prototype.scrollIntoView
+    Element.prototype.scrollIntoView = vi.fn()
+    const RouteView = defineComponent({ template: '<div />' })
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { component: RouteView, meta: { affixTab: true, title: '工作台' }, path: '/dashboard' },
+        { component: RouteView, meta: { title: '用户管理' }, path: '/system/user' },
+        { component: RouteView, meta: { title: '角色管理' }, path: '/system/role' },
+      ],
+    })
+
+    await router.push('/dashboard')
+    await router.isReady()
+
+    const wrapper = mount(LumaLayout, {
+      global: {
+        plugins: [router],
+        stubs: elementPlusStubs,
+      },
+      props: {
+        fixedTabs: [{ path: '/dashboard', title: '工作台' }],
+        routeDriven: true,
+        tabFallbackPath: '/dashboard',
+        tabMaxCount: 2,
+      },
+    })
+
+    await router.push('/system/user')
+    await wrapper.vm.$nextTick()
+    await router.push('/system/role')
+    await wrapper.vm.$nextTick()
+
+    const tabLabels = wrapper.findAll('[role="tab"]').map(tab => tab.text())
+    expect(tabLabels).toEqual(['工作台', '角色管理'])
+
+    await wrapper.find('[aria-label="关闭角色管理"]').trigger('click')
+
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/dashboard'))
+    expect(wrapper.emitted('tabRemove')?.[0]).toEqual(['/system/role'])
+
+    wrapper.unmount()
+    Element.prototype.scrollIntoView = originalScrollIntoView
   })
 })
 

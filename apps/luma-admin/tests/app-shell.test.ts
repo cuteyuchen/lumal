@@ -17,11 +17,15 @@ const LayoutStub = defineComponent({
     activeTopMenuPath: String,
     headerMenuAlign: String,
     headerMenuMaxWidth: [Number, String],
+    fixedTabs: Array,
     menus: Array,
+    routeDriven: Boolean,
+    routeTabResolver: Function,
     showTabIcons: Boolean,
     showTabMaximize: Boolean,
     sidebarWidth: String,
-    tabs: Array,
+    tabFallbackPath: String,
+    tabMaxCount: Number,
     tabsVisible: Boolean,
     title: String,
     topMenus: Array,
@@ -37,8 +41,12 @@ const LayoutStub = defineComponent({
       :data-show-tab-maximize="String(showTabMaximize)"
       :data-sidebar-width="sidebarWidth"
       :data-title="title"
-      :data-tab-count="tabs?.length ?? 0"
-      :data-tab-paths="tabs?.map(tab => tab.path).join(',')"
+      :data-fixed-tab-count="fixedTabs?.length ?? 0"
+      :data-fixed-tab-paths="fixedTabs?.map(tab => tab.path).join(',')"
+      :data-route-driven="String(routeDriven)"
+      :data-route-tab-resolver="String(typeof routeTabResolver === 'function')"
+      :data-tab-fallback-path="tabFallbackPath"
+      :data-tab-max-count="tabMaxCount"
       :data-tabs-visible="String(tabsVisible)"
       :data-top-menu-mode="topMenuMode"
       :data-top-menu-count="topMenus?.length ?? 0"
@@ -120,8 +128,12 @@ describe('app shell', () => {
     expect(wrapper.find('.layout-stub').attributes('data-show-tab-icons')).toBe('true')
     expect(wrapper.find('.layout-stub').attributes('data-show-tab-maximize')).toBe('true')
     expect(wrapper.find('.layout-stub').attributes('data-sidebar-width')).toBe('248px')
-    expect(wrapper.find('.layout-stub').attributes('data-tab-count')).toBe('2')
-    expect(wrapper.find('.layout-stub').attributes('data-tab-paths')).toBe('/dashboard,/examples/overview')
+    expect(wrapper.find('.layout-stub').attributes('data-fixed-tab-count')).toBe('1')
+    expect(wrapper.find('.layout-stub').attributes('data-fixed-tab-paths')).toBe('/dashboard')
+    expect(wrapper.find('.layout-stub').attributes('data-route-driven')).toBe('true')
+    expect(wrapper.find('.layout-stub').attributes('data-route-tab-resolver')).toBe('true')
+    expect(wrapper.find('.layout-stub').attributes('data-tab-fallback-path')).toBe('/dashboard')
+    expect(wrapper.find('.layout-stub').attributes('data-tab-max-count')).toBe('8')
     expect(wrapper.find('.layout-stub').attributes('data-top-menu-mode')).toBe('flat')
     expect(wrapper.find('.layout-stub').attributes('data-tabs-visible')).toBe('true')
     expect(wrapper.find('[data-action="open-settings"]').exists()).toBe(true)
@@ -137,9 +149,7 @@ describe('app shell', () => {
 
     await router.push('/system/user')
     await wrapper.vm.$nextTick()
-
-    expect(wrapper.find('.layout-stub').attributes('data-tab-count')).toBe('3')
-    expect(wrapper.find('.layout-stub').attributes('data-tab-paths')).toBe('/dashboard,/examples/overview,/system/user')
+    expect(wrapper.find('.layout-stub').attributes('data-route-driven')).toBe('true')
   })
 
   it('设置抽屉更新布局偏好后会重新拆分菜单', async () => {

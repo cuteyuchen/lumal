@@ -1,13 +1,28 @@
 <script setup lang="ts">
 import type { ComponentPublicInstance } from 'vue'
-import type { LumaLayoutMenuItem, LumaLayoutTabItem } from './types'
+import type { RouteLocationNormalizedLoaded } from 'vue-router'
+import type {
+  LumaLayoutMenuItem,
+  LumaLayoutRouteTabFilter,
+  LumaLayoutRouteTabResolver,
+  LumaLayoutTabItem,
+} from './types'
 import { ElContainer } from 'element-plus'
-import { computed, onBeforeUnmount, onMounted, shallowRef, useTemplateRef } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from 'vue'
+import { routeLocationKey, routerKey } from 'vue-router'
 import LumaContent from './LumaContent.vue'
 import LumaHeader from './LumaHeader.vue'
 import LumaSidebar from './LumaSidebar.vue'
 import LumaTabs from './LumaTabs.vue'
 import LumaTopNav from './LumaTopNav.vue'
+import {
+  appendTab,
+  closeAllTabs,
+  closeOtherTabs,
+  closeTab,
+  closeTabsLeft,
+  closeTabsRight,
+} from './state/tab-strategy'
 
 /***********************属性定义*********************/
 const props = withDefaults(defineProps<{
@@ -23,6 +38,12 @@ const props = withDefaults(defineProps<{
   showTabIcons?: boolean
   showTabMaximize?: boolean
   tabsVisible?: boolean
+  routeDriven?: boolean
+  routeTabFilter?: LumaLayoutRouteTabFilter
+  routeTabResolver?: LumaLayoutRouteTabResolver
+  tabFallbackPath?: string
+  tabMaxCount?: number
+  fixedTabs?: LumaLayoutTabItem[]
   topMenuMode?: 'flat' | 'tree'
   sidebarWidth?: string
   collapsedSidebarWidth?: string
@@ -39,6 +60,10 @@ const props = withDefaults(defineProps<{
   sidebarWidth: '220px',
   showTabIcons: true,
   showTabMaximize: true,
+  fixedTabs: () => [],
+  routeDriven: false,
+  tabFallbackPath: '',
+  tabMaxCount: 0,
   tabs: () => [],
   tabsVisible: true,
   topMenuMode: 'tree',
@@ -59,22 +84,80 @@ const emit = defineEmits<{
 
 const collapsed = defineModel<boolean>('collapsed', { default: false })
 const activeTabPathModel = defineModel<string>('activeTabPath')
+const injectedRoute = inject(routeLocationKey, undefined)
+const injectedRouter = inject(routerKey, undefined)
 
 /***********************模板引用*********************/
 const layoutRef = useTemplateRef<ComponentPublicInstance>('layoutRef')
 const isMobileViewport = shallowRef(false)
 const mobileMenuOpen = shallowRef(false)
+const routeTabs = shallowRef<LumaLayoutTabItem[]>([])
 let mobileMediaQuery: MediaQueryList | undefined
 
 /***********************布局状态*********************/
+function defaultRouteTabFilter(route: RouteLocationNormalizedLoaded): boolean {
+  return route.meta.layout !== 'public' && route.meta.hideInTab !== true && Boolean(route.meta.title)
+}
+
+function defaultRouteTabResolver(route: RouteLocationNormalizedLoaded): LumaLayoutTabItem | undefined {
+  const title = typeof route.meta.title === 'string' ? route.meta.title : undefined
+  if (!title) {
+    return undefined
+  }
+
+  return {
+    closable: route.meta.affixTab !== true,
+    icon: typeof route.meta.icon === 'string' ? route.meta.icon : undefined,
+    path: route.path,
+    title,
+  }
+}
+
+function normalizeFixedTabs(): LumaLayoutTabItem[] {
+  return props.fixedTabs.map(tab => ({ ...tab, closable: false }))
+}
+
+function syncRouteTabs(route: RouteLocationNormalizedLoaded): void {
+  if (!props.routeDriven || !(props.routeTabFilter ?? defaultRouteTabFilter)(route)) {
+    return
+  }
+
+  const tab = (props.routeTabResolver ?? defaultRouteTabResolver)(route)
+  if (!tab) {
+    return
+  }
+
+  routeTabs.value = appendTab(
+    [...normalizeFixedTabs(), ...routeTabs.value.filter(item => !props.fixedTabs.some(tab => tab.path === item.path))],
+    tab,
+    { maxCount: props.tabMaxCount },
+  )
+}
+
+function navigateRoute(path: string): void {
+  if (props.routeDriven && injectedRouter && path && path !== injectedRoute?.path) {
+    void injectedRouter.push(path)
+  }
+}
+
+function resolveFallbackPath(tabs: LumaLayoutTabItem[]): string {
+  return props.tabFallbackPath || tabs[0]?.path || ''
+}
+
 const currentActiveTabPath = computed({
-  get: () => activeTabPathModel.value ?? props.activeTabPath,
+  get: () => props.routeDriven ? injectedRoute?.path ?? props.activeTabPath : activeTabPathModel.value ?? props.activeTabPath,
   set: (value) => {
-    activeTabPathModel.value = value
+    if (props.routeDriven) {
+      navigateRoute(value)
+    }
+    else {
+      activeTabPathModel.value = value
+    }
   },
 })
 
-const hasTabs = computed(() => props.tabs.length > 0)
+const currentTabs = computed(() => props.routeDriven ? routeTabs.value : props.tabs)
+const hasTabs = computed(() => currentTabs.value.length > 0)
 const hasSidebar = computed(() => props.menus.length > 0)
 const hasTopMenus = computed(() => props.topMenus.length > 0)
 const mobileMenus = computed(() => hasTopMenus.value ? props.topMenus : props.menus)
@@ -102,6 +185,37 @@ onBeforeUnmount(() => {
   mobileMediaQuery?.removeEventListener?.('change', syncMobileViewport)
 })
 
+watch(
+  () => [props.routeDriven, props.tabMaxCount, props.fixedTabs] as const,
+  () => {
+    if (!props.routeDriven) {
+      routeTabs.value = []
+      return
+    }
+
+    const fixedTabs = normalizeFixedTabs()
+    const fixedPaths = new Set(fixedTabs.map(tab => tab.path))
+    let nextTabs = [...fixedTabs]
+
+    for (const tab of routeTabs.value.filter(tab => !fixedPaths.has(tab.path))) {
+      nextTabs = appendTab(nextTabs, tab, { maxCount: props.tabMaxCount })
+    }
+
+    routeTabs.value = nextTabs
+  },
+  { deep: true, immediate: true },
+)
+
+watch(
+  () => injectedRoute?.fullPath,
+  () => {
+    if (injectedRoute) {
+      syncRouteTabs(injectedRoute)
+    }
+  },
+  { immediate: true },
+)
+
 /***********************事件处理*********************/
 function handleToggleCollapse(): void {
   if (isMobileViewport.value) {
@@ -126,13 +240,57 @@ function handleTabChange(path: string): void {
 }
 
 function handleTabRemove(path: string): void {
+  if (props.routeDriven) {
+    const nextTabs = closeTab(routeTabs.value, path)
+    routeTabs.value = nextTabs
+    if (currentActiveTabPath.value === path) {
+      navigateRoute(resolveFallbackPath(nextTabs))
+    }
+  }
   emit('tabRemove', path)
+}
+
+function handleTabCloseLeft(path: string): void {
+  if (props.routeDriven) {
+    routeTabs.value = closeTabsLeft(routeTabs.value, path)
+    navigateRoute(path)
+  }
+  emit('tabCloseLeft', path)
+}
+
+function handleTabCloseRight(path: string): void {
+  if (props.routeDriven) {
+    routeTabs.value = closeTabsRight(routeTabs.value, path)
+    navigateRoute(path)
+  }
+  emit('tabCloseRight', path)
+}
+
+function handleTabCloseOthers(path: string): void {
+  if (props.routeDriven) {
+    routeTabs.value = closeOtherTabs(routeTabs.value, path)
+    navigateRoute(path)
+  }
+  emit('tabCloseOthers', path)
+}
+
+function handleTabCloseAll(): void {
+  if (props.routeDriven) {
+    routeTabs.value = closeAllTabs(routeTabs.value)
+    navigateRoute(resolveFallbackPath(routeTabs.value))
+  }
+  emit('tabCloseAll')
 }
 
 /***********************公开方法*********************/
 defineExpose({
   getLayoutElement: () => layoutRef.value?.$el as HTMLElement | undefined,
   getLayoutInstance: () => layoutRef.value,
+  getTabs: () => [...currentTabs.value],
+  resetTabs: () => {
+    routeTabs.value = normalizeFixedTabs()
+    navigateRoute(resolveFallbackPath(routeTabs.value))
+  },
 })
 </script>
 
@@ -214,14 +372,14 @@ defineExpose({
         <LumaTabs
           v-if="hasTabs && tabsVisible"
           v-model:active-path="currentActiveTabPath"
-          :tabs="tabs"
+          :tabs="currentTabs"
           :show-icon="showTabIcons"
           :show-maximize="showTabMaximize"
           @change="handleTabChange"
-          @close-all="emit('tabCloseAll')"
-          @close-left="emit('tabCloseLeft', $event)"
-          @close-others="emit('tabCloseOthers', $event)"
-          @close-right="emit('tabCloseRight', $event)"
+          @close-all="handleTabCloseAll"
+          @close-left="handleTabCloseLeft"
+          @close-others="handleTabCloseOthers"
+          @close-right="handleTabCloseRight"
           @refresh="emit('tabRefresh', $event)"
           @remove="handleTabRemove"
         />

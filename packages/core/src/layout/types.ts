@@ -1,3 +1,5 @@
+import type { RouteLocationNormalizedLoaded } from 'vue-router'
+
 export interface LumaLayoutMenuItem {
   path: string
   title: string
@@ -14,3 +16,9 @@ export interface LumaLayoutTabItem {
   closable?: boolean
   icon?: string
 }
+
+export type LumaLayoutRouteTabFilter = (route: RouteLocationNormalizedLoaded) => boolean
+
+export type LumaLayoutRouteTabResolver = (
+  route: RouteLocationNormalizedLoaded,
+) => LumaLayoutTabItem | undefined

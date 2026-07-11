@@ -1,13 +1,8 @@
 <script setup lang="ts">
 import type { LumaLayoutTabItem } from '@luma/core/layout'
 import type { LumaPreferences } from '@luma/core/theme'
+import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import {
-  appendTab,
-  closeAllTabs,
-  closeOtherTabs,
-  closeTab,
-  closeTabsLeft,
-  closeTabsRight,
   findMenuItemByPath,
   LumaLayout,
   LumaRouterView,
@@ -39,7 +34,6 @@ const title = adminAppName
 const preferences = adminPreferences
 const settingsVisible = adminSettingsVisible
 const resolvedThemeMode = adminResolvedThemeMode
-const visitedTabs = shallowRef<LumaLayoutTabItem[]>([])
 const routeRefreshKey = shallowRef(0)
 
 /***********************路由状态*********************/
@@ -66,7 +60,7 @@ const layoutMenus = computed(() => splitMenusByLayout({
 }))
 const menus = computed(() => preferences.value.sidebar.enable ? layoutMenus.value.sidebarMenus : [])
 const topMenus = computed(() => layoutMenus.value.topMenus)
-const tabs = computed(() => preferences.value.tabbar.enable ? visitedTabs.value : [])
+const fixedTabs = computed<LumaLayoutTabItem[]>(() => createAdminTabs(undefined, router))
 const topMenuMode = computed(() => preferences.value.app.layout === 'mixed-nav' ? 'flat' : 'tree')
 const routeViewKey = computed(() => `${route.fullPath}:${routeRefreshKey.value}`)
 const sidebarWidth = computed(() => `${preferences.value.sidebar.width}px`)
@@ -81,33 +75,8 @@ const activePath = computed({
   },
 })
 
-watch(
-  () => route.path,
-  (path) => {
-    if (route.meta.layout === 'public') {
-      return
-    }
-
-    const routeTabs = createAdminTabs(path, router)
-    const currentTab = routeTabs.find(tab => tab.path === path)
-
-    if (visitedTabs.value.length === 0) {
-      visitedTabs.value = routeTabs
-      return
-    }
-
-    if (currentTab) {
-      visitedTabs.value = appendTab(visitedTabs.value, currentTab, {
-        maxCount: preferences.value.tabbar.maxCount,
-      })
-    }
-  },
-  { immediate: true },
-)
-
 watch(currentUser, async (user) => {
   if (!user) {
-    visitedTabs.value = []
     return
   }
 
@@ -160,51 +129,24 @@ function handleTabChange(path: string): void {
   activePath.value = path
 }
 
-function handleTabRemove(path: string): void {
-  const currentTabs = visitedTabs.value
-  const closingIndex = currentTabs.findIndex(tab => tab.path === path)
-  const nextTabs = closeTab(currentTabs, path)
-
-  if (nextTabs.length === currentTabs.length) {
-    return
+function resolveAdminRouteTab(currentRoute: RouteLocationNormalizedLoaded): LumaLayoutTabItem | undefined {
+  if (currentRoute.meta.layout === 'public' || currentRoute.meta.hideInTab === true) {
+    return undefined
   }
 
-  visitedTabs.value = nextTabs
+  const menu = findMenuItemByPath(allMenus.value, currentRoute.path)
+  const title = menu?.title ?? (typeof currentRoute.meta.title === 'string' ? currentRoute.meta.title : undefined)
 
-  if (route.path === path) {
-    const nextTab = nextTabs[Math.min(closingIndex, nextTabs.length - 1)] ?? nextTabs.at(-1)
-
-    if (nextTab) {
-      activePath.value = nextTab.path
-    }
+  if (!title) {
+    return undefined
   }
-}
 
-function activateAfterBulkClose(nextTabs: LumaLayoutTabItem[], preferredPath?: string): void {
-  visitedTabs.value = nextTabs
-  const nextPath = preferredPath && nextTabs.some(tab => tab.path === preferredPath)
-    ? preferredPath
-    : nextTabs.at(-1)?.path ?? '/dashboard'
-
-  if (route.path !== nextPath) {
-    activePath.value = nextPath
+  return {
+    closable: !['/403', '/404'].includes(currentRoute.path) && currentRoute.meta.affixTab !== true,
+    icon: menu?.icon ?? (typeof currentRoute.meta.icon === 'string' ? currentRoute.meta.icon : undefined),
+    path: currentRoute.path,
+    title,
   }
-}
-
-function handleTabCloseLeft(path: string): void {
-  activateAfterBulkClose(closeTabsLeft(visitedTabs.value, path), path)
-}
-
-function handleTabCloseRight(path: string): void {
-  activateAfterBulkClose(closeTabsRight(visitedTabs.value, path), path)
-}
-
-function handleTabCloseOthers(path: string): void {
-  activateAfterBulkClose(closeOtherTabs(visitedTabs.value, path), path)
-}
-
-function handleTabCloseAll(): void {
-  activateAfterBulkClose(closeAllTabs(visitedTabs.value))
 }
 
 async function handleTabRefresh(path: string): Promise<void> {
@@ -240,7 +182,11 @@ async function handleTabRefresh(path: string): Promise<void> {
     :header-menu-max-width="preferences.header.menuMaxWidth"
     :show-tab-icons="preferences.tabbar.showIcon"
     :show-tab-maximize="preferences.tabbar.showMaximize"
-    :tabs="tabs"
+    route-driven
+    :fixed-tabs="fixedTabs"
+    :route-tab-resolver="resolveAdminRouteTab"
+    tab-fallback-path="/dashboard"
+    :tab-max-count="preferences.tabbar.maxCount"
     :tabs-visible="preferences.tabbar.enable"
     :active-menu-path="activePath"
     :active-top-menu-path="activeTopMenuPath"
@@ -248,12 +194,7 @@ async function handleTabRefresh(path: string): Promise<void> {
     @menu-select="handleMenuSelect"
     @top-menu-select="handleTopMenuSelect"
     @tab-change="handleTabChange"
-    @tab-close-all="handleTabCloseAll"
-    @tab-close-left="handleTabCloseLeft"
-    @tab-close-others="handleTabCloseOthers"
-    @tab-close-right="handleTabCloseRight"
     @tab-refresh="handleTabRefresh"
-    @tab-remove="handleTabRemove"
   >
     <template #headerActions>
       <AppHeaderActions

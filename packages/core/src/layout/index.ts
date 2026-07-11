@@ -30,5 +30,7 @@ export type {
 } from './state/tab-strategy'
 export type {
   LumaLayoutMenuItem,
+  LumaLayoutRouteTabFilter,
+  LumaLayoutRouteTabResolver,
   LumaLayoutTabItem,
 } from './types'
