@@ -123,11 +123,14 @@ export default defineConfig({
 function createMainTs(): string {
   return `import type { IconDefinition } from '@luma/icons'
 import { createLumaAdmin } from '@luma/core'
+import ElementPlus from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import App from './App.vue'
 import { router } from './router'
 import '@luma/core/theme-chalk/index.scss'
 import '@luma/core/style.css'
 import '@luma/icons/style.css'
+import 'element-plus/dist/index.css'
 import './styles.scss'
 
 /***********************本地图标定义*********************/
@@ -141,38 +144,69 @@ const localIcons: IconDefinition[] = [
 ]
 
 /***********************应用启动*********************/
-createLumaAdmin({
+const framework = createLumaAdmin({
+  elementPlus: {
+    plugin: ElementPlus,
+    options: { locale: zhCn },
+  },
   rootComponent: App,
   router,
   icons: {
     localSvg: localIcons,
   },
-}).mount('#app')
+})
+
+await framework.mount('#app')
 `
 }
 
 function createAppVue(): string {
   return `<script setup lang="ts">
-import type { LumaLayoutMenuItem, LumaLayoutTabItem } from '@luma/core/layout'
-import { LumaLayout, LumaRouterView } from '@luma/core/layout'
+import type { LumaPreferences } from '@luma/core/theme'
+import {
+  LumaLayout,
+  LumaRouterView,
+  resolveActiveTopMenuPath,
+  splitMenusByLayout,
+} from '@luma/core/layout'
 import { computed, shallowRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AppHeaderActions from './components/app/AppHeaderActions.vue'
+import AppSettingsDrawer from './components/app/AppSettingsDrawer.vue'
+import { createAdminSidebarMenus, createAdminTabs } from './router'
 import {
-  createAdminSidebarMenus,
-  createAdminTabs,
-} from './router'
+  adminPreferenceDefaults,
+  adminPreferences,
+  adminResolvedThemeMode,
+  patchAdminPreferences,
+} from './services/preferences'
+import { currentUser, logout } from './services/session'
 
 /***********************页面状态*********************/
 const title = 'Luma Admin'
-const collapsed = shallowRef(false)
+const settingsVisible = shallowRef(false)
 
 /***********************路由状态*********************/
 const route = useRoute()
 const router = useRouter()
+const isPublicLayout = computed(() => route.meta.layout === 'public')
+const collapsed = computed({
+  get: () => adminPreferences.value.sidebar.collapsed,
+  set: collapsed => patchAdminPreferences({ sidebar: { collapsed } }),
+})
 
-const menus = computed<LumaLayoutMenuItem[]>(() => createAdminSidebarMenus())
-const tabs = computed<LumaLayoutTabItem[]>(() => createAdminTabs(route.path))
+const allMenus = computed(() => createAdminSidebarMenus())
+const activeTopMenuPath = computed(() => resolveActiveTopMenuPath(allMenus.value, route.path))
+const layoutMenus = computed(() => splitMenusByLayout({
+  activeTopMenuPath: activeTopMenuPath.value,
+  layout: adminPreferences.value.app.layout,
+  menus: allMenus.value,
+}))
+const menus = computed(() => adminPreferences.value.sidebar.enable ? layoutMenus.value.sidebarMenus : [])
+const topMenus = computed(() => layoutMenus.value.topMenus)
+const tabs = computed(() => adminPreferences.value.tabbar.enable ? createAdminTabs(route.path) : [])
 const routeViewKey = computed(() => route.fullPath)
+const topMenuMode = computed(() => adminPreferences.value.app.layout === 'mixed-nav' ? 'flat' : 'tree')
 const activePath = computed({
   get: () => route.path,
   set: (path: string) => {
@@ -190,33 +224,83 @@ function handleMenuSelect(path: string): void {
 function handleTabChange(path: string): void {
   activePath.value = path
 }
+
+function handlePreferencesChange(preferences: LumaPreferences): void {
+  patchAdminPreferences(preferences)
+}
+
+function toggleTheme(): void {
+  patchAdminPreferences({
+    theme: {
+      mode: adminResolvedThemeMode.value === 'dark' ? 'light' : 'dark',
+    },
+  })
+}
+
+async function handleLogout(): Promise<void> {
+  logout()
+  await router.replace('/login')
+}
 </script>
 
 <template>
+  <LumaRouterView
+    v-if="isPublicLayout"
+    :view-key="routeViewKey"
+    transition
+    transition-name="fade"
+  />
+
   <LumaLayout
+    v-else
     v-model:collapsed="collapsed"
     v-model:active-tab-path="activePath"
     :title="title"
     :menus="menus"
+    :top-menus="topMenus"
     :tabs="tabs"
     :active-menu-path="activePath"
+    :active-top-menu-path="activeTopMenuPath"
+    :header-menu-align="adminPreferences.header.menuAlign"
+    :header-menu-max-width="adminPreferences.header.menuMaxWidth"
+    :show-tab-icons="adminPreferences.tabbar.showIcon"
+    :show-tab-maximize="adminPreferences.tabbar.showMaximize"
+    :sidebar-width="\`\${adminPreferences.sidebar.width}px\`"
+    :tabs-visible="adminPreferences.tabbar.enable"
+    :top-menu-mode="topMenuMode"
     @menu-select="handleMenuSelect"
+    @top-menu-select="handleMenuSelect"
     @tab-change="handleTabChange"
   >
     <template #headerActions>
-      <span class="luma-admin-home__status">Mini</span>
+      <AppHeaderActions
+        :resolved-theme-mode="adminResolvedThemeMode"
+        :user-name="currentUser?.name"
+        @logout="handleLogout"
+        @open-settings="settingsVisible = true"
+        @toggle-theme="toggleTheme"
+      />
     </template>
 
     <LumaRouterView
       :view-key="routeViewKey"
       :progress="true"
       :loading="true"
-      :cache="true"
+      :cache="adminPreferences.tabbar.cache"
       :cache-max="8"
-      transition
-      transition-name="fade-side"
+      :transition="adminPreferences.transition.enable"
+      :transition-name="adminPreferences.transition.name"
     />
   </LumaLayout>
+
+  <AppSettingsDrawer
+    v-model:visible="settingsVisible"
+    :defaults="adminPreferenceDefaults"
+    :preferences="adminPreferences"
+    @change="handlePreferencesChange"
+    @reset="handlePreferencesChange"
+    @update:preferences="handlePreferencesChange"
+  />
 </template>
 `
 }
@@ -225,7 +309,7 @@ function createRouterTs(): string {
   return `import type { LumaLayoutTabItem } from '@luma/core/layout'
 import type { LumaMenuRecord, SidebarMenuItem } from '@luma/core/router'
 import type { Router, RouteRecordRaw, RouterHistory } from 'vue-router'
-import { createPermissionStore, setupPermissionGuard } from '@luma/core/permission'
+import { setupPermissionGuard } from '@luma/core/permission'
 import {
   createRouteRecords,
   createSidebarMenus,
@@ -233,15 +317,13 @@ import {
   normalizeMenuRecords,
 } from '@luma/core/router'
 import { createRouter, createWebHashHistory } from 'vue-router'
+import { permissionStore } from '../services/access'
+import { isAuthenticated } from '../services/session'
+import LoginView from '../views/auth/LoginView.vue'
 import DashboardView from '../views/dashboard/DashboardView.vue'
 import ForbiddenView from '../views/error/ForbiddenView.vue'
+import NotFoundView from '../views/error/NotFoundView.vue'
 import ProjectView from '../views/project/ProjectView.vue'
-
-/***********************权限状态*********************/
-export const permissionStore = createPermissionStore({
-  permissions: ['dashboard:view'],
-  roles: ['admin'],
-})
 
 /***********************菜单配置*********************/
 export const adminRouteRecords: LumaMenuRecord[] = [
@@ -310,13 +392,16 @@ export function createAdminSidebarMenus(): SidebarMenuItem[] {
 }
 
 export function createAdminTabs(activePath?: string): LumaLayoutTabItem[] {
-  const tabs = flattenMenuTabs(createAdminSidebarMenus())
+  const tabs = flattenMenuTabs(createAdminSidebarMenus()).map(tab => ({
+    ...tab,
+    closable: false,
+  }))
 
-  if (activePath === '/403' && !tabs.some(tab => tab.path === '/403')) {
+  if (['/403', '/404'].includes(activePath ?? '') && !tabs.some(tab => tab.path === activePath)) {
     tabs.push({
       closable: false,
-      path: '/403',
-      title: '无权限',
+      path: activePath!,
+      title: activePath === '/403' ? '无权限' : '页面不存在',
     })
   }
 
@@ -345,13 +430,21 @@ function createRoutes(): RouteRecordRaw[] {
 
   return [
     {
+      component: LoginView,
+      meta: { layout: 'public' },
+      name: 'Login',
+      path: '/login',
+    },
+    {
       path: '/',
       redirect: firstAccessibleMenu?.path ?? '/403',
     },
     ...menuRoutes,
     {
+      component: NotFoundView,
+      meta: { title: '页面不存在' },
+      name: 'NotFound',
       path: '/:pathMatch(.*)*',
-      redirect: firstAccessibleMenu?.path ?? '/403',
     },
   ]
 }
@@ -363,9 +456,13 @@ export function createAdminRouter(history: RouterHistory = createWebHashHistory(
   })
 
   setupPermissionGuard(router, permissionStore, {
+    isAuthenticated,
+    loginPath: '/login',
     mode: 'every',
     noAccessRedirect: '/403',
+    requireLoginByDefault: true,
     roleMode: 'every',
+    whiteList: ['/login'],
   })
 
   return router
@@ -377,82 +474,17 @@ export const router = createAdminRouter()
 
 function createDashboardViewVue(): string {
   return `<script setup lang="ts">
-import type {
-  CrudTablePageChangePayload,
-  CrudTableResetPayload,
-  CrudTableSearchPayload,
-  SchemaFormItem,
-  SchemaFormModel,
-  SchemaTableColumn,
-  SchemaTableRow,
-} from '@luma/core/components'
-import {
-  LumaCrudTable,
-  LumaIcon,
-} from '@luma/core/components'
-import { onMounted, shallowRef } from 'vue'
+import { LumaPage } from '@luma/core/components'
+import { onMounted } from 'vue'
 import RequestExamplePanel from '../../components/request/RequestExamplePanel.vue'
 import { useMockRequestExample } from '../../composables/useMockRequestExample'
 
-/***********************页面状态*********************/
-const title = 'Luma Admin'
-const description = '轻量 Vue Admin 框架基线已启动'
-
-/***********************表单配置*********************/
-const formModel = shallowRef<SchemaFormModel>({
-  id: 'demo-001',
-  name: 'Luma 示例项目',
-  status: 'enabled',
-})
-
-const schemas: SchemaFormItem[] = [
-  {
-    field: 'id',
-    label: 'ID',
-    component: 'hidden',
-  },
-  {
-    field: 'name',
-    label: '项目名称',
-    component: 'input',
-    placeholder: '请输入项目名称',
-  },
-  {
-    field: 'status',
-    label: '状态',
-    component: 'select',
-    options: [
-      { label: '启用', value: 'enabled' },
-      { label: '停用', value: 'disabled' },
-    ],
-  },
+const metrics = [
+  { label: '待处理任务', value: 12, description: '今日需要跟进的事项' },
+  { label: '运行服务', value: 6, description: '当前在线的业务服务' },
+  { label: '本周发布', value: 3, description: '已完成的版本发布' },
+  { label: '系统告警', value: 0, description: '当前无未处理告警' },
 ]
-
-/***********************表格配置*********************/
-const tableColumns: SchemaTableColumn[] = [
-  {
-    field: 'name',
-    label: '项目名称',
-  },
-  {
-    field: 'status',
-    label: '状态',
-    formatter: value => value === 'enabled' ? '启用' : '停用',
-  },
-]
-
-const tableRows: SchemaTableRow[] = [
-  {
-    id: 'demo-001',
-    name: 'Luma 示例项目',
-    status: 'enabled',
-  },
-]
-
-/***********************分页状态*********************/
-const page = shallowRef(1)
-const pageSize = shallowRef(10)
-const paginationMessage = shallowRef('当前展示示例数据')
 
 /***********************请求示例*********************/
 const {
@@ -472,49 +504,22 @@ onMounted(() => {
   void loadProjectSummary()
 })
 
-/***********************事件处理*********************/
-function handleSearch(payload: CrudTableSearchPayload): void {
-  paginationMessage.value = \`查询项目：\${String(payload.name ?? '') || '全部'}\`
-}
-
-function handleReset(_payload: CrudTableResetPayload): void {
-  paginationMessage.value = '已重置查询条件'
-}
-
-function handlePaginationChange(payload: CrudTablePageChangePayload): void {
-  paginationMessage.value = \`第 \${payload.page} 页，每页 \${payload.pageSize} 条\`
-}
 </script>
 
 <template>
   <main class="luma-admin-home">
-    <LumaCrudTable
-      v-model:query-model="formModel"
-      v-model:page="page"
-      v-model:page-size="pageSize"
-      class="luma-admin-home__crud"
-      :title="title"
-      :description="description"
-      :query-schemas="schemas"
-      :columns="tableColumns"
-      :rows="tableRows"
-      row-key="id"
-      :total="35"
-      :page-sizes="[10, 20]"
-      @search="handleSearch"
-      @reset="handleReset"
-      @page-change="handlePaginationChange"
+    <LumaPage
+      title="工作台"
+      description="这是脚手架生成的轻量后台首页，可替换为你的业务指标和快捷入口。"
     >
-      <template #actions>
-        <LumaIcon name="app:dashboard" color="#1677ff" :size="36" />
-      </template>
-
-      <template #default>
-        <span class="luma-admin-home__pagination-text">
-          {{ paginationMessage }}
-        </span>
-      </template>
-    </LumaCrudTable>
+      <section class="luma-admin-home__metrics" aria-label="工作台指标">
+        <article v-for="metric in metrics" :key="metric.label" class="luma-admin-home__metric">
+          <span>{{ metric.label }}</span>
+          <strong>{{ metric.value }}</strong>
+          <small>{{ metric.description }}</small>
+        </article>
+      </section>
+    </LumaPage>
 
     <RequestExamplePanel
       :authorization-header="authorizationHeader"
@@ -591,6 +596,295 @@ function handleBackDashboardClick(): void {
       </ElButton>
     </LumaPage>
   </main>
+</template>
+`
+}
+
+function createNotFoundViewVue(): string {
+  return `<script setup lang="ts">
+import { LumaPage } from '@luma/core/components'
+import { ElButton } from 'element-plus'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+</script>
+
+<template>
+  <main class="luma-admin-page">
+    <LumaPage title="页面不存在" description="请检查地址，或返回工作台继续操作。">
+      <ElButton type="primary" @click="router.push('/dashboard')">
+        返回工作台
+      </ElButton>
+    </LumaPage>
+  </main>
+</template>
+`
+}
+
+function createLoginViewVue(): string {
+  return `<script setup lang="ts">
+import type { FormInstance } from 'element-plus'
+import { ElButton, ElForm, ElFormItem, ElInput } from 'element-plus'
+import { reactive, shallowRef, useTemplateRef } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { login } from '../../services/session'
+
+const route = useRoute()
+const router = useRouter()
+const formRef = useTemplateRef<FormInstance>('formRef')
+const loading = shallowRef(false)
+const errorMessage = shallowRef('')
+const form = reactive({ username: 'admin', password: 'luma123' })
+
+function resolveRedirect(): string {
+  const redirect = Array.isArray(route.query.redirect) ? route.query.redirect[0] : route.query.redirect
+  return redirect && redirect.startsWith('/') && !redirect.startsWith('/login') ? redirect : '/dashboard'
+}
+
+async function handleSubmit(): Promise<void> {
+  if (loading.value) {
+    return
+  }
+
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    const valid = await formRef.value?.validate()
+    if (valid === false) {
+      return
+    }
+
+    await login(form)
+    await router.replace(resolveRedirect())
+  }
+  catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '登录失败'
+  }
+  finally {
+    loading.value = false
+  }
+}
+</script>
+
+<template>
+  <main class="luma-admin-login">
+    <section class="luma-admin-login__panel">
+      <div class="luma-admin-login__brand" aria-hidden="true">L</div>
+      <h1>Luma Admin</h1>
+      <p>轻量后台基座</p>
+
+      <ElForm ref="formRef" :model="form" label-position="top" @submit.prevent="handleSubmit">
+        <ElFormItem label="用户名" prop="username" :rules="[{ required: true, message: '请输入用户名' }]">
+          <ElInput v-model="form.username" autocomplete="username" />
+        </ElFormItem>
+        <ElFormItem label="密码" prop="password" :rules="[{ required: true, message: '请输入密码' }]">
+          <ElInput v-model="form.password" type="password" show-password autocomplete="current-password" />
+        </ElFormItem>
+        <p v-if="errorMessage" class="luma-admin-login__error" role="alert">
+          {{ errorMessage }}
+        </p>
+        <ElButton native-type="submit" type="primary" :loading="loading">
+          登录
+        </ElButton>
+      </ElForm>
+
+      <small>演示账号：admin / luma123</small>
+    </section>
+  </main>
+</template>
+`
+}
+
+function createAccessTs(): string {
+  return `import { createPermissionStore } from '@luma/core/permission'
+
+export const permissionStore = createPermissionStore()
+
+export function syncAccess(authenticated: boolean): void {
+  if (!authenticated) {
+    permissionStore.clear()
+    return
+  }
+
+  permissionStore.setPermissions(['dashboard:view', 'project:list'])
+  permissionStore.setRoles(['admin'])
+}
+`
+}
+
+function createSessionTs(): string {
+  return `import { createAuthSession } from '@luma/core/auth'
+import { readonly, shallowRef } from 'vue'
+import { syncAccess } from './access'
+
+export interface LoginPayload {
+  password: string
+  username: string
+}
+
+export interface AdminUser {
+  name: string
+  username: string
+}
+
+const userStorageKey = 'luma-admin:user'
+const currentUserState = shallowRef<AdminUser | null>(null)
+
+function readStoredUser(): AdminUser | null {
+  const raw = localStorage.getItem(userStorageKey)
+  if (!raw) {
+    return null
+  }
+
+  try {
+    return JSON.parse(raw) as AdminUser
+  }
+  catch {
+    localStorage.removeItem(userStorageKey)
+    return null
+  }
+}
+
+function clearSessionState(): void {
+  currentUserState.value = null
+  localStorage.removeItem(userStorageKey)
+  syncAccess(false)
+}
+
+export const session = createAuthSession({
+  onSessionExpired: clearSessionState,
+  tokenKey: 'luma-admin:token',
+})
+
+const storedUser = session.isAuthenticated() ? readStoredUser() : null
+currentUserState.value = storedUser
+syncAccess(Boolean(storedUser))
+
+export const currentUser = readonly(currentUserState)
+
+export function isAuthenticated(): boolean {
+  return session.isAuthenticated() && Boolean(currentUserState.value)
+}
+
+export async function login(payload: LoginPayload): Promise<AdminUser> {
+  await Promise.resolve()
+  if (payload.username !== 'admin' || payload.password !== 'luma123') {
+    throw new Error('用户名或密码错误')
+  }
+
+  const user = { name: '管理员', username: payload.username }
+  session.setSession({ accessToken: 'luma-demo-token' })
+  currentUserState.value = user
+  localStorage.setItem(userStorageKey, JSON.stringify(user))
+  syncAccess(true)
+  return user
+}
+
+export async function logout(): Promise<void> {
+  await session.logout()
+}
+`
+}
+
+function createPreferencesTs(): string {
+  return `import type { LumaPreferencesDefaults } from '@luma/core/theme'
+import { createPreferencesStore } from '@luma/core/theme'
+
+export const adminPreferenceDefaults = {
+  app: { layout: 'sidebar-nav' },
+  sidebar: { width: 220 },
+  tabbar: { cache: true, enable: true, maxCount: 8, showIcon: true, showMaximize: true },
+  transition: { enable: true, name: 'fade-side' },
+} satisfies LumaPreferencesDefaults
+
+const preferencesStore = createPreferencesStore({
+  defaults: adminPreferenceDefaults,
+  storage: localStorage,
+  storageKey: 'luma-admin:preferences',
+})
+
+export const adminPreferences = preferencesStore.state
+export const adminResolvedThemeMode = preferencesStore.resolvedThemeMode
+
+export function patchAdminPreferences(preferences: Parameters<typeof preferencesStore.patch>[0]): void {
+  preferencesStore.patch(preferences)
+}
+`
+}
+
+function createHeaderActionsVue(): string {
+  return `<script setup lang="ts">
+import type { ResolvedThemeMode } from '@luma/core/theme'
+import { ElButton } from 'element-plus'
+
+withDefaults(defineProps<{
+  resolvedThemeMode: ResolvedThemeMode
+  userName?: string
+}>(), {
+  userName: '管理员',
+})
+
+defineEmits<{
+  logout: []
+  openSettings: []
+  toggleTheme: []
+}>()
+</script>
+
+<template>
+  <div class="luma-admin-header-actions">
+    <ElButton text :aria-label="resolvedThemeMode === 'dark' ? '切换浅色模式' : '切换深色模式'" @click="$emit('toggleTheme')">
+      主题
+    </ElButton>
+    <ElButton text aria-label="主题与布局设置" @click="$emit('openSettings')">
+      设置
+    </ElButton>
+    <span>{{ userName }}</span>
+    <ElButton text aria-label="退出登录" @click="$emit('logout')">
+      退出
+    </ElButton>
+  </div>
+</template>
+`
+}
+
+function createSettingsDrawerVue(): string {
+  return `<script setup lang="ts">
+import type { LumaPreferences, LumaPreferencesDefaults } from '@luma/core/theme'
+import { LumaThemeSettingsPanel } from '@luma/core/theme'
+import { ElDrawer } from 'element-plus'
+import { computed } from 'vue'
+
+const props = defineProps<{
+  defaults: LumaPreferencesDefaults
+  preferences: LumaPreferences
+  visible: boolean
+}>()
+
+const emit = defineEmits<{
+  change: [preferences: LumaPreferences]
+  reset: [preferences: LumaPreferences]
+  'update:preferences': [preferences: LumaPreferences]
+  'update:visible': [visible: boolean]
+}>()
+
+const visible = computed({
+  get: () => props.visible,
+  set: value => emit('update:visible', value),
+})
+</script>
+
+<template>
+  <ElDrawer v-model="visible" title="主题与布局设置" size="420px" append-to-body>
+    <LumaThemeSettingsPanel
+      :defaults="defaults"
+      :preferences="preferences"
+      @change="$emit('change', $event)"
+      @reset="$emit('reset', $event)"
+      @update:preferences="$emit('update:preferences', $event)"
+    />
+  </ElDrawer>
 </template>
 `
 }
@@ -840,10 +1134,10 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
   box-sizing: border-box;
   width: min(920px, 100%);
   padding: 24px;
-  border: 1px solid #dbe4f0;
+  border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
+  background: var(--el-bg-color);
+  box-shadow: var(--luma-shadow-card);
 }
 
 .luma-request-panel__header {
@@ -859,7 +1153,7 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
 }
 
 .luma-request-panel__eyebrow {
-  color: #0f766e;
+  color: var(--el-color-primary);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0;
@@ -868,7 +1162,7 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
 
 .luma-request-panel__title {
   margin: 0;
-  color: #111827;
+  color: var(--el-text-color-primary);
   font-size: 20px;
   font-weight: 700;
 }
@@ -885,20 +1179,20 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
   gap: 8px;
   min-width: 0;
   padding: 14px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--el-border-color-lighter);
   border-radius: 6px;
-  background: #f8fafc;
+  background: var(--el-fill-color-light);
 }
 
 .luma-request-panel__label,
 .luma-request-panel__detail-label {
-  color: #64748b;
+  color: var(--el-text-color-secondary);
   font-size: 12px;
 }
 
 .luma-request-panel__value {
   overflow: hidden;
-  color: #111827;
+  color: var(--el-text-color-primary);
   font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -921,7 +1215,7 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
   min-width: 0;
   margin: 0;
   overflow-wrap: anywhere;
-  color: #334155;
+  color: var(--el-text-color-regular);
   font-family:
     "JetBrains Mono",
     Consolas,
@@ -931,7 +1225,7 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
 
 .luma-request-panel__message {
   margin: 18px 0 0;
-  color: #475569;
+  color: var(--el-text-color-secondary);
   font-size: 13px;
 }
 
@@ -955,8 +1249,8 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
 
 function createStylesScss(): string {
   return `:root {
-  color: #1f2937;
-  background: #f5f7fb;
+  color: var(--el-text-color-primary);
+  background: var(--el-bg-color-page);
   font-family:
     Inter,
     "Segoe UI",
@@ -967,36 +1261,45 @@ function createStylesScss(): string {
 
 body {
   margin: 0;
+  min-width: 320px;
+  overflow-x: hidden;
 }
 
 .luma-admin-home {
   display: grid;
-  gap: 24px;
+  gap: var(--luma-page-gutter, 20px);
   box-sizing: border-box;
-  padding: 32px;
+  padding: var(--luma-page-gutter, 20px);
 }
 
-.luma-admin-home__crud {
-  max-width: 920px;
-  box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
+.luma-admin-home__metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
 }
 
-.luma-admin-home__pagination-text {
-  display: block;
-  padding-top: 12px;
-  color: #6b7280;
-  font-size: 13px;
+.luma-admin-home__metric {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--luma-radius-base, 8px);
+  background: var(--el-bg-color);
 }
 
-.luma-admin-home__status {
-  color: #2563eb;
-  font-size: 13px;
-  font-weight: 700;
+.luma-admin-home__metric strong {
+  color: var(--el-color-primary);
+  font-size: 28px;
+}
+
+.luma-admin-home__metric small {
+  color: var(--el-text-color-secondary);
 }
 
 .luma-admin-page {
   box-sizing: border-box;
-  padding: 32px;
+  padding: var(--luma-page-gutter, 20px);
 }
 
 .luma-admin-page__list {
@@ -1007,9 +1310,121 @@ body {
 }
 
 .luma-admin-page__item {
-  color: #334155;
+  color: var(--el-text-color-regular);
   font-size: 14px;
   line-height: 1.6;
+}
+
+.luma-admin-header-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.luma-admin-header-actions .el-button {
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+}
+
+.luma-admin-header-actions span {
+  max-width: 120px;
+  overflow: hidden;
+  color: var(--el-text-color-regular);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.luma-admin-login {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 24px;
+  background: var(--el-bg-color-page);
+}
+
+.luma-admin-login__panel {
+  box-sizing: border-box;
+  width: min(400px, 100%);
+  padding: 32px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--luma-radius-large, 12px);
+  background: var(--el-bg-color);
+  box-shadow: var(--luma-shadow-dialog);
+}
+
+.luma-admin-login__brand {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: var(--luma-radius-base, 8px);
+  color: var(--el-color-white);
+  background: var(--el-color-primary);
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.luma-admin-login h1 {
+  margin: 20px 0 6px;
+}
+
+.luma-admin-login p,
+.luma-admin-login small {
+  color: var(--el-text-color-secondary);
+}
+
+.luma-admin-login .el-form {
+  margin: 24px 0 16px;
+}
+
+.luma-admin-login .el-button {
+  width: 100%;
+  min-height: 44px;
+}
+
+.luma-admin-login__error {
+  color: var(--el-color-danger) !important;
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .luma-admin-home__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .luma-admin-home,
+  .luma-admin-page {
+    padding: 12px;
+  }
+
+  .luma-admin-home__metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .luma-admin-header-actions span {
+    display: none;
+  }
+
+  .luma-admin-login {
+    padding: 16px;
+  }
+
+  .luma-admin-login__panel {
+    padding: 24px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
 }
 `
 }
@@ -1019,13 +1434,20 @@ function createTemplateFiles(projectName: string): TemplateFile[] {
     { path: 'index.html', content: createIndexHtml() },
     { path: 'package.json', content: createPackageJson(projectName) },
     { path: 'src/App.vue', content: createAppVue() },
+    { path: 'src/components/app/AppHeaderActions.vue', content: createHeaderActionsVue() },
+    { path: 'src/components/app/AppSettingsDrawer.vue', content: createSettingsDrawerVue() },
     { path: 'src/components/request/RequestExamplePanel.vue', content: createRequestPanelVue() },
     { path: 'src/composables/useMockRequestExample.ts', content: createRequestExampleTs() },
     { path: 'src/main.ts', content: createMainTs() },
     { path: 'src/router/index.ts', content: createRouterTs() },
+    { path: 'src/services/access.ts', content: createAccessTs() },
+    { path: 'src/services/preferences.ts', content: createPreferencesTs() },
+    { path: 'src/services/session.ts', content: createSessionTs() },
     { path: 'src/styles.scss', content: createStylesScss() },
+    { path: 'src/views/auth/LoginView.vue', content: createLoginViewVue() },
     { path: 'src/views/dashboard/DashboardView.vue', content: createDashboardViewVue() },
     { path: 'src/views/error/ForbiddenView.vue', content: createForbiddenViewVue() },
+    { path: 'src/views/error/NotFoundView.vue', content: createNotFoundViewVue() },
     { path: 'src/views/project/ProjectView.vue', content: createProjectViewVue() },
     { path: 'tsconfig.json', content: createTsConfig() },
     { path: 'vite.config.ts', content: createViteConfig() },
