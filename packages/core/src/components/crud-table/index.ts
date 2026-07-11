@@ -1,8 +1,11 @@
 export { default as LumaCrudTable } from './LumaCrudTable.vue'
+export { deriveCrudFormSchemas } from './schema'
 export type {
   CrudActionsConfig,
   CrudDataSource,
-  CrudDialogConfig,
+  CrudEditorConfig,
+  CrudExportConfig,
+  CrudExportContext,
   CrudFetchParams,
   CrudFetchResult,
   CrudFormMode,
@@ -12,6 +15,7 @@ export type {
   CrudRemoveConfirmOptions,
   CrudStateResolver,
   CrudTableConfig,
+  CrudTableColumn,
   CrudTablePageChangePayload,
   CrudTableProps,
   CrudTableQueryModel,

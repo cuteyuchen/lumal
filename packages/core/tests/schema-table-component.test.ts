@@ -189,6 +189,56 @@ describe('luma schema table', () => {
     expect(wrapper.findAll('.luma-schema-table__dictionary-dot')).toHaveLength(2)
   })
 
+  it('dictType 会优先于手工 options 自动翻译并应用字典颜色', async () => {
+    const rows = [{ id: 'row-1', priority: 1 }]
+    const store = createDictionaryStore({
+      fetcher: async () => ({
+        items: [
+          { color: '#ef4444', label: '高优先级', value: '1' },
+          { color: '#64748b', label: '普通优先级', value: '0' },
+        ],
+      }),
+    })
+    const TableColumnStub = defineComponent({
+      name: 'ElTableColumn',
+      setup(_props, { slots }) {
+        return () => h('div', { class: 'el-table-column' }, slots.default?.({
+          $index: 0,
+          row: rows[0],
+        }))
+      },
+    })
+
+    const wrapper = mount(LumaSchemaTable, {
+      global: {
+        provide: {
+          [dictionaryContextKey as symbol]: { store },
+        },
+        stubs: {
+          ...elementPlusStubs,
+          ElTableColumn: TableColumnStub,
+        },
+      },
+      props: {
+        columns: [{
+          dictType: 'priority',
+          field: 'priority',
+          label: '优先级',
+          options: [{ label: '错误的手工标签', value: 1 }],
+        }],
+        rows,
+      },
+    })
+
+    await Promise.resolve()
+    await nextTick()
+
+    expect(wrapper.find('.luma-schema-table__dictionary-tag').text()).toBe('高优先级')
+    expect(wrapper.find('.luma-schema-table__dictionary-tag').attributes('style')).toContain(
+      '--luma-dictionary-color: #ef4444',
+    )
+  })
+
   it('会渲染选择列、序号列、分页、透传属性并转发交互事件', async () => {
     const rows = [
       { id: 'row-1', name: 'Luma', status: 'enabled' },
@@ -312,5 +362,68 @@ describe('luma schema table', () => {
 
     await wrapper.findAll('.luma-schema-table__column-options input')[1]?.setValue(false)
     expect(wrapper.find('.custom-table-cell').exists()).toBe(false)
+  })
+
+  it('列设置支持持久化顺序、隐藏和恢复默认', async () => {
+    localStorage.setItem('schema-table-columns', JSON.stringify({
+      hidden: ['status'],
+      order: ['status', 'name'],
+    }))
+    const wrapper = mount(LumaSchemaTable, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        columnSettings: {
+          enabled: true,
+          reorderable: true,
+          storageKey: 'schema-table-columns',
+        },
+        columns: [
+          { field: 'name', label: '名称' },
+          { field: 'status', label: '状态' },
+        ],
+        rows: [{ id: 'row-1', name: 'Luma', status: 'enabled' }],
+      },
+    })
+
+    await nextTick()
+    expect(wrapper.findAllComponents({ name: 'ElTableColumn' }).map(item => item.props('prop'))).toEqual(['name'])
+
+    await wrapper.find('.luma-schema-table__column-options-header button').trigger('click')
+    await nextTick()
+    expect(wrapper.findAllComponents({ name: 'ElTableColumn' }).map(item => item.props('prop'))).toEqual(['name', 'status'])
+    expect(JSON.parse(localStorage.getItem('schema-table-columns') ?? '{}')).toEqual({
+      hidden: [],
+      order: ['name', 'status'],
+    })
+  })
+
+  it('会转发排序、筛选、行点击、当前行、展开和重试事件', async () => {
+    const row = { id: 'row-1', name: 'Luma' }
+    const wrapper = mount(LumaSchemaTable, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        columns: [{ field: 'name', label: '名称' }],
+        rows: [row],
+      },
+    })
+    const table = wrapper.findComponent({ name: 'ElTable' })
+    const event = new MouseEvent('click')
+    table.vm.$emit('sort-change', { order: 'ascending', prop: 'name' })
+    table.vm.$emit('filter-change', { status: ['enabled'] })
+    table.vm.$emit('row-click', row, { property: 'name' }, event)
+    table.vm.$emit('current-change', row, undefined)
+    table.vm.$emit('expand-change', row, true)
+    await nextTick()
+
+    expect(wrapper.emitted('sortChange')?.[0]?.[0]).toMatchObject({ order: 'ascending', prop: 'name' })
+    expect(wrapper.emitted('filterChange')?.[0]?.[0]).toEqual({ status: ['enabled'] })
+    expect(wrapper.emitted('rowClick')?.[0]).toEqual([row, { property: 'name' }, event])
+    expect(wrapper.emitted('currentChange')?.[0]).toEqual([row, undefined])
+    expect(wrapper.emitted('expandChange')?.[0]).toEqual([row, true])
+
+    await wrapper.setProps({ error: new Error('加载失败') })
+    await wrapper.find('.luma-schema-table__error button').trigger('click')
+    expect(wrapper.find('.luma-schema-table__error').text()).toContain('加载失败')
+    expect(wrapper.emitted('retry')).toHaveLength(1)
   })
 })

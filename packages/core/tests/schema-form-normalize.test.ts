@@ -66,7 +66,7 @@ describe('schema form normalize', () => {
         component: 'switch',
         field: 'enabled',
         label: '启用',
-        props: {
+        componentProps: {
           activeText: '启用',
         },
       },

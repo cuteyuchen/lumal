@@ -34,7 +34,9 @@ export const elementPlusStubs = {
       rules: Object,
     },
     methods: {
+      clearValidate() {},
       resetFields() {},
+      scrollToField() {},
       async validate() {
         return true
       },
@@ -99,6 +101,16 @@ export const elementPlusStubs = {
     },
     emits: ['update:modelValue'],
     template: '<section v-if="modelValue" class="el-dialog" :data-title="title"><slot /></section>',
+  }),
+  ElDrawer: defineComponent({
+    name: 'ElDrawer',
+    props: {
+      modelValue: Boolean,
+      size: [String, Number],
+      title: String,
+    },
+    emits: ['update:modelValue'],
+    template: '<aside v-if="modelValue" class="el-drawer" :data-title="title" :data-size="size"><slot /><footer><slot name="footer" /></footer></aside>',
   }),
   ElDivider: defineComponent({
     name: 'ElDivider',
@@ -330,7 +342,7 @@ export const elementPlusStubs = {
       stripe: Boolean,
       treeProps: Object,
     },
-    emits: ['selection-change'],
+    emits: ['current-change', 'expand-change', 'filter-change', 'row-click', 'selection-change', 'sort-change'],
     methods: {
       clearSelection() {},
       doLayout() {},

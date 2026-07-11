@@ -13,9 +13,8 @@ import { LumaCrudTable } from '@luma/core/components'
 import { shallowRef } from 'vue'
 import {
   createExampleQueryModel,
-  exampleCrudFormSchemas,
+  exampleCrudColumns,
   exampleQuerySchemas,
-  exampleTableColumns,
   exampleTableRows,
 } from './example-data'
 
@@ -25,18 +24,25 @@ const page = shallowRef(1)
 const pageSize = shallowRef(10)
 const message = shallowRef('等待 CRUD 操作')
 const rows = shallowRef<SchemaTableRow[]>([...exampleTableRows])
+const editorType = shallowRef<'dialog' | 'drawer'>('dialog')
 const queryConfig = {
   collapsible: true,
   collapsedRows: 1,
   columns: 2,
   defaultCollapsed: true,
   schemas: exampleQuerySchemas,
+  submitDebounce: 250,
+  submitOnChange: false,
 }
 const tableConfig = {
-  columns: exampleTableColumns,
+  columns: exampleCrudColumns,
   rowKey: 'id',
   selection: true,
-  showColumnSettings: true,
+  columnSettings: {
+    enabled: true,
+    reorderable: true,
+    storageKey: 'luma-example:crud-columns',
+  },
 }
 const toolbarConfig = {
   export: true,
@@ -126,7 +132,7 @@ function handleExport(payload: { selectedRows: SchemaTableRow[] }): void {
       title="CRUD Table"
       :description="message"
       :data-source="dataSource"
-      :form-schemas="exampleCrudFormSchemas"
+      :editor="{ columns: 2, type: editorType, width: editorType === 'drawer' ? 'min(720px, 92vw)' : 'min(920px, calc(100vw - 32px))' }"
       :query="queryConfig"
       :table="tableConfig"
       :toolbar="toolbarConfig"
@@ -134,6 +140,12 @@ function handleExport(payload: { selectedRows: SchemaTableRow[] }): void {
       @reset="handleReset"
       @page-change="handlePageChange"
       @export="handleExport"
-    />
+    >
+      <template #toolbar-tools>
+        <button class="luma-admin-example__button" type="button" @click="editorType = editorType === 'dialog' ? 'drawer' : 'dialog'">
+          编辑器：{{ editorType === 'dialog' ? '弹窗' : '抽屉' }}
+        </button>
+      </template>
+    </LumaCrudTable>
   </main>
 </template>

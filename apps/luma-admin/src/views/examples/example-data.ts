@@ -1,4 +1,5 @@
 import type {
+  CrudTableColumn,
   InfoTableItem,
   SchemaFormItem,
   SchemaFormModel,
@@ -119,6 +120,11 @@ export const exampleFormSchemas: SchemaFormItem[] = [
     label: '上级节点',
   },
   {
+    component: 'input',
+    field: 'icon',
+    label: '菜单图标',
+  },
+  {
     component: 'upload',
     componentProps: {
       action: '#',
@@ -157,6 +163,42 @@ export const exampleCrudFormSchemas: SchemaFormItem[] = [
     component: 'textarea',
     field: 'remark',
     label: '备注',
+  },
+]
+
+export const exampleCrudColumns: CrudTableColumn[] = [
+  {
+    field: 'name',
+    label: '名称',
+    componentProps: {
+      minWidth: 160,
+    },
+    formComponentProps: {
+      clearable: true,
+    },
+    placeholder: '请输入名称',
+    required: true,
+    rules: [{ required: true, message: '请输入名称' }],
+  },
+  {
+    dictionary: 'status',
+    field: 'status',
+    label: '状态',
+    width: 120,
+  },
+  {
+    component: 'radio',
+    dictionary: 'priority',
+    field: 'priority',
+    label: '优先级',
+    width: 120,
+  },
+  {
+    component: 'textarea',
+    field: 'remark',
+    label: '备注',
+    showInTable: false,
+    span: 24,
   },
 ]
 

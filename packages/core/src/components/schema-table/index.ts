@@ -16,6 +16,7 @@ export type {
   SchemaTableCellFormatter,
   SchemaTableClassName,
   SchemaTableColumn,
+  SchemaTableColumnSettings,
   SchemaTableContext,
   SchemaTableFieldKey,
   SchemaTablePaginationChangePayload,
@@ -23,5 +24,6 @@ export type {
   SchemaTableRow,
   SchemaTableSelectionPayload,
   SchemaTableStateResolver,
+  SchemaTableSortChangePayload,
   SchemaTableTreeProps,
 } from './types'

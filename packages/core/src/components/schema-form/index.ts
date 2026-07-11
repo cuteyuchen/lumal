@@ -15,8 +15,11 @@ export type {
   SchemaFormMode,
   SchemaFormModel,
   SchemaFormOption,
+  SchemaFormOptionsResolver,
   SchemaFormOptionValue,
   SchemaFormRecord,
   SchemaFormRule,
   SchemaFormStateResolver,
+  SchemaFormTextResolver,
+  SchemaFormValueResolver,
 } from './types'

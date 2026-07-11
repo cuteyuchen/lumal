@@ -40,6 +40,18 @@ export interface SchemaTableTreeProps {
   hasChildren?: string
 }
 
+export interface SchemaTableColumnSettings {
+  enabled?: boolean
+  reorderable?: boolean
+  storageKey?: string
+}
+
+export interface SchemaTableSortChangePayload {
+  column?: unknown
+  order?: 'ascending' | 'descending' | null
+  prop?: string
+}
+
 export interface SchemaTableColumn<T extends SchemaTableRecord = SchemaTableRow> {
   field: SchemaTableFieldKey<T>
   label: string
@@ -56,6 +68,7 @@ export interface SchemaTableColumn<T extends SchemaTableRecord = SchemaTableRow>
   componentProps?: Record<string, unknown>
   emptyText?: string
   formatter?: SchemaTableCellFormatter<T>
+  configurable?: boolean
 }
 
 export interface NormalizedSchemaTableColumn<T extends SchemaTableRecord = SchemaTableRow> extends SchemaTableColumn<T> {

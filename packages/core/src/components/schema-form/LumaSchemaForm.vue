@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="T extends SchemaFormRecord = Record<string, unknown>">
 import type { FormInstance } from 'element-plus'
-import type { NormalizedSchemaFormItem, SchemaFormAuthority, SchemaFormItem, SchemaFormMode, SchemaFormModel, SchemaFormRecord } from './types'
+import type { NormalizedSchemaFormItem, SchemaFormAuthority, SchemaFormContext, SchemaFormItem, SchemaFormMode, SchemaFormModel, SchemaFormRecord } from './types'
 import {
   ElButton,
   ElCheckbox,
@@ -11,6 +11,7 @@ import {
   ElFormItem,
   ElInput,
   ElInputNumber,
+  ElLoading,
   ElOption,
   ElRadio,
   ElRadioGroup,
@@ -38,27 +39,47 @@ type SchemaTreeSelectValue
 /***********************属性定义*********************/
 const props = withDefaults(defineProps<{
   canAccess?: (authority: SchemaFormAuthority) => boolean
+  actionLayout?: 'inline' | 'newLine' | 'rowEnd'
+  actionPosition?: 'center' | 'left' | 'right'
   columns?: number
+  compact?: boolean
   disabled?: boolean
+  gutter?: number
   labelPosition?: 'left' | 'right' | 'top'
   labelWidth?: number | string
+  loading?: boolean
   mode?: SchemaFormMode
+  resetText?: string
   schemas: SchemaFormItem<T>[]
+  scrollToFirstError?: boolean
+  showReset?: boolean
   submitLoading?: boolean
+  submitOnEnter?: boolean
   submitText?: string
   showActions?: boolean
 }>(), {
+  actionLayout: 'rowEnd',
+  actionPosition: 'right',
   columns: 1,
+  compact: false,
   disabled: false,
+  gutter: 16,
   labelPosition: 'right',
+  loading: false,
   mode: 'create',
+  resetText: '重置',
+  scrollToFirstError: true,
+  showReset: false,
   submitLoading: false,
+  submitOnEnter: false,
   submitText: '提交',
   showActions: false,
 })
 
 const emit = defineEmits<{
+  reset: [model: SchemaFormModel]
   submit: [model: SchemaFormModel]
+  valuesChange: [model: SchemaFormModel, fields: string[]]
 }>()
 
 const model = defineModel<SchemaFormModel<T>>({
@@ -67,6 +88,8 @@ const model = defineModel<SchemaFormModel<T>>({
 
 /***********************模板引用*********************/
 const formRef = useTemplateRef<FormInstance>('formRef')
+const vLoading = ElLoading.directive
+const initialModel = shallowRef<SchemaFormModel<T>>({ ...model.value })
 
 /***********************模式状态*********************/
 const activeMode = shallowRef<SchemaFormMode>(props.mode)
@@ -83,6 +106,7 @@ const normalizedSchemas = computed(() => normalizeSchemaFormItems(props.schemas,
   canAccess: props.canAccess,
   mode: activeMode.value,
   model: model.value,
+  setFieldValue,
 }))
 
 const renderableSchemas = computed(() => normalizedSchemas.value.filter(schema => schema.renderable))
@@ -229,13 +253,12 @@ function resolveFieldSpan(schema: NormalizedSchemaFormItem<T>): number {
 }
 
 function resolveSchemaOptions(schema: NormalizedSchemaFormItem<T>) {
-  if (schema.options.length > 0) {
-    return schema.options
+  const dictionary = schema.dictionary ?? schema.dictType
+  if (dictionary) {
+    return dictionaryMap.value[dictionary] ?? []
   }
 
-  const dictionary = schema.dictionary ?? schema.dictType
-
-  return dictionary ? dictionaryMap.value[dictionary] ?? [] : []
+  return schema.options
 }
 
 function resolveComponentProps(schema: NormalizedSchemaFormItem<T>): Record<string, unknown> {
@@ -250,26 +273,64 @@ function resolveViewValue(schema: NormalizedSchemaFormItem<T>): string {
   }
 
   const labels = (Array.isArray(value) ? value : [value])
-    .map(item => resolveSchemaOptions(schema).find(option => Object.is(option.value, item))?.label ?? item)
+    .map(item => resolveSchemaOptions(schema).find(option => String(option.value) === String(item))?.label ?? item)
     .filter(item => item !== null && item !== undefined && item !== '')
 
   return labels.length > 0 ? labels.map(String).join(', ') : '-'
 }
 
 /***********************事件处理*********************/
-function updateFieldValue(field: string, value: unknown): void {
-  model.value = {
+function createFieldContext(field: string, value: unknown): SchemaFormContext<T> {
+  return {
+    field: field as Extract<keyof T, string>,
+    getValues: () => normalizedModel.value,
+    mode: activeMode.value,
+    model: normalizedModel.value,
+    setFieldValue,
+    value,
+  }
+}
+
+function setFieldValue(field: Extract<keyof T, string>, value: unknown): void {
+  const nextModel = {
     ...normalizedModel.value,
     [field]: value,
   } as SchemaFormModel<T>
+  model.value = nextModel
+  normalizedSchemas.value.find(schema => schema.field === field)?.onChange?.(
+    value,
+    createFieldContext(field, value),
+  )
+  emit('valuesChange', nextModel, [field])
 }
 
-function handleSubmit(): void {
-  if (activeMode.value === 'view') {
+function updateFieldValue(field: string, value: unknown): void {
+  setFieldValue(field as Extract<keyof T, string>, value)
+}
+
+async function handleSubmit(): Promise<void> {
+  if (activeMode.value === 'view' || props.submitLoading) {
+    return
+  }
+
+  if (!await validate()) {
     return
   }
 
   emit('submit', normalizedModel.value)
+}
+
+function handleEnterSubmit(event: KeyboardEvent): void {
+  if (!props.submitOnEnter || event.isComposing || (event.target as HTMLElement)?.tagName === 'TEXTAREA') {
+    return
+  }
+  event.preventDefault()
+  void handleSubmit()
+}
+
+function handleReset(): void {
+  resetFields()
+  emit('reset', normalizedModel.value)
 }
 
 function resolveFieldSlotName(schema: NormalizedSchemaFormItem<T>): string {
@@ -296,12 +357,37 @@ function setMode(mode: SchemaFormMode): void {
 }
 
 async function validate(): Promise<boolean> {
-  const result = await formRef.value?.validate?.()
-  return result !== false
+  try {
+    const result = await formRef.value?.validate?.()
+    return result !== false
+  }
+  catch (error) {
+    if (props.scrollToFirstError && error && typeof error === 'object') {
+      const field = Object.keys(error)[0]
+      if (field) {
+        formRef.value?.scrollToField?.(field)
+      }
+    }
+    return false
+  }
 }
 
 function resetFields(): void {
   formRef.value?.resetFields?.()
+  model.value = resolveSchemaFormInitialModel(normalizedSchemas.value, initialModel.value)
+}
+
+function clearValidate(field?: string | string[]): void {
+  formRef.value?.clearValidate?.(field)
+}
+
+function scrollToField(field: string): void {
+  formRef.value?.scrollToField?.(field)
+}
+
+function getFieldComponent(field: string): HTMLElement | undefined {
+  const formElement = formRef.value?.$el as HTMLElement | undefined
+  return formElement?.querySelector<HTMLElement>(`[data-field="${field}"] input, [data-field="${field}"] textarea, [data-field="${field}"] select, [data-field="${field}"] button`)
 }
 
 /***********************公开方法*********************/
@@ -310,6 +396,8 @@ defineExpose({
   getFormInstance: () => formRef.value,
   getValues: () => normalizedModel.value,
   resetFields,
+  scrollToField,
+  setFieldValue,
   setMode,
   setValues,
   validate,
@@ -319,14 +407,17 @@ defineExpose({
 <template>
   <ElForm
     ref="formRef"
+    v-loading="props.loading"
     class="luma-schema-form"
+    :class="{ 'is-compact': props.compact }"
     :disabled="props.disabled"
     :label-position="props.labelPosition"
     :label-width="props.labelWidth"
     :model="normalizedModel"
+    @keydown.enter="handleEnterSubmit"
     @submit.prevent="handleSubmit"
   >
-    <ElRow class="luma-schema-form__row" :gutter="16" :data-columns="props.columns">
+    <ElRow class="luma-schema-form__row" :gutter="props.gutter" :data-columns="props.columns">
       <ElCol
         v-for="schema in renderableSchemas"
         :key="schema.field"
@@ -520,11 +611,25 @@ defineExpose({
             :schema="schema"
             :value="normalizedModel[schema.field]"
           />
+
+          <p v-if="schema.description" class="luma-schema-form__description">
+            {{ schema.description }}
+          </p>
+          <p v-if="schema.help" class="luma-schema-form__help">
+            {{ schema.help }}
+          </p>
         </ElFormItem>
       </ElCol>
     </ElRow>
 
-    <div v-if="showActions && activeMode !== 'view'" class="luma-schema-form__actions">
+    <div
+      v-if="showActions && activeMode !== 'view'"
+      class="luma-schema-form__actions"
+      :class="[`is-${actionLayout}`, `is-${actionPosition}`]"
+    >
+      <ElButton v-if="showReset" native-type="button" :disabled="submitLoading" @click="handleReset">
+        {{ resetText }}
+      </ElButton>
       <ElButton type="primary" native-type="submit" :loading="submitLoading" :disabled="submitLoading">
         {{ submitText }}
       </ElButton>
@@ -554,6 +659,23 @@ defineExpose({
   min-width: 0;
 }
 
+.luma-schema-form.is-compact .luma-schema-form__row {
+  row-gap: 10px;
+}
+
+.luma-schema-form__description,
+.luma-schema-form__help {
+  width: 100%;
+  margin: 6px 0 0;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.luma-schema-form__help {
+  color: var(--el-color-info);
+}
+
 .luma-schema-form__item :deep(.el-input),
 .luma-schema-form__item :deep(.el-input-number),
 .luma-schema-form__item :deep(.el-select),
@@ -576,6 +698,23 @@ defineExpose({
   padding-top: 16px;
   border-top: 1px solid var(--el-border-color-lighter);
   justify-content: flex-end;
+}
+
+.luma-schema-form__actions.is-left {
+  justify-content: flex-start;
+}
+
+.luma-schema-form__actions.is-center {
+  justify-content: center;
+}
+
+.luma-schema-form__actions.is-inline {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.luma-schema-form__actions.is-newLine {
+  margin-top: 4px;
 }
 
 @media (max-width: 1024px) {
@@ -608,3 +747,5 @@ defineExpose({
   }
 }
 </style>
+  clearValidate,
+  getFieldComponent,

@@ -171,12 +171,17 @@ const schemas: SchemaFormItem<ProjectForm>[] = [
 - `formatter`：查看模式格式化。
 - `prepend` / `append` / `prefix` / `suffix`：复合输入内容。
 - `componentProps`：按 `component` 精确映射到对应 Element Plus props。
+- `componentProps`、`options`、`required`、`rules`、`hidden`、`disabled`、`readonly` 均可使用 `(context) => value` 动态解析；上下文包含当前字段、值、模型和 `setFieldValue`。
+- `description` / `help`：在控件下方显示持续可见的说明与帮助信息。
+- `onChange`：字段变化回调，不需要从外部重复监听整个模型。
 
 字段插槽命名规则：
 
 - `field-${field}`：完全接管该字段渲染。
 - `prefix-${field}`：字段控件前置内容。
 - `suffix-${field}`：字段控件后置内容。
+
+表单级能力包括 `loading`、`compact`、`gutter`、`showReset`、`submitOnEnter`、`scrollToFirstError`、`actionLayout` 和 `actionPosition`。公开控制器提供 `setFieldValue`、`clearValidate`、`scrollToField` 与 `getFieldComponent`。
 
 ### Schema Table
 
@@ -254,6 +259,7 @@ function handlePageChange(payload: SchemaTablePaginationChangePayload) {
 - `selection`：渲染选择列，并通过 `selection-change(rows, rowKeys)` 同时返回选中行和主键。
 - `showIndex`：渲染序号列。
 - `showColumnSettings`：显示可键盘操作的列设置。
+- `columnSettings`：配置列设置显示、拖动排序和 `storageKey` 持久化；至少保留一个可配置列，固定列不会被无效隐藏。
 - `defaultExpandAll` / `treeProps`：树表配置，同时兼容旧 `tableProps` 写法。
 - `autoResize`：使用 `ResizeObserver` 自动执行表格布局。
 - `scaleColumnWidth`：关闭时忽略配置宽度并使用流式列宽；不依赖全局 viewport 转换。
@@ -267,6 +273,8 @@ function handlePageChange(payload: SchemaTablePaginationChangePayload) {
 - `actions` 插槽：追加操作列。
 - `table-${field}` 插槽：接管指定字段；移动端操作列自动切换为“更多”入口。
 - 字典项包含 `color` 时渲染“颜色点 + 文本”标签；颜色不作为唯一状态信息。
+- 转发 `sortChange`、`filterChange`、`rowClick`、`currentChange`、`expandChange`、`selectionChange` 和 `pageChange`。
+- `error` / `retry` 提供独立错误恢复状态；公开方法可获取可见列、列顺序和导出数据，并可恢复默认列设置。
 
 复杂表格或自定义渲染可以复用公开 helper：
 
@@ -280,7 +288,7 @@ import { resolveSchemaTableCellDisplay } from '@luma/core/components'
 
 ```vue
 <script setup lang="ts">
-import type { CrudDataSource } from '@luma/core/components'
+import type { CrudDataSource, CrudTableColumn } from '@luma/core/components'
 import { LumaCrudTable } from '@luma/core/components'
 
 const querySchemas = [
@@ -288,12 +296,21 @@ const querySchemas = [
   { dictionary: 'status', field: 'status', label: '状态' },
 ]
 
-const columns = [
-  { field: 'name', label: '名称' },
+const columns: CrudTableColumn[] = [
+  { field: 'name', label: '名称', required: true },
   { field: 'status', label: '状态', dictionary: 'status' },
+  {
+    field: 'remark',
+    label: '备注',
+    component: 'textarea',
+    showInTable: false,
+  },
 ]
 
 const dataSource: CrudDataSource = {
+  create: async (model) => {
+    await saveProject(model)
+  },
   fetch: async () => {
     return {
       items: [
@@ -351,7 +368,15 @@ const dataSource: CrudDataSource = {
 }
 ```
 
-`dataSource` 可选动作包括 `create`、`update`、`remove`、`removeMany`。配置 `formSchemas` 后，组件会提供新增、查看、编辑弹窗；配置 `selection` 后会提供批量删除入口。删除确认推荐通过 `actions.confirmRemove` 集中配置，可传函数、文案配置或 `false`（跳过确认）；旧的顶层 `confirmRemove(rows)` 保留兼容。
+`dataSource` 可选动作包括 `create`、`update`、`remove`、`removeMany`。未显式配置 `formSchemas` 时，CRUD 会从 `columns` 自动派生新增、查看、编辑表单：列上的 `dictionary` / `dictType` 会自动生成表单 options，同时继续负责表格值翻译和颜色标签。`showInForm: false` 与 `showInTable: false` 分别控制字段是否进入派生表单或表格；显式 `formSchemas` 会整体覆盖自动派生结果。
+
+Form、Table 和 CRUD 的字典规则保持一致：只需提供 `dictionary`（推荐）或 `dictType`，组件会从字典上下文加载选项；存在字典键时字典结果优先，手工 `options` 仅在未指定字典键时使用。
+
+配置 `selection` 后会提供批量删除入口。删除确认通过 `actions.confirmRemove` 集中配置，可传函数、文案配置或 `false`（跳过确认）。
+
+编辑器通过 `editor` 配置，`type` 支持 `dialog` 和 `drawer`，默认使用 `dialog`；同时支持宽度、表单列数、标签宽度、Loading、禁用态和关闭确认。工具栏支持标题、新增、批量删除、刷新、字典化 CSV 导出和全屏。
+
+CRUD 会转发 `query-{field}`、`table-{field}`、`form-{field}`、`table-title`、`toolbar-actions`、`toolbar-tools`、`row-actions` 和 `footer` 插槽。查询配置可启用 `submitOnChange` 与 `submitDebounce`。
 
 推荐使用六个配置对象组织复杂页面：
 

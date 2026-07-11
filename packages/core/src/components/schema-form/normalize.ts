@@ -13,6 +13,7 @@ export interface NormalizeSchemaFormItemsOptions<T extends SchemaFormRecord = Re
   canAccess?: (authority: NonNullable<SchemaFormItem<T>['authority']>) => boolean
   mode?: SchemaFormMode
   model?: SchemaFormModel<T>
+  setFieldValue?: (field: Extract<keyof T, string>, value: unknown) => void
 }
 
 /***********************字段归一化*********************/
@@ -32,6 +33,18 @@ function resolveState<T extends SchemaFormRecord>(
   return Boolean(value)
 }
 
+function resolveValue<T extends SchemaFormRecord, R>(
+  value: R | ((context: SchemaFormContext<T>) => R) | undefined,
+  context: SchemaFormContext<T>,
+  fallback: R,
+): R {
+  if (typeof value === 'function') {
+    return (value as (context: SchemaFormContext<T>) => R)(context)
+  }
+
+  return value ?? fallback
+}
+
 function canRenderByAuthority<T extends SchemaFormRecord>(
   item: SchemaFormItem<T>,
   options: NormalizeSchemaFormItemsOptions<T>,
@@ -47,14 +60,19 @@ export function normalizeSchemaFormItems<T extends SchemaFormRecord = Record<str
   items: SchemaFormItem<T>[] = [],
   options: NormalizeSchemaFormItemsOptions<T> = {},
 ): NormalizedSchemaFormItem<T>[] {
-  const context: SchemaFormContext<T> = {
-    mode: options.mode ?? 'create',
-    model: options.model ?? {} as SchemaFormModel<T>,
-  }
+  const model = options.model ?? {} as SchemaFormModel<T>
 
   return items
     .filter(item => item.field.trim())
     .map((item) => {
+      const context: SchemaFormContext<T> = {
+        field: item.field,
+        getValues: () => model,
+        mode: options.mode ?? 'create',
+        model,
+        setFieldValue: options.setFieldValue ?? (() => undefined),
+        value: model[item.field],
+      }
       const component = item.component ?? (item.dictionary || item.dictType ? 'select' : 'input')
       const hidden = resolveState(item.hidden, context)
       const disabled = resolveState(item.disabled, context)
@@ -65,20 +83,24 @@ export function normalizeSchemaFormItems<T extends SchemaFormRecord = Record<str
         || readonlyByAuthority
         || resolveState(item.readonly, context)
       const renderable = !hidden && component !== 'hidden' && canRenderByAuthority(item, options)
+      const componentProps = resolveValue(item.componentProps, context, {})
+      const rawOptions = typeof item.options === 'function' ? item.options(context) : unref(item.options)
 
       return {
         ...item,
         id: createSchemaFormItemId(item.field),
         component,
         componentProps: {
-          ...(item.props ?? {}),
-          ...(item.componentProps ?? {}),
+          ...componentProps,
         } as NormalizedSchemaFormItem<T>['componentProps'],
+        description: resolveValue(item.description, context, ''),
         disabled,
-        options: unref(item.options) ?? [],
+        help: resolveValue(item.help, context, ''),
+        options: rawOptions ?? [],
+        required: resolveState(item.required, context),
         readonly,
         renderable,
-        rules: item.rules ?? [],
+        rules: resolveValue(item.rules, context, []),
       }
     })
 }

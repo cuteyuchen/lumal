@@ -31,7 +31,7 @@ export function useDictionaryMap(getDictionaries: DictionaryGetter): {
           dictionaryRefs[dictionary] = computed(() => context?.store.records[dictionary] ?? [])
         }
 
-        void context?.store.loadDictionary(dictionary)
+        void context?.store.loadDictionary(dictionary).catch(() => [])
       })
     },
     {

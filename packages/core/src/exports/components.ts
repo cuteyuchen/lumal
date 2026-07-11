@@ -1,10 +1,13 @@
 export {
+  deriveCrudFormSchemas,
   LumaCrudTable,
 } from '../components/crud-table'
 export type {
   CrudActionsConfig,
   CrudDataSource,
-  CrudDialogConfig,
+  CrudEditorConfig,
+  CrudExportConfig,
+  CrudExportContext,
   CrudFetchParams,
   CrudFetchResult,
   CrudFormMode,
@@ -14,6 +17,7 @@ export type {
   CrudRemoveConfirmOptions,
   CrudStateResolver,
   CrudTableConfig,
+  CrudTableColumn,
   CrudTablePageChangePayload,
   CrudTableProps,
   CrudTableQueryModel,
@@ -58,10 +62,13 @@ export type {
   SchemaFormMode,
   SchemaFormModel,
   SchemaFormOption,
+  SchemaFormOptionsResolver,
   SchemaFormOptionValue,
   SchemaFormRecord,
   SchemaFormRule,
   SchemaFormStateResolver,
+  SchemaFormTextResolver,
+  SchemaFormValueResolver,
 } from '../components/schema-form'
 export {
   LumaSchemaTable,
@@ -73,6 +80,7 @@ export type {
   SchemaTableCellFormatter,
   SchemaTableClassName,
   SchemaTableColumn,
+  SchemaTableColumnSettings,
   SchemaTableContext,
   SchemaTableFieldKey,
   SchemaTablePaginationChangePayload,
@@ -80,6 +88,7 @@ export type {
   SchemaTableRow,
   SchemaTableSelectionPayload,
   SchemaTableStateResolver,
+  SchemaTableSortChangePayload,
   SchemaTableTreeProps,
 } from '../components/schema-table'
 export {

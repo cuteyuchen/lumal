@@ -19,10 +19,20 @@ export function useCrudQuery(options: {
     if (!options.collapsible.value || !collapsed.value) {
       return options.schemas.value
     }
-    return options.schemas.value.slice(0, options.columns.value * options.collapsedRows.value)
+    const defaultSpan = 24 / options.columns.value
+    const capacity = options.columns.value * options.collapsedRows.value
+    let used = 0
+    return options.schemas.value.filter((schema) => {
+      const units = Math.max(1, Math.ceil((schema.span ?? defaultSpan) / defaultSpan))
+      if (used + units > capacity) {
+        return false
+      }
+      used += units
+      return true
+    })
   })
   const canCollapse = computed(() => options.collapsible.value
-    && options.schemas.value.length > options.columns.value * options.collapsedRows.value)
+    && visibleSchemas.value.length < options.schemas.value.length)
 
   function reset(): SchemaFormModel {
     const nextModel = { ...defaultModel.value }

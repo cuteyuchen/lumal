@@ -24,7 +24,7 @@ const pageRef = useTemplateRef<HTMLElement>('pageRef')
 /***********************插槽状态*********************/
 const slots = useSlots()
 
-const hasHeader = computed(() => Boolean(props.title || props.description || slots.actions))
+const hasHeader = computed(() => Boolean(props.title || props.description || slots.title || slots.actions))
 
 /***********************公开方法*********************/
 defineExpose({
@@ -40,9 +40,11 @@ defineExpose({
   >
     <header v-if="hasHeader" class="luma-page__header">
       <div class="luma-page__heading">
-        <h2 v-if="title" class="luma-page__title">
-          {{ title }}
-        </h2>
+        <slot name="title">
+          <h2 v-if="title" class="luma-page__title">
+            {{ title }}
+          </h2>
+        </slot>
         <p v-if="description" class="luma-page__description">
           {{ description }}
         </p>

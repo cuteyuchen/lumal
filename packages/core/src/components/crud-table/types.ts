@@ -1,6 +1,12 @@
 import type { PaginationChangePayload } from '../pagination'
-import type { SchemaFormItem, SchemaFormModel } from '../schema-form'
-import type { SchemaTableColumn, SchemaTableRow } from '../schema-table'
+import type {
+  SchemaFormComponentProps,
+  SchemaFormComponentType,
+  SchemaFormItem,
+  SchemaFormModel,
+  SchemaFormRule,
+} from '../schema-form'
+import type { SchemaTableColumn, SchemaTableColumnSettings, SchemaTableRow } from '../schema-table'
 
 export type CrudTableQueryModel = SchemaFormModel
 
@@ -31,6 +37,7 @@ export interface CrudDataSource<
   remove?: (row: Row) => Promise<unknown>
   removeMany?: (rows: Row[]) => Promise<unknown>
   update?: (row: Row, model: Partial<Row>) => Promise<unknown>
+  beforeRemove?: (rows: Row[]) => boolean | Promise<boolean>
 }
 
 export type CrudFormMode = 'create' | 'edit' | 'view'
@@ -59,27 +66,62 @@ export interface CrudQueryConfig {
   labelWidth?: number | string
   searchText?: string
   resetText?: string
+  submitOnChange?: boolean
+  submitDebounce?: number
 }
 
 export interface CrudTableConfig {
-  columns?: SchemaTableColumn[]
+  columns?: CrudTableColumn[]
   rowKey?: string | ((row: SchemaTableRow, index: number) => string | number)
   selection?: boolean
   showColumnSettings?: boolean
+  columnSettings?: SchemaTableColumnSettings
   autoResize?: boolean
   actionWidth?: number | string
   emptyText?: string
 }
 
+export interface CrudTableColumn extends SchemaTableColumn {
+  component?: SchemaFormComponentType
+  defaultValue?: unknown
+  editDisabled?: boolean
+  formComponentProps?: SchemaFormComponentProps
+  placeholder?: string
+  prepend?: string
+  append?: string
+  prefix?: string
+  suffix?: string
+  required?: boolean
+  rules?: SchemaFormRule[]
+  showInForm?: boolean
+  showInTable?: boolean
+  span?: number
+}
+
 export interface CrudToolbarConfig {
+  title?: string
   create?: boolean
   batchDelete?: boolean
   refresh?: boolean
-  export?: boolean
+  export?: boolean | CrudExportConfig
+  fullscreen?: boolean
   createText?: string
   batchDeleteText?: string
   refreshText?: string
   exportText?: string
+  fullscreenText?: string
+}
+
+export interface CrudExportContext<Row extends SchemaTableRow = SchemaTableRow> {
+  columns: CrudTableColumn[]
+  query: SchemaFormModel
+  rows: Row[]
+  selectedRows: Row[]
+}
+
+export interface CrudExportConfig<Row extends SchemaTableRow = SchemaTableRow> {
+  filename?: string
+  handler?: (context: CrudExportContext<Row>) => void | Promise<void>
 }
 
 export interface CrudActionsConfig<Row extends SchemaTableRow = SchemaTableRow> {
@@ -92,8 +134,13 @@ export interface CrudActionsConfig<Row extends SchemaTableRow = SchemaTableRow> 
   confirmRemove?: CrudRemoveConfirm<Row>
 }
 
-export interface CrudDialogConfig<Row extends SchemaTableRow = SchemaTableRow> {
+export interface CrudEditorConfig<Row extends SchemaTableRow = SchemaTableRow> {
+  type?: 'dialog' | 'drawer'
   width?: number | string
+  columns?: number
+  labelWidth?: number | string
+  loading?: boolean
+  disabled?: boolean
   createTitle?: string
   editTitle?: string
   viewTitle?: string
@@ -117,7 +164,7 @@ export interface CrudTableProps {
   description?: string
   querySchemas?: SchemaFormItem[]
   formSchemas?: SchemaFormItem[]
-  columns?: SchemaTableColumn[]
+  columns?: CrudTableColumn[]
   dataSource?: CrudDataSource
   rows?: SchemaTableRow[]
   rowKey?: string | ((row: SchemaTableRow, index: number) => string | number)
@@ -131,10 +178,9 @@ export interface CrudTableProps {
   createText?: string
   batchDeleteText?: string
   selection?: boolean
-  confirmRemove?: (rows: SchemaTableRow[]) => boolean | Promise<boolean>
   query?: CrudQueryConfig
   table?: CrudTableConfig
   toolbar?: CrudToolbarConfig
   actions?: CrudActionsConfig
-  dialog?: CrudDialogConfig
+  editor?: CrudEditorConfig
 }

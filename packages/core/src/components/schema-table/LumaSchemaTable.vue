@@ -5,9 +5,11 @@ import type {
   SchemaTableAuthority,
   SchemaTableClassName,
   SchemaTableColumn,
+  SchemaTableColumnSettings,
   SchemaTablePaginationChangePayload,
   SchemaTableRecord,
   SchemaTableRow,
+  SchemaTableSortChangePayload,
   SchemaTableTreeProps,
 } from './types'
 import { ElCheckbox, ElLoading, ElTable, ElTableColumn } from 'element-plus'
@@ -35,9 +37,12 @@ const props = withDefaults(defineProps<{
   canAccess?: (authority: SchemaTableAuthority) => boolean
   cellClassName?: SchemaTableClassName<T>
   columnResizable?: boolean
+  columnSettings?: SchemaTableColumnSettings
   columns: SchemaTableColumn<T>[]
   defaultExpandAll?: boolean
   emptyText?: string
+  error?: boolean | Error | string
+  errorText?: string
   headerCellClassName?: SchemaTableClassName<T>
   indexLabel?: string
   indexWidth?: number | string
@@ -61,6 +66,8 @@ const props = withDefaults(defineProps<{
   autoResize: true,
   columnResizable: true,
   emptyText: '暂无数据',
+  error: false,
+  errorText: '数据加载失败',
   indexLabel: '#',
   indexWidth: 64,
   loading: false,
@@ -78,8 +85,14 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
+  currentChange: [currentRow: T | undefined, oldCurrentRow: T | undefined]
+  expandChange: [row: T, expanded: boolean | T[]]
+  filterChange: [filters: Record<string, unknown>]
   pageChange: [payload: SchemaTablePaginationChangePayload]
+  retry: []
+  rowClick: [row: T, column: unknown, event: Event]
   selectionChange: [selectedRows: T[], selectedRowKeys: Array<string | number>]
+  sortChange: [payload: SchemaTableSortChangePayload]
 }>()
 
 const page = defineModel<number>('page', { default: 1 })
@@ -90,18 +103,32 @@ const vLoading = ElLoading.directive
 const containerRef = useTemplateRef<HTMLElement>('containerRef')
 const tableRef = useTemplateRef<TableInstance>('tableRef')
 const hiddenColumnFields = shallowRef(new Set<string>())
+const columnOrder = shallowRef<string[]>([])
 const selectedRows = shallowRef<T[]>([])
 const selectedRowKeys = shallowRef<Array<string | number>>([])
 let resizeObserver: ResizeObserver | undefined
+let draggedColumnField = ''
 
 const normalizedColumns = computed(() => normalizeSchemaTableColumns<T>(props.columns, {
   canAccess: props.canAccess,
   rows: props.rows,
 }))
-const renderableColumns = computed(() => normalizedColumns.value.filter(column =>
+const orderedColumns = computed(() => {
+  const order = columnOrder.value
+  if (order.length === 0) {
+    return normalizedColumns.value
+  }
+  const indexMap = new Map(order.map((field, index) => [field, index]))
+  return [...normalizedColumns.value].sort((left, right) =>
+    (indexMap.get(String(left.field)) ?? Number.MAX_SAFE_INTEGER)
+    - (indexMap.get(String(right.field)) ?? Number.MAX_SAFE_INTEGER))
+})
+const renderableColumns = computed(() => orderedColumns.value.filter(column =>
   column.renderable && !hiddenColumnFields.value.has(String(column.field)),
 ))
-const configurableColumns = computed(() => normalizedColumns.value.filter(column => column.renderable))
+const configurableColumns = computed(() => orderedColumns.value.filter(column =>
+  column.renderable && !column.fixed && column.configurable !== false,
+))
 const flexibleColumnField = computed(() => [...renderableColumns.value]
   .reverse()
   .find(column => !column.fixed)
@@ -120,6 +147,10 @@ const elementRowKey = computed(() => {
   return (row: T): string => String(rowKey(row, props.rows.indexOf(row)))
 })
 const showPagination = computed(() => props.pagination && props.total > 0)
+const showColumnSettingsPanel = computed(() => props.showColumnSettings || props.columnSettings?.enabled)
+const resolvedErrorText = computed(() => props.error instanceof Error
+  ? props.error.message || props.errorText
+  : typeof props.error === 'string' ? props.error : props.errorText)
 const resolvedDefaultExpandAll = computed(() =>
   props.defaultExpandAll ?? Boolean(props.tableProps.defaultExpandAll),
 )
@@ -132,18 +163,113 @@ const resolvedTreeProps = computed<SchemaTableTreeProps>(() =>
 /***********************列与单元格*********************/
 function toggleColumnVisible(field: string): void {
   const next = new Set(hiddenColumnFields.value)
-  next.has(field) ? next.delete(field) : next.add(field)
+  if (next.has(field)) {
+    next.delete(field)
+  }
+  else {
+    const visibleConfigurableCount = configurableColumns.value.filter(column =>
+      !next.has(String(column.field)),
+    ).length
+    if (visibleConfigurableCount <= 1) {
+      return
+    }
+    next.add(field)
+  }
   hiddenColumnFields.value = next
+  persistColumnSettings()
   void nextTick(() => tableRef.value?.doLayout?.())
 }
 
-function resolveColumnOptions(column: NormalizedSchemaTableColumn<T>) {
-  const options = unref(column.options)
-  if (options?.length) {
-    return options
+function resetColumnSettings(): void {
+  hiddenColumnFields.value = new Set()
+  columnOrder.value = normalizedColumns.value.map(column => String(column.field))
+  persistColumnSettings()
+  void nextTick(() => tableRef.value?.doLayout?.())
+}
+
+function moveColumn(field: string, direction: -1 | 1): void {
+  const order = configurableColumns.value.map(column => String(column.field))
+  const currentIndex = order.indexOf(field)
+  const targetIndex = currentIndex + direction
+  if (currentIndex < 0 || targetIndex < 0 || targetIndex >= order.length) {
+    return
   }
+  const targetField = order[targetIndex]
+  const fullOrder = orderedColumns.value.map(column => String(column.field))
+  const from = fullOrder.indexOf(field)
+  const to = fullOrder.indexOf(targetField)
+  fullOrder.splice(from, 1)
+  fullOrder.splice(to, 0, field)
+  columnOrder.value = fullOrder
+  persistColumnSettings()
+  void nextTick(() => tableRef.value?.doLayout?.())
+}
+
+function handleColumnDragStart(field: string): void {
+  draggedColumnField = field
+}
+
+function handleColumnDrop(targetField: string): void {
+  if (!draggedColumnField || draggedColumnField === targetField) {
+    draggedColumnField = ''
+    return
+  }
+  const order = orderedColumns.value.map(column => String(column.field))
+  const from = order.indexOf(draggedColumnField)
+  const to = order.indexOf(targetField)
+  if (from >= 0 && to >= 0) {
+    order.splice(from, 1)
+    order.splice(to, 0, draggedColumnField)
+    columnOrder.value = order
+    persistColumnSettings()
+    void nextTick(() => tableRef.value?.doLayout?.())
+  }
+  draggedColumnField = ''
+}
+
+function persistColumnSettings(): void {
+  const key = props.columnSettings?.storageKey
+  if (!key || typeof localStorage === 'undefined') {
+    return
+  }
+  try {
+    localStorage.setItem(key, JSON.stringify({
+      hidden: [...hiddenColumnFields.value],
+      order: columnOrder.value,
+    }))
+  }
+  catch {
+    // 存储不可用时保留当前会话状态。
+  }
+}
+
+function restoreColumnSettings(): void {
+  columnOrder.value = normalizedColumns.value.map(column => String(column.field))
+  const key = props.columnSettings?.storageKey
+  if (!key || typeof localStorage === 'undefined') {
+    return
+  }
+  try {
+    const stored = JSON.parse(localStorage.getItem(key) ?? '{}') as { hidden?: string[], order?: string[] }
+    const fields = new Set(normalizedColumns.value.map(column => String(column.field)))
+    hiddenColumnFields.value = new Set((stored.hidden ?? []).filter(field => fields.has(field)))
+    columnOrder.value = [
+      ...(stored.order ?? []).filter(field => fields.has(field)),
+      ...[...fields].filter(field => !(stored.order ?? []).includes(field)),
+    ]
+  }
+  catch {
+    resetColumnSettings()
+  }
+}
+
+function resolveColumnOptions(column: NormalizedSchemaTableColumn<T>) {
   const dictionary = column.dictionary ?? column.dictType
-  return dictionary ? dictionaryMap.value[dictionary] ?? [] : []
+  if (dictionary) {
+    return dictionaryMap.value[dictionary] ?? []
+  }
+
+  return unref(column.options) ?? []
 }
 
 function isCellHidden(row: T, column: NormalizedSchemaTableColumn<T>, index: number): boolean {
@@ -205,6 +331,18 @@ function handlePageChange(payload: SchemaTablePaginationChangePayload): void {
   emit('pageChange', payload)
 }
 
+function handleRowClick(row: T, column: unknown, event: Event): void {
+  emit('rowClick', row, column, event)
+}
+
+function handleCurrentChange(currentRow: T | undefined, oldCurrentRow: T | undefined): void {
+  emit('currentChange', currentRow, oldCurrentRow)
+}
+
+function handleExpandChange(row: T, expanded: boolean | T[]): void {
+  emit('expandChange', row, expanded)
+}
+
 function setupResizeObserver(): void {
   if (!props.autoResize || typeof ResizeObserver === 'undefined' || !containerRef.value) {
     return
@@ -224,7 +362,11 @@ watch(() => props.autoResize, () => {
   teardownResizeObserver()
   setupResizeObserver()
 })
-onMounted(setupResizeObserver)
+watch(() => [props.columns, props.columnSettings?.storageKey], restoreColumnSettings, { deep: true })
+onMounted(() => {
+  restoreColumnSettings()
+  setupResizeObserver()
+})
 onBeforeUnmount(teardownResizeObserver)
 
 defineExpose({
@@ -232,6 +374,14 @@ defineExpose({
   doLayout: () => tableRef.value?.doLayout?.(),
   getSelectedRowKeys: () => [...selectedRowKeys.value],
   getSelectedRows: () => [...selectedRows.value],
+  getColumnOrder: () => [...columnOrder.value],
+  getExportData: (sourceRows: T[] = props.rows) => ({
+    columns: renderableColumns.value.map(column => ({ field: String(column.field), label: column.label })),
+    rows: sourceRows.map(row => renderableColumns.value.map(column =>
+      resolveCellDisplay(row, column, props.rows.indexOf(row)).text,
+    )),
+  }),
+  getVisibleColumns: () => [...renderableColumns.value],
   getTableElement: () => tableRef.value?.$el as HTMLElement | undefined,
   getTableInstance: () => tableRef.value,
   toggleRowSelection: (row: T, selected?: boolean) => tableRef.value?.toggleRowSelection?.(row, selected),
@@ -240,7 +390,7 @@ defineExpose({
 
 <template>
   <div ref="containerRef" class="luma-schema-table">
-    <div v-if="showColumnSettings" class="luma-schema-table__toolbar">
+    <div v-if="showColumnSettingsPanel" class="luma-schema-table__toolbar">
       <div class="luma-schema-table__column-settings">
         <details>
           <summary class="luma-schema-table__column-settings-trigger" aria-label="列设置" title="列设置">
@@ -249,20 +399,41 @@ defineExpose({
             </svg>
           </summary>
           <div class="luma-schema-table__column-options">
-            <ElCheckbox
-              v-for="column in configurableColumns"
+            <div class="luma-schema-table__column-options-header">
+              <strong>列设置</strong>
+              <button type="button" @click="resetColumnSettings">恢复默认</button>
+            </div>
+            <div
+              v-for="(column, index) in configurableColumns"
               :key="String(column.field)"
-              :model-value="!hiddenColumnFields.has(String(column.field))"
-              @update:model-value="toggleColumnVisible(String(column.field))"
+              class="luma-schema-table__column-option"
+              :draggable="columnSettings?.reorderable !== false"
+              @dragstart="handleColumnDragStart(String(column.field))"
+              @dragover.prevent
+              @drop="handleColumnDrop(String(column.field))"
             >
-              {{ column.label }}
-            </ElCheckbox>
+              <ElCheckbox
+                :model-value="!hiddenColumnFields.has(String(column.field))"
+                @update:model-value="toggleColumnVisible(String(column.field))"
+              >
+                {{ column.label }}
+              </ElCheckbox>
+              <span v-if="columnSettings?.reorderable !== false" class="luma-schema-table__column-order-actions">
+                <button type="button" :disabled="index === 0" :aria-label="`上移${column.label}`" @click="moveColumn(String(column.field), -1)">↑</button>
+                <button type="button" :disabled="index === configurableColumns.length - 1" :aria-label="`下移${column.label}`" @click="moveColumn(String(column.field), 1)">↓</button>
+              </span>
+            </div>
           </div>
         </details>
       </div>
     </div>
 
-    <div class="luma-schema-table__scroll">
+    <div v-if="error" class="luma-schema-table__error" role="alert">
+      <span>{{ resolvedErrorText }}</span>
+      <button type="button" @click="emit('retry')">{{ retryText }}</button>
+    </div>
+
+    <div v-else class="luma-schema-table__scroll">
       <ElTable
         ref="tableRef"
         v-loading="loading"
@@ -278,6 +449,11 @@ defineExpose({
         :tree-props="resolvedTreeProps"
         :data-loading="loading"
         @selection-change="handleSelectionChange"
+        @sort-change="emit('sortChange', $event)"
+        @filter-change="emit('filterChange', $event)"
+        @row-click="handleRowClick"
+        @current-change="handleCurrentChange"
+        @expand-change="handleExpandChange"
       >
         <ElTableColumn v-if="selection" type="selection" width="48" />
         <ElTableColumn v-if="showIndex" type="index" :label="indexLabel" :width="indexWidth" />
@@ -375,6 +551,63 @@ defineExpose({
   border-radius: var(--el-border-radius-base);
   background: var(--el-bg-color-overlay);
   box-shadow: var(--luma-shadow-base);
+}
+
+.luma-schema-table__column-options-header,
+.luma-schema-table__column-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.luma-schema-table__column-options-header {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.luma-schema-table__column-options-header button,
+.luma-schema-table__column-order-actions button,
+.luma-schema-table__error button {
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--el-border-color);
+  border-radius: var(--el-border-radius-small);
+  color: var(--el-text-color-regular);
+  background: var(--el-fill-color-blank);
+  cursor: pointer;
+}
+
+.luma-schema-table__column-option[draggable="true"] {
+  cursor: grab;
+}
+
+.luma-schema-table__column-order-actions {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.luma-schema-table__column-order-actions button {
+  min-width: 32px;
+  padding: 0;
+}
+
+.luma-schema-table__column-order-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.luma-schema-table__error {
+  display: flex;
+  min-height: 160px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  border: 1px dashed var(--el-color-danger-light-5);
+  border-radius: var(--el-border-radius-base);
+  color: var(--el-color-danger);
+  background: var(--el-color-danger-light-9);
 }
 
 .luma-schema-table__column-settings {
@@ -482,3 +715,6 @@ defineExpose({
   }
 }
 </style>
+  retryText?: string
+  retryText: '重新加载',
+  resetColumnSettings,

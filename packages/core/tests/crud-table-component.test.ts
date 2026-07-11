@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import { h, nextTick } from 'vue'
-import { LumaCrudTable } from '../src/components/crud-table'
+import { deriveCrudFormSchemas, LumaCrudTable } from '../src/components/crud-table'
 import { LumaPagination } from '../src/components/pagination'
 import { LumaSchemaForm } from '../src/components/schema-form'
 import { LumaSchemaTable } from '../src/components/schema-table'
@@ -14,6 +14,39 @@ async function flushPromises(): Promise<void> {
 }
 
 describe('luma crud table', () => {
+  it('会从列配置派生编辑表单并保留字典及显示范围', () => {
+    expect(deriveCrudFormSchemas([
+      {
+        dictionary: 'status',
+        field: 'status',
+        label: '状态',
+        showInTable: false,
+      },
+      {
+        component: 'textarea',
+        field: 'remark',
+        label: '备注',
+        showInForm: false,
+      },
+      {
+        field: 'action',
+        label: '操作',
+      },
+    ])).toEqual([
+      expect.objectContaining({
+        component: 'select',
+        dictionary: 'status',
+        field: 'status',
+        label: '状态',
+      }),
+    ])
+
+    expect(deriveCrudFormSchemas(
+      [{ dictionary: 'status', field: 'status', label: '状态' }],
+      [{ component: 'input', field: 'name', label: '显式字段' }],
+    )).toEqual([{ component: 'input', field: 'name', label: '显式字段' }])
+  })
+
   it('会组合查询表单、表格、分页和 Element Plus 操作按钮', () => {
     const wrapper = mount(LumaCrudTable, {
       global: {
@@ -50,7 +83,9 @@ describe('luma crud table', () => {
     expect(wrapper.findComponent(LumaSchemaForm).exists()).toBe(true)
     expect(wrapper.findComponent(LumaSchemaTable).exists()).toBe(true)
     expect(wrapper.findComponent(LumaPagination).exists()).toBe(true)
-    expect(wrapper.findAllComponents({ name: 'ElButton' })).toHaveLength(2)
+    expect(wrapper.find('[data-action="search"]').exists()).toBe(true)
+    expect(wrapper.find('[data-action="reset"]').exists()).toBe(true)
+    expect(wrapper.find('[data-action="create"]').exists()).toBe(true)
   })
 
   it('允许应用通过 create-action 插槽替换默认新增按钮', async () => {
@@ -274,6 +309,66 @@ describe('luma crud table', () => {
     expect(formatter?.(rows[0], {}, 'enabled', 0)).toBe('启用')
   })
 
+  it('列上的字典键会同时驱动表格翻译和派生弹窗 options', async () => {
+    const rows = [{ id: 'row-1', internal: '隐藏值', status: 1 }]
+    const store = createDictionaryStore({
+      fetcher: async () => ({
+        items: [
+          { color: '#16a34a', label: '启用', value: '1' },
+          { color: '#94a3b8', label: '停用', value: '0' },
+        ],
+      }),
+    })
+    const wrapper = mount(LumaCrudTable, {
+      global: {
+        provide: {
+          [dictionaryContextKey as symbol]: { store },
+        },
+        stubs: elementPlusStubs,
+      },
+      props: {
+        columns: [
+          {
+            dictType: 'status',
+            field: 'status',
+            label: '状态',
+          },
+          {
+            field: 'internal',
+            label: '内部字段',
+            showInForm: false,
+          },
+          {
+            field: 'remark',
+            label: '备注',
+            showInTable: false,
+          },
+        ],
+        dataSource: {
+          create: vi.fn().mockResolvedValue({}),
+          fetch: vi.fn().mockResolvedValue({ items: rows, total: 1 }),
+        },
+      },
+    })
+
+    await flushPromises()
+
+    const table = wrapper.findComponent(LumaSchemaTable)
+    expect(table.props('columns').map((column: { field: string }) => column.field)).toEqual(['status', 'internal'])
+
+    const formatter = table.findAllComponents({ name: 'ElTableColumn' })[0]?.props('formatter') as
+      | ((row: Record<string, unknown>, column: unknown, value: unknown, index: number) => unknown)
+      | undefined
+    expect(formatter?.(rows[0], {}, 1, 0)).toBe('启用')
+
+    await wrapper.find('[data-action="create"]').trigger('click')
+    await flushPromises()
+
+    const dialogForm = wrapper.findAllComponents(LumaSchemaForm).at(-1)
+    expect(dialogForm?.props('schemas').map((schema: { field: string }) => schema.field)).toEqual(['status', 'remark'])
+    expect(dialogForm?.findAllComponents({ name: 'ElOption' }).map(item => item.props('label'))).toEqual(['启用', '停用'])
+  })
+
   it('会通过标准 dataSource 加载数据并随查询分页刷新', async () => {
     const fetch = vi.fn()
       .mockResolvedValueOnce({
@@ -409,13 +504,11 @@ describe('luma crud table', () => {
     const row = { id: 'row-1', name: 'Luma' }
     const confirmRemove = vi.fn().mockResolvedValue(false)
     const remove = vi.fn().mockResolvedValue({})
-    const legacyConfirmRemove = vi.fn().mockResolvedValue(true)
     const wrapper = mount(LumaCrudTable, {
       global: { stubs: elementPlusStubs },
       props: {
         actions: { confirmRemove },
         columns: [{ field: 'name', label: '名称' }],
-        confirmRemove: legacyConfirmRemove,
         dataSource: {
           fetch: vi.fn().mockResolvedValue({ items: [row], total: 1 }),
           remove,
@@ -430,7 +523,6 @@ describe('luma crud table', () => {
     await api.removeRow(row)
 
     expect(confirmRemove).toHaveBeenCalledWith([row])
-    expect(legacyConfirmRemove).not.toHaveBeenCalled()
     expect(remove).not.toHaveBeenCalled()
   })
 
@@ -548,5 +640,82 @@ describe('luma crud table', () => {
     expect(wrapper.find('.luma-crud-table__dialog-error').text()).toContain('保存失败')
     expect(api.isLoading()).toBe(false)
     expect(wrapper.emitted('operationError')).toHaveLength(1)
+  })
+
+  it('支持 Drawer 编辑器并转发 query、table、form 和 footer 插槽', async () => {
+    const wrapper = mount(LumaCrudTable, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        dataSource: {
+          create: vi.fn().mockResolvedValue({}),
+          fetch: vi.fn().mockResolvedValue({ items: [{ id: 'row-1', name: 'Luma' }], total: 1 }),
+        },
+        editor: { type: 'drawer', width: '640px' },
+        query: {
+          schemas: [{ field: 'keyword', label: '关键词' }],
+        },
+        table: {
+          columns: [{ field: 'name', label: '名称' }],
+        },
+      },
+      slots: {
+        'footer': () => h('div', { class: 'custom-editor-footer' }, '自定义底部'),
+        'form-name': () => h('div', { class: 'custom-form-field' }, '自定义表单'),
+        'query-keyword': () => h('div', { class: 'custom-query-field' }, '自定义查询'),
+        'table-name': () => h('div', { class: 'custom-table-field' }, '自定义表格'),
+      },
+    })
+
+    await flushPromises()
+    expect(wrapper.find('.custom-query-field').exists()).toBe(true)
+    expect(wrapper.find('.custom-table-field').exists()).toBe(true)
+
+    await wrapper.find('[data-action="create"]').trigger('click')
+    await nextTick()
+    expect(wrapper.find('.el-drawer').attributes('data-size')).toBe('640px')
+    expect(wrapper.find('.custom-form-field').exists()).toBe(true)
+    expect(wrapper.find('.custom-editor-footer').text()).toBe('自定义底部')
+  })
+
+  it('支持查询值变化防抖提交、定制导出和全屏控制器', async () => {
+    const exportHandler = vi.fn()
+    const fetch = vi.fn().mockResolvedValue({ items: [{ id: 'row-1', name: 'Luma' }], total: 1 })
+    const wrapper = mount(LumaCrudTable, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        dataSource: { fetch },
+        query: {
+          schemas: [{ field: 'keyword', label: '关键词' }],
+          submitDebounce: 0,
+          submitOnChange: true,
+        },
+        table: {
+          columns: [{ field: 'name', label: '名称' }],
+        },
+        toolbar: {
+          export: { filename: 'projects.csv', handler: exportHandler },
+          fullscreen: true,
+        },
+      },
+    })
+
+    await flushPromises()
+    fetch.mockClear()
+    await wrapper.find('input[name="keyword"]').setValue('Luma')
+    await new Promise(resolve => setTimeout(resolve, 1))
+    await flushPromises()
+    expect(fetch).toHaveBeenCalledWith(expect.objectContaining({ query: { keyword: 'Luma' } }))
+
+    await wrapper.find('[data-action="export"]').trigger('click')
+    await flushPromises()
+    expect(exportHandler).toHaveBeenCalledWith(expect.objectContaining({
+      rows: [{ id: 'row-1', name: 'Luma' }],
+      selectedRows: [],
+    }))
+
+    const requestFullscreen = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(wrapper.element, 'requestFullscreen', { configurable: true, value: requestFullscreen })
+    await wrapper.find('[data-action="fullscreen"]').trigger('click')
+    expect(requestFullscreen).toHaveBeenCalled()
   })
 })
