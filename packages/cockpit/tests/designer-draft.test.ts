@@ -1,5 +1,6 @@
 import type { CockpitConfig } from '../src/types'
 import { describe, expect, it } from 'vitest'
+import { COCKPIT_SCHEMA_VERSION } from '../src/config/defaults'
 import { useCockpitDraft } from '../src/designer/useCockpitDraft'
 
 function sourceConfig(): CockpitConfig {
@@ -70,7 +71,7 @@ describe('useCockpitDraft', () => {
     const draft = useCockpitDraft(sourceConfig())
     const { config, validation } = draft.buildSaveConfig()
     expect(validation.valid).toBe(true)
-    expect(config.schemaVersion).toBe(1)
+    expect(config.schemaVersion).toBe(COCKPIT_SCHEMA_VERSION)
     expect(() => JSON.stringify(config)).not.toThrow()
   })
 

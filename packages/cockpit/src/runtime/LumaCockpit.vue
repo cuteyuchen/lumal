@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import type { Slots } from 'vue'
 import type { CockpitRegistry } from '../registry/types'
-import type { CockpitConfig, CockpitRenderMode } from '../types'
+import type {
+  CockpitConfig,
+  CockpitNodeKind,
+  CockpitNodeSelectPayload,
+  CockpitRenderMode,
+  CockpitThemeMode,
+} from '../types'
 import { computed, provide, ref, useSlots, watch } from 'vue'
 import { useCockpit } from '../composables/useCockpit'
 import { normalizeCockpitConfig } from '../config/normalize'
@@ -19,6 +25,8 @@ const props = withDefaults(defineProps<{
   cachePages?: boolean
   /** 渲染模式；Designer 预览传入 design，组件可通过 context.mode 感知 */
   renderMode?: CockpitRenderMode
+  /** 已解析主题；system 由宿主应用解析为 light/dark */
+  themeMode?: CockpitThemeMode
   /** 消息总线可由宿主传入以跨实例共享，否则内部创建 */
   messageBus?: ReturnType<typeof createCockpitMessageBus>
 }>(), {
@@ -26,11 +34,13 @@ const props = withDefaults(defineProps<{
   baseHeight: 1080,
   cachePages: true,
   renderMode: 'runtime',
+  themeMode: 'dark',
 })
 
 const emit = defineEmits<{
   configure: []
   configError: [error: unknown]
+  nodeSelect: [payload: CockpitNodeSelectPayload]
 }>()
 
 const activeCategoryId = defineModel<string | undefined>('activeCategoryId')
@@ -93,10 +103,34 @@ const hasConfig = computed(() => normalized.value !== null && normalized.value.c
 function requestConfigure(): void {
   emit('configure')
 }
+
+function handleNodeClick(event: MouseEvent): void {
+  if (props.renderMode !== 'design')
+    return
+  const target = event.target instanceof Element ? event.target : null
+  const node = target?.closest('[data-cockpit-node]') as HTMLElement | null
+  if (!node || !rootRef.value?.contains(node))
+    return
+  const kind = node.dataset.cockpitNode as CockpitNodeKind | undefined
+  const id = node.dataset.cockpitNodeId
+  if (!kind || !id)
+    return
+  emit('nodeSelect', {
+    kind,
+    id,
+    side: node.dataset.cockpitSide as CockpitNodeSelectPayload['side'],
+  })
+}
 </script>
 
 <template>
-  <div ref="rootRef" class="luma-cockpit" data-mode="runtime">
+  <div
+    ref="rootRef"
+    class="luma-cockpit"
+    :data-mode="renderMode"
+    :data-cockpit-theme="themeMode"
+    @click.capture="handleNodeClick"
+  >
     <!-- 配置加载失败：可覆盖错误插槽 + 重试 -->
     <template v-if="configError">
       <slot name="error" :error="configError">

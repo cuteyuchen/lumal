@@ -30,6 +30,45 @@ describe('normalizeCockpitConfig', () => {
     expect(col.containers[0].height).toBeGreaterThan(0)
   })
 
+  it('v1 区域配置自动补齐 v2 宽度', () => {
+    const result = normalizeCockpitConfig({
+      schemaVersion: 1,
+      categories: [{
+        id: 'c',
+        label: 'c',
+        pages: [{
+          id: 'p',
+          title: 'p',
+          left: { columns: [{ id: 'col', width: 1, containers: [] }] },
+          right: { columns: [] },
+        }],
+      }],
+    })
+
+    expect(result.schemaVersion).toBe(COCKPIT_SCHEMA_VERSION)
+    expect(result.categories[0].pages[0].left.width).toBe(420)
+    expect(result.categories[0].pages[0].right.width).toBe(0)
+  })
+
+  it('区域宽度限制在安全范围并保留中央最小宽度', () => {
+    const result = normalizeCockpitConfig({
+      categories: [{
+        id: 'c',
+        label: 'c',
+        pages: [{
+          id: 'p',
+          title: 'p',
+          left: { width: 900, columns: [{ id: 'left', width: 1, containers: [] }] },
+          right: { width: 900, columns: [{ id: 'right', width: 1, containers: [] }] },
+        }],
+      }],
+    })
+
+    const page = result.categories[0].pages[0]
+    expect(page.left.width).toBe(708)
+    expect(page.right.width).toBe(708)
+  })
+
   it('activeCategoryId 失效时回退到第一个可见分类', () => {
     const result = normalizeCockpitConfig({
       activeCategoryId: 'missing',
@@ -129,6 +168,22 @@ describe('validateCockpitConfig', () => {
       categories: [{ id: 'c', label: 'c', pages: [{ id: 'p', title: 'p', left: { columns: [] }, right: { columns: [] } }] }],
     })
     expect(result.valid).toBe(true)
+  })
+
+  it('区域宽度非法时给出警告但不阻止保存', () => {
+    const result = validateCockpitConfig({
+      schemaVersion: 2,
+      id: 'x',
+      title: 't',
+      categories: [{ id: 'c', label: 'c', pages: [{
+        id: 'p',
+        title: 'p',
+        left: { width: 80, columns: [{ id: 'col', width: 1, containers: [] }] },
+        right: { columns: [] },
+      }] }],
+    })
+    expect(result.valid).toBe(true)
+    expect(result.issues.some(i => i.level === 'warning' && i.message.includes('区域宽度'))).toBe(true)
   })
 })
 

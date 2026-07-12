@@ -38,6 +38,8 @@ const context = computed<CockpitBaseContext | null>(() => {
   }
 })
 
+const centerNodeId = computed(() => props.center?.id ?? `${props.categoryId}:${props.pageId}:center`)
+
 // 有配置时 per-instance 提供上下文
 if (context.value)
   provideCockpitContext(context.value)
@@ -49,7 +51,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="luma-cockpit-center" :data-center-type="center?.type">
+  <div
+    class="luma-cockpit-center"
+    :data-center-type="center?.type"
+    data-cockpit-node="center"
+    :data-cockpit-node-id="centerNodeId"
+  >
     <!-- 未配置中央组件 -->
     <template v-if="!center">
       <component :is="env.slots['empty-center']" v-if="env.slots['empty-center']" />

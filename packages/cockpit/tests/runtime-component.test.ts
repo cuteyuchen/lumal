@@ -189,4 +189,32 @@ describe('lumaCockpit 运行时', () => {
     })
     expect(wrapper.text()).toContain('空驾驶舱')
   })
+
+  it('输出已解析主题属性', () => {
+    const wrapper = mount(LumaCockpit, {
+      props: { config: baseConfig(), registry: createRegistry(), themeMode: 'light' },
+    })
+    expect(wrapper.attributes('data-cockpit-theme')).toBe('light')
+  })
+
+  it('design 模式点击节点时发出稳定 node-select 事件', async () => {
+    const config = baseConfig()
+    config.categories[0].pages[0].left.columns = [{
+      id: 'col',
+      width: 1,
+      containers: [{
+        id: 'ct',
+        height: 1,
+        mode: 'single',
+        widgets: [{ id: 'w1', type: 'stub', visible: true }],
+      }],
+    }]
+    const wrapper = mount(LumaCockpit, {
+      props: { config, registry: createRegistry(), renderMode: 'design' },
+    })
+
+    await wrapper.find('.stub-widget').trigger('click')
+
+    expect(wrapper.emitted('nodeSelect')?.[0]).toEqual([{ kind: 'widget', id: 'w1', side: 'left' }])
+  })
 })

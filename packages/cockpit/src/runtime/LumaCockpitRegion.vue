@@ -17,6 +17,11 @@ const totalWidth = computed(() =>
   props.region.columns.reduce((sum, column) => sum + (column.width > 0 ? column.width : 0), 0),
 )
 
+const regionStyle = computed(() => ({
+  width: `${props.region.width ?? 0}px`,
+  flex: `0 0 ${props.region.width ?? 0}px`,
+}))
+
 function columnFlex(width: number): string {
   const safe = width > 0 ? width : 0
   const total = totalWidth.value
@@ -27,16 +32,27 @@ function columnFlex(width: number): string {
 </script>
 
 <template>
-  <div class="luma-cockpit-region" :data-side="side">
+  <div
+    class="luma-cockpit-region"
+    :data-side="side"
+    data-cockpit-node="region"
+    :data-cockpit-node-id="`${categoryId}:${pageId}:${side}`"
+    :data-cockpit-side="side"
+    :style="regionStyle"
+  >
     <div
       v-for="column in region.columns"
       :key="column.id"
       class="luma-cockpit-region__column"
+      data-cockpit-node="column"
+      :data-cockpit-node-id="column.id"
+      :data-cockpit-side="side"
       :style="{ flex: columnFlex(column.width) }"
     >
       <LumaCockpitColumn
         :category-id="categoryId"
         :page-id="pageId"
+        :side="side"
         :column="column"
       />
     </div>

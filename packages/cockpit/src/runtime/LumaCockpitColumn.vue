@@ -9,6 +9,7 @@ import LumaCockpitContainer from './LumaCockpitContainer.vue'
 const props = defineProps<{
   categoryId: string
   pageId: string
+  side: 'left' | 'right'
   column: CockpitColumnConfig
 }>()
 
@@ -36,6 +37,7 @@ function containerFlex(height: number): string {
       <LumaCockpitContainer
         :category-id="categoryId"
         :page-id="pageId"
+        :side="side"
         :container="container"
       />
     </div>

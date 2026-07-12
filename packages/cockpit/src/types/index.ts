@@ -39,6 +39,8 @@ export interface CockpitColumnConfig {
 }
 
 export interface CockpitRegionConfig {
+  /** 1920 基准画布像素；空区域为 0，非空区域默认 420 */
+  width?: number
   columns: CockpitColumnConfig[]
 }
 
@@ -71,7 +73,16 @@ export interface CockpitConfig {
 
 /***********************组件运行时协议*********************/
 
+export type CockpitThemeMode = 'light' | 'dark'
 export type CockpitRenderMode = 'runtime' | 'design'
+
+export type CockpitNodeKind = 'region' | 'column' | 'container' | 'widget' | 'center'
+
+export interface CockpitNodeSelectPayload {
+  kind: CockpitNodeKind
+  id: string
+  side?: 'left' | 'right'
+}
 
 export interface CockpitBaseContext {
   cockpitId: string

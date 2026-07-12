@@ -1,9 +1,19 @@
 import type {
   CockpitConfig,
   CockpitConfigIssue,
+  CockpitRegionConfig,
 } from '../types'
+import {
+  DEFAULT_REGION_WIDTH,
+  MAX_REGION_WIDTH,
+  MIN_CENTER_WIDTH,
+  MIN_REGION_WIDTH,
+} from './defaults'
 
 /***********************配置校验*********************/
+
+const BASE_CANVAS_WIDTH = 1920
+const BODY_COLUMN_GAPS = 24
 
 export interface CockpitValidationResult {
   valid: boolean
@@ -33,6 +43,41 @@ function createScopedTracker(issues: CockpitConfigIssue[]): IdTracker {
   }
 }
 
+function regionColumnCount(region: CockpitRegionConfig | undefined): number {
+  return region?.columns?.length ?? 0
+}
+
+function resolveRegionWidthForValidation(region: CockpitRegionConfig | undefined): number {
+  const count = regionColumnCount(region)
+  if (count <= 0)
+    return 0
+  const width = region?.width
+  return typeof width === 'number' && Number.isFinite(width) && width > 0
+    ? width
+    : DEFAULT_REGION_WIDTH
+}
+
+function validateRegionWidth(
+  issues: CockpitConfigIssue[],
+  region: CockpitRegionConfig | undefined,
+  path: string[],
+): void {
+  const columnCount = regionColumnCount(region)
+  const width = region?.width
+  if (columnCount <= 0) {
+    if (width !== undefined && width !== 0)
+      issues.push({ level: 'warning', message: '空区域宽度将归一化为 0。', path })
+    return
+  }
+  if (width !== undefined && (!(width > 0) || width < MIN_REGION_WIDTH || width > MAX_REGION_WIDTH)) {
+    issues.push({
+      level: 'warning',
+      message: `区域宽度超出 ${MIN_REGION_WIDTH}-${MAX_REGION_WIDTH} 范围，将归一化为安全值。`,
+      path,
+    })
+  }
+}
+
 /**
  * 校验标准化后的配置。返回是否可保存以及问题清单。
  * error 级别问题会阻止保存；warning 级别仅提示。
@@ -59,6 +104,18 @@ export function validateCockpitConfig(config: CockpitConfig): CockpitValidationR
     category.pages?.forEach((page) => {
       const pagePath = [...categoryPath, page.id]
       pageTracker.addIssueOnDuplicate(page.id, pagePath, '页面')
+
+      validateRegionWidth(issues, page.left, [...pagePath, 'left'])
+      validateRegionWidth(issues, page.right, [...pagePath, 'right'])
+      const sideWidthTotal = resolveRegionWidthForValidation(page.left) + resolveRegionWidthForValidation(page.right)
+      const maxSideTotal = BASE_CANVAS_WIDTH - MIN_CENTER_WIDTH - BODY_COLUMN_GAPS
+      if (sideWidthTotal > maxSideTotal) {
+        issues.push({
+          level: 'warning',
+          message: '左右区域总宽度过大，将压缩以保留中央区域最小宽度。',
+          path: pagePath,
+        })
+      }
 
       ;([['left', page.left], ['right', page.right]] as const).forEach(([side, region]) => {
         const columnTracker = createScopedTracker(issues)

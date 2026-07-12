@@ -81,9 +81,12 @@ export type {
   CockpitContainerConfig,
   CockpitContainerMode,
   CockpitDesignerSavePayload,
+  CockpitNodeKind,
+  CockpitNodeSelectPayload,
   CockpitPageConfig,
   CockpitRegionConfig,
   CockpitRenderMode,
+  CockpitThemeMode,
   CockpitWidgetContext,
   CockpitWidgetInstance,
 } from './types'

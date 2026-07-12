@@ -11,12 +11,18 @@ import type {
 import {
   COCKPIT_SCHEMA_VERSION,
   createCockpitId,
+  DEFAULT_REGION_WIDTH,
   DEFAULT_WEIGHT,
+  MAX_REGION_WIDTH,
+  MIN_CENTER_WIDTH,
+  MIN_REGION_WIDTH,
 } from './defaults'
 
 /***********************工具*********************/
 
 const CONTAINER_MODES: CockpitContainerMode[] = ['single', 'combined', 'tabs']
+const BASE_CANVAS_WIDTH = 1920
+const BODY_COLUMN_GAPS = 24
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -27,6 +33,15 @@ function toSafeWeight(value: unknown, fallback = DEFAULT_WEIGHT): number {
   if (!Number.isFinite(num) || num <= 0)
     return fallback
   return num
+}
+
+function toSafeRegionWidth(value: unknown, columnCount: number): number {
+  if (columnCount <= 0)
+    return 0
+  const num = typeof value === 'number' ? value : Number(value)
+  const fallback = DEFAULT_REGION_WIDTH
+  const width = Number.isFinite(num) && num > 0 ? num : fallback
+  return Math.min(MAX_REGION_WIDTH, Math.max(MIN_REGION_WIDTH, width))
 }
 
 function toArray(value: unknown): unknown[] {
@@ -111,9 +126,28 @@ function normalizeColumn(raw: unknown): CockpitColumnConfig {
 
 function normalizeRegion(raw: unknown): CockpitRegionConfig {
   const source = isPlainObject(raw) ? raw : {}
+  const columns = toArray(source.columns).map(normalizeColumn)
   return {
-    columns: toArray(source.columns).map(normalizeColumn),
+    width: toSafeRegionWidth(source.width, columns.length),
+    columns,
   }
+}
+
+function normalizePageRegionWidths(page: CockpitPageConfig): void {
+  const maxSideTotal = BASE_CANVAS_WIDTH - MIN_CENTER_WIDTH - BODY_COLUMN_GAPS
+  const leftWidth = page.left.width ?? 0
+  const rightWidth = page.right.width ?? 0
+  const total = leftWidth + rightWidth
+  if (total <= maxSideTotal || total <= 0)
+    return
+
+  const ratio = maxSideTotal / total
+  page.left.width = leftWidth > 0
+    ? Math.max(MIN_REGION_WIDTH, Math.floor(leftWidth * ratio))
+    : 0
+  page.right.width = rightWidth > 0
+    ? Math.max(MIN_REGION_WIDTH, Math.floor(rightWidth * ratio))
+    : 0
 }
 
 function normalizePage(raw: unknown): CockpitPageConfig {
@@ -124,6 +158,7 @@ function normalizePage(raw: unknown): CockpitPageConfig {
     left: normalizeRegion(source.left),
     right: normalizeRegion(source.right),
   }
+  normalizePageRegionWidths(page)
   if (typeof source.order === 'number' && Number.isFinite(source.order))
     page.order = source.order
   if (isPlainObject(source.center) && typeof source.center.type === 'string' && source.center.type.trim() !== '') {
@@ -165,12 +200,8 @@ export function normalizeCockpitConfig(raw: unknown): CockpitConfig {
   const source = isPlainObject(raw) ? raw : {}
   const categories = toArray(source.categories).map(normalizeCategory)
 
-  const schemaVersion = typeof source.schemaVersion === 'number' && Number.isFinite(source.schemaVersion)
-    ? source.schemaVersion
-    : COCKPIT_SCHEMA_VERSION
-
   const config: CockpitConfig = {
-    schemaVersion,
+    schemaVersion: COCKPIT_SCHEMA_VERSION,
     id: toStringOr(source.id, createCockpitId('cockpit')),
     title: toStringOr(source.title, '驾驶舱'),
     categories,

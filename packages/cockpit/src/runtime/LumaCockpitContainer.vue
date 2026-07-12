@@ -10,6 +10,7 @@ import LumaCockpitWidgetHost from './LumaCockpitWidgetHost.vue'
 const props = defineProps<{
   categoryId: string
   pageId: string
+  side: 'left' | 'right'
   container: CockpitContainerConfig
 }>()
 
@@ -70,6 +71,9 @@ const isEmpty = computed(() => visibleWidgets.value.length === 0)
     class="luma-cockpit-container"
     :data-mode="container.mode"
     :data-container-id="container.id"
+    data-cockpit-node="container"
+    :data-cockpit-node-id="container.id"
+    :data-cockpit-side="side"
   >
     <!-- 空容器降级 -->
     <template v-if="isEmpty">
@@ -88,6 +92,7 @@ const isEmpty = computed(() => visibleWidgets.value.length === 0)
       <LumaCockpitWidgetHost
         :category-id="categoryId"
         :page-id="pageId"
+        :side="side"
         :widget="visibleWidgets[0]"
       />
     </template>
@@ -104,6 +109,7 @@ const isEmpty = computed(() => visibleWidgets.value.length === 0)
           class="luma-cockpit-container__combined-item"
           :category-id="categoryId"
           :page-id="pageId"
+          :side="side"
           :widget="widget"
         />
       </div>
@@ -143,6 +149,7 @@ const isEmpty = computed(() => visibleWidgets.value.length === 0)
           <LumaCockpitWidgetHost
             :category-id="categoryId"
             :page-id="pageId"
+            :side="side"
             :widget="widget"
           />
         </div>

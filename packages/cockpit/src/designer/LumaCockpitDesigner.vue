@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import type { CockpitRegistry } from '../registry/types'
-import type { CockpitConfig, CockpitConfigIssue, CockpitDesignerSavePayload } from '../types'
+import type {
+  CockpitConfig,
+  CockpitConfigIssue,
+  CockpitDesignerSavePayload,
+  CockpitNodeSelectPayload,
+  CockpitThemeMode,
+} from '../types'
 import { computed, ref } from 'vue'
 import { LumaCockpit } from '../runtime'
 import CockpitComponentLibrary from './CockpitComponentLibrary.vue'
@@ -19,6 +25,8 @@ const props = defineProps<{
   saving?: boolean
   /** 宿主保存失败信息 */
   saveError?: string
+  /** 已解析主题；system 由宿主应用解析为 light/dark */
+  themeMode?: CockpitThemeMode
 }>()
 
 const emit = defineEmits<{
@@ -27,6 +35,7 @@ const emit = defineEmits<{
 }>()
 
 const draft = useCockpitDraft(props.config)
+const selectedNode = ref<CockpitNodeSelectPayload | null>(null)
 
 const issues = ref<CockpitConfigIssue[]>([])
 const errorIssues = computed(() => issues.value.filter(i => i.level === 'error'))
@@ -49,11 +58,20 @@ function handleCancel(): void {
 function handleReset(): void {
   draft.reset()
   issues.value = []
+  selectedNode.value = null
+}
+
+function handleNodeSelect(payload: CockpitNodeSelectPayload): void {
+  selectedNode.value = payload
 }
 </script>
 
 <template>
-  <div class="luma-cockpit-designer">
+  <div
+    class="luma-cockpit-designer"
+    :data-cockpit-theme="themeMode ?? 'dark'"
+    :data-selected-node="selectedNode?.id"
+  >
     <header class="luma-cockpit-designer__toolbar">
       <h2 class="luma-cockpit-designer__heading">
         驾驶舱配置
@@ -115,6 +133,8 @@ function handleReset(): void {
               render-mode="design"
               :active-category-id="previewCategoryId"
               :active-page-id="previewPageId"
+              :theme-mode="themeMode ?? 'dark'"
+              @node-select="handleNodeSelect"
             />
           </div>
         </div>

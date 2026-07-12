@@ -12,6 +12,7 @@ import { resolveCockpitComponent } from './resolveComponent'
 const props = defineProps<{
   categoryId: string
   pageId: string
+  side: 'left' | 'right'
   widget: CockpitWidgetInstance
 }>()
 
@@ -44,7 +45,14 @@ const title = computed(() => props.widget.title)
 </script>
 
 <template>
-  <section class="luma-cockpit-widget" :data-widget-type="widget.type" :data-instance-id="widget.id">
+  <section
+    class="luma-cockpit-widget"
+    :data-widget-type="widget.type"
+    :data-instance-id="widget.id"
+    data-cockpit-node="widget"
+    :data-cockpit-node-id="widget.id"
+    :data-cockpit-side="side"
+  >
     <header v-if="title || env.slots['widget-title']" class="luma-cockpit-widget__title">
       <component
         :is="env.slots['widget-title']"

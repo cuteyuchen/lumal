@@ -11,11 +11,21 @@ import type {
 
 /***********************常量*********************/
 
-/** 配置初版 schema 版本 */
-export const COCKPIT_SCHEMA_VERSION = 1
+/** 当前配置 schema 版本 */
+export const COCKPIT_SCHEMA_VERSION = 2
 
 /** 安全默认权重 */
 export const DEFAULT_WEIGHT = 1
+
+/** 1920 基准画布下，非空左右区域默认宽度 */
+export const DEFAULT_REGION_WIDTH = 420
+
+/** Designer 与标准化共同采用的左右区域宽度边界 */
+export const MIN_REGION_WIDTH = 240
+export const MAX_REGION_WIDTH = 720
+
+/** 1920 基准画布下保留给中央区域的最小宽度 */
+export const MIN_CENTER_WIDTH = 480
 
 /***********************ID 生成*********************/
 
@@ -61,7 +71,7 @@ export function createColumn(): CockpitColumnConfig {
 }
 
 export function createEmptyRegion(): CockpitRegionConfig {
-  return { columns: [] }
+  return { width: 0, columns: [] }
 }
 
 export function createPage(title = '新页面'): CockpitPageConfig {
