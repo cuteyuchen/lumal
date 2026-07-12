@@ -20,13 +20,13 @@ export const LumaCockpit = withInstall(
   'LumaCockpit',
 ) as typeof LumaCockpitComp & { install: (app: App) => void }
 
+export { cockpitRuntimeEnvKey, useCockpitRuntimeEnv } from './context'
+export type { CockpitRuntimeEnv } from './context'
 export { default as LumaCockpitCanvas } from './LumaCockpitCanvas.vue'
 export { default as LumaCockpitCenterHost } from './LumaCockpitCenterHost.vue'
 export { default as LumaCockpitColumn } from './LumaCockpitColumn.vue'
 export { default as LumaCockpitContainer } from './LumaCockpitContainer.vue'
+
 export { default as LumaCockpitRegion } from './LumaCockpitRegion.vue'
 export { default as LumaCockpitWidgetHost } from './LumaCockpitWidgetHost.vue'
-
-export { cockpitRuntimeEnvKey, useCockpitRuntimeEnv } from './context'
-export type { CockpitRuntimeEnv } from './context'
 export { resolveCockpitComponent } from './resolveComponent'

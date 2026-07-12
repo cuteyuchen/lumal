@@ -49,7 +49,7 @@ function normalizeWidget(raw: unknown): CockpitWidgetInstance | null {
     id: toStringOr(raw.id, createCockpitId('widget')),
     type,
     title: typeof raw.title === 'string' ? raw.title : undefined,
-    visible: raw.visible === false ? false : true,
+    visible: raw.visible !== false,
   }
 }
 
@@ -141,7 +141,7 @@ function normalizeCategory(raw: unknown): CockpitCategoryConfig {
   const category: CockpitCategoryConfig = {
     id: toStringOr(source.id, createCockpitId('category')),
     label: toStringOr(source.label, '未命名分类'),
-    visible: source.visible === false ? false : true,
+    visible: source.visible !== false,
     pages,
   }
   if (typeof source.icon === 'string')

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CockpitConfig, CockpitDesignerSavePayload } from '@luma/cockpit'
-import { LumaCockpit } from '@luma/cockpit/runtime'
 import { LumaCockpitDesigner } from '@luma/cockpit/designer'
+import { LumaCockpit } from '@luma/cockpit/runtime'
 import { computed, ref, shallowRef, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { permissionStore } from '../services/permission'
@@ -91,7 +91,9 @@ async function toggleFullscreen(): Promise<void> {
 
     <div v-else-if="loadError" class="admin-cockpit-view__state" role="alert">
       <p>{{ loadError }}</p>
-      <button type="button" @click="load">重试</button>
+      <button type="button" @click="load">
+        重试
+      </button>
     </div>
 
     <template v-else-if="config">

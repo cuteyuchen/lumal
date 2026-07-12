@@ -15,8 +15,11 @@ describe('normalizeCockpitConfig', () => {
   it('非法权重归一为安全默认值', () => {
     const result = normalizeCockpitConfig({
       categories: [{
-        id: 'c', label: 'c', pages: [{
-          id: 'p', title: 'p',
+        id: 'c',
+        label: 'c',
+        pages: [{
+          id: 'p',
+          title: 'p',
           left: { columns: [{ id: 'col', width: -5, containers: [{ id: 'ct', height: 0, mode: 'single', widgets: [] }] }] },
           right: { columns: [] },
         }],
@@ -38,10 +41,15 @@ describe('normalizeCockpitConfig', () => {
   it('single 模式只保留第一个可见模块', () => {
     const result = normalizeCockpitConfig({
       categories: [{
-        id: 'c', label: 'c', pages: [{
-          id: 'p', title: 'p',
+        id: 'c',
+        label: 'c',
+        pages: [{
+          id: 'p',
+          title: 'p',
           left: { columns: [{ id: 'col', width: 1, containers: [{
-            id: 'ct', height: 1, mode: 'single',
+            id: 'ct',
+            height: 1,
+            mode: 'single',
             widgets: [
               { id: 'w1', type: 't', visible: true },
               { id: 'w2', type: 't', visible: true },
@@ -58,10 +66,16 @@ describe('normalizeCockpitConfig', () => {
   it('tabs 默认项不存在时回退到第一个可见模块', () => {
     const result = normalizeCockpitConfig({
       categories: [{
-        id: 'c', label: 'c', pages: [{
-          id: 'p', title: 'p',
+        id: 'c',
+        label: 'c',
+        pages: [{
+          id: 'p',
+          title: 'p',
           left: { columns: [{ id: 'col', width: 1, containers: [{
-            id: 'ct', height: 1, mode: 'tabs', activeWidgetId: 'ghost',
+            id: 'ct',
+            height: 1,
+            mode: 'tabs',
+            activeWidgetId: 'ghost',
             widgets: [{ id: 'w1', type: 't', visible: true }],
           }] }] },
           right: { columns: [] },
@@ -75,7 +89,9 @@ describe('normalizeCockpitConfig', () => {
 describe('validateCockpitConfig', () => {
   it('重复 id 校验失败', () => {
     const result = validateCockpitConfig({
-      schemaVersion: 1, id: 'x', title: 't',
+      schemaVersion: 1,
+      id: 'x',
+      title: 't',
       categories: [
         { id: 'dup', label: 'a', pages: [{ id: 'p1', title: 'p', left: { columns: [] }, right: { columns: [] } }] },
         { id: 'dup', label: 'b', pages: [{ id: 'p2', title: 'p', left: { columns: [] }, right: { columns: [] } }] },
@@ -87,11 +103,16 @@ describe('validateCockpitConfig', () => {
 
   it('single 模式多可见模块报错', () => {
     const result = validateCockpitConfig({
-      schemaVersion: 1, id: 'x', title: 't',
+      schemaVersion: 1,
+      id: 'x',
+      title: 't',
       categories: [{ id: 'c', label: 'c', pages: [{
-        id: 'p', title: 'p',
+        id: 'p',
+        title: 'p',
         left: { columns: [{ id: 'col', width: 1, containers: [{
-          id: 'ct', height: 1, mode: 'single',
+          id: 'ct',
+          height: 1,
+          mode: 'single',
           widgets: [{ id: 'w1', type: 't', visible: true }, { id: 'w2', type: 't', visible: true }],
         }] }] },
         right: { columns: [] },
@@ -102,7 +123,9 @@ describe('validateCockpitConfig', () => {
 
   it('合法配置校验通过', () => {
     const result = validateCockpitConfig({
-      schemaVersion: 1, id: 'x', title: 't',
+      schemaVersion: 1,
+      id: 'x',
+      title: 't',
       categories: [{ id: 'c', label: 'c', pages: [{ id: 'p', title: 'p', left: { columns: [] }, right: { columns: [] } }] }],
     })
     expect(result.valid).toBe(true)

@@ -52,7 +52,9 @@ const hasCategories = computed(() => props.visibleCategories.length > 0)
         </div>
         <div class="luma-cockpit-canvas__title">
           <component :is="env.slots['header-title']" v-if="env.slots['header-title']" :title="title" />
-          <h1 v-else>{{ title }}</h1>
+          <h1 v-else>
+            {{ title }}
+          </h1>
         </div>
         <nav
           v-if="activePages.length > 0"

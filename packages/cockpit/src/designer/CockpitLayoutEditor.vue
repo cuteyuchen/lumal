@@ -45,7 +45,9 @@ function addWidgetFromSelect(columnId: string, containerId: string, event: Event
   <div class="luma-cockpit-designer__region" :data-side="side">
     <header class="luma-cockpit-designer__region-head">
       <span>{{ side === 'left' ? '左侧区域' : '右侧区域' }}</span>
-      <button type="button" @click="draft.addColumn(side)">新增列</button>
+      <button type="button" @click="draft.addColumn(side)">
+        新增列
+      </button>
     </header>
 
     <div v-if="!columns.length" class="luma-cockpit-designer__region-empty">
@@ -139,26 +141,26 @@ function addWidgetFromSelect(columnId: string, containerId: string, event: Event
             class="luma-cockpit-designer__widget"
           >
             <input
-              type="radio"
               v-if="container.mode === 'tabs'"
+              type="radio"
               :name="`active-${container.id}`"
               :checked="container.activeWidgetId === widget.id"
               :aria-label="`设为默认标签：${widget.title ?? widget.type}`"
               @change="draft.setContainerActiveWidget(side, column.id, container.id, widget.id)"
             >
             <input
-              type="checkbox"
               v-else-if="container.mode === 'combined'"
+              type="checkbox"
               disabled
               checked
               aria-hidden="true"
             >
             <span class="luma-cockpit-designer__widget-label">{{ widget.title ?? widget.type }}</span>
             <span class="luma-cockpit-designer__ops">
-              <button type="button" :disabled="wi === 0" :aria-label="`上移模块`" @click="draft.moveWidget(side, column.id, container.id, widget.id, -1)">↑</button>
-              <button type="button" :disabled="wi === container.widgets.length - 1" :aria-label="`下移模块`" @click="draft.moveWidget(side, column.id, container.id, widget.id, 1)">↓</button>
+              <button type="button" :disabled="wi === 0" aria-label="上移模块" @click="draft.moveWidget(side, column.id, container.id, widget.id, -1)">↑</button>
+              <button type="button" :disabled="wi === container.widgets.length - 1" aria-label="下移模块" @click="draft.moveWidget(side, column.id, container.id, widget.id, 1)">↓</button>
               <button type="button" @click="draft.duplicateWidget(side, column.id, container.id, widget.id)">复制</button>
-              <button type="button" :aria-label="`删除模块`" @click="draft.removeWidget(side, column.id, container.id, widget.id)">删除</button>
+              <button type="button" aria-label="删除模块" @click="draft.removeWidget(side, column.id, container.id, widget.id)">删除</button>
             </span>
           </li>
           <li v-if="!container.widgets.length" class="luma-cockpit-designer__widget-empty">

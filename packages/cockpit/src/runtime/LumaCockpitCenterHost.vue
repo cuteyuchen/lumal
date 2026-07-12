@@ -2,9 +2,9 @@
 import type { CockpitBaseContext, CockpitCenterInstance } from '../types'
 import { computed, onBeforeUnmount } from 'vue'
 import { provideCockpitContext } from '../composables/useCockpitContext'
+import CockpitErrorBoundary from './CockpitErrorBoundary.vue'
 import { useCockpitRuntimeEnv } from './context'
 import { resolveCockpitComponent } from './resolveComponent'
-import CockpitErrorBoundary from './CockpitErrorBoundary.vue'
 
 /***********************中央组件 Host*********************/
 // 渲染中央组件实例：未配置 / 未注册 / 渲染失败均可安全降级。
@@ -83,7 +83,9 @@ onBeforeUnmount(() => {
         />
         <div v-else class="luma-cockpit-center__error" role="alert">
           <span>中央组件加载失败</span>
-          <button type="button" @click="retry">重试</button>
+          <button type="button" @click="retry">
+            重试
+          </button>
         </div>
       </template>
     </CockpitErrorBoundary>

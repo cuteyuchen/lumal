@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CockpitConfig, CockpitDesignerSavePayload } from '@luma/cockpit'
-import { LumaCockpit } from '@luma/cockpit/runtime'
 import { LumaCockpitDesigner } from '@luma/cockpit/designer'
+import { LumaCockpit } from '@luma/cockpit/runtime'
 import { ref, shallowRef } from 'vue'
 import { standaloneCockpitRegistry } from './registry'
 import { loadStandaloneConfig, saveStandaloneConfig } from './services/config'

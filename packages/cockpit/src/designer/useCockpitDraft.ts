@@ -1,4 +1,5 @@
 import type { ComputedRef, Ref } from 'vue'
+import type { CockpitValidationResult } from '../config/validate'
 import type {
   CockpitCategoryConfig,
   CockpitColumnConfig,
@@ -11,15 +12,14 @@ import type {
 import { computed, ref } from 'vue'
 import {
   createCategory,
+  createCockpitId,
   createColumn,
   createContainer,
-  createCockpitId,
   createPage,
   createWidgetInstance,
 } from '../config/defaults'
 import { normalizeCockpitConfig } from '../config/normalize'
 import { validateCockpitConfig } from '../config/validate'
-import type { CockpitValidationResult } from '../config/validate'
 
 /***********************Designer 草稿管理*********************/
 

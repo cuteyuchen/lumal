@@ -17,6 +17,8 @@ const activePageId = computed(() => props.draft.activePage.value?.id)
 function confirmRemove(message: string): boolean {
   if (typeof window === 'undefined' || typeof window.confirm !== 'function')
     return true
+  // 危险删除操作需要确认，符合无障碍与交互要求
+  // eslint-disable-next-line no-alert
   return window.confirm(message)
 }
 
@@ -41,7 +43,9 @@ function removePage(id: string, title: string): void {
     <section class="luma-cockpit-designer__props-section">
       <header class="luma-cockpit-designer__props-title">
         <span>分类</span>
-        <button type="button" @click="draft.addCategory()">新增分类</button>
+        <button type="button" @click="draft.addCategory()">
+          新增分类
+        </button>
       </header>
       <ul class="luma-cockpit-designer__props-list">
         <li
@@ -83,7 +87,9 @@ function removePage(id: string, title: string): void {
     <section class="luma-cockpit-designer__props-section">
       <header class="luma-cockpit-designer__props-title">
         <span>页面</span>
-        <button type="button" @click="draft.addPage()">新增页面</button>
+        <button type="button" @click="draft.addPage()">
+          新增页面
+        </button>
       </header>
       <ul class="luma-cockpit-designer__props-list">
         <li

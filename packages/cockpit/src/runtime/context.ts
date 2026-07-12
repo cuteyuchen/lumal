@@ -1,6 +1,6 @@
 import type { InjectionKey, Slots } from 'vue'
-import type { CockpitRegistry } from '../registry/types'
 import type { CockpitMessageBus } from '../messaging/types'
+import type { CockpitRegistry } from '../registry/types'
 import type { CockpitRenderMode } from '../types'
 import { inject } from 'vue'
 

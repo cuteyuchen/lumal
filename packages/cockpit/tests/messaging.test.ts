@@ -42,7 +42,9 @@ describe('createCockpitMessageBus', () => {
     const bus = createCockpitMessageBus()
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const good = vi.fn()
-    bus.subscribe('t', () => { throw new Error('boom') })
+    bus.subscribe('t', () => {
+      throw new Error('boom')
+    })
     bus.subscribe('t', good)
     bus.publish({ topic: 't', sourceId: 's' })
     expect(good).toHaveBeenCalledTimes(1)

@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import type { NodeSelectedPayload } from '../../messages/topics'
 import { useCockpitContext } from '@luma/cockpit'
 import { onBeforeUnmount, ref } from 'vue'
-import { cockpitTopics, type NodeSelectedPayload } from '../../messages/topics'
+import { cockpitTopics } from '../../messages/topics'
 
 /***********************独立应用中性中央组件*********************/
 // 不依赖任何地图/三维运行时；仅演示消息联动与生命周期。
@@ -30,7 +31,9 @@ onBeforeUnmount(() => {
 <template>
   <div class="standalone-center">
     <p>独立应用中央视图</p>
-    <p data-role="last-node">最近选择：{{ lastNode || '（无）' }}</p>
+    <p data-role="last-node">
+      最近选择：{{ lastNode || '（无）' }}
+    </p>
   </div>
 </template>
 

@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { CenterSelectionChangedPayload } from '../../messages/topics'
 import { useCockpitContext } from '@luma/cockpit'
 import { onBeforeUnmount, ref } from 'vue'
 import {
-  type CenterSelectionChangedPayload,
+
   cockpitTopics,
 } from '../../messages/topics'
 
@@ -35,7 +36,9 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="stub-widget" :data-instance-id="context.instanceId">
-    <p class="stub-widget__hint">业务模块示例（实例 {{ context.instanceId }}）</p>
+    <p class="stub-widget__hint">
+      业务模块示例（实例 {{ context.instanceId }}）
+    </p>
     <div class="stub-widget__actions">
       <button
         v-for="id in ['1', '2', '3']"

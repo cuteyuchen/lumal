@@ -52,8 +52,12 @@ const filteredWidgets = computed<readonly CockpitWidgetDefinition[]>(() =>
           v-model="centerGroup"
           aria-label="中央组件分组过滤"
         >
-          <option value="">全部分组</option>
-          <option v-for="g in centerGroups" :key="g" :value="g">{{ g }}</option>
+          <option value="">
+            全部分组
+          </option>
+          <option v-for="g in centerGroups" :key="g" :value="g">
+            {{ g }}
+          </option>
         </select>
       </header>
       <ul class="luma-cockpit-designer__library-list">
@@ -89,8 +93,12 @@ const filteredWidgets = computed<readonly CockpitWidgetDefinition[]>(() =>
           v-model="widgetGroup"
           aria-label="业务模块分组过滤"
         >
-          <option value="">全部分组</option>
-          <option v-for="g in widgetGroups" :key="g" :value="g">{{ g }}</option>
+          <option value="">
+            全部分组
+          </option>
+          <option v-for="g in widgetGroups" :key="g" :value="g">
+            {{ g }}
+          </option>
         </select>
       </header>
       <ul class="luma-cockpit-designer__library-list">

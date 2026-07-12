@@ -196,16 +196,27 @@ for (const forbiddenName of ['echarts', 'vue-echarts', 'vue-i18n', 'vxe-table', 
 /***********************源码边界*********************/
 const coreForbiddenMatches = findTextMatches(
   join(packageDirs.core, 'src'),
-  /@luma\/vben-compat|@luma\/charts|vue-i18n|@intlify\/|vxe-table|vxe-pc-ui|xe-utils|vue-echarts|from 'echarts'/,
+  /@luma\/vben-compat|@luma\/charts|@luma\/cockpit|vue-i18n|@intlify\/|vxe-table|vxe-pc-ui|xe-utils|vue-echarts|from 'echarts'/,
 )
 
 for (const match of coreForbiddenMatches) {
   errors.push(`@luma/core 源码出现禁止依赖标识：${match}`)
 }
 
+/***********************@luma/cockpit 源码边界*********************/
+// 包内不得导入地图/图表运行时或 @luma/charts，也不得出现写死的引擎联合类型
+const cockpitForbiddenMatches = findTextMatches(
+  join(packageDirs.cockpit, 'src'),
+  /@luma\/charts|from 'echarts'|from "echarts"|openlayers|from 'ol|cesium|mapbox-gl|from 'leaflet/,
+)
+
+for (const match of cockpitForbiddenMatches) {
+  errors.push(`@luma/cockpit 源码出现禁止依赖标识：${match}`)
+}
+
 const appSourceAliasMatches = findTextMatches(
   join(rootDir, 'apps'),
-  /\.\.\/\.\.\/packages|packages\/(?:icons|core|vben-compat|vite)\/src|packages\\(?:icons|core|vben-compat|vite)\\src/,
+  /\.\.\/\.\.\/packages|packages\/(?:icons|core|cockpit|vben-compat|vite)\/src|packages\\(?:icons|core|cockpit|vben-compat|vite)\\src/,
 )
 
 for (const match of appSourceAliasMatches) {

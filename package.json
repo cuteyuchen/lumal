@@ -8,9 +8,9 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "build": "pnpm --filter @luma/icons build && pnpm --filter @luma/core build && pnpm --filter @luma/charts build && pnpm --filter @luma/vben-compat build && pnpm --filter @luma/vite build && pnpm --filter create-luma-admin build && pnpm --filter luma-mock-api build",
-    "typecheck": "pnpm --filter @luma/icons typecheck && pnpm --filter @luma/icons build && pnpm --filter @luma/core typecheck && pnpm --filter @luma/core build && pnpm --filter @luma/charts typecheck && pnpm --filter @luma/vben-compat typecheck && pnpm --filter @luma/vite typecheck && pnpm --filter create-luma-admin typecheck && pnpm --filter luma-mock-api typecheck",
-    "test": "pnpm test:scripts && pnpm --filter @luma/icons test && pnpm --filter @luma/icons build && pnpm --filter @luma/core test && pnpm --filter @luma/core build && pnpm --filter @luma/charts test && pnpm --filter @luma/charts build && pnpm --filter @luma/vben-compat test && pnpm --filter @luma/vite test && pnpm --filter create-luma-admin test && pnpm --filter luma-mock-api test && pnpm --filter luma-admin test",
+    "build": "pnpm --filter @luma/icons build && pnpm --filter @luma/core build && pnpm --filter @luma/charts build && pnpm --filter @luma/cockpit build && pnpm --filter @luma/vben-compat build && pnpm --filter @luma/vite build && pnpm --filter create-luma-admin build && pnpm --filter luma-mock-api build",
+    "typecheck": "pnpm --filter @luma/icons typecheck && pnpm --filter @luma/icons build && pnpm --filter @luma/core typecheck && pnpm --filter @luma/core build && pnpm --filter @luma/charts typecheck && pnpm --filter @luma/cockpit typecheck && pnpm --filter @luma/cockpit build && pnpm --filter @luma/vben-compat typecheck && pnpm --filter @luma/vite typecheck && pnpm --filter create-luma-admin typecheck && pnpm --filter luma-mock-api typecheck && pnpm --filter luma-cockpit typecheck",
+    "test": "pnpm test:scripts && pnpm --filter @luma/icons test && pnpm --filter @luma/icons build && pnpm --filter @luma/core test && pnpm --filter @luma/core build && pnpm --filter @luma/charts test && pnpm --filter @luma/charts build && pnpm --filter @luma/cockpit test && pnpm --filter @luma/cockpit build && pnpm --filter @luma/vben-compat test && pnpm --filter @luma/vite test && pnpm --filter create-luma-admin test && pnpm --filter luma-mock-api test && pnpm --filter luma-admin test && pnpm --filter luma-cockpit test",
     "test:scripts": "vitest run --config vitest.config.ts scripts",
     "test:e2e": "playwright test",
     "lint": "eslint .",
@@ -18,7 +18,7 @@
     "admin:build": "pnpm build && pnpm --filter luma-admin build",
     "admin:preview": "pnpm --parallel --filter luma-mock-api --filter luma-admin preview",
     "compat:build": "pnpm build && pnpm --filter luma-vben-compat-demo build",
-    "pack:dry-run": "pnpm --filter @luma/icons pack --dry-run && pnpm --filter @luma/core pack --dry-run && pnpm --filter @luma/charts pack --dry-run && pnpm --filter @luma/vben-compat pack --dry-run && pnpm --filter @luma/vite pack --dry-run && pnpm --filter create-luma-admin pack --dry-run",
+    "pack:dry-run": "pnpm --filter @luma/icons pack --dry-run && pnpm --filter @luma/core pack --dry-run && pnpm --filter @luma/charts pack --dry-run && pnpm --filter @luma/cockpit pack --dry-run && pnpm --filter @luma/vben-compat pack --dry-run && pnpm --filter @luma/vite pack --dry-run && pnpm --filter create-luma-admin pack --dry-run",
     "release:boundaries": "node scripts/check-release-boundaries.mjs",
     "release:artifacts": "node scripts/check-release-artifacts.mjs",
     "release:names": "node scripts/check-npm-package-names.mjs",

@@ -12,6 +12,7 @@ const publishPackageJsonPaths = [
   'packages/icons/package.json',
   'packages/core/package.json',
   'packages/charts/package.json',
+  'packages/cockpit/package.json',
   'packages/vben-compat/package.json',
   'packages/vite/package.json',
   'packages/create-luma-admin/package.json',

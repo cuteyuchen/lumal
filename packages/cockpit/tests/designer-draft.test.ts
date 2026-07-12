@@ -9,9 +9,13 @@ function sourceConfig(): CockpitConfig {
     title: '原始',
     activeCategoryId: 'cat-1',
     categories: [{
-      id: 'cat-1', label: '分类一', visible: true, activePageId: 'p1',
+      id: 'cat-1',
+      label: '分类一',
+      visible: true,
+      activePageId: 'p1',
       pages: [{
-        id: 'p1', title: '页面一',
+        id: 'p1',
+        title: '页面一',
         left: { columns: [{ id: 'col', width: 1, containers: [{ id: 'ct', height: 1, mode: 'single', widgets: [] }] }] },
         right: { columns: [] },
       }],

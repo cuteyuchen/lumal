@@ -18,6 +18,7 @@ rg -n "guiren|gr-framework|GrFramework|GSchemaForm|GSchemaTable|GCrudTable|GPage
 - `@luma/core` 不默认依赖 VXE。
 - `@luma/core` 不默认引入多语言运行时。
 - `@luma/charts` 将 ECharts 和 vue-echarts 保持为 peer dependency。
+- `@luma/cockpit` 依赖 `@luma/core`，`@luma/core` 不反向依赖 `@luma/cockpit`；`@luma/cockpit` 不依赖 `@luma/charts` 或任何地图/图表运行时。
 - `@luma/vite` 不引入强制运行时依赖。
 
 ## 验证命令
@@ -40,7 +41,7 @@ pnpm release:boundaries
 pnpm release:names
 ```
 
-这个命令验证 `@luma/icons`、`@luma/core`、`@luma/charts`、`@luma/vben-compat`、`@luma/vite`、`create-luma-admin` 是否能在 registry 查询到；它不能证明发布账号拥有或可创建 `@luma` scope。
+这个命令验证 `@luma/icons`、`@luma/core`、`@luma/charts`、`@luma/cockpit`、`@luma/vben-compat`、`@luma/vite`、`create-luma-admin` 是否能在 registry 查询到；它不能证明发布账号拥有或可创建 `@luma` scope。
 
 拆开执行时也必须保持串行：
 
@@ -69,6 +70,7 @@ pnpm pack:dry-run
 pnpm --filter @luma/icons pack --dry-run
 pnpm --filter @luma/core pack --dry-run
 pnpm --filter @luma/charts pack --dry-run
+pnpm --filter @luma/cockpit pack --dry-run
 pnpm --filter @luma/vben-compat pack --dry-run
 pnpm --filter @luma/vite pack --dry-run
 pnpm --filter create-luma-admin pack --dry-run
@@ -79,6 +81,7 @@ pnpm --filter create-luma-admin pack --dry-run
 - 包含 `dist`。
 - 包含包内 `README.md`。
 - `@luma/core` 包含 `theme-chalk/index.scss` 和 `dist/core.css`。
+- `@luma/cockpit` 包含 `dist/cockpit.css` 及 `dist/runtime.js`、`dist/designer.js` 独立入口。
 - `create-luma-admin` 包含 `dist/cli.js` 和 `dist/index.js`。
 - 不包含 `apps/*`。
 - 不包含本地日志、IDE 文件和构建缓存。

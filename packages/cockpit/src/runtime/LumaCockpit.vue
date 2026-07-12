@@ -3,9 +3,9 @@ import type { Slots } from 'vue'
 import type { CockpitRegistry } from '../registry/types'
 import type { CockpitConfig, CockpitRenderMode } from '../types'
 import { computed, provide, ref, useSlots, watch } from 'vue'
-import { createCockpitMessageBus } from '../messaging/createCockpitMessageBus'
-import { normalizeCockpitConfig } from '../config/normalize'
 import { useCockpit } from '../composables/useCockpit'
+import { normalizeCockpitConfig } from '../config/normalize'
+import { createCockpitMessageBus } from '../messaging/createCockpitMessageBus'
 import { cockpitRuntimeEnvKey } from './context'
 import LumaCockpitCanvas from './LumaCockpitCanvas.vue'
 
@@ -30,7 +30,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   configure: []
-  'config-error': [error: unknown]
+  configError: [error: unknown]
 }>()
 
 const activeCategoryId = defineModel<string | undefined>('activeCategoryId')
@@ -38,24 +38,24 @@ const activePageId = defineModel<string | undefined>('activePageId')
 
 const slots = useSlots()
 
-// 标准化配置，捕获异常并向宿主报告，不使驾驶舱崩溃
-const configError = ref<unknown>(null)
-const normalized = computed<CockpitConfig | null>(() => {
+// 标准化配置并在同一个纯 computed 中捕获异常，避免 computed 内产生副作用
+const normalizedResult = computed<{ config: CockpitConfig | null, error: unknown }>(() => {
   try {
-    const result = normalizeCockpitConfig(props.config)
-    configError.value = null
-    return result
+    return { config: normalizeCockpitConfig(props.config), error: null }
   }
   catch (error) {
-    configError.value = error
-    return null
+    return { config: null, error }
   }
 })
 
+const normalized = computed<CockpitConfig | null>(() => normalizedResult.value.config)
+const configError = computed<unknown>(() => normalizedResult.value.error)
+
+// 标准化失败时向宿主报告，不使驾驶舱崩溃
 watch(configError, (error) => {
   if (error)
-    emit('config-error', error)
-})
+    emit('configError', error)
+}, { immediate: true })
 
 const messages = props.messageBus ?? createCockpitMessageBus()
 
@@ -96,7 +96,7 @@ function requestConfigure(): void {
 </script>
 
 <template>
-  <div ref="rootRef" class="luma-cockpit" :data-mode="'runtime'">
+  <div ref="rootRef" class="luma-cockpit" data-mode="runtime">
     <!-- 配置加载失败：可覆盖错误插槽 + 重试 -->
     <template v-if="configError">
       <slot name="error" :error="configError">

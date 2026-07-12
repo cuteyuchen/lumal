@@ -55,10 +55,16 @@ function handleReset(): void {
 <template>
   <div class="luma-cockpit-designer">
     <header class="luma-cockpit-designer__toolbar">
-      <h2 class="luma-cockpit-designer__heading">驾驶舱配置</h2>
+      <h2 class="luma-cockpit-designer__heading">
+        驾驶舱配置
+      </h2>
       <div class="luma-cockpit-designer__toolbar-actions">
-        <button type="button" @click="handleReset">重置</button>
-        <button type="button" @click="handleCancel">取消</button>
+        <button type="button" @click="handleReset">
+          重置
+        </button>
+        <button type="button" @click="handleCancel">
+          取消
+        </button>
         <button
           type="button"
           class="luma-cockpit-designer__save"
@@ -73,13 +79,17 @@ function handleReset(): void {
 
     <!-- 校验错误与保存失败提示 -->
     <div v-if="errorIssues.length || saveError" class="luma-cockpit-designer__issues" role="alert">
-      <p v-if="saveError" class="luma-cockpit-designer__issue">保存失败：{{ saveError }}</p>
+      <p v-if="saveError" class="luma-cockpit-designer__issue">
+        保存失败：{{ saveError }}
+      </p>
       <p
         v-for="(issue, index) in errorIssues"
         :key="index"
         class="luma-cockpit-designer__issue"
       >
-        <template v-if="issue.path">[{{ issue.path.join(' / ') }}] </template>{{ issue.message }}
+        <template v-if="issue.path">
+          [{{ issue.path.join(' / ') }}]
+        </template>{{ issue.message }}
       </p>
     </div>
 

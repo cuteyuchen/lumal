@@ -6,6 +6,67 @@
 // 引入基础样式，确保库构建产出 dist/cockpit.css（应用通过 @luma/cockpit/style.css 消费）
 import './style/index.scss'
 
+/***********************composables*********************/
+export {
+  computeCanvasScale,
+  useCanvasScale,
+  useCockpit,
+  useCockpitContext,
+} from './composables'
+
+export type {
+  CanvasScaleResult,
+  UseCockpitOptions,
+  UseCockpitReturn,
+} from './composables'
+/***********************配置*********************/
+export {
+  COCKPIT_SCHEMA_VERSION,
+  createCategory,
+  createCockpitId,
+  createColumn,
+  createContainer,
+  createDefaultCockpitConfig,
+  createEmptyRegion,
+  createPage,
+  createWidgetInstance,
+  DEFAULT_WEIGHT,
+  migrateCockpitConfig,
+  needsMigration,
+  normalizeCockpitConfig,
+  prepareCockpitConfig,
+  validateCockpitConfig,
+} from './config'
+
+export type {
+  CockpitMigration,
+  CockpitValidationResult,
+} from './config'
+/***********************消息总线*********************/
+export { createCockpitMessageBus } from './messaging/createCockpitMessageBus'
+
+export type {
+  CockpitMessage,
+  CockpitMessageBus,
+  CockpitMessageHandler,
+  CockpitMessageSubscribeOptions,
+} from './messaging/types'
+/***********************注册表*********************/
+export { createCockpitRegistry } from './registry/createCockpitRegistry'
+
+export type {
+  CockpitCenterDefinition,
+  CockpitComponentLoader,
+  CockpitRegistry,
+  CockpitWidgetDefinition,
+} from './registry/types'
+/***********************运行时*********************/
+export {
+  LumaCockpit,
+  useCockpitRuntimeEnv,
+} from './runtime'
+
+export type { CockpitRuntimeEnv } from './runtime'
 /***********************类型*********************/
 export type {
   CockpitBaseContext,
@@ -26,64 +87,3 @@ export type {
   CockpitWidgetContext,
   CockpitWidgetInstance,
 } from './types'
-
-/***********************注册表*********************/
-export { createCockpitRegistry } from './registry/createCockpitRegistry'
-export type {
-  CockpitCenterDefinition,
-  CockpitComponentLoader,
-  CockpitRegistry,
-  CockpitWidgetDefinition,
-} from './registry/types'
-
-/***********************消息总线*********************/
-export { createCockpitMessageBus } from './messaging/createCockpitMessageBus'
-export type {
-  CockpitMessage,
-  CockpitMessageBus,
-  CockpitMessageHandler,
-  CockpitMessageSubscribeOptions,
-} from './messaging/types'
-
-/***********************配置*********************/
-export {
-  COCKPIT_SCHEMA_VERSION,
-  createCategory,
-  createCockpitId,
-  createColumn,
-  createContainer,
-  createDefaultCockpitConfig,
-  createEmptyRegion,
-  createPage,
-  createWidgetInstance,
-  DEFAULT_WEIGHT,
-  migrateCockpitConfig,
-  needsMigration,
-  normalizeCockpitConfig,
-  prepareCockpitConfig,
-  validateCockpitConfig,
-} from './config'
-export type {
-  CockpitMigration,
-  CockpitValidationResult,
-} from './config'
-
-/***********************composables*********************/
-export {
-  computeCanvasScale,
-  useCanvasScale,
-  useCockpit,
-  useCockpitContext,
-} from './composables'
-export type {
-  CanvasScaleResult,
-  UseCockpitOptions,
-  UseCockpitReturn,
-} from './composables'
-
-/***********************运行时*********************/
-export {
-  LumaCockpit,
-  useCockpitRuntimeEnv,
-} from './runtime'
-export type { CockpitRuntimeEnv } from './runtime'

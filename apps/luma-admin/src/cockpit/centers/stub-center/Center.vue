@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { BusinessItemSelectedPayload } from '../../messages/topics'
 import { useCockpitContext } from '@luma/cockpit'
 import { onBeforeUnmount, ref } from 'vue'
 import {
-  type BusinessItemSelectedPayload,
+
   cockpitTopics,
 } from '../../messages/topics'
 
@@ -36,7 +37,9 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="stub-center" :data-instance-id="context.instanceId">
-    <p class="stub-center__hint">中央组件示例（模式：{{ context.mode }}）</p>
+    <p class="stub-center__hint">
+      中央组件示例（模式：{{ context.mode }}）
+    </p>
     <p class="stub-center__feedback" data-role="from-widget">
       来自模块：{{ lastSelected || '（无）' }}
     </p>

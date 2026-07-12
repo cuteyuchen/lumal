@@ -11,7 +11,7 @@ const StubWidget = defineComponent({
   name: 'StubWidget',
   setup() {
     const ctx = useCockpitContext()
-    return () => h('div', { class: 'stub-widget', 'data-instance': ctx.instanceId }, ctx.instanceId)
+    return () => h('div', { 'class': 'stub-widget', 'data-instance': ctx.instanceId }, ctx.instanceId)
   },
 })
 
@@ -36,9 +36,13 @@ function baseConfig(overrides: Partial<CockpitConfig> = {}): CockpitConfig {
     id: 'ck',
     title: '测试驾驶舱',
     categories: [{
-      id: 'cat-1', label: '分类一', visible: true, activePageId: 'page-1',
+      id: 'cat-1',
+      label: '分类一',
+      visible: true,
+      activePageId: 'page-1',
       pages: [{
-        id: 'page-1', title: '页面一',
+        id: 'page-1',
+        title: '页面一',
         center: { id: 'center-1', type: 'stub-center' },
         left: { columns: [] },
         right: { columns: [] },
@@ -48,7 +52,7 @@ function baseConfig(overrides: Partial<CockpitConfig> = {}): CockpitConfig {
   }
 }
 
-describe('LumaCockpit 运行时', () => {
+describe('lumaCockpit 运行时', () => {
   it('渲染标题与分类导航', () => {
     const wrapper = mount(LumaCockpit, {
       props: { config: baseConfig(), registry: createRegistry() },
@@ -61,8 +65,12 @@ describe('LumaCockpit 运行时', () => {
   it('single 模式渲染单个可见模块', () => {
     const config = baseConfig()
     config.categories[0].pages[0].left.columns = [{
-      id: 'col', width: 1, containers: [{
-        id: 'ct', height: 1, mode: 'single',
+      id: 'col',
+      width: 1,
+      containers: [{
+        id: 'ct',
+        height: 1,
+        mode: 'single',
         widgets: [{ id: 'w1', type: 'stub', visible: true }],
       }],
     }]
@@ -73,8 +81,13 @@ describe('LumaCockpit 运行时', () => {
   it('combined 模式同时渲染多个模块', () => {
     const config = baseConfig()
     config.categories[0].pages[0].left.columns = [{
-      id: 'col', width: 1, containers: [{
-        id: 'ct', height: 1, mode: 'combined', direction: 'horizontal',
+      id: 'col',
+      width: 1,
+      containers: [{
+        id: 'ct',
+        height: 1,
+        mode: 'combined',
+        direction: 'horizontal',
         widgets: [
           { id: 'w1', type: 'stub', visible: true },
           { id: 'w2', type: 'stub', visible: true },
@@ -88,8 +101,12 @@ describe('LumaCockpit 运行时', () => {
   it('同 type 多实例使用不同 instanceId', () => {
     const config = baseConfig()
     config.categories[0].pages[0].left.columns = [{
-      id: 'col', width: 1, containers: [{
-        id: 'ct', height: 1, mode: 'combined',
+      id: 'col',
+      width: 1,
+      containers: [{
+        id: 'ct',
+        height: 1,
+        mode: 'combined',
         widgets: [
           { id: 'inst-a', type: 'stub', visible: true },
           { id: 'inst-b', type: 'stub', visible: true },
@@ -104,8 +121,13 @@ describe('LumaCockpit 运行时', () => {
   it('tabs 模式仅展示激活面板并可切换', async () => {
     const config = baseConfig()
     config.categories[0].pages[0].left.columns = [{
-      id: 'col', width: 1, containers: [{
-        id: 'ct', height: 1, mode: 'tabs', activeWidgetId: 'w1',
+      id: 'col',
+      width: 1,
+      containers: [{
+        id: 'ct',
+        height: 1,
+        mode: 'tabs',
+        activeWidgetId: 'w1',
         widgets: [
           { id: 'w1', type: 'stub', title: 'Tab1', visible: true },
           { id: 'w2', type: 'stub', title: 'Tab2', visible: true },
@@ -123,8 +145,12 @@ describe('LumaCockpit 运行时', () => {
   it('缺失模块 type 渲染降级占位', () => {
     const config = baseConfig()
     config.categories[0].pages[0].left.columns = [{
-      id: 'col', width: 1, containers: [{
-        id: 'ct', height: 1, mode: 'single',
+      id: 'col',
+      width: 1,
+      containers: [{
+        id: 'ct',
+        height: 1,
+        mode: 'single',
         widgets: [{ id: 'w1', type: 'unknown-type', visible: true }],
       }],
     }]
@@ -136,11 +162,17 @@ describe('LumaCockpit 运行时', () => {
     const config = baseConfig({
       categories: [
         {
-          id: 'cat-1', label: '分类一', visible: true, activePageId: 'p1',
+          id: 'cat-1',
+          label: '分类一',
+          visible: true,
+          activePageId: 'p1',
           pages: [{ id: 'p1', title: '页面A', left: { columns: [] }, right: { columns: [] } }],
         },
         {
-          id: 'cat-2', label: '分类二', visible: true, activePageId: 'p2',
+          id: 'cat-2',
+          label: '分类二',
+          visible: true,
+          activePageId: 'p2',
           pages: [{ id: 'p2', title: '页面B', left: { columns: [] }, right: { columns: [] } }],
         },
       ],

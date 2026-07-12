@@ -2,9 +2,9 @@
 import type { CockpitBaseContext, CockpitWidgetInstance } from '../types'
 import { computed, onBeforeUnmount } from 'vue'
 import { provideCockpitContext } from '../composables/useCockpitContext'
+import CockpitErrorBoundary from './CockpitErrorBoundary.vue'
 import { useCockpitRuntimeEnv } from './context'
 import { resolveCockpitComponent } from './resolveComponent'
-import CockpitErrorBoundary from './CockpitErrorBoundary.vue'
 
 /***********************业务模块 Host*********************/
 // 渲染单个模块实例：per-instance 上下文、缺失降级、卸载清理订阅。
@@ -81,7 +81,9 @@ const title = computed(() => props.widget.title)
           />
           <div v-else class="luma-cockpit-widget__error" role="alert">
             <span>模块加载失败</span>
-            <button type="button" @click="retry">重试</button>
+            <button type="button" @click="retry">
+              重试
+            </button>
           </div>
         </template>
       </CockpitErrorBoundary>
