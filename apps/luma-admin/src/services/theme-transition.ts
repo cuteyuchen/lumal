@@ -1,3 +1,5 @@
+import { nextTick } from 'vue'
+
 export interface ThemeTransitionOrigin {
   clientX: number
   clientY: number
@@ -6,10 +8,11 @@ export interface ThemeTransitionOrigin {
 interface ViewTransitionLike {
   finished: Promise<void>
   ready: Promise<void>
+  skipTransition?: () => void
 }
 
 type ThemeTransitionDocument = Pick<Document, 'documentElement'> & {
-  startViewTransition?: (update: () => void) => ViewTransitionLike
+  startViewTransition?: (update: () => void | Promise<void>) => ViewTransitionLike
 }
 
 export interface ThemeTransitionEnvironment {
@@ -66,17 +69,26 @@ export async function runAdminThemeTransition(
   ]
 
   try {
-    const transition = documentRef.startViewTransition(updateTheme)
+    const transition = documentRef.startViewTransition(async () => {
+      updateTheme()
+      await nextTick()
+    })
     await transition.ready
     const animation = documentRef.documentElement.animate(
       { clipPath: wasDark ? clipPath : [...clipPath].reverse() },
       {
-        duration: 360,
-        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        duration: 400,
+        easing: 'ease-in',
         pseudoElement: wasDark ? '::view-transition-new(root)' : '::view-transition-old(root)',
       },
     )
-    await Promise.allSettled([animation.finished, transition.finished])
+
+    try {
+      await animation.finished
+    }
+    finally {
+      transition.skipTransition?.()
+    }
   }
   finally {
     transitionRunning = false

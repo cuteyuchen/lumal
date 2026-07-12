@@ -39,9 +39,10 @@ describe('admin theme transition', () => {
     const update = vi.fn(() => document.documentElement.classList.add('dark'))
     const finished = Promise.resolve()
     const animate = vi.fn(() => ({ finished }))
+    const skipTransition = vi.fn()
     const startViewTransition = vi.fn((callback: () => void) => {
       callback()
-      return { finished, ready: Promise.resolve() }
+      return { finished, ready: Promise.resolve(), skipTransition }
     })
     Object.defineProperty(document.documentElement, 'animate', {
       configurable: true,
@@ -58,10 +59,12 @@ describe('admin theme transition', () => {
     expect(animate).toHaveBeenCalledWith(
       { clipPath: [expect.stringContaining('at 100px 120px'), 'circle(0px at 100px 120px)'] },
       expect.objectContaining({
-        duration: 360,
+        duration: 400,
+        easing: 'ease-in',
         pseudoElement: '::view-transition-old(root)',
       }),
     )
+    expect(skipTransition).toHaveBeenCalledOnce()
     expect(document.documentElement.classList.contains('dark')).toBe(true)
   })
 })
