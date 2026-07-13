@@ -1,3 +1,4 @@
+@use 'sass:meta';
 @import '@luma/icons/style.css';
 
 /***********************@luma/cockpit 基础样式*********************/
@@ -63,6 +64,10 @@
     will-change: transform;
   }
 
+  &[data-viewport-mode='vwvh'] &__stage {
+    will-change: auto;
+  }
+
   &__header {
     display: flex;
     align-items: center;
@@ -110,21 +115,35 @@
   }
 
   &__body {
+    position: relative;
     flex: 1 1 auto;
-    display: flex;
-    gap: var(--luma-cockpit-gap);
     min-height: 0;
+    overflow: hidden;
   }
 
   &__left,
   &__right {
-    flex: 0 0 auto;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
     min-width: 0;
   }
 
+  &__left {
+    left: 0;
+  }
+
+  &__right {
+    right: 0;
+  }
+
   &__center {
-    flex: 1 1 auto;
-    min-width: 480px;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    min-width: 0;
+    overflow: hidden;
   }
 
   &__categories {
@@ -218,9 +237,12 @@
 
   &__tablist {
     display: flex;
-    gap: 4px;
-    padding: 6px;
-    border-bottom: 1px solid var(--luma-cockpit-border);
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 5px 12px 5px 28px;
+    border-bottom: 0;
+    background: var(--luma-cockpit-tabbar-bg, transparent);
     flex: none;
   }
 
@@ -1439,21 +1461,24 @@
 }
 
 .luma-cockpit-container__tab.el-button {
-  --el-button-bg-color: var(--luma-cockpit-surface);
-  --el-button-border-color: var(--luma-cockpit-border);
-  --el-button-text-color: var(--luma-cockpit-text);
-  --el-button-hover-bg-color: var(--luma-cockpit-selected);
-  --el-button-hover-border-color: var(--luma-cockpit-accent);
-  --el-button-hover-text-color: var(--luma-cockpit-text);
-  --el-button-active-bg-color: var(--luma-cockpit-selected);
-  --el-button-active-border-color: var(--luma-cockpit-accent);
-  --el-button-active-text-color: var(--luma-cockpit-text);
-  min-height: 36px;
-  padding: 6px 12px;
+  --el-button-bg-color: transparent;
+  --el-button-border-color: transparent;
+  --el-button-text-color: var(--luma-cockpit-text-secondary);
+  --el-button-hover-bg-color: transparent;
+  --el-button-hover-border-color: transparent;
+  --el-button-hover-text-color: var(--luma-cockpit-title-text);
+  --el-button-active-bg-color: transparent;
+  --el-button-active-border-color: transparent;
+  --el-button-active-text-color: var(--luma-cockpit-title-text);
+  min-width: 0;
+  min-height: 30px;
+  padding: 0 12px 0 0;
+  border: 0;
+  font-size: 14px;
 
   &.is-active {
-    border-color: var(--luma-cockpit-accent);
-    box-shadow: inset 0 -2px 0 var(--luma-cockpit-accent);
+    color: var(--luma-cockpit-title-text);
+    box-shadow: none;
   }
 }
 
@@ -1463,4 +1488,4 @@
   align-items: center;
 }
 
-@import './designer-v3';
+@include meta.load-css('designer-v3');

@@ -76,4 +76,23 @@ describe('LumaCockpit v3 运行时', () => {
     await wrapper.find('.stub-widget').trigger('click')
     expect(wrapper.emitted('nodeSelect')?.[0]).toEqual([{ kind: 'widget', id: 'left-widget', side: 'left' }])
   })
+
+  it('中心内容先渲染为底层，左右区域随后作为覆盖层', () => {
+    const wrapper = mount(LumaCockpit, {
+      props: { config: config(), registry: registry() },
+      slots: { center: () => h('div', { class: 'stub-center' }) },
+    })
+    const bodyChildren = wrapper.find('.luma-cockpit-canvas__body').element.children
+    expect(bodyChildren[0].classList.contains('luma-cockpit-canvas__center')).toBe(true)
+    expect(bodyChildren[1].classList.contains('luma-cockpit-canvas__left')).toBe(true)
+    expect(bodyChildren[2].classList.contains('luma-cockpit-canvas__right')).toBe(true)
+  })
+
+  it('支持由消费方选择 vwvh 适配模式', () => {
+    const wrapper = mount(LumaCockpit, { props: { config: config(), registry: registry(), viewportMode: 'vwvh' } })
+    expect(wrapper.attributes('data-viewport-mode')).toBe('vwvh')
+    expect(wrapper.find('.luma-cockpit-canvas').attributes('data-viewport-mode')).toBe('vwvh')
+    expect(wrapper.find('.luma-cockpit-canvas__stage').attributes('style')).toContain('100vw')
+    expect(wrapper.find('.luma-cockpit-region').attributes('style')).toContain('--luma-cockpit-x-unit')
+  })
 })

@@ -7,6 +7,7 @@ import type {
   CockpitNodeSelectPayload,
   CockpitRenderMode,
   CockpitThemeMode,
+  CockpitViewportMode,
 } from '../types'
 import type { CockpitRegistry } from '../registry/types'
 import { computed, provide, ref, useSlots, watch } from 'vue'
@@ -26,12 +27,14 @@ const props = withDefaults(defineProps<{
   baseHeight?: number
   cachePages?: boolean
   renderMode?: CockpitRenderMode
+  viewportMode?: CockpitViewportMode
   messageBus?: ReturnType<typeof createCockpitMessageBus>
 }>(), {
   baseWidth: 1920,
   baseHeight: 1080,
   cachePages: true,
   renderMode: 'runtime',
+  viewportMode: 'scale',
 })
 
 const emit = defineEmits<{
@@ -128,6 +131,7 @@ function handleNodeClick(event: MouseEvent): void {
     class="luma-cockpit"
     :data-mode="renderMode"
     :data-cockpit-theme="themeMode"
+    :data-viewport-mode="viewportMode"
     @click.capture="handleNodeClick"
   >
     <template v-if="normalizedResult.error">
@@ -149,6 +153,7 @@ function handleNodeClick(event: MouseEvent): void {
         :title="normalized!.title"
         :base-width="baseWidth"
         :base-height="baseHeight"
+        :viewport-mode="viewportMode"
         :layout="orchestration.activeLayout.value"
         :center-context="centerContext"
       >

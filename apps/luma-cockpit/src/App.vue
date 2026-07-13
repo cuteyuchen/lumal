@@ -24,6 +24,7 @@ const saveError = ref<string>('')
 
 const activeLayoutId = ref<string | undefined>()
 const fullscreenActive = ref(false)
+const viewportMode = ref<'scale' | 'vwvh'>('scale')
 const cockpitRef = ref<InstanceType<typeof LumaCockpit> | null>(null)
 
 const themeModeIcon = computed(() => {
@@ -107,6 +108,7 @@ onBeforeUnmount(() => {
       :config="config"
       :registry="standaloneCockpitRegistry"
       :theme-mode="standaloneResolvedThemeMode"
+      :viewport-mode="viewportMode"
       @configure="openDesigner"
     >
       <template #header-title="{ title }">
@@ -135,6 +137,11 @@ onBeforeUnmount(() => {
           <ElTooltip :content="fullscreenActive ? '退出全屏' : '进入全屏'">
             <ElButton circle data-action="cockpit-fullscreen" :aria-label="fullscreenActive ? '退出全屏' : '进入全屏'" @click="toggleFullscreen">
               <LumaIcon :name="fullscreenActive ? 'luma:fullscreen-exit' : 'luma:fullscreen'" :size="18" />
+            </ElButton>
+          </ElTooltip>
+          <ElTooltip :content="viewportMode === 'scale' ? '当前：等比缩放' : '当前：VW/VH 适配'">
+            <ElButton circle aria-label="切换大屏适配模式" @click="viewportMode = viewportMode === 'scale' ? 'vwvh' : 'scale'">
+              <LumaIcon name="luma:screen" :size="18" />
             </ElButton>
           </ElTooltip>
           <ElTooltip content="打开配置器">

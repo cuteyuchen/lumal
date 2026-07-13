@@ -30,7 +30,8 @@ body {
 
 /* 消费应用负责 Cockpit 的全部主题皮肤，框架只读取这些语义 token。 */
 .luma-cockpit,
-.standalone-app__designer {
+.standalone-app__designer,
+.standalone-app__designer .luma-cockpit-designer {
   --luma-cockpit-bg: #eef6fb;
   --luma-cockpit-panel-bg: rgb(255 255 255 / 92%);
   --luma-cockpit-surface: rgb(235 247 252 / 94%);
@@ -53,11 +54,18 @@ body {
   --luma-cockpit-selected: rgb(0 150 109 / 18%);
   --luma-cockpit-focus-ring: #087faf;
   --luma-cockpit-radius: 4px;
+  --luma-cockpit-tabbar-bg: linear-gradient(90deg, rgb(8 127 175 / 10%), transparent 74%);
+  --luma-cockpit-slot-border: rgb(39 139 178 / 58%);
+  --luma-cockpit-stage-bg: rgb(224 242 249 / 88%);
+  --luma-cockpit-center-bg: radial-gradient(circle at center, rgb(8 127 175 / 8%), transparent 68%);
+  --luma-cockpit-center-border: rgb(39 139 178 / 28%);
+  --luma-cockpit-caption-bg: rgb(236 248 252 / 88%);
   font-family: inherit;
 }
 
 :root[data-luma-theme='dark'] .luma-cockpit,
-:root[data-luma-theme='dark'] .standalone-app__designer {
+:root[data-luma-theme='dark'] .standalone-app__designer,
+:root[data-luma-theme='dark'] .standalone-app__designer .luma-cockpit-designer {
   --luma-cockpit-bg: linear-gradient(180deg, #062b46 0%, #043850 48%, #052d45 100%);
   --luma-cockpit-panel-bg: rgb(2 65 82 / 82%);
   --luma-cockpit-surface: rgb(4 53 71 / 84%);
@@ -80,6 +88,91 @@ body {
   --luma-cockpit-selected: rgb(0 229 160 / 20%);
   --luma-cockpit-focus-ring: #00e5ff;
   --luma-cockpit-radius: 3px;
+  --luma-cockpit-tabbar-bg: linear-gradient(90deg, rgb(0 215 255 / 13%), transparent 78%);
+  --luma-cockpit-slot-border: rgb(6 183 253 / 50%);
+  --luma-cockpit-stage-bg: rgb(0 74 106 / 20%);
+  --luma-cockpit-center-bg: radial-gradient(circle at center, rgb(0 132 181 / 22%), rgb(1 35 50 / 22%) 64%, transparent 100%);
+  --luma-cockpit-center-border: rgb(6 183 253 / 20%);
+  --luma-cockpit-caption-bg: rgb(2 35 49 / 72%);
+}
+
+/* 消费方驾驶舱皮肤，参考富阳驾驶舱的信息面板与 Tab 表现。 */
+.luma-cockpit-container {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.luma-cockpit-container__cell,
+.luma-cockpit-container.is-tabs {
+  border: 1px solid var(--luma-cockpit-border);
+  background: linear-gradient(135deg, var(--luma-cockpit-panel-bg), color-mix(in srgb, var(--luma-cockpit-panel-bg), transparent 18%));
+  box-shadow: inset 0 0 24px color-mix(in srgb, var(--luma-cockpit-accent), transparent 92%);
+}
+
+.luma-cockpit-widget__title {
+  position: relative;
+  min-height: 38px;
+  padding: 9px 14px 7px 28px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--luma-cockpit-accent), transparent 84%), transparent 78%);
+  font-size: 15px;
+  letter-spacing: 0;
+}
+
+.luma-cockpit-widget__title::before {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--luma-cockpit-accent);
+  transform: rotate(45deg);
+  content: '';
+}
+
+.luma-cockpit-widget__title::after {
+  position: absolute;
+  right: 12px;
+  bottom: 0;
+  left: 12px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--luma-cockpit-accent), transparent);
+  opacity: 0.55;
+  content: '';
+}
+
+.luma-cockpit-container__tablist {
+  position: relative;
+}
+
+.luma-cockpit-container__tablist::before {
+  position: absolute;
+  top: 16px;
+  left: 12px;
+  width: 7px;
+  height: 7px;
+  border: 2px solid var(--luma-cockpit-accent);
+  transform: rotate(45deg);
+  content: '';
+}
+
+.luma-cockpit-widget :is(.metric-summary, .trend-panel, .event-list, .status-distribution, .region-ranking) {
+  padding: 10px 12px 12px;
+}
+
+.luma-cockpit-widget .metric-summary__item,
+.luma-cockpit-widget .event-list__items button,
+.luma-cockpit-widget .status-distribution__items button,
+.luma-cockpit-widget .region-ranking__items button,
+.luma-cockpit-widget .trend-panel__legend button {
+  border-color: color-mix(in srgb, var(--luma-cockpit-border), transparent 20%);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--luma-cockpit-floating-bg), transparent 18%);
+}
+
+.luma-cockpit-widget .metric-summary__item dd {
+  color: var(--luma-cockpit-accent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--luma-cockpit-accent), transparent 58%);
 }
 
 .standalone-app__designer {

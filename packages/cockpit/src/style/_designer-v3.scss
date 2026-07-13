@@ -1,5 +1,5 @@
-/***********************v3 Designer 结构样式*********************/
-// 只消费语义 token。主题的实际颜色、纹理和光效由消费应用定义。
+/***********************v3 Designer 装配界面*********************/
+// 框架只定义结构和语义 token，具体深浅主题由消费应用提供。
 
 .luma-cockpit-designer {
   --el-color-primary: var(--luma-cockpit-accent);
@@ -12,38 +12,40 @@
   --el-text-color-secondary: var(--luma-cockpit-text-muted);
   --el-border-color: var(--luma-cockpit-border);
   --el-border-color-light: var(--luma-cockpit-border);
-  --el-border-radius-base: var(--luma-cockpit-radius);
+  --el-border-radius-base: 4px;
 
-  position: relative;
-  isolation: isolate;
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  grid-template-rows: 52px 66px auto minmax(0, 1fr) 58px;
   width: 100%;
   min-width: 1180px;
   height: 100%;
-  min-height: 720px;
+  min-height: 680px;
   overflow: hidden;
   color: var(--luma-cockpit-text);
   background: var(--luma-cockpit-bg);
 
-  &__titlebar {
+  &__titlebar,
+  &__controlbar,
+  &__footer {
     display: flex;
     align-items: center;
-    min-height: 54px;
-    padding: 0 28px;
-    border: 1px solid var(--luma-cockpit-border);
-    background: var(--luma-cockpit-title-bg);
-    box-shadow: var(--luma-cockpit-shadow);
+    padding: 0 20px;
+    border-color: var(--luma-cockpit-border);
+    background: var(--luma-cockpit-surface);
+  }
+
+  &__titlebar {
+    border-bottom: 1px solid var(--luma-cockpit-border);
   }
 
   &__heading {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     margin: 0;
     color: var(--luma-cockpit-title-text);
-    font-size: 19px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 600;
   }
 
   &__title-actions {
@@ -54,29 +56,10 @@
   }
 
   &__controlbar {
-    display: flex;
-    align-items: center;
-    min-height: 82px;
-    padding: 14px 28px;
     border-bottom: 1px solid var(--luma-cockpit-border);
-    background: var(--luma-cockpit-surface);
   }
 
-  &__layout-controls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-
-    > .el-input {
-      width: 210px;
-    }
-
-    .el-select {
-      width: 220px;
-    }
-  }
-
+  &__layout-controls,
   &__layout-tools,
   &__footer-actions {
     display: flex;
@@ -84,16 +67,24 @@
     gap: 10px;
   }
 
+  &__layout-controls > .el-input {
+    width: 190px;
+  }
+
+  &__layout-controls .el-select {
+    width: 200px;
+  }
+
   &__field {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: 6px;
     color: var(--luma-cockpit-text-secondary);
-    font-size: 13px;
+    font-size: 12px;
     white-space: nowrap;
 
     > .el-input-number {
-      width: 88px;
+      width: 76px;
     }
 
     em {
@@ -105,127 +96,162 @@
 
   &__issues {
     display: grid;
-    gap: 8px;
-    padding: 10px 28px;
+    gap: 6px;
+    padding: 8px 20px;
     border-bottom: 1px solid var(--luma-cockpit-border);
-    background: var(--luma-cockpit-surface);
   }
 
   &__workspace {
     display: grid;
-    grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr) 310px;
+    grid-template-columns: minmax(820px, 3fr) minmax(260px, 1fr);
     gap: 12px;
     min-height: 0;
-    padding: 14px 20px;
+    padding: 12px 18px;
     overflow: hidden;
-    background: var(--luma-cockpit-workspace-bg, transparent);
   }
 
-  &__region,
+  &__assembly,
   &__library {
     min-width: 0;
     min-height: 0;
     border: 1px solid var(--luma-cockpit-border);
-    border-radius: var(--luma-cockpit-radius);
+    border-radius: 6px;
     background: var(--luma-cockpit-panel-bg);
-    box-shadow: var(--luma-cockpit-shadow);
     overflow: hidden;
   }
 
-  &__region {
+  &__assembly {
+    padding: 12px;
+  }
+
+  &__assembly-stage {
+    position: relative;
     display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-columns: minmax(260px, 31%) minmax(260px, 1fr) minmax(260px, 31%);
+    gap: 10px;
+    width: 100%;
+    height: 100%;
+    min-height: 430px;
+    padding: 10px;
+    border: 1px solid var(--luma-cockpit-border);
+    border-radius: 5px;
+    background: var(--luma-cockpit-stage-bg, var(--luma-cockpit-surface));
+  }
+
+  &__center-guide {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-width: 0;
+    border: 1px dashed var(--luma-cockpit-center-border, var(--luma-cockpit-border));
+    border-radius: 4px;
+    color: var(--luma-cockpit-text-muted);
+    background: var(--luma-cockpit-center-bg, transparent);
+    font-size: 12px;
+    text-align: center;
+  }
+
+  &__region {
+    z-index: 1;
+    display: grid;
+    grid-template-rows: 76px auto minmax(0, 1fr);
+    min-width: 0;
+    min-height: 0;
   }
 
   &__region-head {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: center;
-    gap: 12px;
-    min-height: 58px;
-    padding: 10px 14px;
+    gap: 8px;
+    padding: 6px 4px 8px;
     border-bottom: 1px solid var(--luma-cockpit-border);
-    background: var(--luma-cockpit-surface);
 
     > div {
-      display: grid;
-      gap: 3px;
-      margin-right: auto;
+      grid-column: 1 / -1;
+      min-width: 0;
+    }
+
+    strong,
+    span {
+      display: block;
     }
 
     strong {
       color: var(--luma-cockpit-title-text);
-      font-size: 15px;
+      font-size: 14px;
     }
 
-    span {
+    > div span {
+      margin-top: 2px;
       color: var(--luma-cockpit-text-muted);
-      font-size: 12px;
+      font-size: 11px;
     }
 
     .el-input-number {
-      width: 76px;
+      width: 58px;
+    }
+
+    .luma-cockpit-designer__field {
+      justify-content: flex-end;
     }
   }
 
   &__region-controls {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 50px;
-    padding: 8px 14px;
-    border-bottom: 1px solid var(--luma-cockpit-border);
+    gap: 8px;
+    min-height: 40px;
+    padding: 7px 4px;
     overflow-x: auto;
   }
 
   &__grid-rows {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     min-height: 0;
-    padding: 12px;
+    padding: 4px;
     overflow: auto;
   }
 
   &__grid-row {
     display: grid;
-    grid-template-rows: auto minmax(110px, 1fr);
-    gap: 8px;
-    min-height: 170px;
-    padding: 10px;
-    border: 1px solid var(--luma-cockpit-border);
-    border-radius: var(--luma-cockpit-radius);
-    background: var(--luma-cockpit-surface);
+    grid-template-rows: 32px minmax(72px, 1fr);
+    gap: 6px;
+    min-height: 130px;
   }
 
   &__grid-row-head {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(42px, 1fr) auto auto;
     align-items: center;
-    gap: 12px;
-    min-height: 34px;
+    gap: 7px;
 
     > strong {
       margin-right: auto;
-      color: var(--luma-cockpit-title-text);
-      font-size: 13px;
+      color: var(--luma-cockpit-text-secondary);
+      font-size: 12px;
     }
 
     .el-input-number {
-      width: 82px;
+      width: 70px;
     }
   }
 
   &__tabs-switch {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 5px;
     color: var(--luma-cockpit-text-secondary);
-    font-size: 12px;
+    font-size: 11px;
     white-space: nowrap;
   }
 
   &__grid-cells {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-height: 0;
   }
 
@@ -235,12 +261,10 @@
     min-height: 0;
   }
 
-  &__tab-row#{&}__drop-zone,
   &__drop-zone.is-tabs {
-    align-content: start;
+    align-content: flex-start;
     flex-wrap: wrap;
-    gap: 10px;
-    min-height: 118px;
+    gap: 8px;
   }
 
   &__empty-cell.el-button {
@@ -248,72 +272,75 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 9px;
+    gap: 6px;
     width: 100%;
     height: 100%;
-    min-height: 118px;
+    min-height: 82px;
     margin: 0;
-    border-style: dashed;
+    border: 1px dashed var(--luma-cockpit-slot-border, var(--luma-cockpit-border));
+    border-radius: 4px;
     color: var(--luma-cockpit-text-secondary);
     background: var(--luma-cockpit-empty-bg, transparent);
     white-space: normal;
   }
 
-  &__placed-widget {
-    display: grid;
-    grid-template-rows: minmax(0, 1fr) 38px;
-    width: 100%;
+  &__placed-widget,
+  &__library-card {
+    position: relative;
     min-width: 0;
-    min-height: 118px;
-    border: 1px solid var(--luma-cockpit-border);
-    border-radius: var(--luma-cockpit-radius);
+    border: 1px solid var(--luma-cockpit-slot-border, var(--luma-cockpit-border));
+    border-radius: 4px;
     background: var(--luma-cockpit-floating-bg);
-    color: var(--luma-cockpit-text);
     cursor: grab;
     overflow: hidden;
     transition: border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
 
-    &:active {
-      cursor: grabbing;
-    }
-
+    &:hover,
+    &:focus-within,
     &.is-active,
-    &:focus-within {
+    &.is-selected {
       border-color: var(--luma-cockpit-accent);
-      box-shadow: 0 0 0 1px var(--luma-cockpit-accent);
+      box-shadow: 0 0 10px var(--luma-cockpit-drop-target);
     }
   }
 
+  &__placed-widget {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 28px;
+    width: 100%;
+    min-height: 82px;
+  }
+
   &__drop-zone.is-tabs &__placed-widget {
-    width: 190px;
-    height: 132px;
+    width: calc(50% - 4px);
+    height: 112px;
   }
 
   &__placed-widget-footer {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     min-width: 0;
-    padding: 0 9px;
-    border-top: 1px solid var(--luma-cockpit-border);
-    background: var(--luma-cockpit-surface);
+    padding: 0 5px;
+    background: var(--luma-cockpit-caption-bg, var(--luma-cockpit-surface));
+    backdrop-filter: blur(7px);
 
-    > span {
-      overflow: hidden;
+    > span,
+    .luma-cockpit-designer__tab-widget-title {
       min-width: 0;
       margin-right: auto;
+      overflow: hidden;
+      color: var(--luma-cockpit-text);
+      font-size: 11px;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-  }
 
-  &__tab-widget-title.el-button {
-    min-width: 0;
-    margin-right: auto;
-    padding: 0;
-    overflow: hidden;
-    color: inherit;
-    text-overflow: ellipsis;
+    .el-button {
+      min-height: 24px;
+      padding: 2px 4px;
+      font-size: 11px;
+    }
   }
 
   &__widget-preview {
@@ -343,31 +370,28 @@
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
   }
 
   &__widget-preview-fallback {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
     width: 100%;
     height: 100%;
-    min-height: 72px;
     color: var(--luma-cockpit-text-muted);
-    text-align: center;
+    font-size: 11px;
   }
 
   &__library {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    padding: 0;
+    grid-template-rows: 50px minmax(0, 1fr);
   }
 
   &__library-title {
-    min-height: 58px;
-    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
     border-bottom: 1px solid var(--luma-cockpit-border);
     background: var(--luma-cockpit-surface);
 
@@ -378,13 +402,13 @@
 
     strong {
       color: var(--luma-cockpit-title-text);
-      font-size: 15px;
+      font-size: 14px;
     }
 
     span {
-      margin-top: 3px;
+      margin-top: 2px;
       color: var(--luma-cockpit-text-muted);
-      font-size: 12px;
+      font-size: 11px;
     }
   }
 
@@ -400,33 +424,19 @@
 
   &__library-card {
     display: grid;
-    grid-template-rows: 92px 36px;
-    min-width: 0;
-    border: 1px solid var(--luma-cockpit-border);
-    border-radius: var(--luma-cockpit-radius);
-    background: var(--luma-cockpit-floating-bg);
-    cursor: grab;
-    overflow: hidden;
-    transition: border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
-
-    &:hover,
-    &:focus-within,
-    &.is-selected {
-      border-color: var(--luma-cockpit-accent);
-      box-shadow: 0 0 0 1px var(--luma-cockpit-accent);
-    }
+    grid-template-rows: 96px 30px;
   }
 
   &__library-select.el-button {
-    display: block;
     width: 100%;
     min-width: 0;
     margin: 0;
-    padding: 0 8px;
+    padding: 0 6px;
     overflow: hidden;
-    border-top: 1px solid var(--luma-cockpit-border);
     border-radius: 0;
     color: var(--luma-cockpit-text);
+    font-size: 12px;
+    font-weight: 600;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -436,22 +446,14 @@
   }
 
   &__footer {
-    display: flex;
-    align-items: center;
-    min-height: 64px;
-    padding: 10px 24px;
+    justify-content: flex-end;
     border-top: 1px solid var(--luma-cockpit-border);
-    background: var(--luma-cockpit-surface);
 
     p {
-      margin: 0 24px 0 auto;
+      margin: 0 18px 0 0;
       color: var(--luma-cockpit-text-secondary);
-      font-size: 13px;
+      font-size: 12px;
     }
-  }
-
-  &__footer-actions {
-    margin-left: 0;
   }
 
   .el-button + .el-button {

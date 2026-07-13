@@ -15,7 +15,7 @@ const regionWidth = computed(() => {
   const widths = props.region.columns.reduce((sum, column) => sum + column.width, 0)
   return widths + Math.max(0, props.region.columns.length - 1) * 12
 })
-const regionStyle = computed(() => ({ width: `${regionWidth.value}px`, flex: `0 0 ${regionWidth.value}px` }))
+const regionStyle = computed(() => ({ width: `calc(${regionWidth.value} * var(--luma-cockpit-x-unit, 1px))` }))
 </script>
 
 <template>

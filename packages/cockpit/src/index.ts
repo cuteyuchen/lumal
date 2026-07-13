@@ -86,6 +86,7 @@ export type {
   CockpitRenderMode,
   CockpitSide,
   CockpitThemeMode,
+  CockpitViewportMode,
   CockpitWidgetContext,
   CockpitWidgetInstance,
 } from './types'

@@ -128,8 +128,16 @@ defineExpose({ toggleTheme })
     </div>
 
     <main class="luma-cockpit-designer__workspace">
-      <CockpitLayoutEditor :cockpit-id="config.id" :draft="draft" :registry="registry" :selected-widget="selectedWidget" side="left" />
-      <CockpitLayoutEditor :cockpit-id="config.id" :draft="draft" :registry="registry" :selected-widget="selectedWidget" side="right" />
+      <section class="luma-cockpit-designer__assembly" aria-label="驾驶舱布局装配区">
+        <div class="luma-cockpit-designer__assembly-stage">
+          <CockpitLayoutEditor :cockpit-id="config.id" :draft="draft" :registry="registry" :selected-widget="selectedWidget" side="left" />
+          <div class="luma-cockpit-designer__center-guide" aria-hidden="true">
+            <LumaIcon name="luma:map" :size="34" />
+            <span>中心组件由消费方固定提供</span>
+          </div>
+          <CockpitLayoutEditor :cockpit-id="config.id" :draft="draft" :registry="registry" :selected-widget="selectedWidget" side="right" />
+        </div>
+      </section>
       <CockpitComponentLibrary
         :cockpit-id="config.id"
         :layout-id="activeLayout?.id ?? ''"

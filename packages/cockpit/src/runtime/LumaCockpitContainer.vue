@@ -14,7 +14,7 @@ const props = defineProps<{
 }>()
 
 const rowStyle = computed(() => ({ height: `${props.row.height}%` }))
-const gridStyle = computed(() => ({ gridTemplateColumns: props.columns.map(column => `${column.width}px`).join(' ') }))
+const gridStyle = computed(() => ({ gridTemplateColumns: props.columns.map(column => `calc(${column.width} * var(--luma-cockpit-x-unit, 1px))`).join(' ') }))
 const activeTabId = ref<string | undefined>()
 
 function resolveActiveTab(): string | undefined {

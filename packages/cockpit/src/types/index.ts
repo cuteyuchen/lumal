@@ -60,6 +60,7 @@ export interface CockpitConfig {
 
 export type CockpitThemeMode = 'light' | 'dark'
 export type CockpitRenderMode = 'runtime' | 'design'
+export type CockpitViewportMode = 'scale' | 'vwvh'
 
 export type CockpitNodeKind = 'layout' | 'region' | 'column' | 'row' | 'cell' | 'widget'
 

@@ -83,7 +83,7 @@ function handleDrop(target: DraftWidgetLocation, payload: { source?: DraftWidget
         <ElInputNumber
           :model-value="region?.rows.length ?? 1"
           :min="1"
-          controls-position="right"
+          :controls="false"
           :aria-label="`${side === 'left' ? '左侧' : '右侧'}区域行数`"
           @change="resize($event ?? 1, region?.columns.length ?? 1)"
         />
@@ -93,7 +93,7 @@ function handleDrop(target: DraftWidgetLocation, payload: { source?: DraftWidget
         <ElInputNumber
           :model-value="region?.columns.length ?? 1"
           :min="1"
-          controls-position="right"
+          :controls="false"
           :aria-label="`${side === 'left' ? '左侧' : '右侧'}区域列数`"
           @change="resize(region?.rows.length ?? 1, $event ?? 1)"
         />
@@ -106,7 +106,7 @@ function handleDrop(target: DraftWidgetLocation, payload: { source?: DraftWidget
         <ElInputNumber
           :model-value="column.width"
           :min="1"
-          controls-position="right"
+          :controls="false"
           :aria-label="`列 ${index + 1} 宽度像素`"
           @change="draft.setColumnWidth(side, column.id, $event ?? column.width)"
         />
@@ -125,14 +125,14 @@ function handleDrop(target: DraftWidgetLocation, payload: { source?: DraftWidget
               :min="1"
               :max="100"
               :precision="3"
-              controls-position="right"
+              :controls="false"
               :aria-label="`第 ${rowIndex + 1} 行高度百分比`"
               @change="draft.setRowHeight(side, row.id, $event ?? row.height)"
             />
             <em>%</em>
           </label>
           <label class="luma-cockpit-designer__tabs-switch">
-            <span>合并为 Tab 行</span>
+            <span>合并列</span>
             <ElSwitch :model-value="row.mode === 'tabs'" @change="setTabs(row, Boolean($event))" />
           </label>
         </header>
