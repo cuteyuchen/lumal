@@ -41,17 +41,20 @@ export type {
 } from './state/tab-strategy'
 export {
   clearTabSnapshot,
+  deserializeTabSnapshot,
   readTabSnapshot,
   restoreTabsFromSnapshot,
   serializeTabSnapshot,
   writeTabSnapshot,
 } from './state/tab-storage'
 export type {
-  DEFAULT_MAX_VISIT_HISTORY,
   RestoreContext,
   PersistContext,
   TabSnapshot,
   TabSnapshotStorage,
+} from './state/tab-storage'
+export {
+  DEFAULT_MAX_VISIT_HISTORY,
   TAB_SNAPSHOT_VERSION,
 } from './state/tab-storage'
 export type {

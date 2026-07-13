@@ -24,7 +24,7 @@ import {
   adminResolvedThemeMode,
   patchAdminPreferences,
 } from './services/preferences'
-import { currentUser, logout } from './services/session'
+import { adminTabSnapshotStorageKey, currentUser, logout } from './services/session'
 import { adminSettingsVisible, openAdminSettings } from './services/settings'
 import { runAdminThemeTransition } from './services/theme-transition'
 
@@ -180,6 +180,7 @@ async function handleTabRefresh(path: string): Promise<void> {
     :fixed-tabs="fixedTabs"
     :route-tab-resolver="resolveAdminRouteTab"
     tab-fallback-path="/dashboard"
+    :tab-storage-key="adminTabSnapshotStorageKey"
     :active-menu-path="activePath"
     @menu-select="handleMenuSelect"
     @toggle-sidebar="handleToggleSidebar"

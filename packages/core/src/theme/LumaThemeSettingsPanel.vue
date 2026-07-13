@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { LumaHeaderMenuAlign, LumaLayoutMode, LumaPreferences, LumaPreferencesDefaults, LumaTransitionName, ThemeMode } from './types'
+import type { LumaHeaderMenuAlign, LumaLayoutMode, LumaPreferences, LumaPreferencesDefaults, LumaTabStyle, LumaTransitionName, ThemeMode } from './types'
 import { LumaIcon } from '@luma/icons'
 import { ElButton, ElInputNumber, ElSlider, ElSwitch } from 'element-plus'
 import { computed, ref } from 'vue'
@@ -37,6 +37,12 @@ const transitionOptions: { label: string, value: LumaTransitionName }[] = [
   { label: '淡入', value: 'fade' },
   { label: '底部', value: 'fade-bottom' },
   { label: '缩放', value: 'zoom-fade' },
+]
+const tabStyleOptions: { label: string, value: LumaTabStyle }[] = [
+  { label: 'Chrome', value: 'chrome' },
+  { label: '朴素', value: 'plain' },
+  { label: '卡片', value: 'card' },
+  { label: '动效', value: 'brisk' },
 ]
 const radiusOptions = [0, 0.25, 0.5, 0.75, 1]
 const alignOptions: { label: string, value: LumaHeaderMenuAlign }[] = [
@@ -224,13 +230,47 @@ function setColor(color: string): void {
             <span>页面缓存</span><ElSwitch :model-value="preferences.tabbar.cache" :disabled="!availability.tabbarCache" @update:model-value="update({ tabbar: { cache: Boolean($event) } })" />
           </div>
           <div class="luma-theme-settings__row">
+            <span>持久化标签</span><ElSwitch :model-value="preferences.tabbar.persist" :disabled="!availability.tabbarCache" @update:model-value="update({ tabbar: { persist: Boolean($event) } })" />
+          </div>
+          <div class="luma-theme-settings__row">
+            <span>记录访问历史</span><ElSwitch :model-value="preferences.tabbar.visitHistory" @update:model-value="update({ tabbar: { visitHistory: Boolean($event) } })" />
+          </div>
+          <div class="luma-theme-settings__row">
+            <span>允许拖拽排序</span><ElSwitch :model-value="preferences.tabbar.draggable" @update:model-value="update({ tabbar: { draggable: Boolean($event) } })" />
+          </div>
+          <div class="luma-theme-settings__row">
+            <span>滚轮切换</span><ElSwitch :model-value="preferences.tabbar.wheelable" @update:model-value="update({ tabbar: { wheelable: Boolean($event) } })" />
+          </div>
+          <div class="luma-theme-settings__row">
+            <span>中键关闭</span><ElSwitch :model-value="preferences.tabbar.middleClickToClose" @update:model-value="update({ tabbar: { middleClickToClose: Boolean($event) } })" />
+          </div>
+          <div class="luma-theme-settings__row">
             <span>显示标签图标</span><ElSwitch :model-value="preferences.tabbar.showIcon" @update:model-value="update({ tabbar: { showIcon: Boolean($event) } })" />
+          </div>
+          <div class="luma-theme-settings__row">
+            <span>显示更多按钮</span><ElSwitch :model-value="preferences.tabbar.showMore" @update:model-value="update({ tabbar: { showMore: Boolean($event) } })" />
           </div>
           <div class="luma-theme-settings__row">
             <span>显示最大化按钮</span><ElSwitch :model-value="preferences.tabbar.showMaximize" @update:model-value="update({ tabbar: { showMaximize: Boolean($event) } })" />
           </div>
+          <div class="luma-theme-settings__row is-stacked">
+            <span>标签风格</span>
+            <div class="luma-theme-settings__segments luma-theme-settings__tab-style">
+              <button
+                v-for="item in tabStyleOptions"
+                :key="item.value"
+                type="button"
+                :disabled="!availability.tabbarCache"
+                :aria-pressed="preferences.tabbar.styleType === item.value"
+                :class="{ 'is-active': preferences.tabbar.styleType === item.value }"
+                @click="update({ tabbar: { styleType: item.value } })"
+              >
+                {{ item.label }}
+              </button>
+            </div>
+          </div>
           <div class="luma-theme-settings__row">
-            <span>最大标签数</span><ElInputNumber :model-value="preferences.tabbar.maxCount" :min="0" :max="30" @update:model-value="update({ tabbar: { maxCount: Number($event ?? 0) } })" />
+            <span>最大标签数（0 为不限制）</span><ElInputNumber :model-value="preferences.tabbar.maxCount" :min="0" :max="30" @update:model-value="update({ tabbar: { maxCount: Number($event ?? 0) } })" />
           </div>
         </section>
       </div>
@@ -283,6 +323,7 @@ button { font: inherit; }
 .luma-theme-settings__radius-grid button, .luma-theme-settings__segments button { min-height: 32px; border: 1px solid var(--el-border-color-lighter); border-radius: 6px; color: var(--el-text-color-secondary); cursor: pointer; background: var(--el-bg-color); }
 .luma-theme-settings__radius-grid button.is-active, .luma-theme-settings__segments button.is-active { border-color: var(--el-color-primary); color: var(--el-color-primary); background: var(--el-color-primary-light-9); }
 .luma-theme-settings__segments { grid-column: 1 / -1; grid-template-columns: repeat(3, 1fr); }
+.luma-theme-settings__tab-style { grid-template-columns: repeat(4, 1fr); }
 .luma-theme-settings__layout-preview { width: 100%; max-height: 48px; color: var(--el-color-primary); }
 .luma-theme-settings__layout-preview rect { fill: var(--el-fill-color); stroke: color-mix(in srgb, var(--el-border-color) 80%, transparent); stroke-width: 1; }
 .luma-theme-settings__layout-preview rect.is-background { fill: var(--el-fill-color-lighter); }

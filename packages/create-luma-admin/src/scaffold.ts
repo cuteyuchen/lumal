@@ -355,7 +355,7 @@ async function handleLogout(): Promise<void> {
       :progress="true"
       :loading="true"
       :cache="adminPreferences.tabbar.cache"
-      :cache-max="8"
+      :cache-max="adminPreferences.tabbar.maxCount"
       :transition="adminPreferences.transition.enable"
       :transition-name="adminPreferences.transition.name"
     />
@@ -797,6 +797,7 @@ export interface AdminUser {
 }
 
 const userStorageKey = 'luma-admin:user'
+export const adminTabSnapshotStorageKey = 'luma-admin:tabs'
 const currentUserState = shallowRef<AdminUser | null>(null)
 
 function readStoredUser(): AdminUser | null {
@@ -817,6 +818,12 @@ function readStoredUser(): AdminUser | null {
 function clearSessionState(): void {
   currentUserState.value = null
   localStorage.removeItem(userStorageKey)
+  try {
+    sessionStorage.removeItem(adminTabSnapshotStorageKey)
+  }
+  catch {
+    // sessionStorage 不可用时静默跳过。
+  }
   syncAccess(false)
 }
 
@@ -862,7 +869,21 @@ import { createPreferencesStore } from '@luma/core/theme'
 export const adminPreferenceDefaults = {
   app: { layout: 'sidebar-nav' },
   sidebar: { width: 220 },
-  tabbar: { cache: true, enable: true, maxCount: 8, showIcon: true, showMaximize: true },
+  tabbar: {
+    cache: true,
+    draggable: true,
+    enable: true,
+    maxCount: 0,
+    middleClickToClose: true,
+    persist: true,
+    showIcon: true,
+    showMaximize: true,
+    showMore: true,
+    showRefresh: true,
+    styleType: 'chrome',
+    visitHistory: true,
+    wheelable: true,
+  },
   transition: { enable: true, name: 'fade-side' },
 } satisfies LumaPreferencesDefaults
 

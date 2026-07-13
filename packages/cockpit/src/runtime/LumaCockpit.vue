@@ -26,14 +26,12 @@ const props = withDefaults(defineProps<{
   baseHeight?: number
   cachePages?: boolean
   renderMode?: CockpitRenderMode
-  themeMode?: CockpitThemeMode
   messageBus?: ReturnType<typeof createCockpitMessageBus>
 }>(), {
   baseWidth: 1920,
   baseHeight: 1080,
   cachePages: true,
   renderMode: 'runtime',
-  themeMode: 'dark',
 })
 
 const emit = defineEmits<{
@@ -43,6 +41,7 @@ const emit = defineEmits<{
 }>()
 
 const activeLayoutId = defineModel<string | undefined>('activeLayoutId')
+const themeMode = defineModel<CockpitThemeMode>('themeMode', { default: 'dark' })
 const slots = useSlots()
 
 const normalizedResult = computed<{ config: CockpitConfig | null, error: unknown }>(() => {
@@ -97,7 +96,10 @@ async function exitFullscreen(): Promise<void> {
   if (document.fullscreenElement)
     await document.exitFullscreen()
 }
-defineExpose({ enterFullscreen, exitFullscreen, messages })
+function toggleTheme(): void {
+  themeMode.value = themeMode.value === 'dark' ? 'light' : 'dark'
+}
+defineExpose({ enterFullscreen, exitFullscreen, messages, toggleTheme })
 
 const hasConfig = computed(() => Boolean(normalized.value?.layouts.length))
 

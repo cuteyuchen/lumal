@@ -38,7 +38,7 @@ describe('luma admin preferences', () => {
       tabbar: {
         cache: true,
         enable: true,
-        maxCount: 8,
+        maxCount: 0,
       },
       theme: {
         colorPrimary: '#1677ff',

@@ -123,13 +123,13 @@ describe('app shell', () => {
     expect(wrapper.find('.layout-stub').attributes('data-route-driven')).toBe('true')
     expect(wrapper.find('.layout-stub').attributes('data-route-tab-resolver')).toBe('true')
     expect(wrapper.find('.layout-stub').attributes('data-tab-fallback-path')).toBe('/dashboard')
-    expect(wrapper.find('.layout-stub').attributes('data-tab-max-count')).toBe('8')
+    expect(wrapper.find('.layout-stub').attributes('data-tab-max-count')).toBe('0')
     expect(wrapper.find('.layout-stub').attributes('data-tabs-visible')).toBe('true')
     expect(wrapper.find('[data-action="open-settings"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('超级管理员')
     expect(wrapper.find('.router-view-stub').attributes()).toMatchObject({
       'data-cache': 'true',
-      'data-cache-max': '8',
+      'data-cache-max': '0',
       'data-loading': 'true',
       'data-progress': 'true',
       'data-transition': 'true',

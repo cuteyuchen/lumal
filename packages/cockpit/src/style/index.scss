@@ -35,25 +35,6 @@
   --luma-cockpit-focus-ring: var(--el-color-primary, #409eff);
 }
 
-.luma-cockpit[data-cockpit-theme='light'],
-.luma-cockpit-designer[data-cockpit-theme='light'] {
-  --luma-cockpit-bg: var(--luma-bg-color-page, var(--el-bg-color-page, #f4f7fb));
-  --luma-cockpit-bg-overlay: rgb(255 255 255 / 58%);
-  --luma-cockpit-texture-opacity: 0.08;
-  --luma-cockpit-panel-bg: rgb(255 255 255 / 78%);
-  --luma-cockpit-floating-bg: rgb(255 255 255 / 92%);
-  --luma-cockpit-border: rgb(83 129 185 / 20%);
-  --luma-cockpit-shadow: 0 14px 34px rgb(38 76 119 / 12%);
-  --luma-cockpit-title-bg: linear-gradient(90deg, rgb(64 158 255 / 12%), rgb(255 255 255 / 0%));
-  --luma-cockpit-title-text: var(--luma-text-color-primary, var(--el-text-color-primary, #1f2d3d));
-  --luma-cockpit-text: var(--luma-text-color-primary, var(--el-text-color-primary, #243447));
-  --luma-cockpit-text-secondary: var(--luma-text-color-regular, var(--el-text-color-regular, #526172));
-  --luma-cockpit-text-muted: var(--luma-text-color-secondary, var(--el-text-color-secondary, #7a8794));
-  --luma-cockpit-map-mask: rgb(230 238 248 / 46%);
-  --luma-cockpit-drop-target: rgb(64 158 255 / 16%);
-  --luma-cockpit-selected: rgb(64 158 255 / 12%);
-}
-
 .luma-cockpit {
   position: relative;
   width: 100%;
@@ -1482,23 +1463,4 @@
   align-items: center;
 }
 
-/* 不能用 --el-text-color-* 反向推导 Cockpit token，否则 Designer 再映射 Element Plus token 时会形成循环。 */
-.luma-cockpit-designer[data-cockpit-theme='light'] {
-  --luma-cockpit-title-text: #1f2d3d;
-  --luma-cockpit-text: #243447;
-  --luma-cockpit-text-secondary: #526172;
-  --luma-cockpit-text-muted: #7a8794;
-  --el-text-color-primary: #243447;
-  --el-text-color-regular: #526172;
-  --el-text-color-secondary: #7a8794;
-}
-
-.luma-cockpit-designer[data-cockpit-theme='dark'] {
-  --luma-cockpit-title-text: #f1f6ff;
-  --luma-cockpit-text: #e5edf7;
-  --luma-cockpit-text-secondary: #a8b7c8;
-  --luma-cockpit-text-muted: #7d8b9c;
-  --el-text-color-primary: #e5edf7;
-  --el-text-color-regular: #a8b7c8;
-  --el-text-color-secondary: #7d8b9c;
-}
+@import './designer-v3';

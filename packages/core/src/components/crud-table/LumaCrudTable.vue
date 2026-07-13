@@ -571,7 +571,7 @@ defineExpose({
           :column-settings="table?.columnSettings"
           :auto-resize="table?.autoResize ?? true"
           :action-width="table?.actionWidth"
-          :table-props="{ height: '100%' }"
+          :table-props="{ height: '100%', border: true }"
           @selection-change="selectionState.update"
         >
           <template v-if="$slots['table-title'] || title" #toolbar-title>
@@ -744,7 +744,10 @@ defineExpose({
         </template>
       </LumaSchemaForm>
       <template #footer>
-        <slot name="footer" :mode="dialogState.mode.value" :model="dialogState.model.value" :close="closeEditor" :submit="submitEditor">
+        <slot
+          name="footer" :mode="dialogState.mode.value" :model="dialogState.model.value" :close="closeEditor"
+          :submit="submitEditor"
+        >
           <div class="luma-crud-table__dialog-footer">
             <ElButton native-type="button" @click="closeEditor">
               {{ dialogState.mode.value === 'view' ? '关闭' : '取消' }}
@@ -865,7 +868,6 @@ defineExpose({
   min-height: 0;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 12px;
   padding: 16px;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: calc(8px * var(--luma-radius-scale, 1));
@@ -893,7 +895,6 @@ defineExpose({
   flex: none;
   min-width: 0;
   padding-top: 12px;
-  border-top: 1px solid var(--el-border-color-lighter);
 }
 
 @media (min-width: 960px) {
@@ -989,11 +990,6 @@ defineExpose({
   .luma-crud-table__query {
     padding: 12px;
   }
-
-  .luma-crud-table__table-panel {
-    padding: 12px;
-  }
-
   .luma-crud-table__dialog-footer :deep(.el-button) {
     flex: 1 1 0;
   }

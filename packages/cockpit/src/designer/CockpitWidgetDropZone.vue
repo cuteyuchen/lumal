@@ -105,6 +105,8 @@ onMounted(() => {
     group: { name: 'luma-cockpit-designer-modules', pull: true, put: true },
     sort: props.allowMultiple,
     draggable: '.luma-cockpit-designer__drag-item',
+    ghostClass: 'is-drag-ghost',
+    chosenClass: 'is-drag-chosen',
     onMove: canMove,
     onAdd: event => void handleAdd(event),
     onUpdate(event) {

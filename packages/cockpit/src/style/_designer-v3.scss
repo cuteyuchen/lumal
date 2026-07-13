@@ -1,0 +1,469 @@
+/***********************v3 Designer 结构样式*********************/
+// 只消费语义 token。主题的实际颜色、纹理和光效由消费应用定义。
+
+.luma-cockpit-designer {
+  --el-color-primary: var(--luma-cockpit-accent);
+  --el-bg-color: var(--luma-cockpit-panel-bg);
+  --el-bg-color-overlay: var(--luma-cockpit-floating-bg);
+  --el-fill-color-blank: var(--luma-cockpit-panel-bg);
+  --el-fill-color-light: var(--luma-cockpit-floating-bg);
+  --el-text-color-primary: var(--luma-cockpit-text);
+  --el-text-color-regular: var(--luma-cockpit-text-secondary);
+  --el-text-color-secondary: var(--luma-cockpit-text-muted);
+  --el-border-color: var(--luma-cockpit-border);
+  --el-border-color-light: var(--luma-cockpit-border);
+  --el-border-radius-base: var(--luma-cockpit-radius);
+
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  width: 100%;
+  min-width: 1180px;
+  height: 100%;
+  min-height: 720px;
+  overflow: hidden;
+  color: var(--luma-cockpit-text);
+  background: var(--luma-cockpit-bg);
+
+  &__titlebar {
+    display: flex;
+    align-items: center;
+    min-height: 54px;
+    padding: 0 28px;
+    border: 1px solid var(--luma-cockpit-border);
+    background: var(--luma-cockpit-title-bg);
+    box-shadow: var(--luma-cockpit-shadow);
+  }
+
+  &__heading {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    color: var(--luma-cockpit-title-text);
+    font-size: 19px;
+    font-weight: 700;
+  }
+
+  &__title-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  &__controlbar {
+    display: flex;
+    align-items: center;
+    min-height: 82px;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--luma-cockpit-border);
+    background: var(--luma-cockpit-surface);
+  }
+
+  &__layout-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+
+    > .el-input {
+      width: 210px;
+    }
+
+    .el-select {
+      width: 220px;
+    }
+  }
+
+  &__layout-tools,
+  &__footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__field {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--luma-cockpit-text-secondary);
+    font-size: 13px;
+    white-space: nowrap;
+
+    > .el-input-number {
+      width: 88px;
+    }
+
+    em {
+      color: var(--luma-cockpit-text-muted);
+      font-size: 12px;
+      font-style: normal;
+    }
+  }
+
+  &__issues {
+    display: grid;
+    gap: 8px;
+    padding: 10px 28px;
+    border-bottom: 1px solid var(--luma-cockpit-border);
+    background: var(--luma-cockpit-surface);
+  }
+
+  &__workspace {
+    display: grid;
+    grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr) 310px;
+    gap: 12px;
+    min-height: 0;
+    padding: 14px 20px;
+    overflow: hidden;
+    background: var(--luma-cockpit-workspace-bg, transparent);
+  }
+
+  &__region,
+  &__library {
+    min-width: 0;
+    min-height: 0;
+    border: 1px solid var(--luma-cockpit-border);
+    border-radius: var(--luma-cockpit-radius);
+    background: var(--luma-cockpit-panel-bg);
+    box-shadow: var(--luma-cockpit-shadow);
+    overflow: hidden;
+  }
+
+  &__region {
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  &__region-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 58px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--luma-cockpit-border);
+    background: var(--luma-cockpit-surface);
+
+    > div {
+      display: grid;
+      gap: 3px;
+      margin-right: auto;
+    }
+
+    strong {
+      color: var(--luma-cockpit-title-text);
+      font-size: 15px;
+    }
+
+    span {
+      color: var(--luma-cockpit-text-muted);
+      font-size: 12px;
+    }
+
+    .el-input-number {
+      width: 76px;
+    }
+  }
+
+  &__region-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 50px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--luma-cockpit-border);
+    overflow-x: auto;
+  }
+
+  &__grid-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    padding: 12px;
+    overflow: auto;
+  }
+
+  &__grid-row {
+    display: grid;
+    grid-template-rows: auto minmax(110px, 1fr);
+    gap: 8px;
+    min-height: 170px;
+    padding: 10px;
+    border: 1px solid var(--luma-cockpit-border);
+    border-radius: var(--luma-cockpit-radius);
+    background: var(--luma-cockpit-surface);
+  }
+
+  &__grid-row-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 34px;
+
+    > strong {
+      margin-right: auto;
+      color: var(--luma-cockpit-title-text);
+      font-size: 13px;
+    }
+
+    .el-input-number {
+      width: 82px;
+    }
+  }
+
+  &__tabs-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--luma-cockpit-text-secondary);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  &__grid-cells {
+    display: grid;
+    gap: 10px;
+    min-height: 0;
+  }
+
+  &__drop-zone {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  &__tab-row#{&}__drop-zone,
+  &__drop-zone.is-tabs {
+    align-content: start;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 118px;
+  }
+
+  &__empty-cell.el-button {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    height: 100%;
+    min-height: 118px;
+    margin: 0;
+    border-style: dashed;
+    color: var(--luma-cockpit-text-secondary);
+    background: var(--luma-cockpit-empty-bg, transparent);
+    white-space: normal;
+  }
+
+  &__placed-widget {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 38px;
+    width: 100%;
+    min-width: 0;
+    min-height: 118px;
+    border: 1px solid var(--luma-cockpit-border);
+    border-radius: var(--luma-cockpit-radius);
+    background: var(--luma-cockpit-floating-bg);
+    color: var(--luma-cockpit-text);
+    cursor: grab;
+    overflow: hidden;
+    transition: border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    &.is-active,
+    &:focus-within {
+      border-color: var(--luma-cockpit-accent);
+      box-shadow: 0 0 0 1px var(--luma-cockpit-accent);
+    }
+  }
+
+  &__drop-zone.is-tabs &__placed-widget {
+    width: 190px;
+    height: 132px;
+  }
+
+  &__placed-widget-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 0 9px;
+    border-top: 1px solid var(--luma-cockpit-border);
+    background: var(--luma-cockpit-surface);
+
+    > span {
+      overflow: hidden;
+      min-width: 0;
+      margin-right: auto;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__tab-widget-title.el-button {
+    min-width: 0;
+    margin-right: auto;
+    padding: 0;
+    overflow: hidden;
+    color: inherit;
+    text-overflow: ellipsis;
+  }
+
+  &__widget-preview {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    background: var(--luma-cockpit-preview-bg, var(--luma-cockpit-surface));
+    overflow: hidden;
+  }
+
+  &__widget-preview-stage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+  }
+
+  &__widget-preview-stage,
+  &__widget-preview-stage > .luma-cockpit-error-boundary,
+  &__widget-preview-stage > .luma-cockpit-error-boundary > * {
+    width: 100%;
+    height: 100%;
+  }
+
+  &__widget-preview-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__widget-preview-fallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    min-height: 72px;
+    color: var(--luma-cockpit-text-muted);
+    text-align: center;
+  }
+
+  &__library {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    padding: 0;
+  }
+
+  &__library-title {
+    min-height: 58px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--luma-cockpit-border);
+    background: var(--luma-cockpit-surface);
+
+    strong,
+    span {
+      display: block;
+    }
+
+    strong {
+      color: var(--luma-cockpit-title-text);
+      font-size: 15px;
+    }
+
+    span {
+      margin-top: 3px;
+      color: var(--luma-cockpit-text-muted);
+      font-size: 12px;
+    }
+  }
+
+  &__library-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: 10px;
+    min-height: 0;
+    padding: 12px;
+    overflow: auto;
+  }
+
+  &__library-card {
+    display: grid;
+    grid-template-rows: 92px 36px;
+    min-width: 0;
+    border: 1px solid var(--luma-cockpit-border);
+    border-radius: var(--luma-cockpit-radius);
+    background: var(--luma-cockpit-floating-bg);
+    cursor: grab;
+    overflow: hidden;
+    transition: border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+
+    &:hover,
+    &:focus-within,
+    &.is-selected {
+      border-color: var(--luma-cockpit-accent);
+      box-shadow: 0 0 0 1px var(--luma-cockpit-accent);
+    }
+  }
+
+  &__library-select.el-button {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0 8px;
+    overflow: hidden;
+    border-top: 1px solid var(--luma-cockpit-border);
+    border-radius: 0;
+    color: var(--luma-cockpit-text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__library-empty {
+    grid-column: 1 / -1;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    min-height: 64px;
+    padding: 10px 24px;
+    border-top: 1px solid var(--luma-cockpit-border);
+    background: var(--luma-cockpit-surface);
+
+    p {
+      margin: 0 24px 0 auto;
+      color: var(--luma-cockpit-text-secondary);
+      font-size: 13px;
+    }
+  }
+
+  &__footer-actions {
+    margin-left: 0;
+  }
+
+  .el-button + .el-button {
+    margin-left: 0;
+  }
+
+  .is-drag-ghost {
+    opacity: 0.35;
+  }
+
+  .is-drag-chosen {
+    border-color: var(--luma-cockpit-accent);
+    box-shadow: 0 0 0 2px var(--luma-cockpit-drop-target);
+  }
+}

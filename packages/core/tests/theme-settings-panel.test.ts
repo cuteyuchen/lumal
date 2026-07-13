@@ -41,18 +41,32 @@ describe('luma theme settings panel', () => {
     expect(updates?.at(-1)?.[0].theme.colorPrimary).toBe('#1677ff')
   })
 
-  it('关闭标签页开关会同步禁用缓存开关', async () => {
+  it('关闭标签页开关会同步禁用缓存和持久化开关', async () => {
     const wrapper = mountPanel()
     await wrapper.findAll('.luma-theme-settings__tab')[1]?.trigger('click')
-    const switches = wrapper.findAll('.el-switch')
-    // DOM 中通用页的三个动画开关在前，布局页标签栏开关位于第六项。
-    await switches[5]?.setValue(false)
+    const findRow = (label: string) => wrapper.findAll('.luma-theme-settings__row').find(row => row.text().includes(label))
+    const enableInput = findRow('启用标签栏')?.find('input.el-switch')
+    await enableInput?.setValue(false)
 
     const updates = wrapper.emitted('update:preferences') as [ReturnType<typeof createDefaultPreferences>][]
     expect(updates?.at(-1)?.[0].tabbar.enable).toBe(false)
 
-    const cacheSwitch = wrapper.findAll('.el-switch')[6]
-    expect((cacheSwitch?.element as HTMLInputElement).disabled).toBe(true)
+    const cacheInput = findRow('页面缓存')?.find('input.el-switch')
+    expect((cacheInput?.element as HTMLInputElement).disabled).toBe(true)
+
+    const persistInput = findRow('持久化标签')?.find('input.el-switch')
+    expect((persistInput?.element as HTMLInputElement).disabled).toBe(true)
+  })
+
+  it('切换标签风格会写入 styleType 且发出 change', async () => {
+    const wrapper = mountPanel()
+    await wrapper.findAll('.luma-theme-settings__tab')[1]?.trigger('click')
+    const styleButtons = wrapper.findAll('.luma-theme-settings__tab-style button')
+    const plain = styleButtons.find(b => b.text().includes('朴素'))
+    await plain?.trigger('click')
+
+    const updates = wrapper.emitted('update:preferences') as [ReturnType<typeof createDefaultPreferences>][]
+    expect(updates?.at(-1)?.[0].tabbar.styleType).toBe('plain')
   })
 
   it('顶部导航保留侧栏偏好入口但禁用当前无效的折叠设置', async () => {
@@ -64,10 +78,13 @@ describe('luma theme settings panel', () => {
     })
 
     await wrapper.findAll('.luma-theme-settings__tab')[1]?.trigger('click')
-    const switches = wrapper.findAll('.el-switch')
 
-    expect((switches[3]?.element as HTMLInputElement).disabled).toBe(false)
-    expect((switches[4]?.element as HTMLInputElement).disabled).toBe(true)
+    const findRow = (label: string) => wrapper.findAll('.luma-theme-settings__row').find(row => row.text().includes(label))
+    const showSidebar = findRow('显示侧边栏')?.find('input.el-switch')
+    const collapse = findRow('折叠菜单')?.find('input.el-switch')
+
+    expect((showSidebar?.element as HTMLInputElement).disabled).toBe(false)
+    expect((collapse?.element as HTMLInputElement).disabled).toBe(true)
   })
 
   it('showLayout 为 false 时不渲染布局模式切换', () => {

@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import type { CockpitWidgetDefinition } from '../registry/types'
+import type { CockpitRegistry, CockpitWidgetDefinition } from '../registry/types'
 import type { CockpitGridRowConfig, CockpitSide } from '../types'
 import type { DraftWidgetLocation, UseCockpitDraftReturn } from './useCockpitDraft'
 import { LumaIcon } from '@luma/icons'
 import { ElButton, ElInputNumber, ElMessage, ElSwitch, ElTooltip } from 'element-plus'
 import { computed } from 'vue'
 import CockpitWidgetDropZone from './CockpitWidgetDropZone.vue'
+import CockpitWidgetPreview from './CockpitWidgetPreview.vue'
 
 /***********************左右区域网格编辑器*********************/
 
 const props = defineProps<{
+  cockpitId: string
   draft: UseCockpitDraftReturn
+  registry: CockpitRegistry
   selectedWidget?: CockpitWidgetDefinition
   side: CockpitSide
 }>()
@@ -28,6 +31,10 @@ function locationForCell(row: CockpitGridRowConfig, cellId: string): DraftWidget
 
 function locationForTabs(row: CockpitGridRowConfig, widgetId?: string): DraftWidgetLocation {
   return { kind: 'tabs', side: props.side, rowId: row.id, widgetId }
+}
+
+function definitionFor(type: string): CockpitWidgetDefinition | undefined {
+  return props.registry.resolveWidget(type)
 }
 
 function resize(rows: number, columns: number): void {
@@ -108,7 +115,7 @@ function handleDrop(target: DraftWidgetLocation, payload: { source?: DraftWidget
     </div>
 
     <div v-if="region" class="luma-cockpit-designer__grid-rows">
-      <section v-for="(row, rowIndex) in region.rows" :key="row.id" class="luma-cockpit-designer__grid-row">
+      <section v-for="(row, rowIndex) in region.rows" :key="row.id" class="luma-cockpit-designer__grid-row" :style="{ flexBasis: `${row.height}%` }">
         <header class="luma-cockpit-designer__grid-row-head">
           <strong>第 {{ rowIndex + 1 }} 行</strong>
           <label class="luma-cockpit-designer__field">
@@ -143,12 +150,22 @@ function handleDrop(target: DraftWidgetLocation, payload: { source?: DraftWidget
               class="luma-cockpit-designer__placed-widget luma-cockpit-designer__drag-item"
               :data-cockpit-drag-source="JSON.stringify(locationForCell(row, cell.id))"
             >
-              <span>{{ cell.widget.title ?? cell.widget.type }}</span>
-              <ElTooltip content="移除模块" placement="top">
-                <ElButton text type="danger" :aria-label="`移除模块 ${cell.widget.title ?? cell.widget.type}`" @click="draft.removeWidget(locationForCell(row, cell.id))">
-                  移除
-                </ElButton>
-              </ElTooltip>
+              <CockpitWidgetPreview
+                v-if="definitionFor(cell.widget.type)"
+                :cockpit-id="cockpitId"
+                :definition="definitionFor(cell.widget.type)!"
+                :instance-id="`placed-preview:${cell.widget.id}`"
+                :layout-id="draft.activeLayout.value?.id ?? ''"
+              />
+              <div v-else class="luma-cockpit-designer__widget-preview-fallback">未注册模块</div>
+              <footer class="luma-cockpit-designer__placed-widget-footer">
+                <span>{{ cell.widget.title ?? cell.widget.type }}</span>
+                <ElTooltip content="移除模块" placement="top">
+                  <ElButton text type="danger" :aria-label="`移除模块 ${cell.widget.title ?? cell.widget.type}`" @click="draft.removeWidget(locationForCell(row, cell.id))">
+                    移除
+                  </ElButton>
+                </ElTooltip>
+              </footer>
             </article>
             <ElButton
               v-else
@@ -158,7 +175,7 @@ function handleDrop(target: DraftWidgetLocation, payload: { source?: DraftWidget
               @click="addSelected(locationForCell(row, cell.id))"
             >
               <LumaIcon name="luma:plus" :size="14" />
-              {{ selectedWidget ? `放入 ${selectedWidget.label}` : '拖放模块到这里' }}
+              <span>{{ selectedWidget ? `放入 ${selectedWidget.label}` : '请置入模块' }}</span>
             </ElButton>
           </CockpitWidgetDropZone>
         </div>
@@ -177,14 +194,24 @@ function handleDrop(target: DraftWidgetLocation, payload: { source?: DraftWidget
             :class="{ 'is-active': row.activeWidgetId === widget.id }"
             :data-cockpit-drag-source="JSON.stringify(locationForTabs(row, widget.id))"
           >
-            <ElButton text class="luma-cockpit-designer__tab-widget-title" :aria-pressed="row.activeWidgetId === widget.id" @click="draft.setActiveTab(side, row.id, widget.id)">
-              {{ widget.title ?? widget.type }}
-            </ElButton>
-            <ElTooltip content="移除模块" placement="top">
-              <ElButton text type="danger" :aria-label="`移除 Tab 模块 ${widget.title ?? widget.type}`" @mousedown.stop @click.stop="draft.removeWidget(locationForTabs(row, widget.id))">
-                移除
+            <CockpitWidgetPreview
+              v-if="definitionFor(widget.type)"
+              :cockpit-id="cockpitId"
+              :definition="definitionFor(widget.type)!"
+              :instance-id="`tab-preview:${widget.id}`"
+              :layout-id="draft.activeLayout.value?.id ?? ''"
+            />
+            <div v-else class="luma-cockpit-designer__widget-preview-fallback">未注册模块</div>
+            <footer class="luma-cockpit-designer__placed-widget-footer">
+              <ElButton text class="luma-cockpit-designer__tab-widget-title" :aria-pressed="row.activeWidgetId === widget.id" @click="draft.setActiveTab(side, row.id, widget.id)">
+                {{ widget.title ?? widget.type }}
               </ElButton>
-            </ElTooltip>
+              <ElTooltip content="移除模块" placement="top">
+                <ElButton text type="danger" :aria-label="`移除 Tab 模块 ${widget.title ?? widget.type}`" @mousedown.stop @click.stop="draft.removeWidget(locationForTabs(row, widget.id))">
+                  移除
+                </ElButton>
+              </ElTooltip>
+            </footer>
           </article>
           <ElButton
             v-if="!row.widgets.length"
@@ -194,7 +221,7 @@ function handleDrop(target: DraftWidgetLocation, payload: { source?: DraftWidget
             @click="addSelected(locationForTabs(row))"
           >
             <LumaIcon name="luma:plus" :size="14" />
-            {{ selectedWidget ? `放入 ${selectedWidget.label}` : '拖放模块到这里' }}
+            <span>{{ selectedWidget ? `放入 ${selectedWidget.label}` : '请置入模块' }}</span>
           </ElButton>
         </CockpitWidgetDropZone>
       </section>

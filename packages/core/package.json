@@ -114,6 +114,10 @@
     }
   },
   "dependencies": {
-    "@luma/icons": "workspace:*"
+    "@luma/icons": "workspace:*",
+    "sortablejs": "^1.15.7"
+  },
+  "devDependencies": {
+    "@types/sortablejs": "^1.15.9"
   }
 }

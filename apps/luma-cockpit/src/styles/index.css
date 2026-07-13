@@ -28,15 +28,89 @@ body {
   color: var(--el-text-color-primary, #e5edf7);
 }
 
-/* 独立应用通过 CSS 变量覆盖 @luma/cockpit 基础 token 完成品牌定制 */
-.luma-cockpit {
-  --luma-cockpit-accent: var(--el-color-primary, #1677ff);
-  --luma-cockpit-bg: linear-gradient(180deg, #f8fbff 0%, #edf4fb 100%);
+/* 消费应用负责 Cockpit 的全部主题皮肤，框架只读取这些语义 token。 */
+.luma-cockpit,
+.standalone-app__designer {
+  --luma-cockpit-bg: #eef6fb;
+  --luma-cockpit-panel-bg: rgb(255 255 255 / 92%);
+  --luma-cockpit-surface: rgb(235 247 252 / 94%);
+  --luma-cockpit-floating-bg: rgb(247 252 255 / 96%);
+  --luma-cockpit-workspace-bg: #dceaf1;
+  --luma-cockpit-preview-bg: #e2f0f6;
+  --luma-cockpit-empty-bg: rgb(27 132 174 / 5%);
+  --luma-cockpit-border: rgb(39 139 178 / 48%);
+  --luma-cockpit-shadow: 0 10px 28px rgb(30 90 116 / 12%);
+  --luma-cockpit-title-bg: linear-gradient(90deg, #d8eef7 0%, #f5fbfe 62%, #d7edf6 100%);
+  --luma-cockpit-title-text: #0b3347;
+  --luma-cockpit-text: #15394a;
+  --luma-cockpit-text-secondary: #456879;
+  --luma-cockpit-text-muted: #6d8a98;
+  --luma-cockpit-accent: #087faf;
+  --luma-cockpit-success: #00966d;
+  --luma-cockpit-warning: #b77900;
+  --luma-cockpit-danger: #d9465f;
+  --luma-cockpit-drop-target: rgb(8 127 175 / 28%);
+  --luma-cockpit-selected: rgb(0 150 109 / 18%);
+  --luma-cockpit-focus-ring: #087faf;
+  --luma-cockpit-radius: 4px;
   font-family: inherit;
 }
 
-:root[data-luma-theme='dark'] .luma-cockpit {
-  --luma-cockpit-bg: radial-gradient(circle at 50% 20%, rgb(22 119 255 / 16%), transparent 32%), #07111f;
+:root[data-luma-theme='dark'] .luma-cockpit,
+:root[data-luma-theme='dark'] .standalone-app__designer {
+  --luma-cockpit-bg: linear-gradient(180deg, #062b46 0%, #043850 48%, #052d45 100%);
+  --luma-cockpit-panel-bg: rgb(2 65 82 / 82%);
+  --luma-cockpit-surface: rgb(4 53 71 / 84%);
+  --luma-cockpit-floating-bg: rgb(3 47 63 / 92%);
+  --luma-cockpit-workspace-bg: linear-gradient(180deg, rgb(2 45 65 / 88%), rgb(1 58 70 / 92%));
+  --luma-cockpit-preview-bg: rgb(5 52 67 / 96%);
+  --luma-cockpit-empty-bg: rgb(0 192 230 / 4%);
+  --luma-cockpit-border: rgb(0 194 238 / 68%);
+  --luma-cockpit-shadow: 0 0 18px rgb(0 193 238 / 12%), inset 0 1px 0 rgb(122 232 255 / 10%);
+  --luma-cockpit-title-bg: linear-gradient(90deg, rgb(4 47 76 / 98%), rgb(7 69 91 / 88%) 68%, rgb(3 49 75 / 98%));
+  --luma-cockpit-title-text: #f0fbff;
+  --luma-cockpit-text: #d9f4ff;
+  --luma-cockpit-text-secondary: #a9d2df;
+  --luma-cockpit-text-muted: #73a8b8;
+  --luma-cockpit-accent: #00d7ff;
+  --luma-cockpit-success: #00e5a0;
+  --luma-cockpit-warning: #ffc857;
+  --luma-cockpit-danger: #ff667d;
+  --luma-cockpit-drop-target: rgb(0 215 255 / 34%);
+  --luma-cockpit-selected: rgb(0 229 160 / 20%);
+  --luma-cockpit-focus-ring: #00e5ff;
+  --luma-cockpit-radius: 3px;
+}
+
+.standalone-app__designer {
+  overflow: auto;
+  background: var(--luma-cockpit-bg);
+}
+
+.standalone-app__designer .luma-cockpit-designer__titlebar {
+  position: relative;
+}
+
+.standalone-app__designer .luma-cockpit-designer__titlebar::after {
+  position: absolute;
+  top: 0;
+  right: 24px;
+  width: 150px;
+  height: 100%;
+  background: repeating-linear-gradient(45deg, transparent 0 10px, var(--luma-cockpit-drop-target) 10px 16px);
+  opacity: 0.32;
+  pointer-events: none;
+  content: '';
+}
+
+:root[data-luma-theme='dark'] .standalone-app__designer .luma-cockpit-designer__titlebar {
+  box-shadow: 0 0 22px rgb(0 215 255 / 20%), inset 0 -1px 0 rgb(104 229 255 / 24%);
+}
+
+.standalone-app__designer .luma-cockpit-designer__empty-cell:hover:not(:disabled),
+.standalone-app__designer .luma-cockpit-designer__library-card:hover,
+.standalone-app__designer .luma-cockpit-designer__placed-widget:hover {
+  box-shadow: 0 0 16px var(--luma-cockpit-drop-target);
 }
 
 button {

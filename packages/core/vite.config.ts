@@ -28,7 +28,7 @@ export default defineConfig({
       fileName: (format, entryName) => `${entryName}.${format === 'cjs' ? 'cjs' : 'js'}`,
     },
     rollupOptions: {
-      external: ['vue', '@luma/icons', 'element-plus', 'pinia', 'vue-router'],
+      external: ['vue', '@luma/icons', 'element-plus', 'pinia', 'vue-router', 'sortablejs'],
     },
   },
 })

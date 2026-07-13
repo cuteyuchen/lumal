@@ -22,6 +22,7 @@ export const LumaCockpitDesigner = withInstall(
 
 export { default as CockpitComponentLibrary } from './CockpitComponentLibrary.vue'
 export { default as CockpitLayoutEditor } from './CockpitLayoutEditor.vue'
+export { default as CockpitWidgetPreview } from './CockpitWidgetPreview.vue'
 export { default as CockpitWidgetDropZone } from './CockpitWidgetDropZone.vue'
 
 export { useCockpitDraft } from './useCockpitDraft'

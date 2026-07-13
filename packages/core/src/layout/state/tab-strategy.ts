@@ -203,13 +203,15 @@ export function pushVisitHistory(
 /**
  * 选择关闭活动标签后应跳转的标签：
  * - 开启访问历史时，返回最近访问且仍存在的标签；
- * - 否则优先进入右侧标签，再回退左侧。
+ * - 否则优先进入关闭位置的右侧标签，再回退到左侧首个标签。
+ *
+ * tabs 为已经移除被关闭标签后的剩余列表；priorClosedIndex 为被关闭标签在原始列表中的位置。
  */
 export function resolveNextActivePath(
   tabs: LumaLayoutTabItem[],
   closedPath: string,
   history: string[] = [],
-  options: { useHistory?: boolean } = {},
+  options: { useHistory?: boolean, priorClosedIndex?: number } = {},
 ): string {
   if (tabs.length === 0) {
     return ''
@@ -227,11 +229,20 @@ export function resolveNextActivePath(
     }
   }
 
-  const closedIndex = tabs.findIndex(tab => tab.path === closedPath)
-  // closeTab 已执行后传入的 tabs 不再包含 closedPath，使用近似策略：
-  // 取剩余列表中靠近原位置的右侧标签，再回退到左侧，最后兜底首个标签。
-  const fallbackIndex = closedIndex === -1 ? 0 : closedIndex
-  return tabs[fallbackIndex]?.path ?? tabs[0]?.path ?? ''
+  // 优先进入关闭位置右侧的标签，再回退到左侧。
+  const priorClosedIndex = options.priorClosedIndex ?? -1
+  if (priorClosedIndex >= 0) {
+    const rightTab = tabs[priorClosedIndex]
+    if (rightTab) {
+      return rightTab.path
+    }
+    const leftTab = tabs[priorClosedIndex - 1]
+    if (leftTab) {
+      return leftTab.path
+    }
+  }
+
+  return tabs[0]?.path ?? ''
 }
 
 /***********************拖拽排序*********************/

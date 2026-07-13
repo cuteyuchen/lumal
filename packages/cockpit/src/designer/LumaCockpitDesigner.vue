@@ -15,13 +15,14 @@ const props = defineProps<{
   registry: CockpitRegistry
   saving?: boolean
   saveError?: string
-  themeMode?: CockpitThemeMode
 }>()
 
 const emit = defineEmits<{
   save: [payload: CockpitDesignerSavePayload]
   cancel: []
 }>()
+
+const themeMode = defineModel<CockpitThemeMode>('themeMode', { default: 'dark' })
 
 const draft = useCockpitDraft(props.config)
 const issues = ref<CockpitConfigIssue[]>([])
@@ -75,18 +76,30 @@ async function reset(): Promise<void> {
     // 用户取消时保留当前草稿。
   }
 }
+
+function toggleTheme(): void {
+  themeMode.value = themeMode.value === 'dark' ? 'light' : 'dark'
+}
+
+defineExpose({ toggleTheme })
 </script>
 
 <template>
-  <div class="luma-cockpit-designer" :data-cockpit-theme="themeMode ?? 'dark'">
-    <header class="luma-cockpit-designer__toolbar">
+  <div class="luma-cockpit-designer" :data-cockpit-theme="themeMode">
+    <header class="luma-cockpit-designer__titlebar">
       <h2 class="luma-cockpit-designer__heading">
         <LumaIcon name="luma:settings" :size="18" />
-        驾驶舱布局
+        模块设置
       </h2>
+      <div class="luma-cockpit-designer__title-actions">
+        <slot name="title-actions" :theme-mode="themeMode" :toggle-theme="toggleTheme" />
+      </div>
+    </header>
+
+    <section class="luma-cockpit-designer__controlbar">
       <div class="luma-cockpit-designer__layout-controls">
         <label class="luma-cockpit-designer__field">
-          <span>布局</span>
+          <span>模板名称</span>
           <ElSelect :model-value="activeLayout?.id" aria-label="选择布局" @update:model-value="draft.selectLayout">
             <ElOption v-for="layout in draft.layouts.value" :key="layout.id" :label="layout.title" :value="layout.id" />
           </ElSelect>
@@ -97,25 +110,17 @@ async function reset(): Promise<void> {
           aria-label="当前布局名称"
           @change="draft.renameLayout(activeLayout.id, $event)"
         />
-        <ElButton type="primary" @click="draft.addLayout()">
-          <LumaIcon name="luma:plus" :size="15" />
-          添加布局
-        </ElButton>
-        <ElButton v-if="activeLayout" @click="draft.duplicateLayout(activeLayout.id)">复制布局</ElButton>
-        <ElButton v-if="activeLayout" type="danger" plain @click="removeLayout">删除布局</ElButton>
+        <div class="luma-cockpit-designer__layout-tools">
+          <ElTooltip content="添加布局" placement="top">
+            <ElButton circle aria-label="添加布局" @click="draft.addLayout()">
+              <LumaIcon name="luma:plus" :size="15" />
+            </ElButton>
+          </ElTooltip>
+          <ElButton v-if="activeLayout" @click="draft.duplicateLayout(activeLayout.id)">复制</ElButton>
+          <ElButton v-if="activeLayout" type="danger" plain @click="removeLayout">删除</ElButton>
+        </div>
       </div>
-      <div class="luma-cockpit-designer__toolbar-actions">
-        <ElTooltip content="重置未保存的草稿" placement="bottom">
-          <ElButton circle aria-label="重置未保存的草稿" @click="reset">
-            <LumaIcon name="luma:reset" :size="16" />
-          </ElButton>
-        </ElTooltip>
-        <ElButton @click="emit('cancel')">取消</ElButton>
-        <ElButton type="primary" class="luma-cockpit-designer__save" :loading="saving" :aria-busy="saving" @click="save">
-          {{ saving ? '保存中…' : '保存' }}
-        </ElButton>
-      </div>
-    </header>
+    </section>
 
     <div v-if="errors.length || saveError" class="luma-cockpit-designer__issues" role="alert">
       <ElAlert v-if="saveError" type="error" :closable="false" :title="`保存失败：${saveError}`" show-icon />
@@ -123,9 +128,32 @@ async function reset(): Promise<void> {
     </div>
 
     <main class="luma-cockpit-designer__workspace">
-      <CockpitLayoutEditor :draft="draft" :selected-widget="selectedWidget" side="left" />
-      <CockpitLayoutEditor :draft="draft" :selected-widget="selectedWidget" side="right" />
-      <CockpitComponentLibrary :registry="registry" :selected-type="selectedWidget?.type" @select-widget="selectedWidget = $event" />
+      <CockpitLayoutEditor :cockpit-id="config.id" :draft="draft" :registry="registry" :selected-widget="selectedWidget" side="left" />
+      <CockpitLayoutEditor :cockpit-id="config.id" :draft="draft" :registry="registry" :selected-widget="selectedWidget" side="right" />
+      <CockpitComponentLibrary
+        :cockpit-id="config.id"
+        :layout-id="activeLayout?.id ?? ''"
+        :registry="registry"
+        :selected-type="selectedWidget?.type"
+        @select-widget="selectedWidget = $event"
+      />
     </main>
+
+    <footer class="luma-cockpit-designer__footer">
+      <p>提示：将需要的业务模块拖入空槽，已占用槽位会在确认后替换。</p>
+      <div class="luma-cockpit-designer__footer-actions">
+        <ElButton @click="reset">
+          <LumaIcon name="luma:reset" :size="16" />
+          重置
+        </ElButton>
+        <ElButton @click="emit('cancel')">
+          <LumaIcon name="luma:close" :size="15" />
+          取消
+        </ElButton>
+        <ElButton type="primary" class="luma-cockpit-designer__save" :loading="saving" :aria-busy="saving" @click="save">
+          {{ saving ? '保存中…' : '保存' }}
+        </ElButton>
+      </div>
+    </footer>
   </div>
 </template>

@@ -6,6 +6,7 @@ import { clearAdminAccess, syncAdminAccess } from './permission'
 
 const tokenStorageKey = 'luma-admin:token'
 const userStorageKey = 'luma-admin:user'
+export const adminTabSnapshotStorageKey = 'luma-admin:tabs'
 
 /***********************存储兜底*********************/
 function createMemoryStorage(): Storage {
@@ -71,7 +72,19 @@ function clearCurrentSessionState(): void {
   currentUserState.value = null
   writeStoredUser(null)
   clearAdminAccess()
+  clearAdminTabSnapshot()
   sessionResetHandlers.forEach(handler => handler())
+}
+
+function clearAdminTabSnapshot(): void {
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem(adminTabSnapshotStorageKey)
+    }
+  }
+  catch {
+    // 存储不可用时静默跳过。
+  }
 }
 
 export const adminSession = createAuthSession({

@@ -123,6 +123,50 @@ describe('theme runtime', () => {
     expect(merged.theme.colorPrimary).toBe('#22c55e')
   })
 
+  it('默认标签偏好对齐 Vben：持久化、访问历史、拖拽、滚轮、中键、更多、刷新、最大化均开启', () => {
+    const preferences = createDefaultPreferences()
+    expect(preferences.tabbar).toMatchObject({
+      cache: true,
+      draggable: true,
+      enable: true,
+      maxCount: 0,
+      middleClickToClose: true,
+      persist: true,
+      showIcon: true,
+      showMaximize: true,
+      showMore: true,
+      showRefresh: true,
+      styleType: 'chrome',
+      visitHistory: true,
+      wheelable: true,
+    })
+  })
+
+  it('旧存储缺少新字段时会以默认值补齐', () => {
+    // 模拟旧存储只包含部分 tabbar 字段。
+    const legacyPreferences = {
+      tabbar: {
+        cache: false,
+        enable: true,
+        maxCount: 8,
+        showIcon: true,
+        showMaximize: true,
+      },
+    }
+    const merged = mergePreferences(legacyPreferences, {}, {})
+    expect(merged.tabbar.cache).toBe(false)
+    expect(merged.tabbar.maxCount).toBe(8)
+    // 缺失字段以 Vben 默认补齐。
+    expect(merged.tabbar.persist).toBe(true)
+    expect(merged.tabbar.visitHistory).toBe(true)
+    expect(merged.tabbar.draggable).toBe(true)
+    expect(merged.tabbar.wheelable).toBe(true)
+    expect(merged.tabbar.middleClickToClose).toBe(true)
+    expect(merged.tabbar.showMore).toBe(true)
+    expect(merged.tabbar.showRefresh).toBe(true)
+    expect(merged.tabbar.styleType).toBe('chrome')
+  })
+
   it('会解析 system 主题并把偏好应用到 DOM', () => {
     const element = document.createElement('html')
     const matchMedia = () => ({ matches: true }) as MediaQueryList

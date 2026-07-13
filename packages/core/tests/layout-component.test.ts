@@ -326,18 +326,18 @@ describe('luma tabs', () => {
     })
 
     const tabButtons = wrapper.findAll('[role="tab"]')
-    await tabButtons[1]?.trigger('keydown', { key: 'ArrowRight' })
-    expect(wrapper.emitted('change')?.at(-1)).toEqual(['/project'])
-
     await wrapper.findAll('.luma-tabs__item')[1]?.trigger('contextmenu', {
       clientX: 120,
       clientY: 80,
     })
     const closeOthers = wrapper.findAll('.luma-tabs-context-menu button')
-      .find(button => button.text().trim() === '关闭其他')
+      .find(button => button.text().includes('关闭其他'))
     await closeOthers?.trigger('click')
 
     expect(wrapper.emitted('closeOthers')?.[0]).toEqual(['/system'])
+
+    await tabButtons[1]?.trigger('keydown', { key: 'ArrowRight' })
+    expect(wrapper.emitted('change')?.at(-1)).toEqual(['/project'])
     wrapper.unmount()
   })
 
