@@ -30,8 +30,14 @@
   --luma-cockpit-drop-target: rgb(64 158 255 / 22%);
   --luma-cockpit-selected: rgb(64 158 255 / 18%);
   --luma-cockpit-gap: var(--luma-cockpit-gap-size, 12px);
+  --luma-cockpit-gap-x: var(--luma-cockpit-gap);
+  --luma-cockpit-gap-y: var(--luma-cockpit-gap);
+  --luma-cockpit-gap-design: 12;
   --luma-cockpit-radius: var(--luma-border-radius-base, var(--el-border-radius-base, 8px));
   --luma-cockpit-header-height: var(--luma-cockpit-header-size, 72px);
+  --luma-cockpit-header-height-design: 72;
+  --luma-cockpit-header-padding-design: 16;
+  --luma-cockpit-title-size-design: 24;
   --luma-cockpit-category-height: var(--luma-cockpit-category-size, 64px);
   --luma-cockpit-focus-ring: var(--el-color-primary, #409eff);
 }
@@ -57,23 +63,27 @@
     left: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--luma-cockpit-gap);
-    padding: var(--luma-cockpit-gap);
+    gap: var(--luma-cockpit-gap-y);
+    padding: var(--luma-cockpit-gap-y) var(--luma-cockpit-gap-x);
     box-sizing: border-box;
     // 使用 transform 缩放，避免频繁重排
     will-change: transform;
   }
 
   &[data-viewport-mode='vwvh'] &__stage {
+    --luma-cockpit-gap-x: calc(var(--luma-cockpit-gap-design) * var(--luma-cockpit-x-unit));
+    --luma-cockpit-gap-y: calc(var(--luma-cockpit-gap-design) * var(--luma-cockpit-y-unit));
+    --luma-cockpit-header-height: calc(var(--luma-cockpit-header-height-design) * var(--luma-cockpit-y-unit));
+
     will-change: auto;
   }
 
   &__header {
     display: flex;
     align-items: center;
-    gap: var(--luma-cockpit-gap);
+    gap: var(--luma-cockpit-gap-x);
     height: var(--luma-cockpit-header-height);
-    padding: 0 16px;
+    padding: 0 calc(var(--luma-cockpit-header-padding-design) * var(--luma-cockpit-x-unit));
     border: 1px solid var(--luma-cockpit-border);
     border-radius: var(--luma-cockpit-radius);
     background: var(--luma-cockpit-title-bg);
@@ -83,7 +93,7 @@
 
   &__title {
     color: var(--luma-cockpit-title-text);
-    font-size: 24px;
+    font-size: calc(var(--luma-cockpit-title-size-design) * var(--luma-cockpit-x-unit));
     font-weight: 600;
 
     h1 {
@@ -185,7 +195,7 @@
 /***********************区域 / 列 / 容器*********************/
 .luma-cockpit-region {
   display: flex;
-  gap: var(--luma-cockpit-gap);
+  gap: var(--luma-cockpit-gap-x);
   min-width: 0;
   height: 100%;
 
@@ -197,7 +207,7 @@
 .luma-cockpit-column {
   display: flex;
   flex-direction: column;
-  gap: var(--luma-cockpit-gap);
+  gap: var(--luma-cockpit-gap-y);
   height: 100%;
 
   &__cell {
@@ -215,7 +225,7 @@
 
   &__combined {
     display: flex;
-    gap: var(--luma-cockpit-gap);
+    gap: var(--luma-cockpit-gap-x);
     height: 100%;
 
     &[data-direction='vertical'] {
@@ -808,100 +818,6 @@
   }
 }
 
-@media (max-width: 1280px) {
-  .luma-cockpit-designer {
-    &__body {
-      grid-template-columns: minmax(220px, 244px) minmax(0, 1fr) minmax(220px, 244px);
-    }
-
-    &__editors {
-      grid-template-columns: minmax(0, 1fr);
-    }
-  }
-}
-
-@media (max-width: 960px) {
-  .luma-cockpit-designer {
-    height: auto;
-    min-height: 100%;
-
-    &__body {
-      grid-template-columns: minmax(0, 1fr);
-      overflow: visible;
-    }
-
-    &__pane {
-      overflow: visible;
-
-      &--props,
-      &--library {
-        border: 0;
-        border-top: 1px solid var(--luma-cockpit-border, rgb(255 255 255 / 12%));
-      }
-
-      &--editor {
-        order: -1;
-      }
-    }
-
-    &__properties,
-    &__library {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-}
-
-@media (max-width: 640px) {
-  .luma-cockpit-designer {
-    &__toolbar {
-      align-items: flex-start;
-      flex-direction: column;
-      padding: 12px;
-    }
-
-    &__toolbar-actions {
-      width: 100%;
-
-      button {
-        flex: 1 1 0;
-      }
-    }
-
-    &__pane {
-      padding: 12px;
-    }
-
-    &__preview {
-      min-height: 300px;
-    }
-
-    &__properties,
-    &__library {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    &__column-head,
-    &__container-head {
-      align-items: stretch;
-
-      > .luma-cockpit-designer__ops {
-        width: 100%;
-        margin-left: 0;
-      }
-    }
-
-    &__widget {
-      grid-template-columns: auto minmax(0, 1fr);
-
-      .luma-cockpit-designer__ops {
-        grid-column: 1 / -1;
-        justify-self: stretch;
-        margin-left: 0;
-      }
-    }
-  }
-}
-
 /***********************减少动画*********************/
 @media (prefers-reduced-motion: reduce) {
   .luma-cockpit-canvas__stage {
@@ -912,7 +828,7 @@
 /***********************v3 网格运行时*********************/
 .luma-cockpit-region {
   flex-direction: column;
-  gap: var(--luma-cockpit-gap);
+  gap: var(--luma-cockpit-gap-y);
   height: 100%;
 
   &__column {
@@ -927,7 +843,8 @@
 
   &__grid {
     display: grid;
-    gap: var(--luma-cockpit-gap);
+    row-gap: var(--luma-cockpit-gap-y);
+    column-gap: var(--luma-cockpit-gap-x);
     width: 100%;
     height: 100%;
   }
@@ -1298,41 +1215,6 @@
     padding: 20px 0;
     color: var(--luma-cockpit-text-muted);
     text-align: center;
-  }
-}
-
-@media (max-width: 1320px) {
-  .luma-cockpit-designer__workspace {
-    grid-template-columns: repeat(2, minmax(320px, 1fr));
-  }
-
-  .luma-cockpit-designer__workspace > .luma-cockpit-designer__library {
-    grid-column: 1 / -1;
-  }
-
-  .luma-cockpit-designer__library-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 760px) {
-  .luma-cockpit-designer__workspace {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 12px;
-  }
-
-  .luma-cockpit-designer__workspace > .luma-cockpit-designer__library {
-    grid-column: auto;
-  }
-
-  .luma-cockpit-designer__library-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .luma-cockpit-designer__region-head,
-  .luma-cockpit-designer__grid-row-head {
-    align-items: flex-start;
-    flex-wrap: wrap;
   }
 }
 

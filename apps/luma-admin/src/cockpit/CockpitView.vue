@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CockpitConfig, CockpitDesignerSavePayload } from '@luma/cockpit'
+import type { CockpitConfig, CockpitDesignerSavePayload, CockpitViewportMode } from '@luma/cockpit'
 import { LumaCockpitDesigner } from '@luma/cockpit/designer'
 import { LumaCockpit } from '@luma/cockpit/runtime'
 import { LumaIcon } from '@luma/icons'
@@ -29,6 +29,7 @@ const saving = ref(false)
 const saveError = ref<string>('')
 
 const activeLayoutId = ref<string | undefined>()
+const viewportMode = ref<CockpitViewportMode>('scale')
 
 async function load(): Promise<void> {
   loading.value = true
@@ -105,6 +106,7 @@ async function toggleFullscreen(): Promise<void> {
         v-model:active-layout-id="activeLayoutId"
         :config="config"
         :registry="adminCockpitRegistry"
+        :viewport-mode="viewportMode"
         @configure="openDesigner"
       >
         <template #header-title="{ title }">
@@ -129,6 +131,11 @@ async function toggleFullscreen(): Promise<void> {
             <ElTooltip content="进入全屏">
               <ElButton circle data-action="cockpit-fullscreen" aria-label="进入全屏" @click="toggleFullscreen">
                 <LumaIcon name="luma:fullscreen" :size="18" />
+              </ElButton>
+            </ElTooltip>
+            <ElTooltip :content="viewportMode === 'scale' ? '当前：等比缩放' : '当前：VW/VH 适配'">
+              <ElButton circle aria-label="切换大屏适配模式" @click="viewportMode = viewportMode === 'scale' ? 'vwvh' : 'scale'">
+                <LumaIcon name="luma:screen" :size="18" />
               </ElButton>
             </ElTooltip>
             <ElTooltip v-if="canEdit" content="进入配置模式">

@@ -13,9 +13,11 @@ const props = defineProps<{
 
 const regionWidth = computed(() => {
   const widths = props.region.columns.reduce((sum, column) => sum + column.width, 0)
-  return widths + Math.max(0, props.region.columns.length - 1) * 12
+  return widths
 })
-const regionStyle = computed(() => ({ width: `calc(${regionWidth.value} * var(--luma-cockpit-x-unit, 1px))` }))
+const regionStyle = computed(() => ({
+  width: `calc(${regionWidth.value} * var(--luma-cockpit-x-unit, 1px) + ${Math.max(0, props.region.columns.length - 1)} * var(--luma-cockpit-gap-x, 12px))`,
+}))
 </script>
 
 <template>
