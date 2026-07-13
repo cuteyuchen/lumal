@@ -13,6 +13,8 @@ pnpm install
 pnpm admin:dev
 ```
 
+`pnpm admin:dev` 会直接解析 `packages/*/src` 并启用 Vite HMR，无需预先构建各包。
+
 创建新项目：
 
 ```bash

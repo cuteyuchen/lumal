@@ -49,7 +49,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   activeMenuPath: '',
   activeTabPath: '',
-  headerHeight: '64px',
+  headerHeight: '50px',
   menus: () => [],
   fixedTabs: () => [],
   routeDriven: false,

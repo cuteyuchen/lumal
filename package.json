@@ -14,7 +14,7 @@
     "test:scripts": "vitest run --config vitest.config.ts scripts",
     "test:e2e": "playwright test",
     "lint": "eslint .",
-    "admin:dev": "pnpm build && pnpm --parallel --filter luma-mock-api --filter luma-admin dev",
+    "admin:dev": "pnpm --parallel --filter luma-mock-api --filter luma-admin dev",
     "admin:build": "pnpm build && pnpm --filter luma-admin build",
     "admin:preview": "pnpm --parallel --filter luma-mock-api --filter luma-admin preview",
     "compat:build": "pnpm build && pnpm --filter luma-vben-compat-demo build",

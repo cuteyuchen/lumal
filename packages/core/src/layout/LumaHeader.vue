@@ -13,7 +13,7 @@ const props = withDefaults(defineProps<{
   toggleAfterTitle?: boolean
 }>(), {
   collapsed: false,
-  height: '64px',
+  height: '50px',
   mobileOnlyToggle: false,
   sidebarEnabled: true,
   toggleAfterTitle: false,

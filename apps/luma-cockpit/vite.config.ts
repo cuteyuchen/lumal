@@ -1,10 +1,13 @@
 import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
+import { createLumaAliases } from '../../packages/vite/src/aliases'
+
+const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
 
 /***********************独立驾驶舱应用配置*********************/
 // 独立应用自行决定第三方依赖的分包与静态资源策略，不进入 @luma/cockpit 发布检查。
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [vue()],
   build: {
     chunkSizeWarningLimit: 500,
@@ -24,8 +27,17 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
+    alias: [
+      {
+        find: '@',
+        replacement: fileURLToPath(new URL('./src', import.meta.url)),
+      },
+      ...(command === 'serve'
+        ? createLumaAliases({
+            packages: ['charts', 'cockpit', 'core', 'icons'],
+            workspaceRoot,
+          })
+        : []),
+    ],
   },
-})
+}))

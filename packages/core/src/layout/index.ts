@@ -18,19 +18,46 @@ export type {
 } from './state/menu-layout'
 export {
   appendTab,
+  canPinTab,
+  canUnpinTab,
+  clampTabCount,
   closeAllTabs,
   closeOtherTabs,
   closeTab,
   closeTabsLeft,
   closeTabsRight,
+  isPermanentlyPinned,
+  pinTab,
+  pushVisitHistory,
+  reorderTab,
   resolveCachedTabPaths,
+  resolveNextActivePath,
+  sortTabsByPinned,
+  unpinTab,
 } from './state/tab-strategy'
 export type {
   AppendTabOptions,
+  VisitHistoryOptions,
 } from './state/tab-strategy'
+export {
+  clearTabSnapshot,
+  readTabSnapshot,
+  restoreTabsFromSnapshot,
+  serializeTabSnapshot,
+  writeTabSnapshot,
+} from './state/tab-storage'
+export type {
+  DEFAULT_MAX_VISIT_HISTORY,
+  RestoreContext,
+  PersistContext,
+  TabSnapshot,
+  TabSnapshotStorage,
+  TAB_SNAPSHOT_VERSION,
+} from './state/tab-storage'
 export type {
   LumaLayoutMenuItem,
   LumaLayoutRouteTabFilter,
   LumaLayoutRouteTabResolver,
   LumaLayoutTabItem,
+  LumaTabStyle,
 } from './types'

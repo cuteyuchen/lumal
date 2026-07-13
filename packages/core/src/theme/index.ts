@@ -33,6 +33,7 @@ export type {
   LumaLayoutMode,
   LumaPreferences,
   LumaPreferencesDefaults,
+  LumaTabStyle,
   LumaTransitionName,
   PreferencesStorage,
   PreferencesStore,

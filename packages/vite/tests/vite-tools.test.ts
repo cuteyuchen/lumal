@@ -37,7 +37,6 @@ describe('@luma/vite', () => {
 
   it('生成源码或产物 alias，并优先匹配子入口', () => {
     const sourceAliases = createLumaAliases({
-      packages: ['core'],
       workspaceRoot: 'E:/workspace/luma',
     })
     const distAliases = createLumaAliases({
@@ -50,6 +49,12 @@ describe('@luma/vite', () => {
       .toBeLessThan(sourceAliases.findIndex(alias => alias.find === '@luma/core'))
     expect(sourceAliases.find(alias => alias.find === '@luma/core')?.replacement)
       .toBe(resolve('E:/workspace/luma', 'packages/core/src/index.ts'))
+    expect(sourceAliases.find(alias => alias.find === '@luma/core/style.css')?.replacement)
+      .toBe(resolve('E:/workspace/luma', 'packages/core/src/source-style.css'))
+    expect(sourceAliases.find(alias => alias.find === '@luma/cockpit/designer')?.replacement)
+      .toBe(resolve('E:/workspace/luma', 'packages/cockpit/src/designer/index.ts'))
+    expect(sourceAliases.every(alias => !alias.replacement.replaceAll('\\', '/').includes('/dist/')))
+      .toBe(true)
     expect(distAliases.find(alias => alias.find === '@luma/icons/vite')?.replacement)
       .toBe(resolve('E:/workspace/luma', 'packages/icons/dist/vite.js'))
   })

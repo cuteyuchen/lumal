@@ -3,6 +3,7 @@ export type ResolvedThemeMode = Exclude<ThemeMode, 'system'>
 export type LumaLayoutMode = 'mixed-nav' | 'sidebar-nav' | 'top-nav'
 export type LumaTransitionName = 'fade' | 'fade-bottom' | 'fade-side' | 'zoom-fade'
 export type LumaHeaderMenuAlign = 'center' | 'left' | 'right'
+export type LumaTabStyle = 'brisk' | 'card' | 'chrome' | 'plain'
 
 export type DeepPartial<T> = {
   [K in keyof T]?: T[K] extends Record<string, unknown> ? DeepPartial<T[K]> : T[K]
@@ -33,10 +34,18 @@ export interface LumaPreferences {
   }
   tabbar: {
     cache: boolean
+    draggable: boolean
     enable: boolean
     maxCount: number
+    middleClickToClose: boolean
+    persist: boolean
     showIcon: boolean
     showMaximize: boolean
+    showMore: boolean
+    showRefresh: boolean
+    styleType: LumaTabStyle
+    visitHistory: boolean
+    wheelable: boolean
   }
   theme: {
     colorPrimary: string

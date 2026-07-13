@@ -1,9 +1,12 @@
 import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
+import { createLumaAliases } from '../../packages/vite/src/aliases'
+
+const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
 
 /***********************应用开发配置*********************/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [vue()],
   build: {
     chunkSizeWarningLimit: 500,
@@ -35,8 +38,17 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
+    alias: [
+      {
+        find: '@',
+        replacement: fileURLToPath(new URL('./src', import.meta.url)),
+      },
+      ...(command === 'serve'
+        ? createLumaAliases({
+            packages: ['core', 'icons', 'vben-compat'],
+            workspaceRoot,
+          })
+        : []),
+    ],
   },
-})
+}))
