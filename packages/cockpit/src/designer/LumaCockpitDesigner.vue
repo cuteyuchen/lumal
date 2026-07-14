@@ -122,7 +122,11 @@ defineExpose({ toggleTheme })
       </div>
     </section>
 
-    <div v-if="errors.length || saveError" class="luma-cockpit-designer__issues" role="alert">
+    <div
+      class="luma-cockpit-designer__issues"
+      :class="{ 'is-empty': !errors.length && !saveError }"
+      role="alert"
+    >
       <ElAlert v-if="saveError" type="error" :closable="false" :title="`保存失败：${saveError}`" show-icon />
       <ElAlert v-for="(issue, index) in errors" :key="index" type="error" :closable="false" :title="issue.message" show-icon />
     </div>
@@ -131,10 +135,7 @@ defineExpose({ toggleTheme })
       <section class="luma-cockpit-designer__assembly" aria-label="驾驶舱布局装配区">
         <div class="luma-cockpit-designer__assembly-stage">
           <CockpitLayoutEditor :cockpit-id="config.id" :draft="draft" :registry="registry" :selected-widget="selectedWidget" side="left" />
-          <div class="luma-cockpit-designer__center-guide" aria-hidden="true">
-            <LumaIcon name="luma:map" :size="34" />
-            <span>中心组件由消费方固定提供</span>
-          </div>
+          <div class="luma-cockpit-designer__center-guide" aria-hidden="true" />
           <CockpitLayoutEditor :cockpit-id="config.id" :draft="draft" :registry="registry" :selected-widget="selectedWidget" side="right" />
         </div>
       </section>

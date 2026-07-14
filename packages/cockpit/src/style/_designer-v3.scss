@@ -15,14 +15,24 @@
   --el-border-radius-base: 4px;
 
   display: grid;
-  grid-template-rows: 52px 66px auto minmax(0, 1fr) 58px;
+  grid-template-rows: 42px 52px auto minmax(0, 1fr) 58px;
   width: 100%;
   min-width: 1180px;
-  height: 100%;
-  min-height: 680px;
+  height: var(--luma-cockpit-designer-height, min(800px, 100%));
+  min-height: 0;
+  align-content: start;
   overflow: hidden;
   color: var(--luma-cockpit-text);
   background: var(--luma-cockpit-bg);
+
+  * {
+    scrollbar-width: none;
+  }
+
+  *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
 
   &__titlebar,
   &__controlbar,
@@ -44,7 +54,7 @@
     gap: 8px;
     margin: 0;
     color: var(--luma-cockpit-title-text);
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
   }
 
@@ -57,6 +67,8 @@
 
   &__controlbar {
     border-bottom: 1px solid var(--luma-cockpit-border);
+    padding-right: 17px;
+    padding-left: 17px;
   }
 
   &__layout-controls,
@@ -64,23 +76,47 @@
   &__footer-actions {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
 
   &__layout-controls > .el-input {
-    width: 190px;
+    width: 152px;
   }
 
   &__layout-controls .el-select {
-    width: 200px;
+    width: 162px;
+  }
+
+  &__controlbar {
+    .el-button,
+    .el-input__wrapper,
+    .el-select__wrapper {
+      min-height: 28px;
+      height: 28px;
+    }
+
+    .el-button {
+      padding: 0 12px;
+      font-size: 12px;
+    }
+
+    .el-button.is-circle {
+      width: 28px;
+      padding: 0;
+    }
+  }
+
+  &__layout-tools .el-button:not(.is-circle) {
+    width: 48px;
+    padding: 0;
   }
 
   &__field {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     color: var(--luma-cockpit-text-secondary);
-    font-size: 12px;
+    font-size: 10px;
     white-space: nowrap;
 
     > .el-input-number {
@@ -94,19 +130,32 @@
     }
   }
 
+  &__layout-controls &__field {
+    gap: 4px;
+    font-size: 10px;
+  }
+
   &__issues {
     display: grid;
     gap: 6px;
     padding: 8px 20px;
     border-bottom: 1px solid var(--luma-cockpit-border);
+
+    &.is-empty {
+      visibility: hidden;
+      height: 0;
+      padding: 0;
+      border: 0;
+      overflow: hidden;
+    }
   }
 
   &__workspace {
     display: grid;
     grid-template-columns: minmax(820px, 3fr) minmax(260px, 1fr);
-    gap: 12px;
+    gap: 8px;
     min-height: 0;
-    padding: 12px 18px;
+    padding: 10px 12px 10px 17px;
     overflow: hidden;
   }
 
@@ -121,7 +170,14 @@
   }
 
   &__assembly {
-    padding: 12px;
+    height: 482px;
+    padding: 10px;
+  }
+
+  &__library {
+    height: 482px;
+    padding: 0;
+    gap: 0;
   }
 
   &__assembly-stage {
@@ -156,7 +212,7 @@
   &__region {
     z-index: 1;
     display: grid;
-    grid-template-rows: 76px auto minmax(0, 1fr);
+    grid-template-rows: 60px auto minmax(0, 1fr);
     min-width: 0;
     min-height: 0;
   }
@@ -202,8 +258,8 @@
   &__region-controls {
     display: flex;
     gap: 8px;
-    min-height: 40px;
-    padding: 7px 4px;
+    min-height: 30px;
+    padding: 4px;
     overflow-x: auto;
   }
 
@@ -221,6 +277,10 @@
     grid-template-rows: 32px minmax(72px, 1fr);
     gap: 6px;
     min-height: 130px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
   }
 
   &__grid-row-head {
@@ -313,7 +373,7 @@
 
   &__drop-zone.is-tabs &__placed-widget {
     width: calc(50% - 4px);
-    height: 112px;
+    height: 90px;
   }
 
   &__placed-widget-footer {
@@ -418,8 +478,17 @@
     align-content: start;
     gap: 10px;
     min-height: 0;
-    padding: 12px;
+    padding: 20px;
     overflow: auto;
+  }
+
+  &__grid-cells > &__drop-zone {
+    min-height: 0;
+  }
+
+  &__grid-cells &__placed-widget {
+    height: 100%;
+    min-height: 0;
   }
 
   &__library-card {
@@ -446,14 +515,29 @@
   }
 
   &__footer {
+    align-items: flex-end;
     justify-content: flex-end;
+    padding-right: 12px;
+    padding-bottom: 0;
     border-top: 1px solid var(--luma-cockpit-border);
 
     p {
       margin: 0 18px 0 0;
       color: var(--luma-cockpit-text-secondary);
-      font-size: 12px;
+      font-size: 10px;
     }
+  }
+
+  &__footer-actions .el-button {
+    width: 60px;
+    min-height: 28px;
+    height: 28px;
+    padding: 0;
+    font-size: 12px;
+  }
+
+  &__footer-actions .luma-cockpit-designer__save {
+    width: 50px;
   }
 
   .el-button + .el-button {
