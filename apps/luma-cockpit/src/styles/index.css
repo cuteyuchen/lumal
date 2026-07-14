@@ -176,6 +176,7 @@ body {
 }
 
 .standalone-app__designer {
+  --luma-cockpit-designer-scale: calc(100vw / 2048px);
   overflow: auto;
   background: var(--luma-cockpit-bg);
 }

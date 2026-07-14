@@ -16,7 +16,7 @@
 
   display: grid;
   grid-template-rows: 42px 52px auto minmax(0, 1fr) 58px;
-  width: 100%;
+  width: calc(100% / var(--luma-cockpit-designer-scale, 1));
   min-width: 1180px;
   height: var(--luma-cockpit-designer-height, min(800px, 100%));
   min-height: 0;
@@ -24,6 +24,8 @@
   overflow: hidden;
   color: var(--luma-cockpit-text);
   background: var(--luma-cockpit-bg);
+  transform: scale(var(--luma-cockpit-designer-scale, 1));
+  transform-origin: top left;
 
   * {
     scrollbar-width: none;
