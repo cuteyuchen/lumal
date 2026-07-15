@@ -105,67 +105,91 @@ body {
 }
 
 /* 消费方驾驶舱皮肤，参考富阳驾驶舱的信息面板与 Tab 表现。 */
-.luma-cockpit-container {
-  border-color: transparent;
-  background: transparent;
-  box-shadow: none;
-}
+.luma-cockpit-card {
+  --luma-cockpit-card-body-padding: 10px 12px 12px;
 
-.luma-cockpit-container__cell,
-.luma-cockpit-container.is-tabs {
-  border: 1px solid var(--luma-cockpit-border);
-  background: linear-gradient(135deg, var(--luma-cockpit-panel-bg), color-mix(in srgb, var(--luma-cockpit-panel-bg), transparent 18%));
-  box-shadow: inset 0 0 24px color-mix(in srgb, var(--luma-cockpit-accent), transparent 92%);
-}
-
-.luma-cockpit-widget__title {
   position: relative;
-  min-height: 38px;
-  padding: 9px 14px 7px 28px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--luma-cockpit-accent), transparent 84%), transparent 78%);
-  font-size: 15px;
-  letter-spacing: 0;
+  isolation: isolate;
+  border-color: color-mix(in srgb, var(--luma-cockpit-border), transparent 16%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--luma-cockpit-panel-bg), transparent 8%),
+    color-mix(in srgb, var(--luma-cockpit-surface), transparent 10%)
+  );
+  box-shadow: var(--luma-cockpit-shadow), inset 0 0 24px color-mix(in srgb, var(--luma-cockpit-accent), transparent 92%);
+  backdrop-filter: blur(7px);
 }
 
-.luma-cockpit-widget__title::before {
+.luma-cockpit-card__header {
+  position: relative;
+  min-height: 40px;
+  padding: 0 14px 0 30px;
+  border-bottom: 0;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--luma-cockpit-accent), transparent 84%), transparent 78%);
+}
+
+.luma-cockpit-card__header::before {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 50%;
+  left: 13px;
   width: 8px;
   height: 8px;
   border: 2px solid var(--luma-cockpit-accent);
-  transform: rotate(45deg);
+  transform: translateY(-50%) rotate(45deg);
   content: '';
 }
 
-.luma-cockpit-widget__title::after {
+.luma-cockpit-card__header::after {
   position: absolute;
   right: 12px;
   bottom: 0;
   left: 12px;
   height: 1px;
-  background: linear-gradient(90deg, var(--luma-cockpit-accent), transparent);
-  opacity: 0.55;
+  background: linear-gradient(90deg, var(--luma-cockpit-accent), color-mix(in srgb, var(--luma-cockpit-border), transparent 52%), transparent);
+  opacity: 0.72;
   content: '';
 }
 
-.luma-cockpit-container__tablist {
-  position: relative;
+.luma-cockpit-card__title {
+  font-size: 15px;
+  letter-spacing: 0;
 }
 
-.luma-cockpit-container__tablist::before {
-  position: absolute;
-  top: 16px;
-  left: 12px;
-  width: 7px;
-  height: 7px;
-  border: 2px solid var(--luma-cockpit-accent);
-  transform: rotate(45deg);
-  content: '';
+.luma-cockpit-card__tablist {
+  width: 100%;
+  gap: 4px;
+  background: var(--luma-cockpit-tabbar-bg, transparent);
 }
 
-.luma-cockpit-widget :is(.metric-summary, .trend-panel, .event-list, .status-distribution, .region-ranking) {
-  padding: 10px 12px 12px;
+.luma-cockpit-card__tab {
+  min-width: 44px;
+  min-height: 44px;
+  border-color: transparent;
+  border-radius: 0;
+  background: transparent;
+}
+
+.luma-cockpit-card__tab.is-active {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--luma-cockpit-selected), transparent 26%);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--luma-cockpit-accent);
+}
+
+.luma-cockpit-card__tab:focus-visible {
+  outline: 2px solid var(--luma-cockpit-focus-ring);
+  outline-offset: -2px;
+}
+
+.luma-cockpit-card__body {
+  border-right: 1px solid color-mix(in srgb, var(--luma-cockpit-border), transparent 56%);
+  border-bottom: 1px solid color-mix(in srgb, var(--luma-cockpit-border), transparent 32%);
+  border-left: 1px solid color-mix(in srgb, var(--luma-cockpit-border), transparent 56%);
+  background:
+    linear-gradient(0deg, var(--luma-cockpit-accent), transparent) left bottom / 2px 48px no-repeat,
+    linear-gradient(90deg, var(--luma-cockpit-accent), transparent) left bottom / 48px 2px no-repeat,
+    linear-gradient(0deg, var(--luma-cockpit-accent), transparent) right bottom / 2px 48px no-repeat,
+    linear-gradient(-90deg, var(--luma-cockpit-accent), transparent) right bottom / 48px 2px no-repeat;
 }
 
 .luma-cockpit-widget .metric-summary__item,

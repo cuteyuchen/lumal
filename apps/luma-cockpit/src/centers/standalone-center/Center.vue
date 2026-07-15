@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { SceneFocusPayload, SceneSelectionPayload } from '../../messages/topics'
 import type { CockpitCenterContext } from '@luma/cockpit'
+import type { SceneFocusPayload, SceneSelectionPayload } from '../../messages/topics'
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { demoScene } from '../../data/demo-scene'
 import { cockpitTopics } from '../../messages/topics'
@@ -18,7 +18,10 @@ const points = computed(() => demoScene.points)
 
 function polygonPoints(regionId: string): string {
   const feature = demoScene.geoJson.features.find(item => item.properties.id === regionId)
-  const coordinates = feature?.geometry.coordinates[0] ?? []
+  const geometry = feature?.geometry
+  const coordinates = geometry?.type === 'MultiPolygon'
+    ? geometry.coordinates[0]?.[0] ?? []
+    : geometry?.coordinates[0] ?? []
   return coordinates.map(([x, y]) => `${x},${-y}`).join(' ')
 }
 

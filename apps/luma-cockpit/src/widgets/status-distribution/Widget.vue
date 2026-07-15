@@ -1,23 +1,46 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { statusDistribution } from '../../data/demo-scene'
-import { cockpitTopics } from '../../messages/topics'
+import type { SceneFilterPayload, SceneSelectionPayload } from '../../messages/topics'
 import { useCockpitContext } from '@luma/cockpit'
+import { computed, onBeforeUnmount, ref } from 'vue'
+import { getSceneEntity, statusDistribution } from '../../data/demo-scene'
+import { cockpitTopics } from '../../messages/topics'
 
 /***********************状态分布模块*********************/
 
 const context = useCockpitContext()
 const loading = false
 const error = ''
+const filterStatus = ref<SceneFilterPayload['status']>()
+const selectedId = ref('')
 const items = computed(() => statusDistribution)
+const selectedStatus = computed(() => getSceneEntity(selectedId.value)?.status)
 
 function filter(status: string): void {
+  const nextStatus = filterStatus.value === status ? undefined : status
   context.messages.publish({
     topic: cockpitTopics.sceneFilterChange,
     sourceId: context.instanceId,
-    payload: { status },
+    payload: { status: nextStatus },
   })
 }
+
+const unsubscribeFilter = context.messages.subscribe<SceneFilterPayload>(
+  cockpitTopics.sceneFilterChange,
+  (message) => {
+    filterStatus.value = message.payload?.status
+  },
+)
+const unsubscribeSelection = context.messages.subscribe<SceneSelectionPayload>(
+  cockpitTopics.sceneSelectionChange,
+  (message) => {
+    selectedId.value = message.payload?.ids[0] ?? ''
+  },
+)
+
+onBeforeUnmount(() => {
+  unsubscribeFilter()
+  unsubscribeSelection()
+})
 </script>
 
 <template>
@@ -36,7 +59,13 @@ function filter(status: string): void {
         v-for="item in items"
         :key="item.status"
         type="button"
+        :class="{
+          'is-filtered': filterStatus === item.status,
+          'is-contextual': !filterStatus && selectedStatus === item.status,
+        }"
         :data-status="item.status"
+        :aria-pressed="filterStatus === item.status"
+        :aria-current="!filterStatus && selectedStatus === item.status ? 'true' : undefined"
         @click="filter(item.status)"
       >
         <span class="status-distribution__value">{{ item.value }}%</span>
@@ -50,7 +79,6 @@ function filter(status: string): void {
 <style scoped>
 .status-distribution {
   height: 100%;
-  padding: 12px;
 }
 
 .status-distribution__items {
@@ -106,6 +134,17 @@ function filter(status: string): void {
 
 .status-distribution__items button[data-status='watch'] .status-distribution__bar span {
   background: var(--luma-cockpit-warning);
+}
+
+.status-distribution__items button.is-contextual {
+  border-color: color-mix(in srgb, var(--luma-cockpit-accent), transparent 28%);
+  box-shadow: inset 3px 0 0 var(--luma-cockpit-accent);
+}
+
+.status-distribution__items button.is-filtered {
+  border-color: var(--luma-cockpit-accent);
+  background: var(--luma-cockpit-selected);
+  box-shadow: inset 3px 0 0 var(--luma-cockpit-accent);
 }
 
 .status-distribution__state {

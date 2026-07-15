@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import type { SceneSelectionPayload } from '../../messages/topics'
+import { useCockpitContext } from '@luma/cockpit'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { demoEvents } from '../../data/demo-scene'
 import { cockpitTopics } from '../../messages/topics'
-import { useCockpitContext } from '@luma/cockpit'
 
 /***********************事件列表模块*********************/
 
 const context = useCockpitContext()
 const loading = false
 const error = ''
+const selectedId = ref('')
 const events = computed(() => demoEvents)
 
 function focusTarget(id: string): void {
@@ -18,6 +20,15 @@ function focusTarget(id: string): void {
     payload: { id },
   })
 }
+
+const unsubscribeSelection = context.messages.subscribe<SceneSelectionPayload>(
+  cockpitTopics.sceneSelectionChange,
+  (message) => {
+    selectedId.value = message.payload?.ids[0] ?? ''
+  },
+)
+
+onBeforeUnmount(unsubscribeSelection)
 </script>
 
 <template>
@@ -33,7 +44,13 @@ function focusTarget(id: string): void {
     </div>
     <ol v-else class="event-list__items">
       <li v-for="item in events" :key="item.id">
-        <button type="button" :data-level="item.level" @click="focusTarget(item.targetId)">
+        <button
+          type="button"
+          :class="{ 'is-active': selectedId === item.targetId }"
+          :data-level="item.level"
+          :aria-pressed="selectedId === item.targetId"
+          @click="focusTarget(item.targetId)"
+        >
           <span class="event-list__time">{{ item.time }}</span>
           <span class="event-list__title">{{ item.title }}</span>
         </button>
@@ -45,7 +62,6 @@ function focusTarget(id: string): void {
 <style scoped>
 .event-list {
   height: 100%;
-  padding: 12px;
 }
 
 .event-list__items {
@@ -80,6 +96,12 @@ function focusTarget(id: string): void {
 
 .event-list__items button[data-level='success'] {
   border-color: color-mix(in srgb, var(--luma-cockpit-success), transparent 58%);
+}
+
+.event-list__items button.is-active {
+  border-color: var(--luma-cockpit-accent);
+  background: var(--luma-cockpit-selected);
+  box-shadow: inset 3px 0 0 var(--luma-cockpit-accent);
 }
 
 .event-list__time {

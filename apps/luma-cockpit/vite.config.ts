@@ -1,14 +1,39 @@
+import type { Target } from 'vite-plugin-static-copy'
+import { relative } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
-import { defineConfig } from 'vite'
+import { defineConfig, normalizePath } from 'vite'
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 import { createLumaAliases } from '../../packages/vite/src/aliases'
 
 const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
+const appRoot = fileURLToPath(new URL('.', import.meta.url))
+const cesiumBaseUrl = 'cesiumStatic'
+const cesiumSource = normalizePath(fileURLToPath(new URL('./node_modules/cesium/Build/Cesium', import.meta.url)))
+const cesiumDirectories = ['ThirdParty', 'Workers', 'Assets', 'Widgets'] as const
+
+function createCesiumCopyTarget(directory: typeof cesiumDirectories[number]): Target {
+  const sourceDirectory = `${cesiumSource}/${directory}`
+  const stripBase = normalizePath(relative(appRoot, sourceDirectory)).split('/').length
+  return {
+    src: `${sourceDirectory}/**/*`,
+    dest: `${cesiumBaseUrl}/${directory}`,
+    rename: { stripBase },
+  }
+}
 
 /***********************独立驾驶舱应用配置*********************/
 // 独立应用自行决定第三方依赖的分包与静态资源策略，不进入 @luma/cockpit 发布检查。
 export default defineConfig(({ command }) => ({
-  plugins: [vue()],
+  define: {
+    CESIUM_BASE_URL: JSON.stringify(`./${cesiumBaseUrl}/`),
+  },
+  plugins: [
+    vue(),
+    viteStaticCopy({
+      targets: cesiumDirectories.map(createCesiumCopyTarget),
+    }),
+  ],
   build: {
     chunkSizeWarningLimit: 500,
     rollupOptions: {

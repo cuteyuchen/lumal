@@ -33,7 +33,6 @@ const items = computed(() => metricSummaries)
 <style scoped>
 .metric-summary {
   height: 100%;
-  padding: 12px;
 }
 
 .metric-summary__grid {

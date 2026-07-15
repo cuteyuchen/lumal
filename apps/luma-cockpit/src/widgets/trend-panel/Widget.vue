@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { trendSeries } from '../../data/demo-scene'
-import { cockpitTopics } from '../../messages/topics'
+import type { SceneFilterPayload, SceneSelectionPayload } from '../../messages/topics'
 import { useCockpitContext } from '@luma/cockpit'
+import { computed, onBeforeUnmount, ref } from 'vue'
+import { getSceneEntity, trendSeries } from '../../data/demo-scene'
+import { cockpitTopics } from '../../messages/topics'
 
 /***********************趋势模块*********************/
 
 const context = useCockpitContext()
 const loading = false
 const error = ''
+const filterStatus = ref<SceneFilterPayload['status']>()
+const selectedId = ref('')
 const series = computed(() => trendSeries)
+const selectedStatus = computed(() => getSceneEntity(selectedId.value)?.status)
 
 function toPoints(values: number[]): string {
   const max = Math.max(...values)
@@ -25,12 +29,31 @@ function toPoints(values: number[]): string {
 }
 
 function filterByStatus(status: string): void {
+  const nextStatus = filterStatus.value === status ? undefined : status
   context.messages.publish({
     topic: cockpitTopics.sceneFilterChange,
     sourceId: context.instanceId,
-    payload: { status },
+    payload: { status: nextStatus },
   })
 }
+
+const unsubscribeFilter = context.messages.subscribe<SceneFilterPayload>(
+  cockpitTopics.sceneFilterChange,
+  (message) => {
+    filterStatus.value = message.payload?.status
+  },
+)
+const unsubscribeSelection = context.messages.subscribe<SceneSelectionPayload>(
+  cockpitTopics.sceneSelectionChange,
+  (message) => {
+    selectedId.value = message.payload?.ids[0] ?? ''
+  },
+)
+
+onBeforeUnmount(() => {
+  unsubscribeFilter()
+  unsubscribeSelection()
+})
 </script>
 
 <template>
@@ -58,7 +81,13 @@ function filterByStatus(status: string): void {
           v-for="item in series"
           :key="item.status"
           type="button"
+          :class="{
+            'is-filtered': filterStatus === item.status,
+            'is-contextual': !filterStatus && selectedStatus === item.status,
+          }"
           :data-status="item.status"
+          :aria-pressed="filterStatus === item.status"
+          :aria-current="!filterStatus && selectedStatus === item.status ? 'true' : undefined"
           @click="filterByStatus(item.status)"
         >
           <span />
@@ -72,7 +101,6 @@ function filterByStatus(status: string): void {
 <style scoped>
 .trend-panel {
   height: 100%;
-  padding: 12px;
 }
 
 .trend-panel__content {
@@ -136,6 +164,17 @@ function filterByStatus(status: string): void {
 
 .trend-panel__legend button[data-status='watch'] span {
   background: var(--luma-cockpit-warning);
+}
+
+.trend-panel__legend button.is-contextual {
+  border-color: color-mix(in srgb, var(--luma-cockpit-accent), transparent 28%);
+  box-shadow: inset 0 -2px 0 var(--luma-cockpit-accent);
+}
+
+.trend-panel__legend button.is-filtered {
+  border-color: var(--luma-cockpit-accent);
+  background: var(--luma-cockpit-selected);
+  box-shadow: inset 0 -2px 0 var(--luma-cockpit-accent);
 }
 
 .trend-panel__state {

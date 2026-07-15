@@ -1,4 +1,8 @@
+import type { Component, PropType } from 'vue'
+import { mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it } from 'vitest'
+import { defineComponent, h } from 'vue'
+import App from '../src/App.vue'
 import { standaloneCockpitRegistry } from '../src/registry'
 import { loadStandaloneConfig, saveStandaloneConfig } from '../src/services/config'
 import {
@@ -21,6 +25,46 @@ describe('独立驾驶舱应用', () => {
     expect(standaloneCockpitRegistry.resolveWidget('event-list')).toBeTruthy()
     expect(standaloneCockpitRegistry.resolveWidget('region-ranking')).toBeTruthy()
     expect(standaloneCockpitRegistry.resolveWidget('status-distribution')).toBeTruthy()
+    expect(standaloneCockpitRegistry.resolveWidget('standalone-widget')).toBeTruthy()
+  })
+
+  it('设计器使用已注册组件实时预览，不引用外部业务截图', () => {
+    const widgetTypes = [
+      'metric-summary',
+      'trend-panel',
+      'event-list',
+      'region-ranking',
+      'status-distribution',
+      'standalone-widget',
+    ]
+
+    for (const type of widgetTypes)
+      expect(standaloneCockpitRegistry.resolveWidget(type)?.thumbnail).toBeUndefined()
+  })
+
+  it('根应用向运行时传入并实际渲染自己的 LumaCockpitCard 包装组件', () => {
+    const LumaCockpitStub = defineComponent({
+      name: 'LumaCockpit',
+      inheritAttrs: false,
+      props: {
+        cardComponent: { type: Object as PropType<Component>, required: true },
+      },
+      setup(props) {
+        return () => h(props.cardComponent, { title: '应用模块' }, {
+          default: () => h('div', { class: 'app-card-content' }, '模块内容'),
+        })
+      },
+    })
+    const wrapper = mount(App, {
+      global: {
+        stubs: { LumaCockpit: LumaCockpitStub },
+      },
+    })
+
+    expect(wrapper.get('.standalone-cockpit-card').exists()).toBe(true)
+    expect(wrapper.get('.standalone-cockpit-card .luma-cockpit-card__title').text()).toBe('应用模块')
+    expect(wrapper.get('.standalone-cockpit-card .app-card-content').text()).toBe('模块内容')
+    wrapper.unmount()
   })
 
   it('加载默认标准配置', () => {

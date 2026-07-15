@@ -37,9 +37,7 @@ function selectNode(id: string): void {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 12px;
   height: 100%;
-  box-sizing: border-box;
 }
 
 .standalone-widget__actions {

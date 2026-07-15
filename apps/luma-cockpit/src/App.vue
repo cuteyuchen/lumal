@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import type { ThemeMode } from '@luma/core/theme'
 import type { CockpitConfig, CockpitDesignerSavePayload } from '@luma/cockpit'
+import type { ThemeMode } from '@luma/core/theme'
 import { LumaCockpitDesigner } from '@luma/cockpit/designer'
 import { LumaCockpit } from '@luma/cockpit/runtime'
 import { LumaIcon } from '@luma/icons'
 import { ElButton, ElTooltip } from 'element-plus'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
-import designerTitleImage from './assets/fuyang-cockpit/dialog-header-bg.png'
-import fuyangMap from './assets/fuyang-cockpit/map.png'
-import EchartsGeoCenter from './centers/echarts-geo-center/Center.vue'
+import designerTitleImage from './assets/cockpit-designer/dialog-header-bg.png'
+import SceneCenter from './centers/scene-center/Center.vue'
+import CockpitCard from './components/CockpitCard.vue'
 import { standaloneCockpitRegistry } from './registry'
 import { loadStandaloneConfig, saveStandaloneConfig } from './services/config'
 import {
@@ -107,6 +107,7 @@ onBeforeUnmount(() => {
     <LumaCockpit
       ref="cockpitRef"
       v-model:active-layout-id="activeLayoutId"
+      :card-component="CockpitCard"
       :config="config"
       :registry="standaloneCockpitRegistry"
       :theme-mode="standaloneResolvedThemeMode"
@@ -154,7 +155,7 @@ onBeforeUnmount(() => {
         </div>
       </template>
       <template #center="{ context }">
-        <EchartsGeoCenter :context="context" />
+        <SceneCenter :key="context.instanceId" :context="context" />
       </template>
     </LumaCockpit>
 
@@ -173,11 +174,7 @@ onBeforeUnmount(() => {
         :theme-mode="standaloneResolvedThemeMode"
         @save="handleSave"
         @cancel="closeDesigner"
-      >
-        <template #center-preview>
-          <img class="standalone-app__designer-map" :src="fuyangMap" alt="富阳驾驶舱地图预览">
-        </template>
-      </LumaCockpitDesigner>
+      />
     </div>
   </div>
 </template>
@@ -192,13 +189,6 @@ onBeforeUnmount(() => {
   position: fixed;
   inset: 0;
   z-index: 2050;
-}
-
-.standalone-app__designer-map {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .standalone-app__actions {

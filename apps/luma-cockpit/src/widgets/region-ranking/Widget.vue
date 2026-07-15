@@ -1,17 +1,24 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { demoScene } from '../../data/demo-scene'
-import { cockpitTopics } from '../../messages/topics'
+import type { SceneSelectionPayload } from '../../messages/topics'
 import { useCockpitContext } from '@luma/cockpit'
+import { computed, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
+import { demoScene, getSceneEntity } from '../../data/demo-scene'
+import { cockpitTopics } from '../../messages/topics'
 
 /***********************区域排名模块*********************/
 
 const context = useCockpitContext()
 const loading = false
 const error = ''
+const selectedId = ref('')
+const regionButtons = useTemplateRef<HTMLButtonElement[]>('regionButtons')
 const regions = computed(() =>
   [...demoScene.regions].sort((a, b) => b.value - a.value),
 )
+const activeRegionId = computed(() => {
+  const entity = getSceneEntity(selectedId.value)
+  return entity?.kind === 'point' ? entity.regionId : entity?.id
+})
 
 function selectRegion(id: string): void {
   context.messages.publish({
@@ -19,12 +26,23 @@ function selectRegion(id: string): void {
     sourceId: context.instanceId,
     payload: { id },
   })
-  context.messages.publish({
-    topic: cockpitTopics.sceneSelectionChange,
-    sourceId: context.instanceId,
-    payload: { ids: [id] },
-  })
 }
+
+const unsubscribeSelection = context.messages.subscribe<SceneSelectionPayload>(
+  cockpitTopics.sceneSelectionChange,
+  (message) => {
+    selectedId.value = message.payload?.ids[0] ?? ''
+  },
+)
+
+watch(activeRegionId, async (id) => {
+  await nextTick()
+  regionButtons.value
+    ?.find(button => button.dataset.regionId === id)
+    ?.scrollIntoView({ block: 'nearest' })
+})
+
+onBeforeUnmount(unsubscribeSelection)
 </script>
 
 <template>
@@ -40,7 +58,14 @@ function selectRegion(id: string): void {
     </div>
     <ol v-else class="region-ranking__items">
       <li v-for="(item, index) in regions" :key="item.id">
-        <button type="button" @click="selectRegion(item.id)">
+        <button
+          ref="regionButtons"
+          type="button"
+          :class="{ 'is-active': activeRegionId === item.id }"
+          :data-region-id="item.id"
+          :aria-pressed="activeRegionId === item.id"
+          @click="selectRegion(item.id)"
+        >
           <span class="region-ranking__index">{{ index + 1 }}</span>
           <span class="region-ranking__name">{{ item.name }}</span>
           <span class="region-ranking__value">{{ item.value }}</span>
@@ -53,7 +78,6 @@ function selectRegion(id: string): void {
 <style scoped>
 .region-ranking {
   height: 100%;
-  padding: 12px;
 }
 
 .region-ranking__items {
@@ -62,6 +86,8 @@ function selectRegion(id: string): void {
   gap: 8px;
   margin: 0;
   padding: 0;
+  height: 100%;
+  overflow: auto;
   list-style: none;
 }
 
@@ -78,6 +104,12 @@ function selectRegion(id: string): void {
   background: var(--luma-cockpit-floating-bg);
   color: inherit;
   cursor: pointer;
+}
+
+.region-ranking__items button.is-active {
+  border-color: var(--luma-cockpit-accent);
+  background: var(--luma-cockpit-selected);
+  box-shadow: inset 3px 0 0 var(--luma-cockpit-accent);
 }
 
 .region-ranking__index {
