@@ -433,6 +433,67 @@ describe('router menu helpers', () => {
     expect(firstMenu?.path).toBe('/system/dict')
   })
 
+  it('父级权限或角色拒绝时会跳过整个子树', () => {
+    const menus = normalizeMenuNodes([
+      {
+        children: [
+          {
+            id: 'restricted-child',
+            path: 'child',
+            title: '无独立权限的子页',
+          },
+        ],
+        id: 'restricted',
+        path: '/restricted',
+        permissions: ['restricted:view'],
+        roles: ['admin'],
+        title: '受限父菜单',
+      },
+      {
+        id: 'dashboard',
+        path: '/dashboard',
+        title: '工作台',
+      },
+    ])
+
+    expect(findFirstAccessibleMenu(menus, {
+      hasPermission: permissions => !permissions.includes('restricted:view'),
+      hasRole: () => true,
+    })?.path).toBe('/dashboard')
+
+    expect(findFirstAccessibleMenu(menus, {
+      hasPermission: () => true,
+      hasRole: roles => !roles.includes('admin'),
+    })?.path).toBe('/dashboard')
+  })
+
+  it('父级可访问但所有子项被拒绝时不会把目录作为首个落点', () => {
+    const menus = normalizeMenuNodes([
+      {
+        children: [
+          {
+            id: 'restricted-child',
+            path: 'child',
+            permissions: ['child:view'],
+            title: '受限子页',
+          },
+        ],
+        id: 'directory',
+        path: '/directory',
+        title: '目录',
+      },
+      {
+        id: 'dashboard',
+        path: '/dashboard',
+        title: '工作台',
+      },
+    ])
+
+    expect(findFirstAccessibleMenu(menus, {
+      hasPermission: permissions => !permissions.includes('child:view'),
+    })?.path).toBe('/dashboard')
+  })
+
   it('会将外链字段贯穿归一化、路由记录和侧边栏菜单', () => {
     const menus = normalizeMenuRecords([
       {

@@ -36,6 +36,7 @@ export interface PermissionRouteMeta {
 
 export interface PermissionRouteLike {
   meta?: PermissionRouteMeta
+  matched?: readonly { meta?: PermissionRouteMeta }[]
   path?: string
   fullPath?: string
   name?: string | symbol | null

@@ -11,7 +11,9 @@ import type {
 import { ElContainer } from 'element-plus'
 import { computed, inject, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from 'vue'
 import { routeLocationKey, routerKey } from 'vue-router'
+import LumaBreadcrumb from './LumaBreadcrumb.vue'
 import LumaContent from './LumaContent.vue'
+import LumaGlobalSearch from './LumaGlobalSearch.vue'
 import LumaHeader from './LumaHeader.vue'
 import LumaSidebar from './LumaSidebar.vue'
 import LumaTabs from './LumaTabs.vue'
@@ -242,7 +244,34 @@ const currentActiveTabPath = computed({
 const currentTabs = computed(() => props.routeDriven ? routeTabs.value : props.tabs)
 const hasTabs = computed(() => currentTabs.value.length > 0)
 const collapsed = computed(() => props.preferences.sidebar.collapsed)
-const resolvedActiveMenuPath = computed(() => props.activeMenuPath || injectedRoute?.path || currentActiveTabPath.value)
+const routeActiveMenuPath = computed(() => typeof injectedRoute?.meta.activeMenu === 'string'
+  ? injectedRoute.meta.activeMenu
+  : '')
+const resolvedActiveMenuPath = computed(() => {
+  const routePath = injectedRoute?.path || currentActiveTabPath.value
+  const activeMenu = routeActiveMenuPath.value
+
+  if (activeMenu && findMenuItemByPath(props.menus, activeMenu)) {
+    return activeMenu
+  }
+  if (routePath && findMenuItemByPath(props.menus, routePath)) {
+    return routePath
+  }
+  if (props.activeMenuPath && findMenuItemByPath(props.menus, props.activeMenuPath)) {
+    return props.activeMenuPath
+  }
+
+  return props.activeMenuPath || routePath
+})
+const resolvedCurrentPath = computed(() => injectedRoute?.path || currentActiveTabPath.value || resolvedActiveMenuPath.value)
+const breadcrumbPreferences = computed(() => ({
+  enable: props.preferences.breadcrumb?.enable ?? true,
+  hideOnlyOne: props.preferences.breadcrumb?.hideOnlyOne ?? false,
+  showHome: props.preferences.breadcrumb?.showHome ?? true,
+  showIcon: props.preferences.breadcrumb?.showIcon ?? true,
+}))
+const globalSearchEnabled = computed(() => props.preferences.header.globalSearch ?? true)
+const globalSearchShortcutEnabled = computed(() => props.preferences.shortcutKeys?.globalSearch ?? true)
 const resolvedActiveTopMenuPath = computed(() => resolveActiveTopMenuPath(props.menus, resolvedActiveMenuPath.value))
 const resolvedMenus = computed(() => {
   const menus = splitMenusByLayout({
@@ -268,6 +297,29 @@ const resolvedTopMenuActivePath = computed(() => (
 ))
 const mobileMenus = computed(() => hasTopMenus.value ? topMenus.value : sidebarMenus.value)
 const hasMobileMenus = computed(() => mobileMenus.value.some(item => !item.hidden))
+
+watch(
+  () => [props.preferences.app.dynamicTitle ?? true, injectedRoute?.meta.title, props.title] as const,
+  ([enabled, routeTitle, appTitle]) => {
+    if (typeof document === 'undefined') {
+      return
+    }
+
+    const pageTitle = typeof routeTitle === 'string' ? routeTitle.trim() : ''
+    const title = appTitle?.trim() ?? ''
+    if (!enabled) {
+      document.title = title
+      return
+    }
+    if (!pageTitle && !title) {
+      return
+    }
+    document.title = pageTitle && title && pageTitle !== title
+      ? `${pageTitle} - ${title}`
+      : pageTitle || title
+  },
+  { immediate: true },
+)
 
 /***********************快照持久化*********************/
 function resolveSnapshotStorage(): { getItem: (key: string) => string | null, removeItem: (key: string) => void, setItem: (key: string, value: string) => void } | undefined {
@@ -431,6 +483,11 @@ function handleTopMenuSelect(path: string): void {
 
   emit('topMenuSelect', path)
   handleMenuSelect(target)
+}
+
+function handleDiscoverySelect(path: string): void {
+  const item = findMenuItemByPath(props.menus, path)
+  handleMenuSelect(resolveNavigationTarget(item) || path)
 }
 
 function handleTabChange(path: string): void {
@@ -611,7 +668,13 @@ defineExpose({
         />
       </template>
 
-      <template v-if="$slots.headerActions" #actions>
+      <template v-if="globalSearchEnabled || $slots.headerActions" #actions>
+        <LumaGlobalSearch
+          v-if="globalSearchEnabled"
+          :menus="menus"
+          :shortcut="globalSearchShortcutEnabled"
+          @select="handleDiscoverySelect"
+        />
         <slot name="headerActions" />
       </template>
     </LumaHeader>
@@ -654,6 +717,17 @@ defineExpose({
       />
 
       <ElContainer class="luma-layout__main" direction="vertical" data-layout-fullscreen-target>
+        <LumaBreadcrumb
+          v-if="breadcrumbPreferences.enable && !isContentMaximized"
+          :active-menu-path="resolvedActiveMenuPath"
+          :active-path="resolvedCurrentPath"
+          :hide-only-one="breadcrumbPreferences.hideOnlyOne"
+          :menus="menus"
+          :show-home="breadcrumbPreferences.showHome"
+          :show-icon="breadcrumbPreferences.showIcon"
+          @select="handleDiscoverySelect"
+        />
+
         <LumaTabs
           v-if="hasTabs && preferences.tabbar.enable"
           ref="tabsRef"

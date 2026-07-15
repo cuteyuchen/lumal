@@ -129,7 +129,7 @@ defineExpose({
   min-width: 0;
   overflow: hidden;
   color: var(--el-text-color-primary);
-  font-size: 16px;
+  font-size: calc(var(--luma-font-size-base, 14px) + 2px);
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;

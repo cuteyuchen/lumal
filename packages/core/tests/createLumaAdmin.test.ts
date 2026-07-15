@@ -2,6 +2,7 @@ import type { App, Plugin } from 'vue'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h } from 'vue'
 import { createLumaAdmin } from '../src'
+import { createPermissionStore, usePermissionStore } from '../src/permission'
 
 /***********************测试组件*********************/
 function createRootComponent(name = 'RootForCreateLumaAdminTest') {
@@ -131,8 +132,31 @@ describe('createLumaAdmin', () => {
 
     expect(allComponents.app.component('LumaPage')).toBeTruthy()
     expect(allComponents.app.component('LumaLayout')).toBeTruthy()
+    expect(allComponents.app.component('LumaAccessControl')).toBeTruthy()
+    expect(allComponents.app.component('LumaBreadcrumb')).toBeTruthy()
+    expect(allComponents.app.component('LumaGlobalSearch')).toBeTruthy()
     expect(selectedComponents.app.component('LumaPage')).toBeTruthy()
     expect(selectedComponents.app.component('LumaLayout')).toBeUndefined()
     expect(noComponents.app.component('LumaPage')).toBeUndefined()
+  })
+
+  it('会自动向组件树注入 permissionStore', async () => {
+    const permissionStore = createPermissionStore({ permissions: ['dashboard:view'] })
+    const Root = defineComponent({
+      setup() {
+        const store = usePermissionStore()
+        return () => h('span', { class: 'permission-result' }, String(store.hasPermission('dashboard:view')))
+      },
+    })
+    const framework = createLumaAdmin({
+      components: false,
+      permissionStore,
+      rootComponent: Root,
+    })
+    const container = document.createElement('div')
+
+    await framework.mount(container)
+    expect(container.querySelector('.permission-result')?.textContent).toBe('true')
+    framework.app.unmount()
   })
 })

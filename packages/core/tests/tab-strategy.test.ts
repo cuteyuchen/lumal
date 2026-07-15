@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
 import type { LumaLayoutTabItem } from '../src/layout/types'
+import { describe, expect, it } from 'vitest'
 import {
   appendTab,
   canPinTab,
@@ -9,7 +9,6 @@ import {
   closeOtherTabs,
   closeTab,
   closeTabsLeft,
-  closeTabsRight,
   isPermanentlyPinned,
   pinTab,
   pushVisitHistory,
@@ -34,12 +33,14 @@ function buildTabs(seeds: TabSeed[]): LumaLayoutTabItem[] {
   }))
 }
 
-const createTabs = (): LumaLayoutTabItem[] => buildTabs([
-  { closable: false, path: '/home', pinned: true, title: '首页' },
-  { path: '/work', title: '工作台' },
-  { path: '/system', title: '系统管理' },
-  { path: '/profile', title: '个人资料' },
-])
+function createTabs(): LumaLayoutTabItem[] {
+  return buildTabs([
+    { closable: false, path: '/home', pinned: true, title: '首页' },
+    { path: '/work', title: '工作台' },
+    { path: '/system', title: '系统管理' },
+    { path: '/profile', title: '个人资料' },
+  ])
+}
 
 describe('tab strategy - pin/unpin', () => {
   it('固定标签会移动到左侧固定组且不会被标识为永久固定', () => {

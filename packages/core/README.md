@@ -9,8 +9,8 @@ import '@luma/core/theme-chalk/index.scss'
 import '@luma/core/style.css'
 ```
 
-`createLumaAdmin` 支持 preset、异步 mount、应用侧 `router` / `pinia`、Element Plus options 和选择性全局组件注册；这些依赖保持为 peer dependency，不会由 core 默认创建。
+`createLumaAdmin` 支持 preset、异步 mount、应用侧 `router` / `pinia`、权限 Store 自动注入、Element Plus options 和选择性全局组件注册；这些依赖保持为 peer dependency，不会由 core 默认创建。
 
-主题子入口提供 `createPreferencesStore`，用于偏好持久化、重置、导出和系统主题监听。
+路由子入口提供 `createMenuRouteRuntime`，统一静态与远程菜单的校验、排序、组件解析和原子注册。布局子入口提供面包屑、全局搜索、菜单徽标与 `activeMenu` 高亮；主题偏好支持持久化动态标题、导航开关和 12-20px 全局字号。
 
 详细说明见仓库文档 `docs/core-api.md`。

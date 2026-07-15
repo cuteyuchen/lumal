@@ -8,7 +8,9 @@ import { LumaPagination } from '../components/pagination'
 import { LumaSchemaForm } from '../components/schema-form'
 import { LumaSchemaTable } from '../components/schema-table'
 import {
+  LumaBreadcrumb,
   LumaContent,
+  LumaGlobalSearch,
   LumaHeader,
   LumaLayout,
   LumaRouterView,
@@ -16,10 +18,13 @@ import {
   LumaTabs,
   LumaTopNav,
 } from '../layout'
+import { LumaAccessControl } from '../permission'
 import LumaThemeSettingsPanel from '../theme/LumaThemeSettingsPanel.vue'
 
 /***********************默认组件注册表*********************/
 export const defaultLumaComponents: Record<string, Component> = {
+  LumaAccessControl,
+  LumaBreadcrumb,
   LumaContent,
   LumaCrudTable,
   LumaHeader,
@@ -27,6 +32,7 @@ export const defaultLumaComponents: Record<string, Component> = {
   LumaIconPicker,
   LumaIconPickerDialog,
   LumaInfoTable,
+  LumaGlobalSearch,
   LumaLayout,
   LumaPage,
   LumaPageLayout,

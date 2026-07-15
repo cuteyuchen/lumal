@@ -671,7 +671,7 @@ defineExpose({
   width: 100%;
   margin: 6px 0 0;
   color: var(--el-text-color-secondary);
-  font-size: 12px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 2px);
   line-height: 1.5;
 }
 

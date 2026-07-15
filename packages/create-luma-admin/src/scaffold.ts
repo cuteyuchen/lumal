@@ -164,6 +164,7 @@ import ElementPlus from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import App from './App.vue'
 import { router } from './router'
+import { permissionStore } from './services/access'
 import '@luma/core/theme-chalk/index.scss'
 import '@luma/core/style.css'
 import '@luma/icons/style.css'
@@ -188,6 +189,7 @@ const framework = createLumaAdmin({
   },
   rootComponent: App,
   router,
+  permissionStore,
   icons: {
     localSvg: localIcons,
   },
@@ -254,7 +256,7 @@ import {
   LumaLayout,
   LumaRouterView,
 } from '@luma/core/layout'
-import { computed, shallowRef } from 'vue'
+import { computed, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeaderActions from './components/app/AppHeaderActions.vue'
 import AppSettingsDrawer from './components/app/AppSettingsDrawer.vue'
@@ -286,6 +288,16 @@ const activePath = computed({
     }
   },
 })
+
+watch([
+  () => route.meta.title,
+  () => adminPreferences.value.app.dynamicTitle,
+], () => {
+  const routeTitle = typeof route.meta.title === 'string' ? route.meta.title.trim() : ''
+  document.title = adminPreferences.value.app.dynamicTitle && routeTitle
+    ? \`\${routeTitle} - \${title}\`
+    : title
+}, { immediate: true })
 
 /***********************导航事件*********************/
 function handleMenuSelect(path: string): void {
@@ -375,15 +387,10 @@ async function handleLogout(): Promise<void> {
 
 function createRouterTs(): string {
   return `import type { LumaLayoutTabItem } from '@luma/core/layout'
-import type { LumaMenuRecord, SidebarMenuItem } from '@luma/core/router'
+import type { LumaStaticMenuRecord, MenuRouteRuntime, RouteRegistryRouterLike, SidebarMenuItem } from '@luma/core/router'
 import type { Router, RouteRecordRaw, RouterHistory } from 'vue-router'
 import { setupPermissionGuard } from '@luma/core/permission'
-import {
-  createRouteRecords,
-  createSidebarMenus,
-  findFirstAccessibleMenu,
-  normalizeMenuRecords,
-} from '@luma/core/router'
+import { createMenuRouteRuntime } from '@luma/core/router'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { permissionStore } from '../services/access'
 import { isAuthenticated } from '../services/session'
@@ -394,9 +401,9 @@ import NotFoundView from '../views/error/NotFoundView.vue'
 import ProjectView from '../views/project/ProjectView.vue'
 
 /***********************菜单配置*********************/
-export const adminRouteRecords: LumaMenuRecord[] = [
+export const adminRouteRecords: LumaStaticMenuRecord[] = [
   {
-    component: 'dashboard/index',
+    component: DashboardView,
     name: 'Dashboard',
     path: '/dashboard',
     meta: {
@@ -407,7 +414,7 @@ export const adminRouteRecords: LumaMenuRecord[] = [
     },
   },
   {
-    component: 'project/index',
+    component: ProjectView,
     name: 'Project',
     path: '/project',
     meta: {
@@ -417,18 +424,9 @@ export const adminRouteRecords: LumaMenuRecord[] = [
       title: '项目管理',
     },
   },
-  {
-    component: 'error/forbidden',
-    name: 'Forbidden',
-    path: '/403',
-    meta: {
-      hideInMenu: true,
-      title: '无权限',
-    },
-  },
 ]
 
-export const normalizedAdminMenus = normalizeMenuRecords(adminRouteRecords)
+const menuRuntimes = new WeakMap<Router, MenuRouteRuntime>()
 
 /***********************菜单生成*********************/
 function hasPermission(permissions: string[]): boolean {
@@ -453,10 +451,7 @@ function flattenMenuTabs(menus: SidebarMenuItem[]): LumaLayoutTabItem[] {
 }
 
 export function createAdminSidebarMenus(): SidebarMenuItem[] {
-  return createSidebarMenus(normalizedAdminMenus, {
-    hasPermission,
-    hasRole,
-  })
+  return menuRuntimes.get(router)?.sidebarMenus ?? []
 }
 
 export function createAdminTabs(activePath?: string): LumaLayoutTabItem[] {
@@ -477,37 +472,24 @@ export function createAdminTabs(activePath?: string): LumaLayoutTabItem[] {
 }
 
 /***********************路由创建*********************/
-function resolveRouteComponent(component: string): RouteRecordRaw['component'] | undefined {
-  const components: Record<string, RouteRecordRaw['component']> = {
-    'dashboard/index': DashboardView,
-    'error/forbidden': ForbiddenView,
-    'project/index': ProjectView,
-  }
-
-  return components[component]
-}
-
-function createRoutes(): RouteRecordRaw[] {
-  const firstAccessibleMenu = findFirstAccessibleMenu(normalizedAdminMenus, {
-    hasPermission,
-    hasRole,
-  })
-  const menuRoutes = createRouteRecords(normalizedAdminMenus, {
-    componentResolver: resolveRouteComponent,
-  }) as RouteRecordRaw[]
-
+function createPublicRoutes(resolveHome: () => string): RouteRecordRaw[] {
   return [
     {
       component: LoginView,
-      meta: { layout: 'public' },
+      meta: { layout: 'public', requireLogin: false, title: '登录' },
       name: 'Login',
       path: '/login',
     },
     {
       path: '/',
-      redirect: firstAccessibleMenu?.path ?? '/403',
+      redirect: () => resolveHome(),
     },
-    ...menuRoutes,
+    {
+      component: ForbiddenView,
+      meta: { title: '无权限' },
+      name: 'Forbidden',
+      path: '/403',
+    },
     {
       component: NotFoundView,
       meta: { title: '页面不存在' },
@@ -518,12 +500,26 @@ function createRoutes(): RouteRecordRaw[] {
 }
 
 export function createAdminRouter(history: RouterHistory = createWebHashHistory()): Router {
-  const router = createRouter({
+  let menuRuntime: MenuRouteRuntime | undefined
+  const targetRouter = createRouter({
     history,
-    routes: createRoutes(),
+    routes: createPublicRoutes(() => menuRuntime?.firstAccessiblePath || '/403'),
   })
 
-  setupPermissionGuard(router, permissionStore, {
+  menuRuntime = createMenuRouteRuntime({
+    hasPermission,
+    hasRole,
+    router: {
+      addRoute: route => targetRouter.addRoute(route as RouteRecordRaw),
+      getRoutes: () => targetRouter.getRoutes(),
+      hasRoute: name => targetRouter.hasRoute(name),
+      removeRoute: name => targetRouter.removeRoute(name),
+    } satisfies RouteRegistryRouterLike,
+    staticMenus: adminRouteRecords,
+  })
+  menuRuntimes.set(targetRouter, menuRuntime)
+
+  setupPermissionGuard(targetRouter, permissionStore, {
     isAuthenticated,
     loginPath: '/login',
     mode: 'every',
@@ -533,7 +529,7 @@ export function createAdminRouter(history: RouterHistory = createWebHashHistory(
     whiteList: ['/login'],
   })
 
-  return router
+  return targetRouter
 }
 
 export const router = createAdminRouter()
@@ -867,7 +863,10 @@ function createPreferencesTs(): string {
 import { createPreferencesStore } from '@luma/core/theme'
 
 export const adminPreferenceDefaults = {
-  app: { layout: 'sidebar-nav' },
+  app: { dynamicTitle: true, layout: 'sidebar-nav' },
+  breadcrumb: { enable: true, hideOnlyOne: false, showHome: true, showIcon: true },
+  header: { globalSearch: true },
+  shortcutKeys: { globalSearch: true },
   sidebar: { width: 220 },
   tabbar: {
     cache: true,
@@ -884,6 +883,7 @@ export const adminPreferenceDefaults = {
     visitHistory: true,
     wheelable: true,
   },
+  theme: { fontSize: 14 },
   transition: { enable: true, name: 'fade-side' },
 } satisfies LumaPreferencesDefaults
 

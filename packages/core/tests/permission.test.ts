@@ -1,10 +1,15 @@
+import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
+import { defineComponent, h, nextTick } from 'vue'
 import {
   createPermissionDirective,
   createPermissionStore,
   hasPermission,
   hasRole,
+  LumaAccessControl,
+  providePermissionStore,
   setupPermissionGuard,
+  usePermissionStore,
 } from '../src/permission'
 
 describe('permission helpers', () => {
@@ -42,6 +47,71 @@ describe('permission store', () => {
     expect(store.hasPermission('system:dict:list')).toBe(true)
     expect(store.hasRole('admin')).toBe(false)
     expect(store.hasRole('auditor')).toBe(true)
+  })
+
+  it('accessControl 会响应权限更新并支持 fallback', async () => {
+    const store = createPermissionStore({ permissions: ['system:user:list'] })
+    const wrapper = mount(LumaAccessControl, {
+      props: {
+        permission: 'system:user:create',
+        store,
+      },
+      slots: {
+        default: '<button class="allowed">新增</button>',
+        fallback: '<span class="denied">无权限</span>',
+      },
+    })
+
+    expect(wrapper.find('.denied').exists()).toBe(true)
+    store.setPermissions(['system:user:create'])
+    await nextTick()
+    expect(wrapper.find('.allowed').exists()).toBe(true)
+  })
+
+  it('accessControl 对权限和角色使用 AND，并分别支持 some/every', async () => {
+    const store = createPermissionStore({
+      permissions: ['report:read'],
+      roles: ['admin'],
+    })
+    const wrapper = mount(LumaAccessControl, {
+      props: {
+        mode: 'some',
+        permissions: ['report:read', 'report:write'],
+        roleMode: 'every',
+        roles: ['admin', 'auditor'],
+        store,
+      },
+      slots: {
+        default: '<span class="allowed">允许</span>',
+        fallback: '<span class="denied">拒绝</span>',
+      },
+    })
+
+    expect(wrapper.find('.denied').exists()).toBe(true)
+    store.setRoles(['admin', 'auditor'])
+    await nextTick()
+    expect(wrapper.find('.allowed').exists()).toBe(true)
+    store.setPermissions([])
+    await nextTick()
+    expect(wrapper.find('.denied').exists()).toBe(true)
+  })
+
+  it('provide/use API 会向后代提供同一 PermissionStore', () => {
+    const store = createPermissionStore({ roles: ['admin'] })
+    const Child = defineComponent({
+      setup() {
+        const injected = usePermissionStore()
+        return () => h('span', { class: 'role-result' }, String(injected.hasRole('admin')))
+      },
+    })
+    const Parent = defineComponent({
+      setup() {
+        providePermissionStore(store)
+        return () => h(Child)
+      },
+    })
+
+    expect(mount(Parent).find('.role-result').text()).toBe('true')
   })
 })
 
@@ -89,6 +159,70 @@ describe('permission guard', () => {
         roles: ['admin'],
       },
     })).toBe(true)
+  })
+
+  it('嵌套路由会逐级校验权限和角色，并在层级之间使用 AND', () => {
+    const store = createPermissionStore({
+      permissions: ['child:read'],
+      roles: ['user'],
+    })
+    const beforeEach = vi.fn()
+
+    setupPermissionGuard({ beforeEach }, store, {
+      mode: 'some',
+      noAccessRedirect: '/403',
+      roleMode: 'some',
+    })
+
+    const guard = beforeEach.mock.calls[0]?.[0]
+    const route = {
+      matched: [
+        { meta: { permissions: ['parent:read', 'parent:write'], roles: ['admin', 'owner'] } },
+        { meta: { permissions: ['child:read', 'child:write'] } },
+      ],
+      meta: { permissions: ['child:read', 'child:write'] },
+    }
+
+    expect(guard(route)).toBe('/403')
+
+    store.setPermissions(['parent:write', 'child:read'])
+    store.setRoles(['owner'])
+    expect(guard(route)).toBe(true)
+
+    store.setRoles(['user'])
+    expect(guard(route)).toBe('/403')
+  })
+
+  it('嵌套路由的每一级会分别保留 every 匹配模式', () => {
+    const store = createPermissionStore({
+      permissions: ['parent:read', 'parent:write', 'child:read', 'child:write'],
+      roles: ['admin', 'auditor'],
+    })
+    const beforeEach = vi.fn()
+
+    setupPermissionGuard({ beforeEach }, store, {
+      mode: 'every',
+      noAccessRedirect: '/403',
+      roleMode: 'every',
+    })
+
+    const guard = beforeEach.mock.calls[0]?.[0]
+    const route = {
+      matched: [
+        { meta: { permissions: ['parent:read', 'parent:write'], roles: ['admin'] } },
+        { meta: { permissions: ['child:read', 'child:write'], roles: ['auditor'] } },
+      ],
+      meta: { permissions: ['child:read', 'child:write'], roles: ['auditor'] },
+    }
+
+    expect(guard(route)).toBe(true)
+
+    store.setPermissions(['parent:read', 'child:read', 'child:write'])
+    expect(guard(route)).toBe('/403')
+
+    store.setPermissions(['parent:read', 'parent:write', 'child:read', 'child:write'])
+    store.setRoles(['admin'])
+    expect(guard(route)).toBe('/403')
   })
 
   it('登录页与白名单路径始终放行', () => {

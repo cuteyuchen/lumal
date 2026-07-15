@@ -12,12 +12,16 @@ function canAccessRoute(
   store: PermissionStore,
   options: PermissionGuardOptions,
 ): boolean {
-  const meta = route.meta ?? {}
-  const permissions = meta.permissions ?? meta.permission
-  const roles = meta.roles ?? meta.role
+  const records = route.matched?.length ? route.matched : [route]
 
-  return store.hasPermission(permissions, options.mode)
-    && store.hasRole(roles, options.roleMode)
+  return records.every((record) => {
+    const meta = record.meta ?? {}
+    const permissions = meta.permissions ?? meta.permission
+    const roles = meta.roles ?? meta.role
+
+    return store.hasPermission(permissions, options.mode)
+      && store.hasRole(roles, options.roleMode)
+  })
 }
 
 /***********************登录判断*********************/

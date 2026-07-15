@@ -1,9 +1,15 @@
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import type { LumaTabStyle } from '../theme/types'
 
+export type LumaMenuBadgeType = 'dot' | 'text'
+export type LumaMenuBadgeTone = 'danger' | 'info' | 'primary' | 'success' | 'warning'
+
 export interface LumaLayoutMenuItem {
   path: string
   title: string
+  badge?: number | string
+  badgeTone?: LumaMenuBadgeTone
+  badgeType?: LumaMenuBadgeType
   children?: LumaLayoutMenuItem[]
   externalLink?: string
   externalTarget?: '_blank' | '_self'

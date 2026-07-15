@@ -92,6 +92,9 @@ export type {
   SchemaTableTreeProps,
 } from '../components/schema-table'
 export {
+  LumaAccessControl,
+} from '../permission'
+export {
   LumaIcon,
   LumaIconPicker,
   LumaIconPickerDialog,

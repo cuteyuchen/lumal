@@ -1,9 +1,8 @@
+import type { LumaLayoutTabItem, LumaTabStyle } from '../src/layout'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { LumaTabs } from '../src/layout'
-import type { LumaTabStyle } from '../src/layout'
-import type { LumaLayoutTabItem } from '../src/layout'
 
 const tabs: LumaLayoutTabItem[] = [
   { closable: false, path: '/home', pinned: true, title: '首页' },
@@ -196,7 +195,7 @@ describe('luma tabs - icons', () => {
 })
 
 describe('luma tabs - keyboard navigation', () => {
-  it('ArrowRight 跳转到右侧标签并发出 change', async () => {
+  it('arrowRight 跳转到右侧标签并发出 change', async () => {
     const wrapper = mountTabsWithStyle('chrome', '/work')
     const tabButtons = wrapper.findAll('[role="tab"]')
     await tabButtons[1]?.trigger('keydown', { key: 'ArrowRight' })
@@ -204,7 +203,7 @@ describe('luma tabs - keyboard navigation', () => {
     wrapper.unmount()
   })
 
-  it('Home 跳转到首个标签', async () => {
+  it('home 跳转到首个标签', async () => {
     const wrapper = mountTabsWithStyle('chrome', '/system')
     const tabButtons = wrapper.findAll('[role="tab"]')
     await tabButtons[2]?.trigger('keydown', { key: 'Home' })

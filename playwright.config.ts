@@ -1,6 +1,9 @@
 import process from 'node:process'
 import { defineConfig, devices } from '@playwright/test'
 
+const adminUrl = 'http://127.0.0.1:4174'
+const mockApiUrl = 'http://127.0.0.1:5321'
+
 export default defineConfig({
   expect: {
     timeout: 8_000,
@@ -18,28 +21,31 @@ export default defineConfig({
   testDir: 'apps/luma-admin/e2e',
   timeout: 45_000,
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: adminUrl,
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
   },
   webServer: [
     {
-      command: 'pnpm dev',
+      command: 'pnpm exec nitro dev --host 127.0.0.1 --port 5321',
       cwd: 'apps/luma-mock-api',
       env: {
         MOCK_LOGIN_RATE_LIMIT: '1000',
         MOCK_RATE_LIMIT: '10000',
       },
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 120_000,
-      url: 'http://127.0.0.1:5320/api/status',
+      url: `${mockApiUrl}/api/status`,
     },
     {
-      command: 'node ../../node_modules/vite/bin/vite.js --host 127.0.0.1 --port 4173',
+      command: 'node ../../node_modules/vite/bin/vite.js --host 127.0.0.1 --port 4174',
       cwd: 'apps/luma-admin',
-      reuseExistingServer: !process.env.CI,
+      env: {
+        LUMA_MOCK_API_TARGET: mockApiUrl,
+      },
+      reuseExistingServer: false,
       timeout: 120_000,
-      url: 'http://127.0.0.1:4173',
+      url: adminUrl,
     },
   ],
   workers: 1,

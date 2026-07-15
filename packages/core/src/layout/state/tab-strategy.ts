@@ -133,7 +133,7 @@ export function closeAllTabs(tabs: LumaLayoutTabItem[]): LumaLayoutTabItem[] {
  */
 export function pinTab(tabs: LumaLayoutTabItem[], path: string): LumaLayoutTabItem[] {
   let found = false
-  const next = tabs.map(tab => {
+  const next = tabs.map((tab) => {
     if (tab.path === path) {
       found = true
       return { ...tab, pinned: true }
@@ -149,7 +149,7 @@ export function pinTab(tabs: LumaLayoutTabItem[], path: string): LumaLayoutTabIt
  */
 export function unpinTab(tabs: LumaLayoutTabItem[], path: string): LumaLayoutTabItem[] {
   let found = false
-  const next = tabs.map(tab => {
+  const next = tabs.map((tab) => {
     if (tab.path === path && tab.closable !== false) {
       found = true
       return { ...tab, pinned: false }

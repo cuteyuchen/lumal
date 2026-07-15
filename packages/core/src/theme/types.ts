@@ -21,9 +21,17 @@ export type ThemeTokens = Record<`--luma-${string}`, string>
 
 export interface LumaPreferences {
   app: {
+    dynamicTitle: boolean
     layout: LumaLayoutMode
   }
+  breadcrumb: {
+    enable: boolean
+    hideOnlyOne: boolean
+    showHome: boolean
+    showIcon: boolean
+  }
   header: {
+    globalSearch: boolean
     menuAlign: LumaHeaderMenuAlign
     menuMaxWidth: number
   }
@@ -49,8 +57,12 @@ export interface LumaPreferences {
   }
   theme: {
     colorPrimary: string
+    fontSize: number
     mode: ThemeMode
     radiusScale: number
+  }
+  shortcutKeys: {
+    globalSearch: boolean
   }
   transition: {
     enable: boolean

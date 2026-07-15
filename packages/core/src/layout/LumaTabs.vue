@@ -13,16 +13,16 @@ import {
   watch,
 } from 'vue'
 
-type TabContextAction =
-  | 'close'
-  | 'close-all'
-  | 'close-left'
-  | 'close-others'
-  | 'close-right'
-  | 'maximize'
-  | 'new-window'
-  | 'pin'
-  | 'refresh'
+type TabContextAction
+  = | 'close'
+    | 'close-all'
+    | 'close-left'
+    | 'close-others'
+    | 'close-right'
+    | 'maximize'
+    | 'new-window'
+    | 'pin'
+    | 'refresh'
 
 interface MenuState {
   path: string

@@ -519,7 +519,7 @@ defineExpose({
         v-model="queryModel"
         :schemas="queryState.visibleSchemas.value"
         :columns="queryColumns"
-        :label-width="query?.labelWidth ?? 'auto'"
+        :label-width="query?.labelWidth ?? 88"
         class="luma-crud-table__query-form"
         @values-change="handleQueryValuesChange"
       >

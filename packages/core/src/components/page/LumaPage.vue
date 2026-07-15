@@ -107,14 +107,14 @@ defineExpose({
 .luma-page__title {
   margin: 0;
   color: var(--el-text-color-primary);
-  font-size: 18px;
+  font-size: calc(var(--luma-font-size-base, 14px) + 4px);
   line-height: 1.4;
 }
 
 .luma-page__description {
   margin: 4px 0 0;
   color: var(--el-text-color-secondary);
-  font-size: 14px;
+  font-size: var(--luma-font-size-base, 14px);
   line-height: 1.5;
 }
 
@@ -141,7 +141,7 @@ defineExpose({
   place-items: center;
   color: var(--el-text-color-regular);
   background: color-mix(in srgb, var(--el-bg-color) 82%, transparent);
-  font-size: 14px;
+  font-size: var(--luma-font-size-base, 14px);
 }
 
 @media (max-width: 768px) {

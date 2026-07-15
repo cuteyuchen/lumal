@@ -94,7 +94,7 @@ defineExpose({
   padding: 10px 12px;
   color: var(--el-text-color-regular);
   background: var(--el-fill-color-light);
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
   font-weight: 600;
   line-height: 1.5;
 }
@@ -105,7 +105,7 @@ defineExpose({
   margin: 0;
   padding: 10px 12px;
   color: var(--el-text-color-primary);
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
   line-height: 1.5;
   overflow-wrap: anywhere;
 }

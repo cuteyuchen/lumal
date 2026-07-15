@@ -39,6 +39,28 @@ export function findMenuItemByPath(
   return undefined
 }
 
+export function findMenuTrailByPath(
+  menus: LumaLayoutMenuItem[],
+  path: string,
+): LumaLayoutMenuItem[] {
+  for (const item of menus) {
+    if (item.hidden) {
+      continue
+    }
+
+    if (item.path === path) {
+      return [item]
+    }
+
+    const childTrail = findMenuTrailByPath(item.children ?? [], path)
+    if (childTrail.length > 0) {
+      return [item, ...childTrail]
+    }
+  }
+
+  return []
+}
+
 /**
  * 解析菜单项的导航目标：有子级时下钻到首个可导航子项。
  */

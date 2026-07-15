@@ -4,6 +4,7 @@ import type { LumaLayoutMenuItem } from './types'
 import { LumaIcon } from '@luma/icons'
 import { ElMenu, ElMenuItem } from 'element-plus'
 import { computed, useTemplateRef } from 'vue'
+import LumaMenuBadge from './LumaMenuBadge.vue'
 import LumaTopNavMenuItem from './LumaTopNavMenuItem.vue'
 
 /***********************属性定义*********************/
@@ -64,7 +65,10 @@ defineExpose({
       @click="handleSelect(item.path)"
     >
       <LumaIcon v-if="item.icon" :name="item.icon" :size="16" />
-      <span>{{ item.title }}</span>
+      <span class="luma-top-nav__label">
+        <span>{{ item.title }}</span>
+        <LumaMenuBadge :badge="item.badge" :label="item.title" :tone="item.badgeTone" :type="item.badgeType" />
+      </span>
       <span v-if="item.externalLink" class="luma-top-nav__external" aria-hidden="true">↗</span>
     </ElMenuItem>
   </ElMenu>
@@ -101,12 +105,19 @@ defineExpose({
   min-height: 44px;
   padding: 0 18px;
   border-bottom-width: 2px;
-  font-size: 14px;
+  font-size: var(--luma-font-size-base, 14px);
   font-weight: 500;
 }
 
 .luma-top-nav__external {
   color: var(--el-text-color-placeholder);
-  font-size: 12px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 2px);
+}
+
+.luma-top-nav__label {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
 }
 </style>

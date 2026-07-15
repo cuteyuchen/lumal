@@ -6,6 +6,7 @@ import type {
 import { registerStaticLocalSvgIcons } from '@luma/icons'
 import { createApp } from 'vue'
 import { installDictionary } from '../dictionary'
+import { permissionStoreKey } from '../permission/context'
 import { defaultLumaComponents } from './default-components'
 
 /***********************选项归一化*********************/
@@ -85,6 +86,10 @@ function registerGlobalComponents(app: LumaAdminInstance['app'], options: Create
 export function createLumaAdmin(options: CreateLumaAdminOptions): LumaAdminInstance {
   const resolvedOptions = resolveOptions(options)
   const app = createApp(resolvedOptions.rootComponent, resolvedOptions.rootProps)
+
+  if (resolvedOptions.permissionStore) {
+    app.provide(permissionStoreKey, resolvedOptions.permissionStore)
+  }
 
   if (resolvedOptions.icons?.localSvg?.length) {
     registerStaticLocalSvgIcons(resolvedOptions.icons.localSvg)

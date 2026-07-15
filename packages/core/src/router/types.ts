@@ -1,6 +1,10 @@
+import type { Component } from 'vue'
+
 export type MenuNodeId = string
 
 export type LumaRouteAuthority = string | string[]
+export type LumaMenuBadgeType = 'dot' | 'text'
+export type LumaMenuBadgeTone = 'primary' | 'success' | 'warning' | 'danger' | 'info'
 
 export interface LumaRouteMeta {
   title?: string
@@ -12,6 +16,10 @@ export interface LumaRouteMeta {
   keepAlive?: boolean
   affixTab?: boolean
   authority?: LumaRouteAuthority
+  badge?: string | number
+  badgeType?: LumaMenuBadgeType
+  badgeTone?: LumaMenuBadgeTone
+  hideInBreadcrumb?: boolean
   roles?: LumaRouteAuthority
   externalLink?: string
   externalTarget?: '_blank' | '_self'
@@ -29,6 +37,17 @@ export interface LumaMenuRecord {
   externalLink?: string
 }
 
+export type LumaMenuComponent = Component | (() => Promise<unknown>)
+export type MenuRouteComponent = LumaMenuComponent
+
+/**
+ * 静态菜单可以直接绑定 Vue 组件或懒加载器；字符串组件仍交给 componentResolver 解析。
+ */
+export interface LumaStaticMenuRecord extends Omit<LumaMenuRecord, 'children' | 'component'> {
+  children?: LumaStaticMenuRecord[]
+  component?: string | LumaMenuComponent
+}
+
 /**
  * 非标准菜单记录：字段名由后端决定，需要通过 fieldNames 显式映射到标准字段。
  */
@@ -39,6 +58,10 @@ export type LumaMenuInputRecord = LumaMenuRecord | Record<string, unknown>
  * 未配置的字段回退到标准字段位置（顶层或 meta）。
  */
 export interface MenuRecordFieldNames {
+  activeMenu?: string
+  badge?: string
+  badgeType?: string
+  badgeTone?: string
   path?: string
   name?: string
   component?: string
@@ -50,6 +73,7 @@ export interface MenuRecordFieldNames {
   authority?: string
   roles?: string
   hideInMenu?: string
+  hideInBreadcrumb?: string
   keepAlive?: string
   externalLink?: string
 }
@@ -59,11 +83,15 @@ export interface NormalizeMenuRecordsOptions {
 }
 
 export interface MenuNode {
+  activeMenu?: string
+  badge?: string | number
+  badgeType?: LumaMenuBadgeType
+  badgeTone?: LumaMenuBadgeTone
   id: MenuNodeId
   path: string
   title: string
   children?: MenuNode[]
-  component?: string
+  component?: string | LumaMenuComponent
   icon?: string
   keepAlive?: boolean
   meta?: Record<string, unknown>
@@ -74,6 +102,7 @@ export interface MenuNode {
   redirect?: string
   roles?: string[]
   visible?: boolean
+  hideInBreadcrumb?: boolean
   externalLink?: string
 }
 
@@ -125,6 +154,9 @@ export interface LumaRouteRecord {
 }
 
 export interface SidebarMenuItem {
+  badge?: string | number
+  badgeType?: LumaMenuBadgeType
+  badgeTone?: LumaMenuBadgeTone
   path: string
   title: string
   children: SidebarMenuItem[]
@@ -153,8 +185,17 @@ export interface FindAccessibleMenuOptions {
  */
 export interface RouteRegistryRouterLike {
   addRoute: (route: LumaRouteRecord) => (() => void) | unknown
+  getRoutes?: () => readonly { name?: string | symbol, path: string }[]
   hasRoute: (name: string) => boolean
   removeRoute: (name: string) => void
+}
+
+/**
+ * 菜单路由运行时需要读取现有路由路径，以便在注册前完成 path 冲突校验。
+ * 旧 createRouteRegistry 继续接受不含 getRoutes 的宽松 Router 子集。
+ */
+export interface MenuRouteRuntimeRouterLike extends RouteRegistryRouterLike {
+  getRoutes: () => readonly { name?: string | symbol, path: string }[]
 }
 
 /**
@@ -164,4 +205,45 @@ export interface RouteRegistry {
   register: (routes: LumaRouteRecord[]) => void
   reset: () => void
   readonly names: readonly string[]
+}
+
+export type MenuRouteSource = 'static' | 'remote'
+export type MenuRouteConflictSource = MenuRouteSource | 'existing'
+export type MenuRouteConflictKind = 'id' | 'name' | 'path'
+
+export interface MenuRouteErrorContext {
+  component?: string
+  phase: 'load-component' | 'load-remote-menus' | 'register-routes' | 'resolve-component'
+  routeName?: string
+  routePath?: string
+  source?: MenuRouteSource
+}
+
+export interface CreateMenuRouteRuntimeOptions {
+  router: MenuRouteRuntimeRouterLike
+  staticMenus?: LumaStaticMenuRecord[]
+  loadRemoteMenus?: () => Promise<LumaMenuInputRecord[]>
+  remoteNormalizeOptions?: NormalizeMenuRecordsOptions
+  componentResolver?: RouteComponentResolver
+  fallbackComponent?: () => Promise<unknown>
+  hasPermission?: (permissions: string[]) => boolean
+  hasRole?: (roles: string[]) => boolean
+  onError?: (error: unknown, context: MenuRouteErrorContext) => void
+}
+
+export interface MenuRouteRuntime {
+  readonly firstAccessibleMenu: NormalizedMenuNode | undefined
+  readonly firstAccessiblePath: string
+  readonly menus: NormalizedMenuNode[]
+  readonly remoteLoaded: boolean
+  readonly remoteMenus: NormalizedMenuNode[]
+  readonly routeNames: readonly string[]
+  readonly routes: LumaRouteRecord[]
+  readonly sidebarMenus: SidebarMenuItem[]
+  readonly staticMenus: NormalizedMenuNode[]
+  readonly topMenus: SidebarMenuItem[]
+  loadRemote: () => Promise<NormalizedMenuNode[]>
+  reload: () => Promise<NormalizedMenuNode[]>
+  resetRemote: () => void
+  dispose: () => void
 }

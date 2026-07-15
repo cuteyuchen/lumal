@@ -136,4 +136,35 @@ describe('luma theme settings panel', () => {
       theme: { mode: 'dark' },
     })
   })
+
+  it('通用设置会更新动态标题、搜索快捷键和面包屑开关', async () => {
+    const wrapper = mountPanel()
+    await wrapper.findAll('.luma-theme-settings__tab')[2]?.trigger('click')
+    const findRow = (label: string) => wrapper.findAll('.luma-theme-settings__row').find(row => row.text().includes(label))
+
+    await findRow('动态页面标题')?.find('input.el-switch').setValue(false)
+    await findRow('全局搜索')?.find('input.el-switch').setValue(false)
+
+    const updates = wrapper.emitted('update:preferences') as [ReturnType<typeof createDefaultPreferences>][]
+    expect(updates.at(-2)?.[0].app.dynamicTitle).toBe(false)
+    expect(updates.at(-1)?.[0].header.globalSearch).toBe(false)
+    expect((findRow('搜索快捷键')?.find('input.el-switch').element as HTMLInputElement).disabled).toBe(true)
+
+    await findRow('显示面包屑')?.find('input.el-switch').setValue(false)
+    expect(updates.at(-1)?.[0].breadcrumb.enable).toBe(false)
+    expect((findRow('显示首页')?.find('input.el-switch').element as HTMLInputElement).disabled).toBe(true)
+  })
+
+  it('外观设置会更新受限的全局字号', async () => {
+    const wrapper = mountPanel()
+    const fontRow = wrapper.findAll('.luma-theme-settings__row').find(row => row.text().includes('全局字号'))
+    const input = fontRow?.find('input.el-input-number')
+
+    expect(input?.attributes('min')).toBe('12')
+    expect(input?.attributes('max')).toBe('20')
+    await input?.setValue(18)
+
+    const updates = wrapper.emitted('update:preferences') as [ReturnType<typeof createDefaultPreferences>][]
+    expect(updates.at(-1)?.[0].theme.fontSize).toBe(18)
+  })
 })

@@ -192,6 +192,7 @@ describe('luma crud table', () => {
       resizeCallback?.([{ contentRect: { width: 600 } } as ResizeObserverEntry], {} as ResizeObserver)
       await nextTick()
       expect(queryForm.props('columns')).toBe(1)
+      expect(queryForm.props('labelWidth')).toBe(88)
 
       resizeCallback?.([{ contentRect: { width: 800 } } as ResizeObserverEntry], {} as ResizeObserver)
       await nextTick()

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   applyThemePreferences,
@@ -104,10 +105,24 @@ describe('theme runtime', () => {
 
     expect(preferences).toMatchObject({
       app: {
+        dynamicTitle: true,
         layout: 'mixed-nav',
+      },
+      breadcrumb: {
+        enable: true,
+        hideOnlyOne: false,
+        showHome: true,
+        showIcon: true,
+      },
+      header: {
+        globalSearch: true,
+      },
+      shortcutKeys: {
+        globalSearch: true,
       },
       theme: {
         colorPrimary: '#22c55e',
+        fontSize: 14,
         mode: 'dark',
         radiusScale: 0.75,
       },
@@ -165,6 +180,17 @@ describe('theme runtime', () => {
     expect(merged.tabbar.showMore).toBe(true)
     expect(merged.tabbar.showRefresh).toBe(true)
     expect(merged.tabbar.styleType).toBe('chrome')
+    expect(merged.app.dynamicTitle).toBe(true)
+    expect(merged.breadcrumb.enable).toBe(true)
+    expect(merged.header.globalSearch).toBe(true)
+    expect(merged.shortcutKeys.globalSearch).toBe(true)
+    expect(merged.theme.fontSize).toBe(14)
+  })
+
+  it('会把全局字号限制在 12 到 20 之间', () => {
+    expect(createDefaultPreferences({ theme: { fontSize: 100 } }).theme.fontSize).toBe(20)
+    expect(mergePreferences(createDefaultPreferences(), { theme: { fontSize: 8 } }).theme.fontSize).toBe(12)
+    expect(mergePreferences(createDefaultPreferences(), { theme: { fontSize: 16.7 } }).theme.fontSize).toBe(17)
   })
 
   it('会解析 system 主题并把偏好应用到 DOM', () => {
@@ -173,6 +199,7 @@ describe('theme runtime', () => {
     const preferences = createDefaultPreferences({
       theme: {
         colorPrimary: '#16a34a',
+        fontSize: 18,
         mode: 'system',
         radiusScale: 0.75,
       },
@@ -193,6 +220,26 @@ describe('theme runtime', () => {
     expect(element.style.getPropertyValue('--luma-header-height')).toBe('64px')
     expect(element.style.getPropertyValue('--luma-tabbar-height')).toBe('40px')
     expect(element.style.getPropertyValue('--luma-sidebar-width')).toBe('280px')
+    expect(element.style.getPropertyValue('--luma-font-size-base')).toBe('18px')
+    expect(element.style.getPropertyValue('--el-font-size-base')).toBe('18px')
+    expect(element.style.getPropertyValue('--el-font-size-small')).toBe('17px')
+    expect(element.style.getPropertyValue('--el-font-size-extra-small')).toBe('16px')
+    expect(element.style.getPropertyValue('--el-font-size-medium')).toBe('20px')
+    expect(element.style.getPropertyValue('--el-font-size-large')).toBe('22px')
+    expect(element.style.fontSize).toBe('18px')
+  })
+
+  it('核心布局与业务组件会消费全局字号变量', () => {
+    const sources = [
+      '../src/layout/LumaHeader.vue',
+      '../src/components/page/LumaPage.vue',
+      '../src/components/info-table/LumaInfoTable.vue',
+      '../src/components/schema-form/LumaSchemaForm.vue',
+      '../src/components/schema-table/LumaSchemaTable.vue',
+    ].map(path => readFileSync(new URL(path, import.meta.url), 'utf8'))
+
+    expect(sources.every(source => source.includes('var(--luma-font-size-base, 14px)'))).toBe(true)
+    expect(sources.some(source => /font-size:\s*(?:12|13|14|16|18)px/.test(source))).toBe(false)
   })
 
   it('会按布局模式统一解析设置项可用性', () => {

@@ -1,4 +1,9 @@
 export {
+  permissionStoreKey,
+  providePermissionStore,
+  usePermissionStore,
+} from './context'
+export {
   createPermissionDirective,
 } from './directive'
 export {
@@ -8,6 +13,7 @@ export {
   hasPermission,
   hasRole,
 } from './helpers'
+export { default as LumaAccessControl } from './LumaAccessControl.vue'
 export {
   createPermissionStore,
 } from './store'

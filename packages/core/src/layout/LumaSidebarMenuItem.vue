@@ -3,6 +3,7 @@ import type { LumaLayoutMenuItem } from './types'
 import { LumaIcon } from '@luma/icons'
 import { ElMenuItem, ElSubMenu } from 'element-plus'
 import { computed } from 'vue'
+import LumaMenuBadge from './LumaMenuBadge.vue'
 
 /***********************属性定义*********************/
 const props = defineProps<{
@@ -41,7 +42,10 @@ function handleSelect(path: string): void {
       >
         <LumaIcon :name="item.icon" :size="16" />
       </i>
-      <span class="luma-sidebar-menu-item__title">{{ item.title }}</span>
+      <span class="luma-sidebar-menu-item__label">
+        <span class="luma-sidebar-menu-item__title">{{ item.title }}</span>
+        <LumaMenuBadge :badge="item.badge" :label="item.title" :tone="item.badgeTone" :type="item.badgeType" />
+      </span>
       <span v-if="item.externalLink" class="luma-sidebar-menu-item__external" aria-hidden="true">↗</span>
     </template>
 
@@ -70,7 +74,10 @@ function handleSelect(path: string): void {
     >
       <LumaIcon :name="item.icon" :size="16" />
     </i>
-    <span class="luma-sidebar-menu-item__title">{{ item.title }}</span>
+    <span class="luma-sidebar-menu-item__label">
+      <span class="luma-sidebar-menu-item__title">{{ item.title }}</span>
+      <LumaMenuBadge :badge="item.badge" :label="item.title" :tone="item.badgeTone" :type="item.badgeType" />
+    </span>
     <span v-if="item.externalLink" class="luma-sidebar-menu-item__external" aria-hidden="true">↗</span>
   </ElMenuItem>
 </template>
@@ -85,14 +92,22 @@ function handleSelect(path: string): void {
   font-style: normal;
 }
 
+.luma-sidebar-menu-item__label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
 .luma-sidebar-menu-item__title {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .luma-sidebar-menu-item__external {
   margin-left: auto;
   color: var(--el-text-color-placeholder);
-  font-size: 12px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 2px);
 }
 </style>

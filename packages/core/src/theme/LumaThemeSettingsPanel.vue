@@ -100,6 +100,33 @@ function setColor(color: string): void {
     <div class="luma-theme-settings__scroll">
       <div v-show="activeTab === 'common'" class="luma-theme-settings__pane" role="tabpanel">
         <section class="luma-theme-settings__section">
+          <h4>界面功能</h4>
+          <div class="luma-theme-settings__row">
+            <span>动态页面标题</span><ElSwitch :model-value="preferences.app.dynamicTitle" @update:model-value="update({ app: { dynamicTitle: Boolean($event) } })" />
+          </div>
+          <div class="luma-theme-settings__row">
+            <span>全局搜索</span><ElSwitch :model-value="preferences.header.globalSearch" @update:model-value="update({ header: { globalSearch: Boolean($event) } })" />
+          </div>
+          <div class="luma-theme-settings__row" :class="{ 'is-disabled': !preferences.header.globalSearch }">
+            <span>搜索快捷键</span><ElSwitch :model-value="preferences.shortcutKeys.globalSearch" :disabled="!preferences.header.globalSearch" @update:model-value="update({ shortcutKeys: { globalSearch: Boolean($event) } })" />
+          </div>
+        </section>
+        <section class="luma-theme-settings__section">
+          <h4>面包屑</h4>
+          <div class="luma-theme-settings__row">
+            <span>显示面包屑</span><ElSwitch :model-value="preferences.breadcrumb.enable" @update:model-value="update({ breadcrumb: { enable: Boolean($event) } })" />
+          </div>
+          <div class="luma-theme-settings__row" :class="{ 'is-disabled': !preferences.breadcrumb.enable }">
+            <span>仅一项时隐藏</span><ElSwitch :model-value="preferences.breadcrumb.hideOnlyOne" :disabled="!preferences.breadcrumb.enable" @update:model-value="update({ breadcrumb: { hideOnlyOne: Boolean($event) } })" />
+          </div>
+          <div class="luma-theme-settings__row" :class="{ 'is-disabled': !preferences.breadcrumb.enable }">
+            <span>显示首页</span><ElSwitch :model-value="preferences.breadcrumb.showHome" :disabled="!preferences.breadcrumb.enable" @update:model-value="update({ breadcrumb: { showHome: Boolean($event) } })" />
+          </div>
+          <div class="luma-theme-settings__row" :class="{ 'is-disabled': !preferences.breadcrumb.enable }">
+            <span>显示图标</span><ElSwitch :model-value="preferences.breadcrumb.showIcon" :disabled="!preferences.breadcrumb.enable" @update:model-value="update({ breadcrumb: { showIcon: Boolean($event) } })" />
+          </div>
+        </section>
+        <section class="luma-theme-settings__section">
           <h4>页面反馈</h4>
           <div class="luma-theme-settings__row">
             <span>页面切换进度条</span><ElSwitch :model-value="preferences.transition.progress" @update:model-value="update({ transition: { progress: Boolean($event) } })" />
@@ -157,6 +184,12 @@ function setColor(color: string): void {
             <button v-for="value in radiusOptions" :key="value" type="button" :class="{ 'is-active': preferences.theme.radiusScale === value }" @click="update({ theme: { radiusScale: value } })">
               {{ value }}
             </button>
+          </div>
+        </section>
+        <section class="luma-theme-settings__section">
+          <h4>字体</h4>
+          <div class="luma-theme-settings__row is-stacked">
+            <span>全局字号</span><ElSlider :model-value="preferences.theme.fontSize" :min="12" :max="20" :step="1" @update:model-value="update({ theme: { fontSize: Number($event) } })" /><ElInputNumber :model-value="preferences.theme.fontSize" :min="12" :max="20" :step="1" @update:model-value="update({ theme: { fontSize: Number($event ?? 14) } })" />
           </div>
         </section>
       </div>
@@ -287,15 +320,15 @@ function setColor(color: string): void {
 <style scoped lang="scss">
 .luma-theme-settings { container-type: inline-size; display: flex; height: 100%; min-height: 0; flex-direction: column; overflow: hidden; color: var(--el-text-color-primary); }
 .luma-theme-settings__tabs { display: grid; grid-template-columns: repeat(3, 1fr); flex: none; gap: 4px; margin-top: 12px; padding: 4px; border: 1px solid var(--el-border-color-lighter); border-radius: 9px; background: var(--el-fill-color); }
-.luma-theme-settings__tab { min-height: 34px; padding: 0 8px; border: 0; border-radius: 6px; color: var(--el-text-color-secondary); cursor: pointer; background: transparent; font-size: 13px; font-weight: 600; transition: color .2s, background-color .2s, box-shadow .2s; }
+.luma-theme-settings__tab { min-height: 34px; padding: 0 8px; border: 0; border-radius: 6px; color: var(--el-text-color-secondary); cursor: pointer; background: transparent; font-size: calc(var(--luma-font-size-base, 14px) - 1px); font-weight: 600; transition: color .2s, background-color .2s, box-shadow .2s; }
 .luma-theme-settings__tab:hover { color: var(--el-text-color-primary); }
 .luma-theme-settings__tab.is-active { color: var(--el-color-primary); background: var(--el-bg-color); box-shadow: 0 1px 3px color-mix(in srgb, var(--el-color-black) 12%, transparent); }
 .luma-theme-settings__scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 4px 22px; scrollbar-width: thin; }
 .luma-theme-settings__pane { display: grid; gap: 26px; }
 .luma-theme-settings__section { display: grid; gap: 12px; }
 .luma-theme-settings__section + .luma-theme-settings__section { padding-top: 0; border-top: 0; }
-h4 { margin: 0; color: var(--el-text-color-primary); font-size: 14px; font-weight: 700; letter-spacing: .01em; }
-.luma-theme-settings__row { display: flex; min-height: 34px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px; font-size: 13px; }
+h4 { margin: 0; color: var(--el-text-color-primary); font-size: var(--luma-font-size-base, 14px); font-weight: 700; letter-spacing: .01em; }
+.luma-theme-settings__row { display: flex; min-height: 34px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px; font-size: calc(var(--luma-font-size-base, 14px) - 1px); }
 .luma-theme-settings__row.is-stacked { display: grid; grid-template-columns: 1fr auto; }
 .luma-theme-settings__row.is-stacked :deep(.el-slider) { grid-column: 1; width: 100%; }
 .luma-theme-settings__row.is-stacked :deep(.el-input-number) { grid-column: 2; grid-row: 2; width: 112px; }
@@ -317,7 +350,7 @@ button { font: inherit; }
 .luma-theme-settings__color-card.is-active { border-color: var(--el-color-primary); color: var(--el-color-primary); background: color-mix(in srgb, var(--el-color-primary) 6%, var(--el-bg-color)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--el-color-primary) 25%, transparent); }
 .luma-theme-settings__color-card i { width: 28px; height: 20px; flex: none; border-radius: 6px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--el-color-black) 8%, transparent); }
 .luma-theme-settings__color-card i.is-custom { background: linear-gradient(135deg, #3b82f6, #8b5cf6 50%, #ef4444); }
-.luma-theme-settings__color-card > span { min-width: 0; max-width: 100%; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; word-break: keep-all; }
+.luma-theme-settings__color-card > span { min-width: 0; max-width: 100%; overflow: hidden; font-size: calc(var(--luma-font-size-base, 14px) - 2px); text-overflow: ellipsis; white-space: nowrap; word-break: keep-all; }
 .luma-theme-settings__color-card input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 .luma-theme-settings__radius-grid, .luma-theme-settings__segments { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
 .luma-theme-settings__radius-grid button, .luma-theme-settings__segments button { min-height: 32px; border: 1px solid var(--el-border-color-lighter); border-radius: 6px; color: var(--el-text-color-secondary); cursor: pointer; background: var(--el-bg-color); }
@@ -329,7 +362,7 @@ button { font: inherit; }
 .luma-theme-settings__layout-preview rect.is-background { fill: var(--el-fill-color-lighter); }
 .luma-theme-settings__layout-preview rect.is-medium { fill: var(--el-color-primary-light-7); stroke: var(--el-color-primary-light-5); }
 .luma-theme-settings__layout-preview rect.is-strong { fill: var(--el-color-primary-light-5); stroke: var(--el-color-primary-light-3); }
-.luma-theme-settings__transition-card { min-height: 64px; padding: 7px 4px; font-size: 12px; }
+.luma-theme-settings__transition-card { min-height: 64px; padding: 7px 4px; font-size: calc(var(--luma-font-size-base, 14px) - 2px); }
 .luma-theme-settings__transition-preview { position: relative; width: 42px; height: 30px; border-radius: 6px; background: var(--el-fill-color-light); }
 .luma-theme-settings__transition-preview i { position: absolute; inset: 7px 10px; border-radius: 5px; background: var(--el-color-primary-light-5); opacity: .3; }
 .luma-theme-settings__transition-preview i:last-child { opacity: 1; }

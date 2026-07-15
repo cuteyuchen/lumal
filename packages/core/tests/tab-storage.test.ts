@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
 import type { LumaLayoutTabItem } from '../src/layout/types'
+import { describe, expect, it } from 'vitest'
 import {
   clearTabSnapshot,
   DEFAULT_MAX_VISIT_HISTORY,
@@ -27,7 +27,7 @@ function buildHistory(): string[] {
   return ['/home', '/work', '/system']
 }
 
-function createMemoryStorage(): { store: Record<string, string>, storage: { getItem(key: string): string | null, removeItem(key: string): void, setItem(key: string, value: string): void } } {
+function createMemoryStorage(): { store: Record<string, string>, storage: { getItem: (key: string) => string | null, removeItem: (key: string) => void, setItem: (key: string, value: string) => void } } {
   const store: Record<string, string> = {}
   return {
     store,
@@ -92,14 +92,14 @@ describe('tab-storage - storage wrapper', () => {
     storage.setItem('tabs', '{invalid')
     const read = readTabSnapshot(storage, 'tabs')
     expect(read).toBeUndefined()
-    expect(Object.prototype.hasOwnProperty.call(store, 'tabs')).toBe(false)
+    expect(Object.hasOwn(store, 'tabs')).toBe(false)
   })
 
   it('clearTabSnapshot 会移除对应键', () => {
     const { store, storage } = createMemoryStorage()
     storage.setItem('tabs', 'content')
     clearTabSnapshot(storage, 'tabs')
-    expect(Object.prototype.hasOwnProperty.call(store, 'tabs')).toBe(false)
+    expect(Object.hasOwn(store, 'tabs')).toBe(false)
   })
 })
 
