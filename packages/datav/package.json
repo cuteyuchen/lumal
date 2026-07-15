@@ -1,0 +1,123 @@
+{
+  "name": "@luma/datav",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "High-fidelity Vue 3 refactors of DataV cockpit visualization components.",
+  "license": "MIT",
+  "keywords": [
+    "luma",
+    "vue",
+    "datav",
+    "dashboard",
+    "cockpit"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./active-ring-chart": {
+      "types": "./dist/src/components/LumaActiveRingChart.vue.d.ts",
+      "import": "./dist/active-ring-chart.js",
+      "require": "./dist/active-ring-chart.cjs"
+    },
+    "./border-box": {
+      "types": "./dist/src/components/LumaBorderBox.vue.d.ts",
+      "import": "./dist/border-box.js",
+      "require": "./dist/border-box.cjs"
+    },
+    "./capsule-chart": {
+      "types": "./dist/src/components/LumaCapsuleChart.vue.d.ts",
+      "import": "./dist/capsule-chart.js",
+      "require": "./dist/capsule-chart.cjs"
+    },
+    "./charts": {
+      "types": "./dist/src/components/LumaCharts.vue.d.ts",
+      "import": "./dist/charts.js",
+      "require": "./dist/charts.cjs"
+    },
+    "./conical-column-chart": {
+      "types": "./dist/src/components/LumaConicalColumnChart.vue.d.ts",
+      "import": "./dist/conical-column-chart.js",
+      "require": "./dist/conical-column-chart.cjs"
+    },
+    "./decoration": {
+      "types": "./dist/src/components/LumaDecoration.vue.d.ts",
+      "import": "./dist/decoration.js",
+      "require": "./dist/decoration.cjs"
+    },
+    "./digital-flop": {
+      "types": "./dist/src/components/LumaDigitalFlop.vue.d.ts",
+      "import": "./dist/digital-flop.js",
+      "require": "./dist/digital-flop.cjs"
+    },
+    "./flyline-chart": {
+      "types": "./dist/src/components/LumaFlylineChart.vue.d.ts",
+      "import": "./dist/flyline-chart.js",
+      "require": "./dist/flyline-chart.cjs"
+    },
+    "./flyline-chart-enhanced": {
+      "types": "./dist/src/components/LumaFlylineChartEnhanced.vue.d.ts",
+      "import": "./dist/flyline-chart-enhanced.js",
+      "require": "./dist/flyline-chart-enhanced.cjs"
+    },
+    "./full-screen-container": {
+      "types": "./dist/src/components/LumaFullScreenContainer.vue.d.ts",
+      "import": "./dist/full-screen-container.js",
+      "require": "./dist/full-screen-container.cjs"
+    },
+    "./loading": {
+      "types": "./dist/src/components/LumaLoading.vue.d.ts",
+      "import": "./dist/loading.js",
+      "require": "./dist/loading.cjs"
+    },
+    "./percent-pond": {
+      "types": "./dist/src/components/LumaPercentPond.vue.d.ts",
+      "import": "./dist/percent-pond.js",
+      "require": "./dist/percent-pond.cjs"
+    },
+    "./scroll-board": {
+      "types": "./dist/src/components/LumaScrollBoard.vue.d.ts",
+      "import": "./dist/scroll-board.js",
+      "require": "./dist/scroll-board.cjs"
+    },
+    "./scroll-ranking-board": {
+      "types": "./dist/src/components/LumaScrollRankingBoard.vue.d.ts",
+      "import": "./dist/scroll-ranking-board.js",
+      "require": "./dist/scroll-ranking-board.cjs"
+    },
+    "./water-level-pond": {
+      "types": "./dist/src/components/LumaWaterLevelPond.vue.d.ts",
+      "import": "./dist/water-level-pond.js",
+      "require": "./dist/water-level-pond.cjs"
+    },
+    "./style.css": "./dist/datav.css"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/src/index.d.ts",
+  "files": [
+    "README.md",
+    "THIRD_PARTY_NOTICES.md",
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build --config vite.config.ts && vue-tsc -p tsconfig.json --emitDeclarationOnly --outDir dist && node ../../scripts/clean-package-dist.mjs dist",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --config ../../vitest.config.ts tests --exclude tests/visual/**"
+  },
+  "peerDependencies": {
+    "echarts": "^5.5.0",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "echarts": "^5.5.0"
+  }
+}
