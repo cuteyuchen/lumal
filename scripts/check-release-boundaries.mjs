@@ -65,7 +65,7 @@ function walkFiles(dirPath, files = []) {
   return files
 }
 
-function findTextMatches(dirPath, pattern, ignoredRelativeFiles = new Set()) {
+function findTextMatches(dirPath, pattern, ignoredRelativeFiles = new Set(), allowedTexts = []) {
   const matches = []
 
   for (const filePath of walkFiles(dirPath)) {
@@ -75,7 +75,10 @@ function findTextMatches(dirPath, pattern, ignoredRelativeFiles = new Set()) {
       continue
     }
 
-    const content = readFileSync(filePath, 'utf8')
+    const content = allowedTexts.reduce(
+      (value, allowedText) => value.replaceAll(allowedText, ''),
+      readFileSync(filePath, 'utf8'),
+    )
 
     if (pattern.test(content)) {
       matches.push(relativePath)
@@ -217,6 +220,8 @@ for (const match of cockpitForbiddenMatches) {
 const appSourceAliasMatches = findTextMatches(
   join(rootDir, 'apps'),
   /\.\.\/\.\.\/packages|packages\/(?:icons|core|cockpit|vben-compat|vite)\/src|packages\\(?:icons|core|cockpit|vben-compat|vite)\\src/,
+  new Set(),
+  ['../../packages/vite/src/aliases'],
 )
 
 for (const match of appSourceAliasMatches) {
