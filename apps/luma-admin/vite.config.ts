@@ -1,3 +1,4 @@
+import process from 'node:process'
 import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
@@ -12,7 +13,7 @@ export default defineConfig(({ command }) => ({
     proxy: {
       '/api': {
         changeOrigin: true,
-        target: 'http://127.0.0.1:5320',
+        target: process.env.LUMA_MOCK_API_TARGET || 'http://127.0.0.1:5320',
       },
     },
   },

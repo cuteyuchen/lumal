@@ -44,7 +44,7 @@ export interface SystemUserListResult { items: SystemUserRecord[], total: number
 export interface SaveSystemUserInput { nickname?: unknown, phone?: unknown, roles?: unknown, status?: unknown, username?: unknown }
 export interface SystemPermissionTreeNode { children?: SystemPermissionTreeNode[], id: string, label: string, permissions: string[] }
 export interface SystemMenuRecord extends Omit<RawSystemMenuRecord, 'children' | 'permission' | 'permissions'> { children?: SystemMenuRecord[], permissions: string[] }
-export interface SaveSystemMenuInput { component?: unknown, externalLink?: unknown, externalTarget?: unknown, hidden?: unknown, icon?: unknown, name?: unknown, order?: unknown, parentId?: unknown, path?: unknown, permissions?: unknown, redirect?: unknown, title?: unknown, type?: unknown }
+export interface SaveSystemMenuInput { activeMenu?: unknown, badge?: unknown, badgeTone?: unknown, badgeType?: unknown, component?: unknown, externalLink?: unknown, externalTarget?: unknown, hidden?: unknown, hideInBreadcrumb?: unknown, icon?: unknown, name?: unknown, order?: unknown, parentId?: unknown, path?: unknown, permissions?: unknown, redirect?: unknown, title?: unknown, type?: unknown }
 
 function toSystemUserRecord(record: RawSystemUserRecord): SystemUserRecord {
   const { role: _legacyRole, ...standardRecord } = record

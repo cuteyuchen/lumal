@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { loginAsAdmin, openTopMenu } from './helpers'
 
 test('用户管理支持查询和新增流程', async ({ page }) => {

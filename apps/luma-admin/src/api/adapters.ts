@@ -34,12 +34,17 @@ interface AdminTransportResponseOptions {
 }
 
 export interface AdminTransportMenuInput {
+  activeMenu?: string
   authority?: string[]
+  badge?: string | number
+  badgeTone?: string
+  badgeType?: 'dot' | 'text'
   children?: AdminTransportMenuInput[]
   component?: string
   externalLink?: string
   externalTarget?: '_blank' | '_self'
   hidden?: boolean
+  hideInBreadcrumb?: boolean
   icon?: string
   name: string
   order?: number
@@ -86,7 +91,12 @@ export function createAdminMenuTransport(record: AdminTransportMenuInput): Recor
     menuName: record.title,
     menuType: record.type,
     meta: {
+      activeMenu: record.activeMenu,
+      badge: record.badge,
+      badgeTone: record.badgeTone,
+      badgeType: record.badgeType,
       externalTarget: record.externalTarget,
+      hideInBreadcrumb: record.hideInBreadcrumb,
       hideInMenu: record.hidden,
     },
     nodes: record.children?.map(createAdminMenuTransport),

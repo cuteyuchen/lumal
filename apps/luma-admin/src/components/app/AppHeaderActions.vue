@@ -133,7 +133,7 @@ function handleLogout(): void {
   color: var(--el-text-color-regular);
   cursor: pointer;
   background: transparent;
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -156,7 +156,7 @@ function handleLogout(): void {
   border-radius: 50%;
   color: var(--el-color-white);
   background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-primary-light-3));
-  font-size: 12px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 2px);
 }
 
 .luma-admin-header-actions__divider {

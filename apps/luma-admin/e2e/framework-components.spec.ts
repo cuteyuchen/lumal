@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { loginAsAdmin } from './helpers'
 
 test('Schema Form 保持范围日期样式、区块间距并支持图标选择', async ({ page }) => {
@@ -142,4 +142,7 @@ test('CRUD Table 在移动端不会产生页面级溢出，弹窗标签改为上
   expect(labelBox).not.toBeNull()
   expect(contentBox).not.toBeNull()
   expect((labelBox?.y ?? 0) + (labelBox?.height ?? 0)).toBeLessThanOrEqual((contentBox?.y ?? 0) + 1)
+
+  await dialog.getByRole('button', { name: '取消', exact: true }).click()
+  await expect(dialogPanel).toBeHidden()
 })

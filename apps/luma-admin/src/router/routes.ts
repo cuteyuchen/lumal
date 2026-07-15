@@ -1,7 +1,7 @@
-import type { LumaMenuRecord } from '@luma/core/router'
+import type { LumaMenuRecord, LumaStaticMenuRecord } from '@luma/core/router'
 
-/***********************菜单配置*********************/
-export const adminRouteRecords: LumaMenuRecord[] = [
+/***********************静态菜单配置*********************/
+export const staticAdminRouteRecords = [
   {
     component: 'dashboard/index',
     name: 'Dashboard',
@@ -24,6 +24,10 @@ export const adminRouteRecords: LumaMenuRecord[] = [
       title: '个人中心',
     },
   },
+] satisfies LumaStaticMenuRecord[]
+
+/***********************远程菜单种子*********************/
+export const adminRouteRecords: LumaMenuRecord[] = [
   {
     children: [
       {
@@ -121,9 +125,23 @@ export const adminRouteRecords: LumaMenuRecord[] = [
         path: 'overview',
         meta: {
           authority: ['examples:view'],
+          badge: 'NEW',
+          badgeTone: 'primary',
+          badgeType: 'text',
           icon: 'app:examples',
           order: 1,
           title: '示例总览',
+        },
+      },
+      {
+        component: 'examples/overview',
+        name: 'ExamplesDetail',
+        path: 'detail',
+        meta: {
+          activeMenu: '/examples/overview',
+          authority: ['examples:view'],
+          hideInMenu: true,
+          title: '示例详情',
         },
       },
       {
@@ -263,8 +281,10 @@ export const adminRouteRecords: LumaMenuRecord[] = [
         name: 'ExamplesRestricted',
         path: 'restricted',
         meta: {
+          activeMenu: '/examples/overview',
           authority: ['examples:restricted'],
           hideInMenu: true,
+          hideInBreadcrumb: true,
           title: '受限示例',
         },
       },

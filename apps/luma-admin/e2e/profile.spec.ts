@@ -1,7 +1,9 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { loginAsAdmin } from './helpers'
 
-test('个人中心可更新资料并校验修改密码表单', async ({ page }) => {
+test('个人中心可更新资料并校验修改密码表单', async ({ browserDiagnostics, page }) => {
+  browserDiagnostics.expectHttpError('/api/profile/password', 400)
+
   await loginAsAdmin(page)
   await page.getByRole('button', { name: '进入个人中心' }).click()
 

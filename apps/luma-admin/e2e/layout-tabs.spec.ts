@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { expectNoPageOverflow, loginAsAdmin, openTopMenu } from './helpers'
 
 test('设置、标签页和移动布局可以完整操作并持久化', async ({ page }) => {
@@ -10,8 +10,8 @@ test('设置、标签页和移动布局可以完整操作并持久化', async ({
   await page.getByRole('button', { name: '刷新当前页面' }).click()
 
   await page.getByRole('tab', { name: 'Chart Panel' }).click({ button: 'right' })
-  await expect(page.getByRole('menuitem', { name: '刷新当前页' })).toBeVisible()
-  await page.getByRole('menuitem', { name: '刷新当前页' }).click()
+  await expect(page.getByRole('menuitem', { name: '重新加载' })).toBeVisible()
+  await page.getByRole('menuitem', { name: '重新加载' }).click()
 
   await page.getByRole('button', { name: '偏好设置' }).click()
   const drawer = page.locator('.luma-admin-settings-drawer')
@@ -46,20 +46,82 @@ test('设置、标签页和移动布局可以完整操作并持久化', async ({
   await expectNoPageOverflow(page)
 })
 
-test('三种桌面布局在 768、1024、1440px 均无页面级溢出', async ({ page }) => {
+test('三种布局在 375、768、1024、1440px 下保持导航可用且无页面级溢出', async ({ page }) => {
+  test.setTimeout(120_000)
   await loginAsAdmin(page)
 
-  for (const width of [768, 1024, 1440]) {
-    await page.setViewportSize({ width, height: 900 })
-    await page.getByRole('button', { name: '偏好设置' }).click()
-    await page.getByRole('tab', { name: '布局', exact: true }).click()
+  const layouts = [
+    { label: '侧边导航', value: 'sidebar-nav' },
+    { label: '顶部导航', value: 'top-nav' },
+    { label: '混合导航', value: 'mixed-nav' },
+  ] as const
 
-    for (const layout of ['侧边导航', '顶部导航', '混合导航']) {
-      await page.getByRole('button', { name: layout, exact: true }).click()
+  for (const width of [375, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+
+    for (const layout of layouts) {
+      await page.getByRole('button', { name: '偏好设置' }).click()
+      await page.getByRole('tab', { name: '布局', exact: true }).click()
+      await page.getByRole('button', { name: layout.label, exact: true }).click()
+      await expect(page.locator('.luma-layout')).toHaveAttribute('data-layout', layout.value)
+      await page.getByRole('button', { name: '关闭此对话框' }).click()
+
+      await page.goto('/#/examples/detail')
+      await expect(page).toHaveURL(/#\/examples\/detail$/)
+      await expect(page.locator('.luma-layout')).toHaveAttribute('data-layout', layout.value)
+      await expectNoPageOverflow(page)
+
+      const breadcrumb = page.getByRole('navigation', { name: '面包屑' })
+      const desktopSidebar = page.locator('.luma-layout__desktop-sidebar')
+      const primaryNavigation = page.getByRole('navigation', { name: '主导航' })
+      const isMobile = width <= 768
+
+      if (isMobile) {
+        await expect(breadcrumb).toBeHidden()
+        await expect(desktopSidebar).toBeHidden()
+        await expect(primaryNavigation).toBeHidden()
+
+        await page.getByRole('button', { name: '展开侧边栏' }).click()
+        const mobileSidebar = page.locator('.luma-layout__mobile-sidebar')
+        await expect(mobileSidebar).toBeVisible()
+        await expect(mobileSidebar.locator('.el-sub-menu.is-active')).toContainText('功能示例')
+        await expect(mobileSidebar.locator('.el-menu-item.is-active')).toContainText('示例总览')
+        await page.getByRole('button', { name: '收起侧边栏' }).click()
+      }
+      else {
+        await expect(breadcrumb).toBeVisible()
+        await expect(breadcrumb).toContainText('功能示例')
+        await expect(breadcrumb).toContainText('示例详情')
+
+        if (layout.value === 'sidebar-nav') {
+          await expect(primaryNavigation).toBeHidden()
+          await expect(desktopSidebar).toBeVisible()
+          await expect(desktopSidebar.locator('.el-sub-menu.is-active')).toContainText('功能示例')
+          await expect(desktopSidebar.locator('.el-menu-item.is-active')).toContainText('示例总览')
+        }
+        else if (layout.value === 'top-nav') {
+          await expect(primaryNavigation).toBeVisible()
+          await expect(desktopSidebar).toBeHidden()
+          await expect(page.locator('.luma-top-nav .el-sub-menu.is-active')).toContainText('功能示例')
+        }
+        else {
+          await expect(primaryNavigation).toBeVisible()
+          await expect(desktopSidebar).toBeVisible()
+          await expect(page.locator('.luma-top-nav .el-menu-item.is-active')).toContainText('功能示例')
+          await expect(desktopSidebar.locator('.el-menu-item.is-active')).toContainText('示例总览')
+        }
+      }
+
+      await page.getByRole('button', { name: '打开全局搜索' }).click()
+      const search = page.getByRole('dialog', { name: '全局搜索' })
+      const searchInput = search.getByRole('combobox', { name: '搜索菜单' })
+      await expect(search).toBeVisible()
+      await searchInput.fill('用户管理')
+      await expect(search.getByRole('option')).toHaveCount(1)
+      await searchInput.press('Escape')
+      await expect(search).toHaveCount(0)
       await expectNoPageOverflow(page)
     }
-
-    await page.getByRole('button', { name: '关闭此对话框' }).click()
   }
 })
 
@@ -82,7 +144,7 @@ test('混合导航会根据一级菜单子级动态显示和隐藏侧栏', async
   const sidebar = page.locator('.luma-layout__desktop-sidebar')
 
   await expect(sidebar).toHaveCount(0)
-  await page.getByRole('menuitem', { name: '系统管理', exact: true }).click()
+  await openTopMenu(page, '系统管理')
   await expect(sidebar).toBeVisible()
   await expect(sidebar).toHaveCSS('transition-duration', /.+/)
 

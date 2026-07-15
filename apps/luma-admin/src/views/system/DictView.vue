@@ -444,7 +444,7 @@ onMounted(() => {
 .luma-dictionary-manager__header span {
   margin-left: 8px;
   color: var(--el-text-color-secondary);
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
 }
 
 .luma-dictionary-manager__actions {

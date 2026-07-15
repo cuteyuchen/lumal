@@ -119,14 +119,14 @@ function handleReset(nextPreferences: LumaPreferences): void {
 }
 
 .luma-admin-settings-drawer__title-copy strong {
-  font-size: 16px;
+  font-size: calc(var(--luma-font-size-base, 14px) + 2px);
   font-weight: 700;
   line-height: 1.25;
 }
 
 .luma-admin-settings-drawer__title-copy small {
   color: var(--el-text-color-secondary);
-  font-size: 11px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 3px);
   font-weight: 400;
   line-height: 1.25;
 }

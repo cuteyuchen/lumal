@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { BusinessItemSelectedPayload } from '../../messages/topics'
 import type { CockpitCenterContext } from '@luma/cockpit'
+import type { BusinessItemSelectedPayload } from '../../messages/topics'
 import { onBeforeUnmount, ref } from 'vue'
 import {
 

@@ -24,9 +24,17 @@ describe('luma admin preferences', () => {
 
     expect(preferences).toMatchObject({
       app: {
+        dynamicTitle: true,
         layout: 'mixed-nav',
       },
+      breadcrumb: {
+        enable: true,
+        hideOnlyOne: false,
+        showHome: true,
+        showIcon: true,
+      },
       header: {
+        globalSearch: true,
         menuAlign: 'center',
         menuMaxWidth: 1120,
       },
@@ -42,6 +50,7 @@ describe('luma admin preferences', () => {
       },
       theme: {
         colorPrimary: '#1677ff',
+        fontSize: 14,
         mode: 'system',
         radiusScale: 0.75,
       },
@@ -106,17 +115,18 @@ describe('luma admin preferences', () => {
   it('会持久化偏好并导出归一化快照', () => {
     patchAdminPreferences({
       sidebar: { collapsed: true },
-      theme: { mode: 'dark' },
+      theme: { fontSize: 18, mode: 'dark' },
     })
 
     expect(exportAdminPreferences()).toMatchObject({
       sidebar: { collapsed: true },
-      theme: { mode: 'dark' },
+      theme: { fontSize: 18, mode: 'dark' },
     })
     expect(JSON.parse(localStorage.getItem('luma-admin:preferences') ?? '{}')).toMatchObject({
       sidebar: { collapsed: true },
-      theme: { mode: 'dark' },
+      theme: { fontSize: 18, mode: 'dark' },
     })
     expect(adminResolvedThemeMode.value).toBe('dark')
+    expect(document.documentElement.style.getPropertyValue('--luma-font-size-base')).toBe('18px')
   })
 })

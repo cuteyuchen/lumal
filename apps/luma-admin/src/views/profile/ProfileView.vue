@@ -286,20 +286,20 @@ onMounted(() => void loadProfile())
   border-radius: 50%;
   color: var(--el-color-white);
   background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-primary-light-3));
-  font-size: 26px;
+  font-size: calc(var(--luma-font-size-base, 14px) + 12px);
   font-weight: 700;
 }
 
 .luma-admin-profile__summary h2 {
   margin: 0;
   color: var(--el-text-color-primary);
-  font-size: 18px;
+  font-size: calc(var(--luma-font-size-base, 14px) + 4px);
 }
 
 .luma-admin-profile__summary p {
   margin: 6px 0 20px;
   color: var(--el-text-color-secondary);
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
 }
 
 .luma-admin-profile__summary dl {
@@ -318,14 +318,14 @@ onMounted(() => void loadProfile())
 
 .luma-admin-profile__summary dt {
   color: var(--el-text-color-secondary);
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
 }
 
 .luma-admin-profile__summary dd {
   min-width: 0;
   margin: 0;
   color: var(--el-text-color-regular);
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
   overflow-wrap: anywhere;
 }
 
@@ -345,7 +345,7 @@ onMounted(() => void loadProfile())
 .luma-admin-profile__hint {
   margin: -2px 0 16px;
   color: var(--el-text-color-secondary);
-  font-size: 12px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 2px);
   line-height: 1.6;
 }
 

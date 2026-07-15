@@ -65,14 +65,15 @@ create-luma-admin  →  生成消费公开包入口的应用
 ## 当前稳定能力
 
 - Element Plus 驱动的三种桌面布局、移动抽屉菜单和完整标签页工作流。
-- 后端菜单加载、权限过滤、动态路由、403/404、外链和登出重置闭环。
-- 明暗/系统主题、布局与标签偏好持久化、重置、导出和设置抽屉。
+- 静态与后端菜单统一运行时、权限过滤、原子动态路由、403/404、外链和登出重置闭环。
+- 面包屑、全局搜索、父菜单高亮、菜单徽标和动态页面标题。
+- 明暗/系统主题、全局字号、布局与标签偏好持久化、重置、导出和设置抽屉。
 - 字典上下文、标准 `{ items }` 响应、字段映射与颜色标签回显。
 - `LumaSchemaForm`、`LumaSchemaTable`、`LumaCrudTable`、页面与分页组件。
 - fetch 请求客户端、统一错误、接口适配、Token 刷新单飞和安全重放。
 - 用户、角色、菜单、字典和系统配置 Mock CRUD 页面。
 - 响应式图标系统、图表工作流、迁移兼容层、Vite 助手和后台脚手架。
-- Playwright 关键流程验收、明确 vendor 分包和发布产物体积门禁。
+- Playwright 关键流程验收、跨平台 CI、Changesets、CodeQL、明确 vendor 分包和发布产物体积门禁。
 
 全量重构已完成，阶段实施记录和最终验收结果统一维护在 [开发路线图](docs/development-roadmap.md)。
 
@@ -80,7 +81,7 @@ create-luma-admin  →  生成消费公开包入口的应用
 
 框架内部优先使用稳定的语义字段：
 
-- 菜单：`path`、`name`、`component`、`children`、`meta.title`、`meta.authority`。
+- 菜单：`path`、`name`、`component`、`children`、`meta.title`、`meta.authority`、`meta.activeMenu`、`meta.badge`。
 - 字典：`label`、`value`、`color`、`disabled`、`children`。
 - 表单和表格：`field`、`dictionary`、`options`、`componentProps`。
 - 分页：`{ items, total }`。

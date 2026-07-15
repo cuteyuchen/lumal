@@ -111,6 +111,7 @@ describe('app shell', () => {
     })
 
     expect(wrapper.find('.layout-stub').attributes('data-title')).toBe('Luma Admin')
+    expect(document.title).toBe('示例总览 - Luma Admin')
     expect(wrapper.find('.layout-stub').attributes('data-layout')).toBe('mixed-nav')
     expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('5')
     expect(wrapper.find('.layout-stub').attributes('data-header-menu-align')).toBe('center')
@@ -162,7 +163,7 @@ describe('app shell', () => {
     })
 
     const topNavPreferences = mergePreferences(createAdminPreferences(), {
-      app: { layout: 'top-nav' },
+      app: { dynamicTitle: false, layout: 'top-nav' },
     })
 
     wrapper.findComponent(AppSettingsDrawer).vm.$emit('update:preferences', topNavPreferences)
@@ -170,6 +171,7 @@ describe('app shell', () => {
 
     expect(wrapper.find('.layout-stub').attributes('data-layout')).toBe('top-nav')
     expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('5')
+    expect(document.title).toBe('Luma Admin')
   })
 
   it('登录页使用 public layout，不渲染后台壳', async () => {
@@ -192,6 +194,7 @@ describe('app shell', () => {
 
     expect(wrapper.find('.layout-stub').exists()).toBe(false)
     expect(wrapper.find('.router-view-stub').exists()).toBe(true)
+    expect(document.title).toBe('登录 - Luma Admin')
   })
 
   it('应用挂载后登录会刷新菜单并显示后台壳', async () => {

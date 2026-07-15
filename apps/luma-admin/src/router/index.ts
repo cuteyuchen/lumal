@@ -1,20 +1,13 @@
 import type { LumaLayoutTabItem } from '@luma/core/layout'
 import type {
-  NormalizedMenuNode,
-  RouteRegistry,
+  LumaMenuInputRecord,
+  MenuRouteRuntime,
   RouteRegistryRouterLike,
   SidebarMenuItem,
 } from '@luma/core/router'
-import type { ShallowRef } from 'vue'
 import type { Router, RouteRecordRaw, RouterHistory } from 'vue-router'
 import { setupPermissionGuard } from '@luma/core/permission'
-import {
-  createRouteRecords,
-  createRouteRegistry,
-  createSidebarMenus,
-  findFirstAccessibleMenu,
-} from '@luma/core/router'
-import { shallowRef } from 'vue'
+import { createMenuRouteRuntime } from '@luma/core/router'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { loadAdminMenus } from '../api/menu'
 import { permissionStore } from '../services/permission'
@@ -23,18 +16,25 @@ import {
   registerSessionResetHandler,
 } from '../services/session'
 import { resolveRouteComponent } from './components'
+import { staticAdminRouteRecords } from './routes'
 
 export { permissionStore } from '../services/permission'
-export { adminRouteRecords } from './routes'
+export { adminRouteRecords, staticAdminRouteRecords } from './routes'
 
 interface AdminRouterRuntime {
-  initialized: boolean
-  initializing?: Promise<void>
-  menus: ShallowRef<NormalizedMenuNode[]>
-  registry: RouteRegistry
+  menuRoutes: MenuRouteRuntime
+  staticRouteNames: ReadonlySet<string>
 }
 
 const routerRuntimes = new WeakMap<Router, AdminRouterRuntime>()
+
+function loadNormalizedAdminMenus(): Promise<LumaMenuInputRecord[]> {
+  return loadAdminMenus() as unknown as Promise<LumaMenuInputRecord[]>
+}
+
+export interface CreateAdminRouterOptions {
+  loadRemoteMenus?: () => Promise<LumaMenuInputRecord[]>
+}
 
 /***********************权限判断*********************/
 function hasPermission(permissions: string[]): boolean {
@@ -57,10 +57,7 @@ function getRouterRuntime(targetRouter: Router): AdminRouterRuntime {
 }
 
 function resetRouterRuntime(runtime: AdminRouterRuntime): void {
-  runtime.registry.reset()
-  runtime.menus.value = []
-  runtime.initialized = false
-  runtime.initializing = undefined
+  runtime.menuRoutes.resetRemote()
 }
 
 export async function ensureAdminRoutes(targetRouter: Router): Promise<void> {
@@ -71,30 +68,7 @@ export async function ensureAdminRoutes(targetRouter: Router): Promise<void> {
     return
   }
 
-  if (runtime.initialized) {
-    return
-  }
-
-  if (!runtime.initializing) {
-    runtime.initializing = (async () => {
-      const menus = await loadAdminMenus()
-      const routes = createRouteRecords(menus, {
-        componentResolver: resolveRouteComponent,
-      })
-
-      runtime.registry.reset()
-      runtime.registry.register(routes)
-      runtime.menus.value = menus
-      runtime.initialized = true
-    })().catch((error) => {
-      resetRouterRuntime(runtime)
-      throw error
-    }).finally(() => {
-      runtime.initializing = undefined
-    })
-  }
-
-  await runtime.initializing
+  await runtime.menuRoutes.loadRemote()
 }
 
 export function resetAdminRoutes(targetRouter: Router): void {
@@ -102,7 +76,8 @@ export function resetAdminRoutes(targetRouter: Router): void {
 }
 
 export function getAdminRouteNames(targetRouter: Router): readonly string[] {
-  return getRouterRuntime(targetRouter).registry.names
+  const runtime = getRouterRuntime(targetRouter)
+  return runtime.menuRoutes.routeNames.filter(name => !runtime.staticRouteNames.has(name))
 }
 
 /***********************菜单生成*********************/
@@ -125,10 +100,7 @@ function resolveMenuTab(menus: LumaLayoutTabItem[], path: string): LumaLayoutTab
 }
 
 export function createAdminSidebarMenus(targetRouter: Router): SidebarMenuItem[] {
-  return createSidebarMenus(getRouterRuntime(targetRouter).menus.value, {
-    hasPermission,
-    hasRole,
-  })
+  return isAuthenticated() ? getRouterRuntime(targetRouter).menuRoutes.sidebarMenus : []
 }
 
 export function createAdminTabs(activePath: string | undefined, targetRouter: Router): LumaLayoutTabItem[] {
@@ -163,10 +135,7 @@ export function createAdminTabs(activePath: string | undefined, targetRouter: Ro
 }
 
 export function resolveFirstAccessibleAdminPath(targetRouter: Router): string {
-  return findFirstAccessibleMenu(getRouterRuntime(targetRouter).menus.value, {
-    hasPermission,
-    hasRole,
-  })?.path ?? '/403'
+  return getRouterRuntime(targetRouter).menuRoutes.firstAccessiblePath || '/403'
 }
 
 /***********************路由创建*********************/
@@ -230,19 +199,30 @@ function createStaticRoutes(): RouteRecordRaw[] {
   ]
 }
 
-export function createAdminRouter(history: RouterHistory = createWebHashHistory()): Router {
+export function createAdminRouter(
+  history: RouterHistory = createWebHashHistory(),
+  options: CreateAdminRouterOptions = {},
+): Router {
   const targetRouter = createRouter({
     history,
     routes: createStaticRoutes(),
   })
-  const runtime: AdminRouterRuntime = {
-    initialized: false,
-    menus: shallowRef<NormalizedMenuNode[]>([]),
-    registry: createRouteRegistry({
+  const menuRoutes = createMenuRouteRuntime({
+    componentResolver: resolveRouteComponent,
+    hasPermission,
+    hasRole,
+    loadRemoteMenus: options.loadRemoteMenus ?? loadNormalizedAdminMenus,
+    router: {
       addRoute: route => targetRouter.addRoute(route as RouteRecordRaw),
+      getRoutes: () => targetRouter.getRoutes(),
       hasRoute: name => targetRouter.hasRoute(name),
       removeRoute: name => targetRouter.removeRoute(name),
-    } satisfies RouteRegistryRouterLike),
+    } satisfies RouteRegistryRouterLike,
+    staticMenus: staticAdminRouteRecords,
+  })
+  const runtime: AdminRouterRuntime = {
+    menuRoutes,
+    staticRouteNames: new Set(menuRoutes.routeNames),
   }
 
   routerRuntimes.set(targetRouter, runtime)
@@ -259,7 +239,7 @@ export function createAdminRouter(history: RouterHistory = createWebHashHistory(
       return resolveFirstAccessibleAdminPath(targetRouter)
     }
 
-    const needsRematch = !runtime.initialized
+    const needsRematch = !runtime.menuRoutes.remoteLoaded
     await ensureAdminRoutes(targetRouter)
 
     if (to.path === '/') {

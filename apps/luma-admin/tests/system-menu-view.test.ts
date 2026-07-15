@@ -124,6 +124,7 @@ describe('system menu view', () => {
       'component',
       'externalLink',
       'icon',
+      'badge',
       'permissions',
       'order',
       'hidden',
@@ -165,9 +166,14 @@ describe('system menu view', () => {
       'redirect',
       'externalLink',
       'icon',
+      'activeMenu',
+      'badge',
+      'badgeType',
+      'badgeTone',
       'permissions',
       'order',
       'hidden',
+      'hideInBreadcrumb',
     ])
 
     expect((schemas.find(schema => schema.field === 'type') as { options?: Array<{ value: string }> }).options?.map(option => option.value)).toEqual([
@@ -199,9 +205,14 @@ describe('system menu view', () => {
       'path',
       'redirect',
       'icon',
+      'activeMenu',
+      'badge',
+      'badgeType',
+      'badgeTone',
       'permissions',
       'order',
       'hidden',
+      'hideInBreadcrumb',
     ])
     expect(resolveVisibleFields(schemas, 'menu')).toEqual([
       'type',
@@ -211,9 +222,14 @@ describe('system menu view', () => {
       'path',
       'component',
       'icon',
+      'activeMenu',
+      'badge',
+      'badgeType',
+      'badgeTone',
       'permissions',
       'order',
       'hidden',
+      'hideInBreadcrumb',
     ])
     expect(resolveVisibleFields(schemas, 'button')).toEqual([
       'type',
@@ -230,9 +246,14 @@ describe('system menu view', () => {
       'path',
       'externalLink',
       'icon',
+      'activeMenu',
+      'badge',
+      'badgeType',
+      'badgeTone',
       'permissions',
       'order',
       'hidden',
+      'hideInBreadcrumb',
     ])
     expect(resolveVisibleFields(schemas, 'external')).toEqual([
       'type',
@@ -242,9 +263,14 @@ describe('system menu view', () => {
       'path',
       'externalLink',
       'icon',
+      'activeMenu',
+      'badge',
+      'badgeType',
+      'badgeTone',
       'permissions',
       'order',
       'hidden',
+      'hideInBreadcrumb',
     ])
   })
 })

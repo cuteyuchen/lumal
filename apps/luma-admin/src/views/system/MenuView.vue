@@ -41,6 +41,19 @@ const menuTypeOptions: SchemaFormOption[] = [
   { label: '外链', value: 'external' },
 ]
 
+const badgeTypeOptions: SchemaFormOption[] = [
+  { label: '文字', value: 'text' },
+  { label: '圆点', value: 'dot' },
+]
+
+const badgeToneOptions: SchemaFormOption[] = [
+  { label: '主色', value: 'primary' },
+  { label: '成功', value: 'success' },
+  { label: '警告', value: 'warning' },
+  { label: '危险', value: 'danger' },
+  { label: '信息', value: 'info' },
+]
+
 const columns: SchemaTableColumn[] = [
   { field: 'title', label: '标题', width: 180 },
   { field: 'type', label: '类型', options: menuTypeOptions, width: 90 },
@@ -48,6 +61,7 @@ const columns: SchemaTableColumn[] = [
   { field: 'component', label: '组件', width: 160 },
   { field: 'externalLink', label: '页面地址', width: 180 },
   { field: 'icon', label: '图标', width: 130 },
+  { field: 'badge', label: '徽标', width: 90 },
   {
     field: 'permissions',
     formatter: value => Array.isArray(value) ? value.join(', ') : '',
@@ -159,6 +173,38 @@ const formSchemas = computed<SchemaFormItem[]>(() => [
   },
   {
     component: 'input',
+    field: 'activeMenu',
+    hidden: ({ model }) => model.type === 'button',
+    label: '激活菜单',
+    placeholder: '例如 /system/user',
+    span: 12,
+  },
+  {
+    component: 'input',
+    field: 'badge',
+    hidden: ({ model }) => model.type === 'button',
+    label: '菜单徽标',
+    placeholder: '例如 NEW 或 3',
+    span: 8,
+  },
+  {
+    component: 'select',
+    field: 'badgeType',
+    hidden: ({ model }) => model.type === 'button',
+    label: '徽标类型',
+    options: badgeTypeOptions,
+    span: 8,
+  },
+  {
+    component: 'select',
+    field: 'badgeTone',
+    hidden: ({ model }) => model.type === 'button',
+    label: '徽标色调',
+    options: badgeToneOptions,
+    span: 8,
+  },
+  {
+    component: 'input',
     field: 'permissions',
     label: '权限码',
     placeholder: '多个权限码使用英文逗号分隔',
@@ -175,6 +221,13 @@ const formSchemas = computed<SchemaFormItem[]>(() => [
     field: 'hidden',
     hidden: ({ model }) => model.type === 'button',
     label: '菜单隐藏',
+    span: 12,
+  },
+  {
+    component: 'switch',
+    field: 'hideInBreadcrumb',
+    hidden: ({ model }) => model.type === 'button',
+    label: '面包屑隐藏',
     span: 12,
   },
 ])
@@ -204,10 +257,15 @@ function toMenuRecord(row: SchemaTableRow): SystemMenuRecord {
 
 function toMenuInput(model: SchemaFormModel): SaveSystemMenuInput {
   return {
+    activeMenu: model.activeMenu,
+    badge: model.badge,
+    badgeTone: model.badgeTone,
+    badgeType: model.badgeType,
     component: model.component,
     externalLink: model.externalLink,
     externalTarget: model.type === 'embedded' ? '_self' : model.type === 'external' ? '_blank' : undefined,
     hidden: model.hidden,
+    hideInBreadcrumb: model.hideInBreadcrumb,
     icon: model.icon,
     name: model.name,
     order: model.order,
@@ -225,7 +283,10 @@ function openCreate(parentId = ''): void {
   formMode.value = 'create'
   editingMenu.value = undefined
   formModel.value = {
+    badgeTone: 'primary',
+    badgeType: 'text',
     hidden: false,
+    hideInBreadcrumb: false,
     order: 0,
     parentId,
     type: parentId ? 'menu' : 'directory',

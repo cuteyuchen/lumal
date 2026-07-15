@@ -47,7 +47,7 @@ withDefaults(defineProps<{
 
 .luma-brand__copy strong {
   overflow: hidden;
-  font-size: 17px;
+  font-size: calc(var(--luma-font-size-base, 14px) + 3px);
   font-weight: 750;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -57,7 +57,7 @@ withDefaults(defineProps<{
 
 .luma-brand__copy small {
   color: var(--el-text-color-secondary);
-  font-size: 11px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 3px);
   line-height: 1.3;
 }
 
@@ -71,7 +71,7 @@ withDefaults(defineProps<{
 }
 
 .luma-brand.is-compact .luma-brand__copy strong {
-  font-size: 15px;
+  font-size: calc(var(--luma-font-size-base, 14px) + 1px);
 }
 
 .luma-brand.is-inverse {

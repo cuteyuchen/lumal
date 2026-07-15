@@ -374,7 +374,7 @@ onMounted(() => {
 .luma-admin-role-authorization__hint {
   margin: 0 0 12px;
   color: var(--el-text-color-secondary);
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
   line-height: 1.6;
 }
 </style>

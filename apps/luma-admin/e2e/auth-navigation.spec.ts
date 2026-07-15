@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { loginAs, loginAsAdmin, openTopMenu, resetBrowserState } from './helpers'
 
 test('登录后加载权限菜单并正确处理 403、404 与退出', async ({ page }) => {
@@ -32,7 +32,12 @@ test('admin 可以在动态菜单间导航', async ({ page }) => {
   await expect(page.getByText('角色管理', { exact: true }).last()).toBeVisible()
 })
 
-test('operator 和 guest 按各自权限加载动态菜单', async ({ page }) => {
+test('operator 和 guest 按各自权限加载动态菜单', async ({ browserDiagnostics, page }) => {
+  browserDiagnostics.expectHttpError('/api/system/users?page=1&pageSize=5', 403, 2)
+  browserDiagnostics.expectHttpError('/api/system/roles?page=1&pageSize=1', 403, 2)
+  browserDiagnostics.expectHttpError('/api/system/menus', 403, 2)
+  browserDiagnostics.expectHttpError('/api/system/dictionaries/types', 403)
+
   await loginAs(page, 'operator')
   await openTopMenu(page, '系统管理')
   await expect(page.getByRole('menuitem', { name: '字典分类', exact: true })).toBeVisible()

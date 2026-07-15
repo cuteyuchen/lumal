@@ -1,5 +1,28 @@
-import { readFile } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+
+interface StyleSource {
+  path: string
+  source: string
+}
+
+async function readStyleSources(directory: string): Promise<StyleSource[]> {
+  const entries = await readdir(directory, { withFileTypes: true })
+  const nested = await Promise.all(entries.map(async (entry): Promise<StyleSource[]> => {
+    const path = join(directory, entry.name)
+
+    if (entry.isDirectory()) {
+      return readStyleSources(path)
+    }
+    if (!entry.name.endsWith('.vue') && !entry.name.endsWith('.scss')) {
+      return []
+    }
+
+    return [{ path, source: await readFile(path, 'utf8') }]
+  }))
+
+  return nested.flat()
+}
 
 /***********************样式入口*********************/
 describe('luma admin style entry', () => {
@@ -26,5 +49,17 @@ describe('luma admin style entry', () => {
     expect(appVue).toContain(':progress="preferences.transition.progress"')
     expect(appVue).toContain(':loading="preferences.transition.loading"')
     expect(appVue).toContain(':cache="routeViewCache"')
+  })
+
+  it('可见文本字号会统一消费全局字号令牌', async () => {
+    const sources = await readStyleSources(join(process.cwd(), 'src'))
+    const violations = sources.flatMap(({ path, source }) => (
+      [...source.matchAll(/font-size\s*:\s*([^;}\r\n]+)/g)]
+        .filter(match => match[1]?.includes('px') && !match[1].includes('var(--luma-font-size-base'))
+        .map(match => `${path}:${source.slice(0, match.index).split(/\r?\n/).length}:${match[0]}`)
+    ))
+
+    expect(violations).toEqual([])
+    expect(sources.some(({ source }) => source.includes('var(--luma-font-size-base, 14px)'))).toBe(true)
   })
 })

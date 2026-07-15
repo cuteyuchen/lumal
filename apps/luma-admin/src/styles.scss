@@ -71,12 +71,12 @@ button {
   display: block;
   padding-top: 12px;
   color: var(--el-text-color-secondary);
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
 }
 
 .luma-admin-home__status {
   color: var(--el-color-primary);
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
   font-weight: 700;
 }
 
@@ -128,7 +128,7 @@ button {
 
 .luma-admin-page__item {
   color: var(--el-text-color-regular);
-  font-size: 14px;
+  font-size: var(--luma-font-size-base, 14px);
   line-height: 1.6;
 }
 
@@ -159,13 +159,13 @@ button {
 .luma-admin-example__metric span,
 .luma-admin-example__chart-card-label {
   color: var(--el-text-color-secondary);
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
 }
 
 .luma-admin-example__metric strong,
 .luma-admin-example__chart-card-value {
   color: var(--el-text-color-primary);
-  font-size: 24px;
+  font-size: calc(var(--luma-font-size-base, 14px) + 10px);
   line-height: 1.2;
 }
 
@@ -240,7 +240,7 @@ button {
 .luma-admin-example__chart-label,
 .luma-admin-example__chart-value {
   color: var(--el-text-color-regular);
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
 }
 
 .luma-admin-example__chart-track {

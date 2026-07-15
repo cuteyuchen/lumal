@@ -61,11 +61,22 @@ function resolveAdminPreferencesStorage(): Storage {
 /***********************默认偏好*********************/
 export const adminPreferenceDefaults: LumaPreferencesDefaults = {
   app: {
+    dynamicTitle: true,
     layout: 'mixed-nav',
   },
+  breadcrumb: {
+    enable: true,
+    hideOnlyOne: false,
+    showHome: true,
+    showIcon: true,
+  },
   header: {
+    globalSearch: true,
     menuAlign: 'center',
     menuMaxWidth: 1120,
+  },
+  shortcutKeys: {
+    globalSearch: true,
   },
   sidebar: {
     collapsed: false,
@@ -89,6 +100,7 @@ export const adminPreferenceDefaults: LumaPreferencesDefaults = {
   },
   theme: {
     colorPrimary: '#1677ff',
+    fontSize: 14,
     mode: 'system',
     radiusScale: 0.75,
   },
@@ -140,7 +152,7 @@ export function updateAdminSystemConfig(config: AdminSystemConfig): AdminSystemC
   const appName = config.appName.trim() || initialAdminSystemConfig.appName
   const colorPrimary = config.colorPrimary.trim() || initialAdminSystemConfig.colorPrimary
 
-  adminPreferenceDefaults.app = { layout: config.layout }
+  adminPreferenceDefaults.app = { ...adminPreferenceDefaults.app, layout: config.layout }
   adminPreferenceDefaults.tabbar = {
     ...adminPreferenceDefaults.tabbar,
     enable: config.tabbarEnable,
@@ -166,7 +178,7 @@ export function updateAdminSystemConfig(config: AdminSystemConfig): AdminSystemC
 }
 
 export function resetAdminSystemConfig(): void {
-  adminPreferenceDefaults.app = { layout: initialAdminSystemConfig.layout }
+  adminPreferenceDefaults.app = { ...adminPreferenceDefaults.app, layout: initialAdminSystemConfig.layout }
   adminPreferenceDefaults.tabbar = {
     ...adminPreferenceDefaults.tabbar,
     enable: initialAdminSystemConfig.tabbarEnable,

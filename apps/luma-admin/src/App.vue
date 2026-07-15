@@ -55,6 +55,21 @@ const activePath = computed({
   },
 })
 
+watch([
+  title,
+  () => route.meta.title,
+  () => preferences.value.app.dynamicTitle,
+], () => {
+  if (typeof document === 'undefined') {
+    return
+  }
+
+  const routeTitle = typeof route.meta.title === 'string' ? route.meta.title.trim() : ''
+  document.title = preferences.value.app.dynamicTitle && routeTitle
+    ? `${routeTitle} - ${title.value}`
+    : title.value
+}, { immediate: true })
+
 watch(currentUser, async (user) => {
   if (!user) {
     return

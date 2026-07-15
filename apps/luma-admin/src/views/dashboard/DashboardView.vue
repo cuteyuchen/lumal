@@ -189,7 +189,7 @@ onMounted(() => {
 
 .luma-admin-workspace__metric strong {
   color: var(--el-text-color-primary);
-  font-size: 28px;
+  font-size: calc(var(--luma-font-size-base, 14px) + 14px);
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
 }

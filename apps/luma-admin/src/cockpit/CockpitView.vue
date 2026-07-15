@@ -6,9 +6,9 @@ import { LumaIcon } from '@luma/icons'
 import { ElButton, ElTooltip } from 'element-plus'
 import { computed, ref, shallowRef, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import StubCenter from './centers/stub-center/Center.vue'
 import { permissionStore } from '../services/permission'
 import { adminCockpitRepository } from './api/cockpit'
+import StubCenter from './centers/stub-center/Center.vue'
 import { adminCockpitRegistry } from './registry'
 import '@luma/cockpit/style.css'
 
@@ -127,7 +127,9 @@ async function toggleFullscreen(): Promise<void> {
         <!-- 应用提供的顶部操作：返回、全屏、配置入口 -->
         <template #header-actions>
           <div class="admin-cockpit-view__actions">
-            <ElButton data-action="cockpit-back" aria-label="返回 Admin" @click="backToAdmin">返回</ElButton>
+            <ElButton data-action="cockpit-back" aria-label="返回 Admin" @click="backToAdmin">
+              返回
+            </ElButton>
             <ElTooltip content="进入全屏">
               <ElButton circle data-action="cockpit-fullscreen" aria-label="进入全屏" @click="toggleFullscreen">
                 <LumaIcon name="luma:fullscreen" :size="18" />

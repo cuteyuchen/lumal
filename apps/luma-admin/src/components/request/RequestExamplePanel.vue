@@ -135,7 +135,7 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
 
 .luma-request-panel__eyebrow {
   color: var(--el-color-primary);
-  font-size: 12px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 2px);
   font-weight: 700;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -144,7 +144,7 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
 .luma-request-panel__title {
   margin: 0;
   color: var(--el-text-color-primary);
-  font-size: 20px;
+  font-size: calc(var(--luma-font-size-base, 14px) + 6px);
   font-weight: 700;
 }
 
@@ -168,13 +168,13 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
 .luma-request-panel__label,
 .luma-request-panel__detail-label {
   color: var(--el-text-color-secondary);
-  font-size: 12px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 2px);
 }
 
 .luma-request-panel__value {
   overflow: hidden;
   color: var(--el-text-color-primary);
-  font-size: 14px;
+  font-size: var(--luma-font-size-base, 14px);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -201,13 +201,13 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
     "JetBrains Mono",
     Consolas,
     monospace;
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
 }
 
 .luma-request-panel__message {
   margin: 18px 0 0;
   color: var(--el-text-color-regular);
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
 }
 
 @media (max-width: 760px) {

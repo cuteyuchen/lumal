@@ -211,10 +211,13 @@ describe('system mock api', () => {
     })
 
     const menus = await loadAdminMenus()
-    expect(menus[0]).toMatchObject({
-      path: '/dashboard',
-      title: '工作台',
-    })
+    expect(menus.some(menu => menu.path === '/dashboard' || menu.path === '/profile')).toBe(false)
+    expect(menus).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        path: '/examples',
+        title: '功能示例',
+      }),
+    ]))
   })
 
   it('保护内置角色不被删除', async () => {
@@ -271,7 +274,12 @@ describe('system mock api', () => {
       type: 'directory',
     })
     const menu = await createSystemMenu({
+      activeMenu: '/audit',
+      badge: 'NEW',
+      badgeTone: 'success',
+      badgeType: 'text',
       component: 'audit/index',
+      hideInBreadcrumb: true,
       name: 'AuditIndex',
       order: 1,
       parentId: directory.id,
@@ -325,7 +333,12 @@ describe('system mock api', () => {
 
     let runtimeMenus = await loadAdminMenus()
     expect(findRuntimeMenu(runtimeMenus, '/audit/index')).toMatchObject({
+      activeMenu: '/audit',
+      badge: 'NEW',
+      badgeTone: 'success',
+      badgeType: 'text',
       component: 'audit/index',
+      hideInBreadcrumb: true,
       name: 'AuditIndex',
       title: '审计日志',
     })

@@ -1,3 +1,4 @@
+import { MenuRouteConflictError } from '@luma/core/router'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory } from 'vue-router'
 import {
@@ -7,7 +8,7 @@ import {
   getAdminRouteNames,
   permissionStore,
 } from '../src/router'
-import { adminRouteRecords } from '../src/router/routes'
+import { adminRouteRecords, staticAdminRouteRecords } from '../src/router/routes'
 import { login, logout } from '../src/services/session'
 
 describe('luma admin router', () => {
@@ -17,11 +18,11 @@ describe('luma admin router', () => {
 
   it('示例路由配置使用标准 meta.authority 字段', () => {
     const examplesRoute = adminRouteRecords.find(route => route.path === '/examples')
-    const profileRoute = adminRouteRecords.find(route => route.path === '/profile')
+    const profileRoute = staticAdminRouteRecords.find(route => route.path === '/profile')
     const projectRoute = adminRouteRecords.find(route => route.path === '/project')
     const systemRoute = adminRouteRecords.find(route => route.path === '/system')
 
-    expect(adminRouteRecords[0]).toMatchObject({
+    expect(staticAdminRouteRecords[0]).toMatchObject({
       path: '/dashboard',
       meta: {
         authority: ['dashboard:view'],
@@ -95,6 +96,7 @@ describe('luma admin router', () => {
         title: '个人中心',
       },
     })
+    expect(adminRouteRecords.some(route => route.path === '/dashboard' || route.path === '/profile')).toBe(false)
     expect(JSON.stringify(adminRouteRecords)).not.toContain('"permissions"')
     expect(JSON.stringify(adminRouteRecords)).not.toContain('"dictType"')
   })
@@ -114,6 +116,9 @@ describe('luma admin router', () => {
       {
         children: [
           {
+            badge: 'NEW',
+            badgeTone: 'primary',
+            badgeType: 'text',
             children: [],
             icon: 'app:examples',
             path: '/examples/overview',
@@ -223,6 +228,14 @@ describe('luma admin router', () => {
     ])
   })
 
+  it('创建 Router 时立即注册静态菜单，远程菜单等待登录加载', () => {
+    const router = createAdminRouter(createMemoryHistory())
+
+    expect(router.hasRoute('Dashboard')).toBe(true)
+    expect(router.hasRoute('Profile')).toBe(true)
+    expect(router.hasRoute('System')).toBe(false)
+  })
+
   it('operator 只能看到字典系统菜单、项目和示例字典能力', async () => {
     await login('operator')
     const router = createAdminRouter(createMemoryHistory())
@@ -298,6 +311,45 @@ describe('luma admin router', () => {
     expect(new Set(names).size).toBe(names.length)
   })
 
+  it('远程菜单加载失败时保留静态菜单和静态路由', async () => {
+    await login('admin')
+    const router = createAdminRouter(createMemoryHistory(), {
+      loadRemoteMenus: async () => {
+        throw new Error('菜单服务不可用')
+      },
+    })
+
+    await expect(ensureAdminRoutes(router)).rejects.toThrow('菜单服务不可用')
+    expect(router.hasRoute('Dashboard')).toBe(true)
+    expect(router.hasRoute('System')).toBe(false)
+    expect(createAdminSidebarMenus(router).map(menu => menu.path)).toEqual(['/dashboard'])
+  })
+
+  it('远程菜单与静态菜单冲突时不留下部分远程路由', async () => {
+    await login('admin')
+    const router = createAdminRouter(createMemoryHistory(), {
+      loadRemoteMenus: async () => [
+        {
+          component: 'dashboard/index',
+          meta: { title: '临时页面' },
+          name: 'TemporaryPage',
+          path: '/temporary-page',
+        },
+        {
+          component: 'dashboard/index',
+          meta: { title: '冲突页面' },
+          name: 'DuplicateDashboardPath',
+          path: '/dashboard',
+        },
+      ],
+    })
+
+    await expect(ensureAdminRoutes(router)).rejects.toBeInstanceOf(MenuRouteConflictError)
+    expect(router.hasRoute('TemporaryPage')).toBe(false)
+    expect(router.hasRoute('Dashboard')).toBe(true)
+    expect(getAdminRouteNames(router)).toEqual([])
+  })
+
   it('刷新深层地址时会先注册菜单路由再恢复原地址', async () => {
     await login('admin')
     const router = createAdminRouter(createMemoryHistory())
@@ -366,11 +418,13 @@ describe('luma admin router', () => {
     const router = createAdminRouter(createMemoryHistory())
     await ensureAdminRoutes(router)
 
+    expect(router.hasRoute('Dashboard')).toBe(true)
     expect(router.hasRoute('SystemUser')).toBe(true)
 
     await logout()
 
     expect(router.hasRoute('SystemUser')).toBe(false)
+    expect(router.hasRoute('Dashboard')).toBe(true)
     expect(getAdminRouteNames(router)).toEqual([])
     expect(createAdminSidebarMenus(router)).toEqual([])
   })
@@ -419,6 +473,33 @@ describe('luma admin router', () => {
     await router.isReady()
 
     expect(router.currentRoute.value.path).toBe('/403')
+  })
+
+  it('无父菜单权限时不能直接访问未声明权限的子路由', async () => {
+    await login('guest')
+    const router = createAdminRouter(createMemoryHistory(), {
+      loadRemoteMenus: async () => [
+        {
+          children: [
+            {
+              component: 'dashboard/index',
+              meta: { title: '子页面' },
+              name: 'RestrictedChild',
+              path: 'child',
+            },
+          ],
+          meta: { authority: ['restricted:parent:view'], title: '受限父菜单' },
+          name: 'RestrictedParent',
+          path: '/restricted-parent',
+        },
+      ],
+    })
+
+    await router.push('/restricted-parent/child')
+    await router.isReady()
+
+    expect(router.currentRoute.value.path).toBe('/403')
+    expect(createAdminSidebarMenus(router).some(menu => menu.path === '/restricted-parent')).toBe(false)
   })
 
   it('有项目权限时可以访问项目路由', async () => {

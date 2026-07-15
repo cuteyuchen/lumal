@@ -459,14 +459,14 @@ async function handleSubmit(): Promise<void> {
 .luma-admin-login__welcome {
   margin: 0 0 14px;
   color: #60a5fa;
-  font-size: 11px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 3px);
   font-weight: 750;
   letter-spacing: .18em;
 }
 
 .luma-admin-login__hero h2 {
   margin: 0;
-  font-size: clamp(34px, 3.2vw, 52px);
+  font-size: clamp(calc(var(--luma-font-size-base, 14px) + 20px), 3.2vw, calc(var(--luma-font-size-base, 14px) + 38px));
   font-weight: 720;
   letter-spacing: -.045em;
   line-height: 1.18;
@@ -476,7 +476,7 @@ async function handleSubmit(): Promise<void> {
   max-width: 550px;
   margin: 22px 0 0;
   color: #9fb0c7;
-  font-size: 15px;
+  font-size: calc(var(--luma-font-size-base, 14px) + 1px);
   line-height: 1.85;
 }
 
@@ -541,8 +541,8 @@ async function handleSubmit(): Promise<void> {
   backdrop-filter: blur(14px);
 }
 
-.luma-admin-login__metric b { font-size: 12px; font-weight: 650; }
-.luma-admin-login__metric small { color: #8094af; font-size: 10px; }
+.luma-admin-login__metric b { font-size: calc(var(--luma-font-size-base, 14px) - 2px); font-weight: 650; }
+.luma-admin-login__metric small { color: #8094af; font-size: calc(var(--luma-font-size-base, 14px) - 4px); }
 .luma-admin-login__metric > i:first-child {
   width: 7px;
   height: 7px;
@@ -573,7 +573,7 @@ async function handleSubmit(): Promise<void> {
   margin: 0;
   padding: 0;
   color: #aebed2;
-  font-size: 12px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 2px);
   list-style: none;
 }
 
@@ -608,7 +608,7 @@ async function handleSubmit(): Promise<void> {
 .luma-admin-login__heading h1 {
   margin: 0;
   color: var(--el-text-color-primary);
-  font-size: 32px;
+  font-size: calc(var(--luma-font-size-base, 14px) + 18px);
   font-weight: 730;
   letter-spacing: -.04em;
   line-height: 1.2;
@@ -616,7 +616,7 @@ async function handleSubmit(): Promise<void> {
 .luma-admin-login__heading > p:last-child {
   margin: 10px 0 0;
   color: var(--el-text-color-secondary);
-  font-size: 14px;
+  font-size: var(--luma-font-size-base, 14px);
   line-height: 1.6;
 }
 
@@ -626,7 +626,7 @@ async function handleSubmit(): Promise<void> {
   height: auto;
   padding-bottom: 8px;
   color: var(--el-text-color-regular);
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
   font-weight: 600;
   line-height: 1.3;
 }
@@ -646,7 +646,7 @@ async function handleSubmit(): Promise<void> {
 .luma-admin-login__error {
   margin: -4px 0 12px;
   color: var(--el-color-danger);
-  font-size: 13px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 1px);
   line-height: 1.5;
 }
 .luma-admin-login__submit {
@@ -678,8 +678,8 @@ async function handleSubmit(): Promise<void> {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--el-color-success) 12%, transparent);
 }
 .luma-admin-login__hint p { display: grid; gap: 3px; margin: 0; }
-.luma-admin-login__hint strong { color: var(--el-text-color-regular); font-size: 12px; }
-.luma-admin-login__hint small { color: var(--el-text-color-secondary); font-size: 11px; line-height: 1.5; }
+.luma-admin-login__hint strong { color: var(--el-text-color-regular); font-size: calc(var(--luma-font-size-base, 14px) - 2px); }
+.luma-admin-login__hint small { color: var(--el-text-color-secondary); font-size: calc(var(--luma-font-size-base, 14px) - 3px); line-height: 1.5; }
 
 .luma-admin-login__copyright {
   position: absolute;
@@ -688,7 +688,7 @@ async function handleSubmit(): Promise<void> {
   left: 0;
   margin: 0;
   color: var(--el-text-color-placeholder);
-  font-size: 11px;
+  font-size: calc(var(--luma-font-size-base, 14px) - 3px);
   text-align: center;
 }
 
@@ -747,7 +747,7 @@ async function handleSubmit(): Promise<void> {
   .luma-admin-login__topbar { height: 68px; padding: 0 16px; }
   .luma-admin-login__auth { padding: 92px 20px 58px; }
   .luma-admin-login__heading { margin-bottom: 26px; }
-  .luma-admin-login__heading h1 { font-size: 28px; }
+  .luma-admin-login__heading h1 { font-size: calc(var(--luma-font-size-base, 14px) + 14px); }
   .luma-admin-login.is-form-center .luma-admin-login__panel {
     padding: 0;
     border: 0;

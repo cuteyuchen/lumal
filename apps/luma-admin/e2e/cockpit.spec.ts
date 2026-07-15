@@ -1,18 +1,18 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { loginAs, loginAsAdmin } from './helpers'
 
 /***********************驾驶舱 E2E 验收*********************/
 
 test.describe('驾驶舱', () => {
-  test('从 Header 进入驾驶舱并切换分类、页面', async ({ page }) => {
+  test('从 Header 进入驾驶舱并显示布局导航', async ({ page }) => {
     await loginAsAdmin(page)
 
     // 从 Header 图标进入驾驶舱
     await page.locator('[data-action="open-cockpit"]').click()
     await expect(page).toHaveURL(/#\/cockpit/)
 
-    // 分类导航可见
-    await expect(page.locator('[aria-label="分类导航"]')).toBeVisible()
+    // 布局导航可见
+    await expect(page.locator('[aria-label="布局选择"]')).toBeVisible()
 
     // 中央组件示例渲染
     await expect(page.locator('.stub-center')).toBeVisible()
@@ -41,8 +41,8 @@ test.describe('驾驶舱', () => {
     await page.locator('[data-action="cockpit-configure"]').click()
     await expect(page.getByRole('dialog', { name: '驾驶舱配置' })).toBeVisible()
 
-    // 新增一列以验证布局编辑
-    await page.getByRole('button', { name: '新增列' }).first().click()
+    // 切换为二列以验证布局编辑
+    await page.getByRole('dialog', { name: '驾驶舱配置' }).getByText('二列', { exact: true }).click()
 
     // 保存
     await page.getByRole('button', { name: '保存', exact: true }).click()
@@ -50,7 +50,7 @@ test.describe('驾驶舱', () => {
 
     // 刷新后配置仍生效（保存到 mock 会话）
     await page.reload()
-    await expect(page.locator('[aria-label="分类导航"]')).toBeVisible()
+    await expect(page.locator('[aria-label="布局选择"]')).toBeVisible()
   })
 
   test('返回 Admin', async ({ page }) => {
@@ -62,8 +62,13 @@ test.describe('驾驶舱', () => {
     await expect(page).toHaveURL(/#\/dashboard$/)
   })
 
-  test('无查看权限账号看不到驾驶舱入口', async ({ page }) => {
+  test('无查看权限账号看不到驾驶舱入口', async ({ browserDiagnostics, page }) => {
+    browserDiagnostics.expectHttpError('/api/system/users?page=1&pageSize=5', 403)
+    browserDiagnostics.expectHttpError('/api/system/roles?page=1&pageSize=1', 403)
+    browserDiagnostics.expectHttpError('/api/system/menus', 403)
+    browserDiagnostics.expectHttpError('/api/system/dictionaries/types', 403)
+
     await loginAs(page, 'guest')
-    await expect(page.locator('[data-action="open-cockpit"]')).toHaveCount(0)
+    await expect(page.locator('[data-action="open-cockpit"]')).not.toBeVisible()
   })
 })

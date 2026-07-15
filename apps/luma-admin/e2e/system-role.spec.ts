@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { loginAsAdmin, openTopMenu } from './helpers'
 
 test('角色页显示角色编码并可打开菜单与按钮授权树', async ({ page }) => {

@@ -21,8 +21,8 @@ describe('cockpit 集成', () => {
   it('能从 Mock API 加载标准配置', async () => {
     await login('admin')
     const config = await adminCockpitRepository.load('admin-demo-cockpit')
-    expect(config.schemaVersion).toBe(1)
-    expect(config.categories.length).toBeGreaterThan(0)
+    expect(config.schemaVersion).toBe(3)
+    expect(config.layouts.length).toBeGreaterThan(0)
   })
 
   it('保存后返回服务端配置用于更新运行态', async () => {
