@@ -22,4 +22,5 @@ export type {
   CrudTableResetPayload,
   CrudTableSearchPayload,
   CrudToolbarConfig,
+  CrudToolbarSlotProps,
 } from './types'

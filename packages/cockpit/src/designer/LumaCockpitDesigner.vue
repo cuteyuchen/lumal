@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import type { CockpitRegistry, CockpitWidgetDefinition } from '../registry/types'
-import type { CockpitConfig, CockpitConfigIssue, CockpitDesignerSavePayload, CockpitThemeMode } from '../types'
+import type { CockpitCenterContext, CockpitConfig, CockpitConfigIssue, CockpitDesignerSavePayload, CockpitThemeMode } from '../types'
+import type { DesignerPlacementSelection } from './types'
 import { LumaIcon } from '@luma/icons'
-import { ElAlert, ElButton, ElCheckbox, ElInput, ElMessageBox, ElOption, ElRadio, ElRadioGroup, ElSelect, ElTooltip } from 'element-plus'
-import { computed, ref } from 'vue'
+import { ElAlert, ElButton, ElInput, ElMessageBox, ElOption, ElSelect, ElTooltip } from 'element-plus'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { createCockpitMessageBus } from '../messaging/createCockpitMessageBus'
 import CockpitComponentLibrary from './CockpitComponentLibrary.vue'
 import CockpitLayoutEditor from './CockpitLayoutEditor.vue'
+import CockpitPreviewContextHost from './CockpitPreviewContextHost.vue'
 import { useCockpitDraft } from './useCockpitDraft'
 
 /***********************驾驶舱装配 Designer*********************/
@@ -26,29 +29,58 @@ const themeMode = defineModel<CockpitThemeMode>('themeMode', { default: 'dark' }
 
 const draft = useCockpitDraft(props.config)
 const issues = ref<CockpitConfigIssue[]>([])
-const selectedWidget = ref<CockpitWidgetDefinition>()
+const placementSelection = ref<DesignerPlacementSelection>()
 const activeLayout = computed(() => draft.activeLayout.value)
 const errors = computed(() => issues.value.filter(issue => issue.level === 'error'))
-const columnCount = computed({
-  get: () => activeLayout.value?.left.columns.length ?? 1,
-  set: (value: number) => {
-    const layout = activeLayout.value
-    if (!layout)
-      return
-    draft.resizeRegion('left', layout.left.rows.length, value)
-    draft.resizeRegion('right', layout.right.rows.length, value)
-  },
+const previewMessages = createCockpitMessageBus()
+const centerPreviewContext = computed<CockpitCenterContext | undefined>(() => activeLayout.value
+  ? {
+      cockpitId: props.config.id,
+      layoutId: activeLayout.value.id,
+      instanceId: `${activeLayout.value.id}:center`,
+      mode: 'design',
+      messages: previewMessages,
+    }
+  : undefined)
+const placementStatus = computed(() => {
+  const selection = placementSelection.value
+  if (!selection)
+    return 'PS：将需要的业务板块拖入上方白框内，已占用槽位会在确认后替换。'
+  return selection.kind === 'library'
+    ? `已选择模块“${selection.title}”，可连续放入多个槽位，按 Esc 取消。`
+    : `正在移动“${selection.title}”，请选择目标槽位或 Tab 行，按 Esc 取消。`
 })
-const mergeRows = computed({
-  get: () => Boolean(activeLayout.value?.left.rows.length && activeLayout.value.left.rows.every(row => row.mode === 'tabs')),
-  set: (value: boolean) => {
-    const layout = activeLayout.value
-    if (!layout)
-      return
-    layout.left.rows.forEach(row => draft.setRowTabs('left', row.id, value))
-    layout.right.rows.forEach(row => draft.setRowTabs('right', row.id, value))
-  },
+
+watch(() => activeLayout.value?.id, (next, previous) => {
+  placementSelection.value = undefined
+  if (previous && previous !== next)
+    previewMessages.clearInstance(`${previous}:center`)
 })
+
+onBeforeUnmount(() => {
+  const context = centerPreviewContext.value
+  if (context)
+    previewMessages.clearInstance(context.instanceId)
+})
+
+function selectLibraryWidget(widget: CockpitWidgetDefinition): void {
+  placementSelection.value = { kind: 'library', type: widget.type, title: widget.label }
+}
+
+function selectPlacedWidget(selection: Extract<DesignerPlacementSelection, { kind: 'placed' }>): void {
+  placementSelection.value = selection
+}
+
+function clearPlacementSelection(): void {
+  placementSelection.value = undefined
+}
+
+function handleDesignerKeydown(event: KeyboardEvent): void {
+  if (event.key !== 'Escape' || !placementSelection.value)
+    return
+  event.preventDefault()
+  clearPlacementSelection()
+}
 
 function save(): void {
   const result = draft.buildSaveConfig()
@@ -105,7 +137,7 @@ defineExpose({ toggleTheme })
 </script>
 
 <template>
-  <div class="luma-cockpit-designer" :data-cockpit-theme="themeMode">
+  <div class="luma-cockpit-designer" :data-cockpit-theme="themeMode" @keydown="handleDesignerKeydown">
     <header class="luma-cockpit-designer__titlebar">
       <h2 class="luma-cockpit-designer__heading">
         <LumaIcon name="luma:settings" :size="18" />
@@ -143,22 +175,6 @@ defineExpose({ toggleTheme })
             删除
           </ElButton>
         </div>
-        <div class="luma-cockpit-designer__global-controls" aria-label="布局列设置">
-          <ElRadioGroup v-model="columnCount">
-            <ElRadio :value="1">
-              一列
-            </ElRadio>
-            <ElRadio :value="2">
-              二列
-            </ElRadio>
-            <ElRadio :value="3">
-              三列
-            </ElRadio>
-          </ElRadioGroup>
-          <ElCheckbox v-model="mergeRows">
-            合并列
-          </ElCheckbox>
-        </div>
       </div>
     </section>
 
@@ -174,26 +190,48 @@ defineExpose({ toggleTheme })
     <main class="luma-cockpit-designer__workspace">
       <section class="luma-cockpit-designer__assembly" aria-label="驾驶舱布局装配区">
         <div class="luma-cockpit-designer__assembly-stage">
-          <CockpitLayoutEditor :cockpit-id="config.id" :draft="draft" :registry="registry" :selected-widget="selectedWidget" side="left" />
+          <CockpitLayoutEditor
+            :cockpit-id="config.id"
+            :draft="draft"
+            :registry="registry"
+            :placement-selection="placementSelection"
+            :preview-message-bus="previewMessages"
+            side="left"
+            @select-placed="selectPlacedWidget"
+            @clear-placement="clearPlacementSelection"
+          />
           <div class="luma-cockpit-designer__center-preview">
-            <slot name="center-preview" :layout="activeLayout">
-              <div class="luma-cockpit-designer__center-guide" aria-hidden="true" />
-            </slot>
+            <CockpitPreviewContextHost v-if="centerPreviewContext" :key="centerPreviewContext.instanceId" :context="centerPreviewContext">
+              <slot name="center-preview" :context="centerPreviewContext" :layout="activeLayout">
+                <div class="luma-cockpit-designer__center-guide" aria-hidden="true" />
+              </slot>
+            </CockpitPreviewContextHost>
           </div>
-          <CockpitLayoutEditor :cockpit-id="config.id" :draft="draft" :registry="registry" :selected-widget="selectedWidget" side="right" />
+          <CockpitLayoutEditor
+            :cockpit-id="config.id"
+            :draft="draft"
+            :registry="registry"
+            :placement-selection="placementSelection"
+            :preview-message-bus="previewMessages"
+            side="right"
+            @select-placed="selectPlacedWidget"
+            @clear-placement="clearPlacementSelection"
+          />
         </div>
       </section>
       <CockpitComponentLibrary
         :cockpit-id="config.id"
         :layout-id="activeLayout?.id ?? ''"
         :registry="registry"
-        :selected-type="selectedWidget?.type"
-        @select-widget="selectedWidget = $event"
+        :selected-type="placementSelection?.kind === 'library' ? placementSelection.type : undefined"
+        @select-widget="selectLibraryWidget"
       />
     </main>
 
     <footer class="luma-cockpit-designer__footer">
-      <p>PS：将需要的业务板块拖入上方白框内，已占用槽位会在确认后替换。</p>
+      <p class="luma-cockpit-designer__placement-status" role="status" aria-live="polite">
+        {{ placementStatus }}
+      </p>
       <div class="luma-cockpit-designer__footer-actions">
         <ElButton @click="reset">
           <LumaIcon name="luma:reset" :size="16" />

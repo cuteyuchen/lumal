@@ -7,6 +7,7 @@ import type {
   SaveSystemRoleInput,
   SaveSystemUserInput,
   SystemMenuRecord,
+  SystemUserRoleBatchMode,
 } from '../domain/system'
 import process from 'node:process'
 import {
@@ -27,6 +28,8 @@ import {
   verifyMockAccount,
 } from '../domain/auth'
 import {
+  mockBatchUpdateSystemUserRoles,
+  mockBatchUpdateSystemUserStatus,
   mockCreateDictionaryItem,
   mockCreateDictionaryType,
   mockCreateSystemMenu,
@@ -43,6 +46,7 @@ import {
   mockFetchDictionaryOptions,
   mockFetchDictionaryTypes,
   mockFetchSystemMenus,
+  mockFetchSystemOrganizationOptions,
   mockFetchSystemOrganizations,
   mockFetchSystemPermissionTree,
   mockFetchSystemRoleOptions,
@@ -339,13 +343,28 @@ export default defineEventHandler(async (event) => {
         const result = await mockFetchSystemUsers({
           page: toNumber(query.page, 1),
           pageSize: toNumber(query.pageSize, 10),
-          query: { keyword: String(query.keyword || ''), role: String(query.roles || ''), status: query.status as '' | 'disabled' | 'enabled' },
+          query: {
+            keyword: String(query.keyword || ''),
+            organizationId: String(query.organizationId || ''),
+            role: String(query.roles || ''),
+            status: query.status as '' | 'disabled' | 'enabled',
+          },
         })
         return page(result.items, result.total)
       }
       if (path === '/system/users' && method === 'POST') {
         requirePermission(auth.user, 'system:user:create')
         return ok(await mockCreateSystemUser(await readRequiredBody<SaveSystemUserInput>(event)))
+      }
+      if (path === '/system/users/batch/status' && method === 'PATCH') {
+        requirePermission(auth.user, 'system:user:status')
+        const body = await readRequiredBody<{ ids: string[], status: 'disabled' | 'enabled' }>(event)
+        return ok(await mockBatchUpdateSystemUserStatus(body.ids, body.status))
+      }
+      if (path === '/system/users/batch/roles' && method === 'PUT') {
+        requirePermission(auth.user, 'system:user:assign-roles')
+        const body = await readRequiredBody<{ ids: string[], mode: SystemUserRoleBatchMode, roles: string[] }>(event)
+        return ok(await mockBatchUpdateSystemUserRoles(body.ids, body.roles, body.mode))
       }
       let match = path.match(/^\/system\/users\/([^/]+)$/)
       if (match && method === 'PUT') {
@@ -412,6 +431,10 @@ export default defineEventHandler(async (event) => {
       if (path === '/system/organizations' && method === 'GET') {
         requirePermission(auth.user, 'system:organization:list')
         return ok(await mockFetchSystemOrganizations())
+      }
+      if (path === '/system/organizations/options' && method === 'GET') {
+        requirePermission(auth.user, 'system:user:list')
+        return ok(await mockFetchSystemOrganizationOptions())
       }
       if (path === '/system/organizations' && method === 'POST') {
         requirePermission(auth.user, 'system:organization:create')

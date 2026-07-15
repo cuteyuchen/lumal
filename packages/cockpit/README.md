@@ -1,80 +1,106 @@
 # @luma/cockpit
 
-Luma 通用驾驶舱编排框架。提供驾驶舱骨架、布局运行时、模块编排设计器、组件注册机制与通用消息通道。
+Luma 通用驾驶舱 v3 编排框架。包负责布局配置、左右模块运行时、Designer、组件注册和消息总线；消费应用负责中心内容、业务模块、导航、主题皮肤、权限和持久化。
 
-本包不内置任何地图引擎、图表引擎、业务模块或行业术语。中央组件、业务模块、分类、页面、数据请求、权限和持久化实现全部由应用提供。
+## v3 模型
 
-## 依赖方向
-
-```text
-@luma/icons → @luma/core → @luma/cockpit → apps
-```
-
-`@luma/core` 不能反向依赖 `@luma/cockpit`；`@luma/cockpit` 不依赖 `@luma/charts`、ECharts、OpenLayers、Cesium、Mapbox、Leaflet 等可视化或地图运行时。
+- `CockpitConfig` 只包含 `layouts` 和 `activeLayoutId`，不包含分类、页面或中央组件配置。
+- 一个布局保存独立的左、右区域。
+- 区域由像素列宽和百分比行高组成；所有行高标准化后合计 `100%`。
+- 普通行每列对应一个空槽或模块；合并行跨满区域并作为 Tab 容器。
+- 中心内容不进入配置，由消费应用通过插槽直接提供。
 
 ## 公开入口
 
 ```text
-@luma/cockpit            # 类型、注册表、消息与运行时公共 API
-@luma/cockpit/runtime    # 运行时组件（LumaCockpit、LumaCockpitCard 等）
-@luma/cockpit/designer   # 配置设计器（LumaCockpitDesigner）
-@luma/cockpit/registry   # createCockpitRegistry
-@luma/cockpit/style.css  # 基础样式
+@luma/cockpit
+@luma/cockpit/runtime
+@luma/cockpit/designer
+@luma/cockpit/registry
+@luma/cockpit/style.css
 ```
 
-`runtime` 与 `designer` 为独立构建入口，只读驾驶舱应用可只加载 `runtime`。
+`runtime` 和 `designer` 独立构建，只读应用无需加载 Designer 与 SortableJS。
 
-## 基本用法
+## 注册模块
 
 ```ts
 import { createCockpitRegistry } from '@luma/cockpit/registry'
 
 const registry = createCockpitRegistry()
-registry.registerCenter({ type: 'app-center', label: '中央视图', component: () => import('./Center.vue') })
-registry.registerWidget({ type: 'app-widget', label: '业务模块', component: () => import('./Widget.vue') })
+
+registry.registerWidget({
+  type: 'application-widget',
+  label: '应用模块',
+  component: () => import('./ApplicationWidget.vue'),
+})
 ```
+
+模块定义可以提供 `thumbnail`。未提供时 Designer 实时渲染组件；缩略图和业务资源始终由消费应用维护。
+
+## 运行时
 
 ```vue
-<script setup lang="ts">
-import { LumaCockpit } from '@luma/cockpit/runtime'
-import '@luma/cockpit/style.css'
-</script>
+<LumaCockpit
+  v-model:active-layout-id="activeLayoutId"
+  :config="config"
+  :registry="registry"
+  :viewport-mode="viewportMode"
+>
+  <template #header-title="{ title }">
+    <AppHeader :title="title" :layouts="config.layouts" />
+  </template>
 
-<template>
-  <LumaCockpit :config="config" :registry="registry" />
-</template>
+  <template #center="{ context, layout }">
+    <ApplicationCenter :key="context.instanceId" :context="context" :layout="layout" />
+  </template>
+</LumaCockpit>
 ```
 
-应用通过 CSS 变量、class 和插槽完成品牌定制，不修改包内组件。
+- 布局导航由消费应用负责。
+- 中心内容位于底层全宽画布，左右区域覆盖在其两侧。
+- `viewportMode="scale"` 使用 1920 × 1080 等比缩放；`viewportMode="vwvh"` 使用 VW/VH 单位适配。
+- 相同模块 type 可以创建多个拥有独立 `instanceId` 的实例。
+- Tab 切换保留全部模块实例状态。
+
+## Designer
+
+```vue
+<LumaCockpitDesigner
+  :config="config"
+  :registry="registry"
+  :saving="saving"
+  @save="saveLayout"
+  @cancel="closeDesigner"
+>
+  <template #center-preview="{ context, layout }">
+    <ApplicationCenter :key="context.instanceId" :context="context" :layout="layout" />
+  </template>
+</LumaCockpitDesigner>
+```
+
+- Designer 只编辑打开时创建的草稿副本。
+- 左右区域独立设置任意行列、像素列宽和百分比行高。
+- 每行独立切换普通网格或 Tab 行。
+- 模块库拖入时复制实例，已放置模块可以跨区域和普通槽/Tab 行移动。
+- 替换占用槽必须确认；缩减包含模块的行列会被阻止。
+- 拖拽操作同时提供可聚焦的选择、移动和目标按钮。
+- 中心预览与已放置模块共享 `mode: 'design'` 的消息总线；模块库预览保持隔离。
+- 保存事件输出 `{ config, layout }`，包不调用 HTTP 或写入 localStorage。
 
 ## 公共 Card
 
-`LumaCockpitCard`、`CockpitCardTab`、`CockpitCardProps` 和 `CockpitCardComponent` 同时从 `@luma/cockpit` 与 `@luma/cockpit/runtime` 导出。`LumaCockpit` 默认使用 `LumaCockpitCard`；应用需要完全替换外观或结构时，可传入兼容组件：
+`LumaCockpit` 默认使用 `LumaCockpitCard`。应用可通过 `cardComponent` 替换外框和 Tab 头部，组件须接收：
 
-```vue
-<script setup lang="ts">
-import type { CockpitCardComponent } from '@luma/cockpit/runtime'
-import { LumaCockpit } from '@luma/cockpit/runtime'
-import AppCockpitCard from './AppCockpitCard.vue'
+- `title?: string`
+- `widget?: CockpitWidgetInstance`
+- `tabs?: CockpitCardTab[]`
+- `activeTabId?: string`
+- `update:activeTabId` 事件
+- 默认、`title` 和 `tab` 插槽
 
-const cardComponent: CockpitCardComponent = AppCockpitCard
-</script>
+默认 Card 提供 TabList、Tab、TabPanel 语义以及方向键、Home、End 键盘操作。
 
-<template>
-  <LumaCockpit
-    :config="config"
-    :registry="registry"
-    :card-component="cardComponent"
-  />
-</template>
-```
+## 主题边界
 
-Card 替换组件须遵守以下契约：
-
-- props：`title?: string`、`widget?: CockpitWidgetInstance`、`tabs?: CockpitCardTab[]`、`activeTabId?: string`，其中 Tab 项为 `{ id, title, widget }`。
-- emit：`update:activeTabId`，参数为新的 Tab id。
-- slots：默认插槽 `{ activeTabId }`；`title` 插槽 `{ title, widget }`；`tab` 插槽 `{ tab, active }`。
-- 多个 Tab 在标题栏内切换；单个 Tab 退化为普通标题，不渲染无意义的 Tab 控件。
-- 标题由运行时按 `widget.title → registry.label → widget.type` 回退。既有 `widget-title` 插槽同时映射到普通标题和 Tab 标题。
-
-默认组件使用 `.luma-cockpit-card`、`__header`、`__title`、`__tablist`、`__tab` 和 `__body` 作为样式入口。Card 只负责外框、标题、Tab 和统一内容间距；业务数据的 loading、empty、error 状态仍由 Widget 自己处理。
+包只提供结构样式和语义 CSS 变量，不包含固定行业皮肤、Logo、地图、业务截图或业务字体。消费应用可以覆盖变量、传入 Card、使用标题背景和自定义插槽实现品牌样式。

@@ -24,6 +24,7 @@ export type {
   CrudTableResetPayload,
   CrudTableSearchPayload,
   CrudToolbarConfig,
+  CrudToolbarSlotProps,
 } from '../components/crud-table'
 export {
   LumaInfoTable,

@@ -1,7 +1,7 @@
 import { resolve } from 'node:path'
 
 export type LumaAliasTarget = 'dist' | 'source'
-export type LumaAliasPackage = 'charts' | 'cockpit' | 'core' | 'icons' | 'vben-compat'
+export type LumaAliasPackage = 'charts' | 'cockpit' | 'core' | 'datav' | 'icons' | 'vben-compat'
 
 export interface LumaAliasEntry {
   find: string
@@ -60,6 +60,12 @@ const PACKAGE_ENTRIES: PackageEntry[] = [
     specifier: '@luma/charts/style.css',
   },
   {
+    dist: 'packages/datav/dist/datav.css',
+    packageName: 'datav',
+    source: 'packages/datav/src/source-style.css',
+    specifier: '@luma/datav/style.css',
+  },
+  {
     dist: 'packages/cockpit/dist/designer.js',
     packageName: 'cockpit',
     source: 'packages/cockpit/src/designer/index.ts',
@@ -96,6 +102,12 @@ const PACKAGE_ENTRIES: PackageEntry[] = [
     specifier: '@luma/charts',
   },
   {
+    dist: 'packages/datav/dist/index.js',
+    packageName: 'datav',
+    source: 'packages/datav/src/index.ts',
+    specifier: '@luma/datav',
+  },
+  {
     dist: 'packages/icons/dist/index.js',
     packageName: 'icons',
     source: 'packages/icons/src/index.ts',
@@ -117,7 +129,7 @@ const PACKAGE_ENTRIES: PackageEntry[] = [
 
 export function createLumaAliases(options: CreateLumaAliasesOptions): LumaAliasEntry[] {
   const target = options.target ?? 'source'
-  const includedPackages = new Set(options.packages ?? ['charts', 'cockpit', 'core', 'icons', 'vben-compat'])
+  const includedPackages = new Set(options.packages ?? ['charts', 'cockpit', 'core', 'datav', 'icons', 'vben-compat'])
 
   return PACKAGE_ENTRIES
     .filter(entry => includedPackages.has(entry.packageName))

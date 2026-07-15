@@ -22,6 +22,7 @@ export interface SystemUserRecord {
   createdAt: string
   id: string
   nickname: string
+  organizationId: string
   phone: string
   /** @deprecated 使用 roles；保留给现有消费页面兼容。 */
   role: string
@@ -32,6 +33,7 @@ export interface SystemUserRecord {
 
 export interface SystemUserQuery {
   keyword?: string
+  organizationId?: string
   /** @deprecated 使用 roles；保留旧调用兼容。 */
   role?: string
   roles?: string
@@ -51,6 +53,7 @@ export interface SystemUserListResult {
 
 export interface SaveSystemUserInput {
   nickname?: unknown
+  organizationId?: unknown
   phone?: unknown
   /** @deprecated 使用 roles；保留旧调用兼容。 */
   role?: unknown
@@ -61,6 +64,13 @@ export interface SaveSystemUserInput {
 
 export interface SystemUserPasswordResetResult {
   temporaryPassword: string
+}
+
+export type SystemUserRoleBatchMode = 'append' | 'replace'
+
+export interface SystemUserBatchResult {
+  items: SystemUserRecord[]
+  updated: number
 }
 
 export type SystemRoleStatus = SystemUserStatus
@@ -119,6 +129,13 @@ export interface SaveSystemOrganizationInput {
   parentId?: unknown
   phone?: unknown
   status?: unknown
+}
+
+export interface SystemOrganizationOption {
+  children?: SystemOrganizationOption[]
+  disabled: boolean
+  label: string
+  value: string
 }
 
 export interface SystemPermissionTreeNode {
@@ -216,6 +233,7 @@ const initialSystemUsers: SystemUserRecord[] = [
     createdAt: '2026-01-15',
     id: 'user-1',
     nickname: '超级管理员',
+    organizationId: 'organization-1',
     phone: '13800138001',
     role: 'admin',
     roles: ['admin'],
@@ -226,6 +244,7 @@ const initialSystemUsers: SystemUserRecord[] = [
     createdAt: '2026-02-20',
     id: 'user-2',
     nickname: '运营人员',
+    organizationId: 'organization-5',
     phone: '13800138002',
     role: 'operator',
     roles: ['operator'],
@@ -236,6 +255,7 @@ const initialSystemUsers: SystemUserRecord[] = [
     createdAt: '2026-03-10',
     id: 'user-3',
     nickname: '访客账号',
+    organizationId: 'organization-1',
     phone: '13800138003',
     role: 'guest',
     roles: ['guest'],
@@ -246,6 +266,7 @@ const initialSystemUsers: SystemUserRecord[] = [
     createdAt: '2026-04-05',
     id: 'user-4',
     nickname: '项目管理员',
+    organizationId: 'organization-2',
     phone: '13800138004',
     role: 'operator',
     roles: ['operator'],
@@ -256,6 +277,7 @@ const initialSystemUsers: SystemUserRecord[] = [
     createdAt: '2026-05-12',
     id: 'user-5',
     nickname: '审计访客',
+    organizationId: 'organization-4',
     phone: '13800138005',
     role: 'guest',
     roles: ['guest'],
@@ -266,6 +288,7 @@ const initialSystemUsers: SystemUserRecord[] = [
     createdAt: '2026-06-18',
     id: 'user-6',
     nickname: '内容运营',
+    organizationId: 'organization-5',
     phone: '13800138006',
     role: 'operator',
     roles: ['operator'],
@@ -739,9 +762,13 @@ function normalizeStatus(value: unknown): SystemUserStatus {
   return 'enabled'
 }
 
-function resolveUserInput(input: SaveSystemUserInput): Omit<SystemUserRecord, 'createdAt' | 'id'> {
+function resolveUserInput(
+  input: SaveSystemUserInput,
+  currentOrganizationId?: string,
+): Omit<SystemUserRecord, 'createdAt' | 'id'> {
   const username = normalizeText(input.username)
   const nickname = normalizeText(input.nickname)
+  const organizationId = normalizeText(input.organizationId)
   const roles = normalizeRoles(input.roles ?? input.role)
 
   if (!username) {
@@ -752,8 +779,22 @@ function resolveUserInput(input: SaveSystemUserInput): Omit<SystemUserRecord, 'c
     throw new Error('昵称不能为空')
   }
 
+  if (!organizationId) {
+    throw new Error('请选择所属机构')
+  }
+
+  const organization = findOrganizationById(systemOrganizations, organizationId)
+  if (!organization) {
+    throw new Error('所属机构不存在')
+  }
+
+  if (organization.status === 'disabled' && organizationId !== currentOrganizationId) {
+    throw new Error('只能选择启用机构')
+  }
+
   return {
     nickname,
+    organizationId,
     phone: normalizeText(input.phone),
     role: roles[0],
     roles,
@@ -1122,6 +1163,13 @@ function assertDictionaryValueAvailable(typeCode: string, value: string, exclude
 
 export async function mockFetchSystemUsers(params: SystemUserListParams): Promise<SystemUserListResult> {
   const keyword = normalizeText(params.query?.keyword).toLowerCase()
+  const organizationId = normalizeText(params.query?.organizationId)
+  const selectedOrganization = organizationId
+    ? findOrganizationById(systemOrganizations, organizationId)
+    : undefined
+  const organizationIds = organizationId
+    ? new Set(selectedOrganization ? flattenOrganizations([selectedOrganization]).map(item => item.id) : [])
+    : undefined
   const role = params.query?.roles || params.query?.role || ''
   const status = params.query?.status || ''
   const page = Math.max(1, Number(params.page) || 1)
@@ -1132,8 +1180,9 @@ export async function mockFetchSystemUsers(params: SystemUserListParams): Promis
       : true
     const matchesRole = role ? user.roles.includes(role) : true
     const matchesStatus = status ? user.status === status : true
+    const matchesOrganization = organizationIds ? organizationIds.has(user.organizationId) : true
 
-    return matchesKeyword && matchesRole && matchesStatus
+    return matchesKeyword && matchesRole && matchesStatus && matchesOrganization
   })
   const start = (page - 1) * pageSize
 
@@ -1167,7 +1216,7 @@ export async function mockUpdateSystemUser(id: string, input: SaveSystemUserInpu
   const normalized = resolveUserInput({
     ...currentUser,
     ...input,
-  })
+  }, currentUser.organizationId)
   assertUsernameAvailable(normalized.username, id)
 
   const updatedUser: SystemUserRecord = {
@@ -1213,6 +1262,78 @@ export async function mockUpdateSystemUserRoles(
   systemUsers = systemUsers.map(item => item.id === id ? updatedUser : item)
   updateMockAccountRoles(updatedUser.username, normalizedRoles)
   return cloneUser(updatedUser)
+}
+
+function resolveBatchUsers(ids: unknown): SystemUserRecord[] {
+  if (!Array.isArray(ids)) {
+    throw new TypeError('请选择用户')
+  }
+
+  const normalizedIds = Array.from(new Set(ids.map(normalizeText).filter(Boolean)))
+  if (normalizedIds.length === 0) {
+    throw new Error('请选择用户')
+  }
+
+  const users = normalizedIds.map(id => systemUsers.find(user => user.id === id))
+  if (users.some(user => !user)) {
+    throw new Error('用户不存在')
+  }
+
+  return users as SystemUserRecord[]
+}
+
+function normalizeRequiredStatus(value: unknown): SystemUserStatus {
+  if (value !== 'disabled' && value !== 'enabled') {
+    throw new Error('请选择有效状态')
+  }
+
+  return value
+}
+
+export async function mockBatchUpdateSystemUserStatus(
+  ids: string[],
+  status: SystemUserStatus,
+): Promise<SystemUserBatchResult> {
+  const users = resolveBatchUsers(ids)
+  const normalizedStatus = normalizeRequiredStatus(status)
+  const updates = new Map(users.map(user => [user.id, { ...user, status: normalizedStatus }]))
+
+  systemUsers = systemUsers.map(user => updates.get(user.id) ?? user)
+  const items = users.map((user) => {
+    const updatedUser = updates.get(user.id)!
+    updateMockAccountStatus(updatedUser.username, updatedUser.status === 'enabled')
+    return cloneUser(updatedUser)
+  })
+
+  return { items, updated: items.length }
+}
+
+export async function mockBatchUpdateSystemUserRoles(
+  ids: string[],
+  roles: string[],
+  mode: SystemUserRoleBatchMode,
+): Promise<SystemUserBatchResult> {
+  const users = resolveBatchUsers(ids)
+  const normalizedRoles = normalizeRoles(roles)
+  if (mode !== 'append' && mode !== 'replace') {
+    throw new Error('请选择有效的角色分配方式')
+  }
+
+  const updates = new Map(users.map((user) => {
+    const nextRoles = mode === 'append'
+      ? normalizeRoles([...user.roles, ...normalizedRoles])
+      : normalizedRoles
+    return [user.id, { ...user, role: nextRoles[0]!, roles: [...nextRoles] }]
+  }))
+
+  systemUsers = systemUsers.map(user => updates.get(user.id) ?? user)
+  const items = users.map((user) => {
+    const updatedUser = updates.get(user.id)!
+    updateMockAccountRoles(updatedUser.username, updatedUser.roles)
+    return cloneUser(updatedUser)
+  })
+
+  return { items, updated: items.length }
 }
 
 export async function mockResetSystemUserPassword(id: string): Promise<SystemUserPasswordResetResult> {
@@ -1341,6 +1462,21 @@ export async function mockFetchSystemOrganizations(): Promise<SystemOrganization
   return cloneOrganizations(sortOrganizations(systemOrganizations))
 }
 
+export async function mockFetchSystemOrganizationOptions(): Promise<SystemOrganizationOption[]> {
+  return sortOrganizations(systemOrganizations).map(toOrganizationOption)
+}
+
+function toOrganizationOption(organization: SystemOrganizationRecord): SystemOrganizationOption {
+  return {
+    ...(organization.children?.length
+      ? { children: organization.children.map(toOrganizationOption) }
+      : {}),
+    disabled: organization.status === 'disabled',
+    label: `${organization.name}（${organization.code}）`,
+    value: organization.id,
+  }
+}
+
 export async function mockCreateSystemOrganization(
   input: SaveSystemOrganizationInput,
 ): Promise<SystemOrganizationRecord> {
@@ -1385,6 +1521,10 @@ export async function mockDeleteSystemOrganization(id: string): Promise<void> {
 
   if (organization.children?.length) {
     throw new Error('请先删除或移动下级机构')
+  }
+
+  if (systemUsers.some(user => user.organizationId === id)) {
+    throw new Error('该机构仍有直属用户，请先迁移用户')
   }
 
   systemOrganizations = removeOrganization(systemOrganizations, id)

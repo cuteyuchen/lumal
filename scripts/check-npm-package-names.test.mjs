@@ -12,6 +12,7 @@ describe('getPublishPackageNames', () => {
       '@luma/icons',
       '@luma/core',
       '@luma/charts',
+      '@luma/datav',
       '@luma/cockpit',
       '@luma/vben-compat',
       '@luma/vite',

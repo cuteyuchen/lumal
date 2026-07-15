@@ -23,6 +23,7 @@ describe('mock sandbox', () => {
 
     await withSandbox(first, () => mockCreateSystemUser({
       nickname: '沙箱用户',
+      organizationId: 'organization-3',
       roles: ['guest'],
       status: 'enabled',
       username: 'sandbox-user',
@@ -35,6 +36,13 @@ describe('mock sandbox', () => {
 
     resetSandbox(first)
     await expect(withSandbox(first, () => mockFetchSystemUsers({ page: 1, pageSize: 20, query: { keyword: 'sandbox-user' } }))).resolves.toMatchObject({ total: 0 })
+    await expect(withSandbox(first, () => mockFetchSystemUsers({ page: 1, pageSize: 20, query: { organizationId: 'organization-5' } }))).resolves.toMatchObject({
+      items: [
+        expect.objectContaining({ id: 'user-2', organizationId: 'organization-5' }),
+        expect.objectContaining({ id: 'user-6', organizationId: 'organization-5' }),
+      ],
+      total: 2,
+    })
   })
 
   it('签发并校验 access 和 refresh JWT', () => {

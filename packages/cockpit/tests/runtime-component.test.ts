@@ -110,15 +110,17 @@ describe('lumaCockpit v3 运行时', () => {
     expect(tabRow.findAll('.luma-cockpit-widget .luma-cockpit-card')).toHaveLength(0)
     expect(tabRow.findAll('.luma-cockpit-card__header')).toHaveLength(1)
     expect(tabs.map(tab => tab.text())).toEqual(['甲', '乙'])
-    // Tab 面板使用 v-show 保留非激活模块状态，左侧模块加两个 Tab 模块共三实例。
-    expect(wrapper.findAll('.stub-widget')).toHaveLength(3)
-    const panels = tabRow.findAll('.luma-cockpit-container__tabpanel')
-    expect((panels[0].element as HTMLElement).style.display).toBe('')
-    expect((panels[1].element as HTMLElement).style.display).toBe('none')
+    // Tab 首次激活时挂载，访问后使用 v-show 保留实例状态。
+    expect(wrapper.findAll('.stub-widget')).toHaveLength(2)
+    expect(tabRow.findAll('.luma-cockpit-container__tabpanel')).toHaveLength(1)
     await tabs[1].trigger('click')
     expect(tabs[1].attributes('aria-selected')).toBe('true')
+    const panels = tabRow.findAll('.luma-cockpit-container__tabpanel')
+    expect(panels).toHaveLength(2)
     expect((panels[0].element as HTMLElement).style.display).toBe('none')
     expect((panels[1].element as HTMLElement).style.display).toBe('')
+    expect(wrapper.findAll('.stub-widget')).toHaveLength(3)
+    await tabs[0].trigger('click')
     expect(wrapper.findAll('.stub-widget')).toHaveLength(3)
   })
 
@@ -206,7 +208,7 @@ describe('lumaCockpit v3 运行时', () => {
     expect(wrapper.findAll('.luma-cockpit-card')).toHaveLength(0)
     expect(wrapper.findAll('.custom-cockpit-card')).toHaveLength(2)
     expect(wrapper.get('[data-instance-id="left-widget"] .stub-widget').exists()).toBe(true)
-    expect(wrapper.findAll('.stub-widget')).toHaveLength(3)
+    expect(wrapper.findAll('.stub-widget')).toHaveLength(2)
     expect(wrapper.get('.custom-cockpit-card[data-active-tab-id="right-a"]').exists()).toBe(true)
 
     await wrapper.findAll('.custom-cockpit-card__tab')[1].trigger('click')

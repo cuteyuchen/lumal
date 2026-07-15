@@ -12,6 +12,7 @@ const publishPackageJsonPaths = [
   'packages/icons/package.json',
   'packages/core/package.json',
   'packages/charts/package.json',
+  'packages/datav/package.json',
   'packages/cockpit/package.json',
   'packages/vben-compat/package.json',
   'packages/vite/package.json',

@@ -114,6 +114,14 @@ export interface CrudToolbarConfig {
   fullscreenText?: string
 }
 
+export interface CrudToolbarSlotProps<Row extends SchemaTableRow = SchemaTableRow> {
+  clearSelection: () => void
+  openCreate: () => void
+  reload: () => Promise<void>
+  selectedRowKeys: Array<number | string>
+  selectedRows: Row[]
+}
+
 export interface CrudExportContext<Row extends SchemaTableRow = SchemaTableRow> {
   columns: CrudTableColumn[]
   query: SchemaFormModel

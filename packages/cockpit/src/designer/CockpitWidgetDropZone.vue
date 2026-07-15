@@ -2,9 +2,9 @@
 import type { SortableEvent } from 'sortablejs'
 import type { CockpitWidgetInstance } from '../types'
 import type { DraftWidgetLocation } from './useCockpitDraft'
-import { ElMessageBox } from 'element-plus'
 import Sortable from 'sortablejs'
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { confirmWidgetReplacement } from './confirmWidgetReplacement'
 
 /***********************Designer 模块投放区*********************/
 
@@ -17,10 +17,14 @@ interface DragPayload {
 
 const props = withDefaults(defineProps<{
   allowMultiple?: boolean
+  dragHandle?: string
+  sortableTarget?: string
   target: DraftWidgetLocation
   widget?: CockpitWidgetInstance
 }>(), {
   allowMultiple: false,
+  dragHandle: '',
+  sortableTarget: '',
   widget: undefined,
 })
 
@@ -45,20 +49,8 @@ function readSource(value: string | undefined): DraftWidgetLocation | undefined 
   return undefined
 }
 
-function isCurrentTarget(source: DraftWidgetLocation | undefined): boolean {
-  return Boolean(
-    source
-    && source.kind === 'cell'
-    && props.target.kind === 'cell'
-    && source.side === props.target.side
-    && source.rowId === props.target.rowId
-    && source.cellId === props.target.cellId,
-  )
-}
-
 function canMove(event: Sortable.MoveEvent): boolean {
-  const source = readSource((event.dragged as HTMLElement).dataset.cockpitDragSource)
-  return !isCurrentTarget(source)
+  return event.to !== event.from || props.allowMultiple
 }
 
 function payloadFor(item: HTMLElement, replace = false): DragPayload {
@@ -77,18 +69,14 @@ async function handleAdd(event: SortableEvent): Promise<void> {
   const replace = !props.allowMultiple && Boolean(props.widget)
 
   if (replace) {
-    try {
-      await ElMessageBox.confirm('目标槽位已有模块，是否替换？', '确认替换', {
-        cancelButtonText: '取消',
-        confirmButtonText: '替换',
-        type: 'warning',
-      })
-    }
-    catch {
-      if (payload.source)
-        event.from.appendChild(item)
-      else
+    if (!await confirmWidgetReplacement()) {
+      if (payload.source) {
+        const previousSibling = event.from.children.item(event.oldIndex ?? event.from.children.length)
+        event.from.insertBefore(item, previousSibling)
+      }
+      else {
         item.remove()
+      }
       return
     }
   }
@@ -100,9 +88,15 @@ async function handleAdd(event: SortableEvent): Promise<void> {
 onMounted(() => {
   if (!zoneRef.value)
     return
-  sortable = Sortable.create(zoneRef.value, {
+  const sortableElement = props.sortableTarget
+    ? zoneRef.value.querySelector<HTMLElement>(props.sortableTarget)
+    : zoneRef.value
+  if (!sortableElement)
+    return
+  sortable = Sortable.create(sortableElement, {
     animation: 160,
     group: { name: 'luma-cockpit-designer-modules', pull: true, put: true },
+    handle: props.dragHandle || undefined,
     sort: props.allowMultiple,
     draggable: '.luma-cockpit-designer__drag-item',
     ghostClass: 'is-drag-ghost',

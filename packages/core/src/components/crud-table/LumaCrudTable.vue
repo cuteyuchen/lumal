@@ -8,6 +8,7 @@ import type {
   CrudTableProps,
   CrudTableResetPayload,
   CrudTableSearchPayload,
+  CrudToolbarSlotProps,
 } from './types'
 import { LumaIcon } from '@luma/icons'
 import { ElButton, ElMessageBox } from 'element-plus'
@@ -45,6 +46,37 @@ interface SchemaTableExpose {
   getTableInstance: () => unknown
 }
 
+type CrudTableSlots = {
+  [name in `form-${string}`]?: (props: Record<string, unknown>) => unknown
+} & {
+  [name in `query-${string}`]?: (props: Record<string, unknown>) => unknown
+} & {
+  [name in `table-${string}`]?: (props: Record<string, unknown>) => unknown
+} & {
+  'actions'?: () => unknown
+  'create-action'?: (props: Pick<CrudToolbarSlotProps, 'openCreate'>) => unknown
+  'default'?: () => unknown
+  'footer'?: (props: {
+    close: () => void
+    mode: CrudFormMode
+    model: SchemaFormModel
+    submit: () => void
+  }) => unknown
+  'row-actions'?: (props: {
+    index: number
+    openEdit: (row: SchemaTableRow) => void
+    openView: (row: SchemaTableRow) => void
+    removeRow: (row: SchemaTableRow) => Promise<void>
+    row: SchemaTableRow
+  }) => unknown
+  'table-title'?: () => unknown
+  'toolbar-actions'?: (props: CrudToolbarSlotProps) => unknown
+  'toolbar-tools'?: (props: {
+    reload: () => Promise<void>
+    toggleFullscreen: () => Promise<void>
+  }) => unknown
+}
+
 /***********************属性与事件*********************/
 const props = withDefaults(defineProps<CrudTableProps>(), {
   rows: () => [],
@@ -70,6 +102,8 @@ const emit = defineEmits<{
   (event: 'export', payload: { query: SchemaFormModel, selectedRows: SchemaTableRow[] }): void
   (event: 'operationError', error: unknown): void
 }>()
+
+defineSlots<CrudTableSlots>()
 
 const queryModel = defineModel<SchemaFormModel>('queryModel', { default: () => ({}) })
 const page = defineModel<number>('page', { default: 1 })
@@ -391,8 +425,7 @@ async function runMutation(task: () => Promise<unknown>): Promise<boolean> {
   operationLoading.value = true
   try {
     await task()
-    selectionState.clear()
-    tableRef.value?.clearSelection()
+    clearSelection()
     await data.load()
     return true
   }
@@ -476,12 +509,14 @@ function submitEditor(): void {
   void handleFormSubmit(dialogState.model.value)
 }
 
+function clearSelection(): void {
+  selectionState.clear()
+  tableRef.value?.clearSelection()
+}
+
 /***********************公开方法*********************/
 defineExpose({
-  clearSelection: () => {
-    selectionState.clear()
-    tableRef.value?.clearSelection()
-  },
+  clearSelection,
   getCrudElement: () => crudRef.value,
   closeEditor,
   getEditorForm: () => dialogFormRef.value,
@@ -602,7 +637,14 @@ defineExpose({
               <ElButton v-if="showExport" native-type="button" data-action="export" @click="handleExportClick">
                 {{ toolbar?.exportText ?? '导出' }}
               </ElButton>
-              <slot name="toolbar-actions" :reload="data.load" :open-create="openCreate" />
+              <slot
+                name="toolbar-actions"
+                :reload="data.load"
+                :open-create="openCreate"
+                :selected-rows="selectionState.selectedRows.value"
+                :selected-row-keys="selectionState.selectedRowKeys.value"
+                :clear-selection="clearSelection"
+              />
               <slot name="actions" />
             </div>
           </template>

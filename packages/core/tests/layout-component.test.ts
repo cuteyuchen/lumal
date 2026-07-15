@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { defineComponent } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import {
+  LumaBreadcrumb,
   LumaContent,
   LumaHeader,
   LumaLayout,
@@ -76,6 +77,8 @@ describe('luma layout', () => {
 
     expect(wrapper.findComponent({ name: 'ElContainer' }).exists()).toBe(true)
     expect(wrapper.findComponent(LumaHeader).exists()).toBe(true)
+    expect(wrapper.findComponent(LumaHeader).findComponent(LumaBreadcrumb).exists()).toBe(true)
+    expect(wrapper.find('.luma-layout__main > .luma-breadcrumb').exists()).toBe(false)
     expect(wrapper.findComponent(LumaSidebar).exists()).toBe(true)
     expect(wrapper.findComponent(LumaTabs).exists()).toBe(true)
     expect(wrapper.findComponent(LumaContent).exists()).toBe(true)
@@ -151,6 +154,8 @@ describe('luma layout', () => {
     expect(wrapper.findComponent(LumaTopNav).exists()).toBe(true)
     expect(wrapper.findComponent(LumaTopNav).props('activePath')).toBe('/system/user')
     expect(wrapper.find('.luma-header__navigation').exists()).toBe(true)
+    expect(wrapper.findComponent(LumaHeader).findComponent(LumaBreadcrumb).exists()).toBe(false)
+    expect(wrapper.find('.luma-layout__main > .luma-breadcrumb').exists()).toBe(true)
 
     await wrapper.find('[data-menu-path="/system/user"]').trigger('click')
 
@@ -173,6 +178,8 @@ describe('luma layout', () => {
     expect(wrapper.findComponent(LumaTopNav).props('mode')).toBe('flat')
     expect(wrapper.find('[data-menu-path="/system"]').exists()).toBe(true)
     expect(wrapper.findComponent(LumaSidebar).props('menus')).toEqual(menus[1]!.children)
+    expect(wrapper.findComponent(LumaHeader).findComponent(LumaBreadcrumb).exists()).toBe(false)
+    expect(wrapper.find('.luma-layout__main > .luma-breadcrumb').exists()).toBe(true)
 
     await wrapper.find('[data-menu-path="/system"]').trigger('click')
     expect(wrapper.emitted('menuSelect')?.at(-1)).toEqual(['/system/user'])

@@ -70,6 +70,7 @@ defineExpose({
   position: relative;
   box-sizing: border-box;
   display: grid;
+  align-content: start;
   gap: 16px;
   min-width: 0;
   padding: 20px;

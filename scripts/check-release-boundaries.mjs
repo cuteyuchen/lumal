@@ -10,6 +10,7 @@ const packageDirs = {
   icons: join(rootDir, 'packages/icons'),
   core: join(rootDir, 'packages/core'),
   charts: join(rootDir, 'packages/charts'),
+  datav: join(rootDir, 'packages/datav'),
   cockpit: join(rootDir, 'packages/cockpit'),
   vbenCompat: join(rootDir, 'packages/vben-compat'),
   vite: join(rootDir, 'packages/vite'),
@@ -114,6 +115,7 @@ if (existsSync(licensePath)) {
 const iconsPackage = checkPublishPackage('@luma/icons', packageDirs.icons)
 const corePackage = checkPublishPackage('@luma/core', packageDirs.core)
 const chartsPackage = checkPublishPackage('@luma/charts', packageDirs.charts)
+const datavPackage = checkPublishPackage('@luma/datav', packageDirs.datav)
 const cockpitPackage = checkPublishPackage('@luma/cockpit', packageDirs.cockpit)
 const compatPackage = checkPublishPackage('@luma/vben-compat', packageDirs.vbenCompat)
 const vitePackage = checkPublishPackage('@luma/vite', packageDirs.vite)
@@ -123,6 +125,27 @@ assert(corePackage.files?.includes('theme-chalk'), '@luma/core files 未包含 t
 assert(corePackage.exports?.['./style.css'] === './dist/core.css', '@luma/core 未导出 style.css')
 assert(corePackage.exports?.['./theme-chalk/index.scss'], '@luma/core 未导出 theme-chalk/index.scss')
 assert(createPackage.bin?.['create-luma-admin'] === './dist/cli.js', 'create-luma-admin 缺少 bin.create-luma-admin')
+assert(datavPackage.exports?.['./style.css'] === './dist/datav.css', '@luma/datav 未导出 style.css')
+for (const entry of [
+  'active-ring-chart',
+  'border-box',
+  'capsule-chart',
+  'charts',
+  'conical-column-chart',
+  'decoration',
+  'digital-flop',
+  'flyline-chart',
+  'flyline-chart-enhanced',
+  'full-screen-container',
+  'loading',
+  'percent-pond',
+  'scroll-board',
+  'scroll-ranking-board',
+  'water-level-pond',
+]) {
+  const exported = datavPackage.exports?.[`./${entry}`]
+  assert(exported?.types && exported?.import && exported?.require, `@luma/datav 未完整导出 ${entry}`)
+}
 
 assert(cockpitPackage.exports?.['./style.css'] === './dist/cockpit.css', '@luma/cockpit 未导出 style.css')
 assert(cockpitPackage.exports?.['./runtime'], '@luma/cockpit 未导出 runtime 入口')
@@ -150,6 +173,11 @@ const chartsAllDependencies = getDependencyNames(chartsPackage, [
   'peerDependencies',
   'optionalDependencies',
 ])
+const datavAllDependencies = getDependencyNames(datavPackage, [
+  'dependencies',
+  'peerDependencies',
+  'optionalDependencies',
+])
 const viteAllDependencies = getDependencyNames(vitePackage, [
   'dependencies',
   'peerDependencies',
@@ -171,6 +199,15 @@ assert(!compatAllDependencies.has('element-plus'), '@luma/vben-compat 不应直�
 assert(hasDependency(chartsPackage, 'peerDependencies', 'echarts'), '@luma/charts 应把 echarts 放在 peerDependencies')
 assert(!hasDependency(chartsPackage, 'dependencies', 'echarts'), '@luma/charts 不能把 echarts 放在 dependencies')
 assert(!chartsAllDependencies.has('@luma/core'), '@luma/charts 不应依赖 @luma/core')
+assert(hasDependency(datavPackage, 'peerDependencies', 'vue'), '@luma/datav 应把 vue 放在 peerDependencies')
+assert(hasDependency(datavPackage, 'peerDependencies', 'echarts'), '@luma/datav 应把 echarts 放在 peerDependencies')
+assert(datavAllDependencies.size === 2, '@luma/datav 运行时依赖应仅包含 vue 与 echarts peer')
+assert(!hasDependency(datavPackage, 'dependencies', 'vue'), '@luma/datav 不能把 vue 放在 dependencies')
+assert(!hasDependency(datavPackage, 'dependencies', 'echarts'), '@luma/datav 不能把 echarts 放在 dependencies')
+assert(!hasDependency(datavPackage, 'optionalDependencies', 'vue'), '@luma/datav 不能把 vue 放在 optionalDependencies')
+for (const forbiddenName of ['@luma/cockpit', '@luma/charts', 'element-plus', '@jiaminghi/data-view', '@jiaminghi/charts', '@jiaminghi/c-render']) {
+  assert(!datavAllDependencies.has(forbiddenName), `@luma/datav 不能依赖 ${forbiddenName}`)
+}
 assert(viteAllDependencies.size === 0, '@luma/vite 不应引入强制运行时依赖')
 
 /***********************@luma/cockpit 依赖边界*********************/
@@ -217,9 +254,19 @@ for (const match of cockpitForbiddenMatches) {
   errors.push(`@luma/cockpit 源码出现禁止依赖标识：${match}`)
 }
 
+/***********************@luma/datav 源码边界*********************/
+const datavForbiddenMatches = findTextMatches(
+  join(packageDirs.datav, 'src'),
+  /@luma\/cockpit|@luma\/charts|@jiaminghi\/|from 'element-plus'|from "element-plus"/,
+)
+
+for (const match of datavForbiddenMatches) {
+  errors.push(`@luma/datav 源码出现禁止依赖标识：${match}`)
+}
+
 const appSourceAliasMatches = findTextMatches(
   join(rootDir, 'apps'),
-  /\.\.\/\.\.\/packages|packages\/(?:icons|core|cockpit|vben-compat|vite)\/src|packages\\(?:icons|core|cockpit|vben-compat|vite)\\src/,
+  /\.\.\/\.\.\/packages|packages\/(?:icons|core|datav|cockpit|vben-compat|vite)\/src|packages\\(?:icons|core|datav|cockpit|vben-compat|vite)\\src/,
   new Set(),
   ['../../packages/vite/src/aliases'],
 )

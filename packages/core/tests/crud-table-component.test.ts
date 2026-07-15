@@ -1,3 +1,4 @@
+import type { CrudToolbarSlotProps } from '../src/exports/components'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import { h, nextTick } from 'vue'
@@ -161,6 +162,44 @@ describe('luma crud table', () => {
       },
     })
     expect(wrapperWithoutTitle.find('.luma-schema-table__toolbar-title').exists()).toBe(false)
+  })
+
+  it('toolbar-actions 插槽会实时提供选择状态并可清空选择', async () => {
+    const row = { id: 'row-1', name: 'Luma' }
+    const wrapper = mount(LumaCrudTable, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        columns: [{ field: 'name', label: '名称' }],
+        rowKey: 'id',
+        rows: [row],
+        selection: true,
+      },
+      slots: {
+        'toolbar-actions': ({
+          clearSelection,
+          selectedRowKeys,
+          selectedRows,
+        }: CrudToolbarSlotProps) => h('button', {
+          'data-action': 'clear-toolbar-selection',
+          'data-selected-keys': selectedRowKeys.join(','),
+          'data-selected-rows': String(selectedRows.length),
+          'onClick': clearSelection,
+        }, '清空选择'),
+      },
+    })
+
+    const table = wrapper.findComponent(LumaSchemaTable)
+    table.vm.$emit('selectionChange', [row], ['row-1'])
+    await nextTick()
+
+    const clearButton = wrapper.find('[data-action="clear-toolbar-selection"]')
+    expect(clearButton.attributes('data-selected-rows')).toBe('1')
+    expect(clearButton.attributes('data-selected-keys')).toBe('row-1')
+
+    await clearButton.trigger('click')
+
+    expect(clearButton.attributes('data-selected-rows')).toBe('0')
+    expect(clearButton.attributes('data-selected-keys')).toBe('')
   })
 
   it('查询列数会按容器宽度自适应，并允许 query.columns 显式覆盖', async () => {

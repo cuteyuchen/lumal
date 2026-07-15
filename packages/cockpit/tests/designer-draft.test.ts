@@ -43,6 +43,15 @@ describe('v3 useCockpitDraft', () => {
     expect(rows[0].height).toBeCloseTo(70, 3)
   })
 
+  it('左右区域的行列结构可以独立调整', () => {
+    const draft = useCockpitDraft(sourceConfig())
+    expect(draft.resizeRegion('left', 2, 3)).toBe(true)
+    expect(draft.activeLayout.value!.left.rows).toHaveLength(2)
+    expect(draft.activeLayout.value!.left.columns).toHaveLength(3)
+    expect(draft.activeLayout.value!.right.rows).toHaveLength(1)
+    expect(draft.activeLayout.value!.right.columns).toHaveLength(1)
+  })
+
   it('缩减含模块的列被阻止，显式丢弃才会执行', () => {
     const draft = useCockpitDraft(sourceConfig())
     draft.addWidget({ kind: 'cell', side: 'left', rowId: 'left-row', cellId: 'left-cell-b' }, 'stub')
@@ -61,6 +70,58 @@ describe('v3 useCockpitDraft', () => {
     expect(row.widgets).toHaveLength(2)
     expect(draft.setRowTabs('left', 'left-row', false)).toBe(true)
     expect(row.cells.filter(cell => cell.widget)).toHaveLength(2)
+  })
+
+  it('新增和移动到 Tab 行后激活新模块，删除其他 Tab 不改变当前项', () => {
+    const draft = useCockpitDraft(sourceConfig())
+    draft.setRowTabs('left', 'left-row', true)
+    draft.addWidget({ kind: 'tabs', side: 'left', rowId: 'left-row' }, 'a', '模块 A')
+    const row = draft.activeLayout.value!.left.rows[0]
+    const firstId = row.activeWidgetId
+    draft.addWidget({ kind: 'tabs', side: 'left', rowId: 'left-row' }, 'b', '模块 B')
+    const secondId = row.activeWidgetId
+    expect(secondId).not.toBe(firstId)
+
+    draft.removeWidget({ kind: 'tabs', side: 'left', rowId: 'left-row', widgetId: firstId })
+    expect(row.activeWidgetId).toBe(secondId)
+
+    draft.removeWidget({ kind: 'tabs', side: 'left', rowId: 'left-row', widgetId: secondId })
+    expect(row.activeWidgetId).toBeUndefined()
+  })
+
+  it('普通槽模块移入 Tab 行后追加到末尾并成为激活项', () => {
+    const draft = useCockpitDraft(sourceConfig())
+    const source = { kind: 'cell' as const, side: 'left' as const, rowId: 'left-row', cellId: 'left-cell-a' }
+    const target = { kind: 'tabs' as const, side: 'right' as const, rowId: 'right-row' }
+    draft.addWidget(source, 'source', '来源模块')
+    draft.setRowTabs('right', 'right-row', true)
+    draft.addWidget(target, 'existing', '现有 Tab')
+
+    expect(draft.moveWidget(source, target).moved).toBe(true)
+    const row = draft.activeLayout.value!.right.rows[0]
+    expect(row.widgets.map(widget => widget.type)).toEqual(['existing', 'source'])
+    expect(row.activeWidgetId).toBe(row.widgets[1].id)
+    expect(draft.hasWidgetAt(source)).toBe(false)
+  })
+
+  it('复制布局时保留原 Tab 激活位置并生成新实例 id', () => {
+    const source = sourceConfig()
+    source.layouts[0].left.rows[0] = {
+      id: 'left-tabs',
+      height: 100,
+      mode: 'tabs',
+      cells: [],
+      widgets: [
+        { id: 'tab-a', type: 'a' },
+        { id: 'tab-b', type: 'b' },
+      ],
+      activeWidgetId: 'tab-b',
+    }
+    const draft = useCockpitDraft(source)
+    draft.duplicateLayout('layout')
+    const clonedRow = draft.layouts.value[1].left.rows[0]
+    expect(clonedRow.activeWidgetId).toBe(clonedRow.widgets[1].id)
+    expect(clonedRow.widgets[1].id).not.toBe('tab-b')
   })
 
   it('移动到占用槽需要替换确认', () => {

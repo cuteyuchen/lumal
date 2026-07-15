@@ -66,6 +66,10 @@ defineExpose({
       </ElButton>
     </div>
 
+    <div v-if="$slots.breadcrumb" class="luma-header__breadcrumb">
+      <slot name="breadcrumb" />
+    </div>
+
     <nav v-if="$slots.navigation" class="luma-header__navigation" aria-label="主导航">
       <slot name="navigation" />
     </nav>
@@ -144,6 +148,14 @@ defineExpose({
   overflow: hidden;
 }
 
+.luma-header__breadcrumb {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: 24px;
+  overflow: hidden;
+}
+
 .luma-header__actions {
   display: flex;
   flex: none;
@@ -159,6 +171,10 @@ defineExpose({
   .luma-header__navigation {
     margin-left: 16px;
   }
+
+  .luma-header__breadcrumb {
+    margin-left: 16px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -167,6 +183,10 @@ defineExpose({
   }
 
   .luma-header__navigation {
+    display: none;
+  }
+
+  .luma-header__breadcrumb {
     display: none;
   }
 

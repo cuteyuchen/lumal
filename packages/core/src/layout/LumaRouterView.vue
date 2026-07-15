@@ -125,11 +125,11 @@ defineExpose({
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .luma-router-view :deep(> *) {
-  flex: 1 1 auto;
   min-height: 0;
 }
 

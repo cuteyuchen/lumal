@@ -53,10 +53,31 @@ describe('@luma/vite', () => {
       .toBe(resolve('E:/workspace/luma', 'packages/core/src/source-style.css'))
     expect(sourceAliases.find(alias => alias.find === '@luma/cockpit/designer')?.replacement)
       .toBe(resolve('E:/workspace/luma', 'packages/cockpit/src/designer/index.ts'))
+    expect(sourceAliases.find(alias => alias.find === '@luma/datav')?.replacement)
+      .toBe(resolve('E:/workspace/luma', 'packages/datav/src/index.ts'))
+    expect(sourceAliases.find(alias => alias.find === '@luma/datav/style.css')?.replacement)
+      .toBe(resolve('E:/workspace/luma', 'packages/datav/src/source-style.css'))
     expect(sourceAliases.every(alias => !alias.replacement.replaceAll('\\', '/').includes('/dist/')))
       .toBe(true)
     expect(distAliases.find(alias => alias.find === '@luma/icons/vite')?.replacement)
       .toBe(resolve('E:/workspace/luma', 'packages/icons/dist/vite.js'))
+
+    const datavDistAliases = createLumaAliases({
+      packages: ['datav'],
+      target: 'dist',
+      workspaceRoot: 'E:/workspace/luma',
+    })
+
+    expect(datavDistAliases).toEqual([
+      {
+        find: '@luma/datav/style.css',
+        replacement: resolve('E:/workspace/luma', 'packages/datav/dist/datav.css'),
+      },
+      {
+        find: '@luma/datav',
+        replacement: resolve('E:/workspace/luma', 'packages/datav/dist/index.js'),
+      },
+    ])
   })
 
   it('仅在启用时调用外部 Devtools 工厂', () => {

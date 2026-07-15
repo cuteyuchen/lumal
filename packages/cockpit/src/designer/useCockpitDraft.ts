@@ -104,6 +104,9 @@ function cloneLayoutWithIds(source: CockpitLayoutConfig): CockpitLayoutConfig {
       column.id = createGridColumn().id
     })
     region.rows.forEach((row) => {
+      const activeWidgetIndex = row.mode === 'tabs'
+        ? Math.max(0, row.widgets.findIndex(widget => widget.id === row.activeWidgetId))
+        : -1
       row.id = createGridRow(1).id
       row.cells.forEach((cell) => {
         cell.id = createGridCell().id
@@ -113,7 +116,7 @@ function cloneLayoutWithIds(source: CockpitLayoutConfig): CockpitLayoutConfig {
       row.widgets.forEach((widget) => {
         widget.id = createWidgetInstance(widget.type).id
       })
-      row.activeWidgetId = row.widgets[0]?.id
+      row.activeWidgetId = row.mode === 'tabs' ? row.widgets[activeWidgetIndex]?.id : undefined
     })
   }
   return clone
@@ -294,7 +297,7 @@ export function useCockpitDraft(source: CockpitConfig): UseCockpitDraftReturn {
       if (!row || row.mode !== 'tabs')
         return false
       row.widgets.push(widget)
-      row.activeWidgetId ??= widget.id
+      row.activeWidgetId = widget.id
       return true
     }
     const cell = findCell(location)
@@ -315,9 +318,12 @@ export function useCockpitDraft(source: CockpitConfig): UseCockpitDraftReturn {
     if (!row || row.mode !== 'tabs')
       return
     const index = location.widgetId ? row.widgets.findIndex(widget => widget.id === location.widgetId) : 0
-    if (index >= 0)
+    if (index >= 0) {
+      const removedWasActive = row.widgets[index]?.id === row.activeWidgetId
       row.widgets.splice(index, 1)
-    row.activeWidgetId = row.widgets[0]?.id
+      if (removedWasActive || !row.widgets.some(widget => widget.id === row.activeWidgetId))
+        row.activeWidgetId = row.widgets[index]?.id ?? row.widgets[index - 1]?.id
+    }
   }
 
   function removeLocatedWidget(location: DraftWidgetLocation, widgetId?: string): CockpitWidgetInstance | undefined {
@@ -362,7 +368,7 @@ export function useCockpitDraft(source: CockpitConfig): UseCockpitDraftReturn {
     if (!moved)
       return { moved: false, requiresReplace: false }
     row.widgets.push(moved)
-    row.activeWidgetId ??= moved.id
+    row.activeWidgetId = moved.id
     return { moved: true, requiresReplace: false }
   }
 

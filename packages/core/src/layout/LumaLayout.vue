@@ -289,6 +289,11 @@ const sidebarMenus = computed(() => resolvedMenus.value.sidebarMenus)
 const topMenus = computed(() => resolvedMenus.value.topMenus)
 const hasSidebar = computed(() => sidebarMenus.value.length > 0)
 const hasTopMenus = computed(() => topMenus.value.length > 0)
+const showHeaderBreadcrumb = computed(() => (
+  breadcrumbPreferences.value.enable
+  && hasSidebar.value
+  && !hasTopMenus.value
+))
 const resolvedTopMenuMode = computed(() => props.preferences.app.layout === 'mixed-nav' ? 'flat' : 'tree')
 const resolvedTopMenuActivePath = computed(() => (
   props.preferences.app.layout === 'top-nav'
@@ -668,6 +673,19 @@ defineExpose({
         />
       </template>
 
+      <template v-if="showHeaderBreadcrumb" #breadcrumb>
+        <LumaBreadcrumb
+          class="luma-layout__header-breadcrumb"
+          :active-menu-path="resolvedActiveMenuPath"
+          :active-path="resolvedCurrentPath"
+          :hide-only-one="breadcrumbPreferences.hideOnlyOne"
+          :menus="menus"
+          :show-home="breadcrumbPreferences.showHome"
+          :show-icon="breadcrumbPreferences.showIcon"
+          @select="handleDiscoverySelect"
+        />
+      </template>
+
       <template v-if="globalSearchEnabled || $slots.headerActions" #actions>
         <LumaGlobalSearch
           v-if="globalSearchEnabled"
@@ -718,7 +736,7 @@ defineExpose({
 
       <ElContainer class="luma-layout__main" direction="vertical" data-layout-fullscreen-target>
         <LumaBreadcrumb
-          v-if="breadcrumbPreferences.enable && !isContentMaximized"
+          v-if="breadcrumbPreferences.enable && !showHeaderBreadcrumb && !isContentMaximized"
           :active-menu-path="resolvedActiveMenuPath"
           :active-path="resolvedCurrentPath"
           :hide-only-one="breadcrumbPreferences.hideOnlyOne"
@@ -799,6 +817,14 @@ defineExpose({
   display: none;
 }
 
+.luma-layout__header-breadcrumb {
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  border-bottom: 0;
+  background: transparent;
+}
+
 .luma-layout.is-content-maximized .luma-layout__main {
   position: absolute;
   inset: 0;
@@ -811,7 +837,6 @@ defineExpose({
   overflow: hidden;
   transition:
     width var(--luma-motion-duration-base) var(--luma-easing-standard),
-    flex-basis var(--luma-motion-duration-base) var(--luma-easing-standard),
     opacity var(--luma-motion-duration-fast) ease,
     transform var(--luma-motion-duration-base) var(--luma-easing-standard),
     border-color var(--luma-motion-duration-fast) ease;
@@ -824,7 +849,6 @@ defineExpose({
 .luma-layout-sidebar-enter-from,
 .luma-layout-sidebar-leave-to {
   width: 0 !important;
-  flex-basis: 0 !important;
   opacity: 0;
   border-right-color: transparent;
   transform: translateX(-12px);

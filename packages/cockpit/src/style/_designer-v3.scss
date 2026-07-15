@@ -17,7 +17,7 @@
   display: grid;
   grid-template-rows: 60px 92px auto minmax(0, 1fr) 64px;
   width: 100%;
-  min-width: 1180px;
+  min-width: 1024px;
   height: 100%;
   min-height: 680px;
   overflow: hidden;
@@ -94,44 +94,6 @@
 
   &__layout-tools {
     margin-left: 2px;
-  }
-
-  &__global-controls {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-left: auto;
-    color: var(--luma-cockpit-text-secondary, #d7efff);
-
-    .el-radio-group {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .el-radio,
-    .el-checkbox {
-      margin: 0;
-      color: var(--luma-cockpit-text-secondary, #d7efff);
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    .el-radio__inner,
-    .el-checkbox__inner {
-      border-color: var(--luma-cockpit-border, rgb(6 183 253 / 50%));
-      background: var(--luma-cockpit-control-bg, rgb(0 74 106 / 40%));
-    }
-
-    .el-radio__input.is-checked .el-radio__inner {
-      border-color: var(--luma-cockpit-accent, #00cbf4);
-      background: var(--luma-cockpit-accent, #00cbf4);
-    }
-
-    .el-radio__input.is-checked + .el-radio__label,
-    .el-checkbox__input.is-checked + .el-checkbox__label {
-      color: var(--luma-cockpit-success, #1dffa0);
-    }
   }
 
   &__field {
@@ -272,13 +234,13 @@
   }
 
   &__region-tools-trigger {
-    top: 6px;
-    left: 6px;
+    top: -12px;
+    left: -12px;
   }
 
   &__grid-row-tools-trigger {
-    top: 6px;
-    right: 6px;
+    top: -10px;
+    right: -10px;
   }
 
   &__region:hover > &__region-tools &__region-tools-trigger,
@@ -459,9 +421,9 @@
   }
 
   &__drop-zone.is-tabs {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 
   &__empty-cell.el-button {
@@ -515,6 +477,11 @@
       border-color: var(--luma-cockpit-accent, #00cbf4);
       box-shadow: 0 2px 12px rgb(0 0 0 / 20%);
     }
+
+    &.is-keyboard-selected {
+      border-color: var(--luma-cockpit-success, #1dffa0);
+      box-shadow: inset 0 0 0 1px var(--luma-cockpit-success, #1dffa0), 0 0 12px color-mix(in srgb, var(--luma-cockpit-success, #1dffa0), transparent 56%);
+    }
   }
 
   &__placed-widget-footer {
@@ -528,7 +495,7 @@
     justify-content: center;
     min-width: 0;
     min-height: 28px;
-    padding: 4px 34px 4px 7px;
+    padding: 4px 86px 4px 7px;
     background: var(--luma-cockpit-caption-bg, rgb(2 35 49 / 42%));
     backdrop-filter: blur(7px);
 
@@ -545,31 +512,134 @@
     }
   }
 
-  &__remove-widget.el-button {
+  &__placed-widget-actions {
     position: absolute;
     right: 3px;
     bottom: 2px;
     z-index: 4;
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+
+  &__widget-action.el-button,
+  &__tab-action.el-button,
+  &__tab-target.el-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 24px;
     min-width: 24px;
     height: 24px;
     min-height: 24px;
     padding: 0;
-    border: 1px solid color-mix(in srgb, var(--luma-cockpit-danger, #f56c6c), transparent 40%);
     border-image: none;
-    border-radius: 4px;
-    color: #fff;
-    background: color-mix(in srgb, var(--luma-cockpit-danger, #f56c6c), transparent 28%);
-    box-shadow: none;
-    opacity: 0.58;
-    transition: opacity 160ms ease, background 160ms ease, box-shadow 160ms ease;
+    border-radius: 3px;
+    opacity: 0.72;
   }
 
-  &__placed-widget:hover &__remove-widget,
-  &__placed-widget:focus-within &__remove-widget {
+  &__widget-action.el-button[aria-pressed='true'],
+  &__tab-action.el-button[aria-pressed='true'] {
+    border-color: var(--luma-cockpit-success, #1dffa0);
+    color: var(--luma-cockpit-success, #1dffa0);
     opacity: 1;
-    background: var(--luma-cockpit-danger, #f56c6c);
-    box-shadow: 0 0 10px color-mix(in srgb, var(--luma-cockpit-danger, #f56c6c), transparent 48%);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--luma-cockpit-success, #1dffa0), transparent 52%);
+  }
+
+  &__placed-widget:hover &__widget-action,
+  &__placed-widget:focus-within &__widget-action {
+    opacity: 1;
+  }
+
+  &__tab-card {
+    display: grid;
+    grid-template-rows: 34px minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    border: 1px solid var(--luma-cockpit-slot-border, rgb(6 183 253 / 50%));
+    border-radius: 4px;
+    background: transparent;
+    overflow: hidden;
+  }
+
+  &__tab-list {
+    display: flex;
+    align-items: stretch;
+    min-width: 0;
+    min-height: 34px;
+    border-bottom: 1px solid color-mix(in srgb, var(--luma-cockpit-slot-border, rgb(6 183 253 / 50%)), transparent 18%);
+    background: var(--luma-cockpit-caption-bg, rgb(2 35 49 / 42%));
+    overflow-x: auto;
+  }
+
+  &__tab-item {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    border-right: 1px solid color-mix(in srgb, var(--luma-cockpit-slot-border, rgb(6 183 253 / 50%)), transparent 48%);
+
+    &.is-active {
+      background: color-mix(in srgb, var(--luma-cockpit-accent, #00cbf4), transparent 88%);
+      box-shadow: inset 0 -2px 0 var(--luma-cockpit-accent, #00cbf4);
+    }
+
+    &.is-keyboard-selected {
+      box-shadow: inset 0 0 0 1px var(--luma-cockpit-success, #1dffa0);
+    }
+  }
+
+  &__tab-widget-title.el-button {
+    min-width: 64px;
+    max-width: 148px;
+    height: 32px;
+    min-height: 32px;
+    padding: 0 8px;
+    overflow: hidden;
+    border: 0;
+    border-image: none;
+    border-radius: 0;
+    color: var(--luma-cockpit-text-secondary, #d7efff);
+    background: transparent;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__tab-item.is-active &__tab-widget-title {
+    color: var(--luma-cockpit-title-text, #fff);
+  }
+
+  &__tab-action.el-button,
+  &__tab-target.el-button {
+    align-self: center;
+    flex: 0 0 auto;
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    min-height: 22px;
+    margin-right: 2px;
+  }
+
+  &__tab-move {
+    cursor: grab;
+  }
+
+  &__tab-target.el-button {
+    margin: 5px;
+    border-color: var(--luma-cockpit-success, #1dffa0);
+    color: var(--luma-cockpit-success, #1dffa0);
+  }
+
+  &__tab-preview {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  &__tab-preview > .luma-cockpit-designer__empty-cell {
+    border: 0;
+    border-radius: 0;
   }
 
   &__widget-preview {
@@ -756,13 +826,27 @@
     border-image: none;
   }
 
-  &__remove-widget.el-button {
+  &__widget-action.el-button,
+  &__tab-action.el-button,
+  &__tab-target.el-button {
     width: 24px;
     min-width: 24px;
     height: 24px;
     min-height: 24px;
-    border: 1px solid color-mix(in srgb, var(--luma-cockpit-danger, #f56c6c), transparent 40%);
     border-image: none;
+  }
+
+  &__tab-action.el-button,
+  &__tab-target.el-button {
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    min-height: 22px;
+  }
+
+  &__widget-action.el-button--danger,
+  &__tab-action.el-button--danger {
+    border-color: color-mix(in srgb, var(--luma-cockpit-danger, #f56c6c), transparent 40%);
     color: #fff;
     background: color-mix(in srgb, var(--luma-cockpit-danger, #f56c6c), transparent 28%);
   }
@@ -870,6 +954,50 @@
       right: calc(100% - 6px);
       left: auto;
       transform-origin: top right;
+    }
+  }
+}
+
+@media (max-width: 1180px) {
+  .luma-cockpit-designer {
+    &__controlbar {
+      padding-inline: 20px;
+    }
+
+    &__workspace {
+      grid-template-columns: minmax(0, 1fr) 250px;
+      gap: 8px;
+      padding: 0 8px 8px 20px;
+    }
+
+    &__assembly {
+      padding: 12px;
+    }
+
+    &__assembly-stage {
+      grid-template-columns: minmax(200px, 29%) minmax(260px, 1fr) minmax(200px, 29%);
+      gap: 8px;
+    }
+
+    &__library {
+      padding: 12px;
+    }
+
+    &__library-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    &__footer {
+      gap: 12px;
+      padding-inline: 20px 12px;
+
+      p {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
     }
   }
 }

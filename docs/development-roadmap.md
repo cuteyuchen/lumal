@@ -4,7 +4,7 @@
 
 ## 当前基线
 
-- 日期：2026-07-11。
+- 日期：2026-07-15。
 - 工作区版本：`0.0.0`。
 - 当前分支：`master`。
 - 当前已知最近提交：
@@ -58,6 +58,7 @@
 | 8 Admin 系统页面 | 已完成 | `8ecba31` |
 | 9 图标、图表、兼容与 Vite | 已完成 | `96d4d3a`、`4ce169e`、`a6a36da`、`95ca1dd`、`4f7aba6` |
 | 10 脚手架、性能与发布 | 已完成 | `575b3c2`、`92bec49`、`a2af23f`、`1d66b01`、`9996f05` |
+| 11 组织化用户管理 | 已完成 | 待提交 |
 
 完成审计补充：Core 已补齐 `LumaLayout` 路由驱动标签 API，Admin 不再自行编排访问标签；CRUD 删除确认进入 `actions` 配置且保留旧 prop 兼容；公司异常响应、菜单、分页和会话字段的构造与解析均集中在 Admin adapter 文件。
 
@@ -393,6 +394,20 @@ Vben 兼容层同步 number、switch、date/datetime/daterange、radio、checkbo
 - `1d66b01 chore(release): 完成发布前质量检查`
 - `9996f05 perf(compat): 优化兼容示例依赖分包`
 - `docs(project): 同步最终 API 与发布说明`（本次文档收口提交）
+
+### 阶段 11：组织化用户管理
+
+状态：已完成。
+
+- 为用户增加必填机构归属，机构筛选默认覆盖当前机构及全部下级机构。
+- 用户页使用响应式机构树联动用户 CRUD，并增加批量启停与角色追加/替换。
+- Mock API 提供精简机构选项和原子批量用户接口；机构存在直属用户时禁止删除。
+- `LumaCrudTable` 向 `toolbar-actions` slot 暴露选择行、选择键和清空选择能力。
+- 恢复干净检出下的 frozen lockfile 安装，并保持 Changesets、发布边界和完整发布检查通过。
+
+验收要求：覆盖机构归属与子树筛选、停用机构规则、机构占用删除、批量操作原子回滚、权限隔离、响应式布局和浏览器真实流程；最终执行 `pnpm install --frozen-lockfile`、`pnpm release:check`、`git diff --check` 与 `pnpm changeset:status`。
+
+验收结果：Mock API 13 项、Core 273 项、Admin 95 项测试通过；完整 `pnpm release:check` 通过，其中 Playwright 27 项通过，并覆盖组织筛选、创建归属机构用户、批量启停、批量追加角色及 375/768/1024/1440px 无页面级横向溢出。当前工作区与模拟干净检出均通过 `pnpm install --frozen-lockfile`，`pnpm changeset:status`、发布边界、类型检查、构建、发布产物、六个公共包 dry-run 和 `git diff --check` 均通过。
 
 ## 验收门禁
 
