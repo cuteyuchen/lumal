@@ -190,7 +190,7 @@ async function handleTabKeydown(row: CockpitGridRowConfig, index: number, event:
         <ElInputNumber
           :model-value="region?.rows.length ?? 1"
           :min="1"
-          :controls="false"
+          controls-position="right"
           :aria-label="`${side === 'left' ? '左侧' : '右侧'}区域行数`"
           @change="resize($event ?? 1, region?.columns.length ?? 1)"
         />
@@ -200,26 +200,23 @@ async function handleTabKeydown(row: CockpitGridRowConfig, index: number, event:
         <ElInputNumber
           :model-value="region?.columns.length ?? 1"
           :min="1"
-          :controls="false"
+          controls-position="right"
           :aria-label="`${side === 'left' ? '左侧' : '右侧'}区域列数`"
           @change="resize(region?.rows.length ?? 1, $event ?? 1)"
         />
       </label>
-    </header>
-
-    <div v-if="region" class="luma-cockpit-designer__region-columns" :style="{ gridTemplateColumns: columnTemplate() }">
-      <label v-for="(column, index) in region.columns" :key="column.id" class="luma-cockpit-designer__field luma-cockpit-designer__column-field">
-        <span>列 {{ index + 1 }}</span>
+      <label v-for="(column, index) in region?.columns ?? []" :key="column.id" class="luma-cockpit-designer__field luma-cockpit-designer__column-field">
+        <span>列宽 {{ index + 1 }}</span>
         <ElInputNumber
           :model-value="column.width"
           :min="1"
-          :controls="false"
+          controls-position="right"
           :aria-label="`列 ${index + 1} 宽度像素`"
           @change="draft.setColumnWidth(side, column.id, $event ?? column.width)"
         />
         <em>px</em>
       </label>
-    </div>
+    </header>
 
     <div v-if="region" class="luma-cockpit-designer__grid-rows">
       <section v-for="(row, rowIndex) in region.rows" :key="row.id" class="luma-cockpit-designer__grid-row" :style="{ flexBasis: `${row.height}%` }">
@@ -237,7 +234,7 @@ async function handleTabKeydown(row: CockpitGridRowConfig, index: number, event:
               :min="1"
               :max="100"
               :precision="3"
-              :controls="false"
+              controls-position="right"
               :aria-label="`第 ${rowIndex + 1} 行高度百分比`"
               @change="draft.setRowHeight(side, row.id, $event ?? row.height)"
             />

@@ -3,7 +3,7 @@ import { createCockpitMessageBus } from '@luma/cockpit'
 import { LumaDigitalFlop, LumaPercentPond, LumaScrollBoard, LumaScrollRankingBoard } from '@luma/datav'
 import { mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h, nextTick } from 'vue'
+import { nextTick } from 'vue'
 import { demoEvents, demoScene, metricSummaries, statusDistribution, trendSeries } from '../src/data/demo-scene'
 import { cockpitTopics } from '../src/messages/topics'
 import EventList from '../src/widgets/event-list/Widget.vue'
@@ -24,25 +24,28 @@ vi.mock('@luma/cockpit', async (importOriginal) => {
   }
 })
 
-vi.mock('@luma/charts', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@luma/charts')>()
+// 用轻量 stub 替换 @luma/datav 的 LumaCharts，避免测试中初始化真实 ECharts。
+// stub 暴露 option 与 events，便于断言配置与模拟图表交互。
+vi.mock('@luma/datav', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@luma/datav')>()
+  // 在工厂内部按需引入 vue 辅助函数：@luma/datav 是静态导入，其 mock 工厂会
+  // 早于顶部的 vue import 求值，直接引用 defineComponent/h 会触发 TDZ。
+  const { defineComponent: define, h: createElement } = await import('vue')
   return {
     ...actual,
-    useChartResize: vi.fn(),
+    LumaCharts: define({
+      name: 'LumaChartsStub',
+      inheritAttrs: false,
+      props: {
+        option: { type: Object, required: true },
+        events: { type: Object, default: () => ({}) },
+      },
+      setup() {
+        return () => createElement('div', { class: 'luma-charts-stub' })
+      },
+    }),
   }
 })
-
-vi.mock('vue-echarts', () => ({
-  default: defineComponent({
-    name: 'VChartStub',
-    inheritAttrs: false,
-    props: { option: { type: Object, required: true } },
-    emits: ['click'],
-    setup() {
-      return () => h('div', { class: 'v-chart-stub' })
-    },
-  }),
-}))
 
 function createContext(): CockpitWidgetContext {
   return {
@@ -78,7 +81,7 @@ describe('驾驶舱数据模块', () => {
     const filters: CockpitMessage[] = []
     widgetMocks.context!.messages.subscribe(cockpitTopics.sceneFilterChange, message => filters.push(message))
     const wrapper = mount(TrendPanel)
-    const chart = wrapper.getComponent({ name: 'VChartStub' })
+    const chart = wrapper.getComponent({ name: 'LumaChartsStub' })
     const option = chart.props('option') as { series: Array<{ name: string, type: string }> }
 
     expect(option.series).toHaveLength(trendSeries.length)
@@ -86,7 +89,8 @@ describe('驾驶舱数据模块', () => {
     await wrapper.get('button[data-status="active"]').trigger('click')
     expect(filters.at(-1)?.payload).toEqual({ status: 'active' })
 
-    chart.vm.$emit('click', { seriesName: '待关注' })
+    const trendEvents = chart.props('events') as { click: (params: unknown) => void }
+    trendEvents.click({ seriesName: '待关注' })
     await nextTick()
     expect(filters.at(-1)?.payload).toEqual({ status: 'watch' })
 
@@ -105,7 +109,7 @@ describe('驾驶舱数据模块', () => {
     const filters: CockpitMessage[] = []
     widgetMocks.context!.messages.subscribe(cockpitTopics.sceneFilterChange, message => filters.push(message))
     const wrapper = mount(StatusDistribution)
-    const chart = wrapper.getComponent({ name: 'VChartStub' })
+    const chart = wrapper.getComponent({ name: 'LumaChartsStub' })
     const option = chart.props('option') as {
       series: Array<{ type: string, data: Array<{ status: string, value: number }> }>
     }
@@ -114,7 +118,8 @@ describe('驾驶舱数据模块', () => {
     expect(option.series[0]?.data).toHaveLength(statusDistribution.length)
     expect(option.series[0]?.data.reduce((sum, item) => sum + item.value, 0)).toBe(demoScene.regions.length)
 
-    chart.vm.$emit('click', { data: { status: 'active' } })
+    const statusEvents = chart.props('events') as { click: (params: unknown) => void }
+    statusEvents.click({ data: { status: 'active' } })
     await nextTick()
     expect(filters.at(-1)?.payload).toEqual({ status: 'active' })
     wrapper.unmount()

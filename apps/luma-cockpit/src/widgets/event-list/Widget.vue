@@ -3,6 +3,7 @@ import type { SceneSelectionPayload } from '../../messages/topics'
 import { useCockpitContext } from '@luma/cockpit'
 import { LumaScrollBoard } from '@luma/datav'
 import { computed, onBeforeUnmount, ref } from 'vue'
+import WidgetState from '../../components/WidgetState.vue'
 import { demoEvents } from '../../data/demo-scene'
 import { cockpitTopics } from '../../messages/topics'
 
@@ -46,16 +47,8 @@ onBeforeUnmount(unsubscribeSelection)
 
 <template>
   <div class="event-list">
-    <div v-if="loading" class="event-list__state" role="status">
-      加载中
-    </div>
-    <div v-else-if="error" class="event-list__state" role="alert">
-      {{ error }}
-    </div>
-    <div v-else-if="events.length === 0" class="event-list__state" role="status">
-      暂无数据
-    </div>
-    <div v-else class="event-list__table">
+    <WidgetState :loading="loading" :error="error" :empty="events.length === 0" />
+    <div v-if="!loading && !error && events.length > 0" class="event-list__table">
       <div class="event-list__head" aria-hidden="true">
         <span>时间</span>
         <span>等级</span>
@@ -228,13 +221,5 @@ onBeforeUnmount(unsubscribeSelection)
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-.event-list__state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--luma-cockpit-text-secondary);
 }
 </style>

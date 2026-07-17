@@ -87,6 +87,33 @@ describe('luma layout', () => {
     expect(wrapper.find('.layout-body').text()).toBe('页面内容')
   })
 
+  it('showHeader 为 false 时不渲染头部，其余布局保持完整', () => {
+    const wrapper = mount(LumaLayout, {
+      global: {
+        stubs: {
+          ...elementPlusStubs,
+          RouterView: {
+            name: 'RouterView',
+            template: '<div class="router-view">路由内容</div>',
+          },
+        },
+      },
+      props: {
+        activeMenuPath: '/dashboard',
+        menus,
+        preferences: createLayoutPreferences(),
+        showHeader: false,
+      },
+      slots: {
+        default: '<section class="layout-body">页面内容</section>',
+      },
+    })
+
+    expect(wrapper.findComponent(LumaHeader).exists()).toBe(false)
+    expect(wrapper.findComponent(LumaSidebar).exists()).toBe(true)
+    expect(wrapper.find('.layout-body').text()).toBe('页面内容')
+  })
+
   it('头部折叠按钮会由 layout 抛出统一切换事件', async () => {
     const wrapper = mount(LumaLayout, {
       global: {
@@ -274,6 +301,35 @@ describe('luma sidebar', () => {
     await wrapper.find('[data-menu-path="/system/user"]').trigger('click')
 
     expect(wrapper.emitted('select')?.[0]).toEqual(['/system/user'])
+  })
+
+  it('新开页外链不进入 ElMenu 选中态追踪，避免点击后高亮与实际页面错位', async () => {
+    const externalMenus = [
+      { externalLink: 'https://example.com', path: '/docs', title: '文档', externalTarget: '_blank' as const },
+      { externalLink: 'https://self.example.com', path: '/inner', title: '内嵌', externalTarget: '_self' as const },
+    ]
+
+    const wrapper = mount(LumaSidebar, {
+      global: {
+        stubs: elementPlusStubs,
+      },
+      props: {
+        activePath: '/dashboard',
+        menus: externalMenus,
+      },
+    })
+
+    // 新开页外链渲染为原生元素，不带 data-menu-path（即没有 ElMenu 的 :index）
+    expect(wrapper.find('[data-menu-path="/docs"]').exists()).toBe(false)
+    const externalItem = wrapper.find('.luma-sidebar-menu-item--external')
+    expect(externalItem.exists()).toBe(true)
+    expect(externalItem.text()).toContain('文档')
+
+    await externalItem.trigger('click')
+    expect(wrapper.emitted('select')?.[0]).toEqual(['/docs'])
+
+    // _self 外链仍作为普通导航项参与选中态
+    expect(wrapper.find('[data-menu-path="/inner"]').exists()).toBe(true)
   })
 })
 

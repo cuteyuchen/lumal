@@ -4,6 +4,7 @@ import type { SceneSelectionPayload } from '../../messages/topics'
 import { useCockpitContext } from '@luma/cockpit'
 import { LumaScrollRankingBoard } from '@luma/datav'
 import { computed, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
+import WidgetState from '../../components/WidgetState.vue'
 import { demoScene, getSceneEntity } from '../../data/demo-scene'
 import { cockpitTopics } from '../../messages/topics'
 
@@ -62,16 +63,8 @@ onBeforeUnmount(unsubscribeSelection)
 
 <template>
   <div ref="root" class="region-ranking">
-    <div v-if="loading" class="region-ranking__state" role="status">
-      加载中
-    </div>
-    <div v-else-if="error" class="region-ranking__state" role="alert">
-      {{ error }}
-    </div>
-    <div v-else-if="regions.length === 0" class="region-ranking__state" role="status">
-      暂无数据
-    </div>
-    <div v-else class="region-ranking__table">
+    <WidgetState :loading="loading" :error="error" :empty="regions.length === 0" />
+    <div v-if="!loading && !error && regions.length > 0" class="region-ranking__table">
       <div class="region-ranking__head" aria-hidden="true">
         <span>排名</span>
         <span>区域</span>
@@ -237,13 +230,5 @@ button[data-status='watch'] .region-ranking__status {
   display: block;
   height: 100%;
   background: linear-gradient(90deg, var(--luma-cockpit-accent), transparent);
-}
-
-.region-ranking__state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--luma-cockpit-text-secondary);
 }
 </style>

@@ -60,7 +60,9 @@ export interface CockpitConfig {
 
 export type CockpitThemeMode = 'light' | 'dark'
 export type CockpitRenderMode = 'runtime' | 'design'
-export type CockpitViewportMode = 'scale' | 'vwvh'
+// scale：画布内部按等比缩放并居中；vwvh：用视口单位铺满；
+// external：画布不自缩放，铺满父容器，缩放交由外层容器（如 @luma/datav 的 LumaFullScreenContainer）承担。
+export type CockpitViewportMode = 'scale' | 'vwvh' | 'external'
 
 export type CockpitNodeKind = 'layout' | 'region' | 'column' | 'row' | 'cell' | 'widget'
 

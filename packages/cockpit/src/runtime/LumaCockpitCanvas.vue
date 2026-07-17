@@ -20,21 +20,35 @@ const { result } = useCanvasScale(containerRef, {
   baseWidth: () => props.baseWidth,
   baseHeight: () => props.baseHeight,
 })
-const stageStyle = computed(() => props.viewportMode === 'vwvh'
-  ? {
+const stageStyle = computed(() => {
+  // vwvh：用视口单位铺满，子元素按设计像素单位布局
+  if (props.viewportMode === 'vwvh') {
+    return {
       'width': '100vw',
       'height': '100vh',
       '--luma-cockpit-x-unit': `${100 / props.baseWidth}vw`,
       '--luma-cockpit-y-unit': `${100 / props.baseHeight}vh`,
     }
-  : {
+  }
+  // external：不自缩放，铺满父容器，缩放由外层容器（LumaFullScreenContainer）承担
+  if (props.viewportMode === 'external') {
+    return {
       'width': `${props.baseWidth}px`,
       'height': `${props.baseHeight}px`,
-      'transform': `translate(${result.value.offsetX}px, ${result.value.offsetY}px) scale(${result.value.scale})`,
-      'transformOrigin': 'top left',
       '--luma-cockpit-x-unit': '1px',
       '--luma-cockpit-y-unit': '1px',
-    })
+    }
+  }
+  // scale：内部按等比缩放并居中
+  return {
+    'width': `${props.baseWidth}px`,
+    'height': `${props.baseHeight}px`,
+    'transform': `translate(${result.value.offsetX}px, ${result.value.offsetY}px) scale(${result.value.scale})`,
+    'transformOrigin': 'top left',
+    '--luma-cockpit-x-unit': '1px',
+    '--luma-cockpit-y-unit': '1px',
+  }
+})
 </script>
 
 <template>

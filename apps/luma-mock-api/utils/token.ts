@@ -1,6 +1,5 @@
 import { Buffer } from 'node:buffer'
 import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
-import process from 'node:process'
 
 export interface TokenPayload {
   exp: number

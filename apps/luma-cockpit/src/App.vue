@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { CockpitConfig, CockpitDesignerSavePayload } from '@luma/cockpit'
+import type { CockpitConfig, CockpitDesignerSavePayload, CockpitViewportMode } from '@luma/cockpit'
 import type { ThemeMode } from '@luma/core/theme'
 import { LumaCockpitDesigner } from '@luma/cockpit/designer'
 import { LumaCockpit } from '@luma/cockpit/runtime'
+import { LumaFullScreenContainer } from '@luma/datav'
 import { LumaIcon } from '@luma/icons'
 import { ElButton, ElTooltip } from 'element-plus'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
@@ -24,10 +25,39 @@ const designerVisible = ref(false)
 const saving = ref(false)
 const saveError = ref<string>('')
 
+// 三种大屏适配 UI 模式：scale 等比缩放 / vwvh 视口铺满 / container 由 @luma/datav 全屏容器缩放
+type ViewportUiMode = 'scale' | 'vwvh' | 'container'
+
 const activeLayoutId = ref<string | undefined>()
 const fullscreenActive = ref(false)
-const viewportMode = ref<'scale' | 'vwvh'>('scale')
+const viewportMode = ref<ViewportUiMode>('scale')
 const cockpitRef = ref<InstanceType<typeof LumaCockpit> | null>(null)
+
+// 基准设计尺寸，供全屏容器与画布共用
+const baseWidth = 1920
+const baseHeight = 1080
+
+// container 模式下让 LumaCockpit 使用 external（自身不缩放），交由 LumaFullScreenContainer
+const cockpitViewportMode = computed<CockpitViewportMode>(() =>
+  viewportMode.value === 'container' ? 'external' : viewportMode.value,
+)
+const useFullScreenContainer = computed(() => viewportMode.value === 'container')
+
+const viewportModeLabel = computed(() => {
+  const labels: Record<ViewportUiMode, string> = {
+    scale: '等比缩放',
+    vwvh: 'VW/VH 适配',
+    container: '全屏容器缩放',
+  }
+  return labels[viewportMode.value]
+})
+
+// 循环切换三种适配模式
+function cycleViewportMode(): void {
+  const order: ViewportUiMode[] = ['scale', 'vwvh', 'container']
+  const index = order.indexOf(viewportMode.value)
+  viewportMode.value = order[(index + 1) % order.length] ?? 'scale'
+}
 
 const themeModeIcon = computed(() => {
   const mode = standalonePreferences.value.theme.mode
@@ -104,64 +134,73 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="standalone-app">
-    <LumaCockpit
-      ref="cockpitRef"
-      v-model:active-layout-id="activeLayoutId"
-      :card-component="CockpitCard"
-      :config="config"
-      :registry="standaloneCockpitRegistry"
-      :theme-mode="standaloneResolvedThemeMode"
-      :viewport-mode="viewportMode"
-      @configure="openDesigner"
+    <!-- container 模式：用 @luma/datav 全屏容器承担缩放；其它模式透传，由 LumaCockpit 自缩放 -->
+    <component
+      :is="useFullScreenContainer ? LumaFullScreenContainer : 'div'"
+      :class="useFullScreenContainer ? 'standalone-app__stage' : 'standalone-app__passthrough'"
+      v-bind="useFullScreenContainer ? { width: baseWidth, height: baseHeight, mode: 'width' } : {}"
     >
-      <template #header-title="{ title }">
-        <div class="standalone-app__heading">
-          <div class="standalone-app__brand">
-            <h1>{{ title }}</h1>
-            <span>NATIONAL SMART OPERATIONS</span>
+      <LumaCockpit
+        ref="cockpitRef"
+        v-model:active-layout-id="activeLayoutId"
+        :card-component="CockpitCard"
+        :config="config"
+        :registry="standaloneCockpitRegistry"
+        :theme-mode="standaloneResolvedThemeMode"
+        :base-width="baseWidth"
+        :base-height="baseHeight"
+        :viewport-mode="cockpitViewportMode"
+        @configure="openDesigner"
+      >
+        <template #header-title="{ title }">
+          <div class="standalone-app__heading">
+            <div class="standalone-app__brand">
+              <h1>{{ title }}</h1>
+              <span>NATIONAL SMART OPERATIONS</span>
+            </div>
+            <nav class="standalone-app__layouts" aria-label="布局选择">
+              <ElButton
+                v-for="layout in config.layouts"
+                :key="layout.id"
+                :class="{ 'is-active': (activeLayoutId ?? config.activeLayoutId) === layout.id }"
+                :aria-current="(activeLayoutId ?? config.activeLayoutId) === layout.id ? 'page' : undefined"
+                @click="activeLayoutId = layout.id"
+              >
+                {{ layout.title }}
+              </ElButton>
+            </nav>
           </div>
-          <nav class="standalone-app__layouts" aria-label="布局选择">
-            <ElButton
-              v-for="layout in config.layouts"
-              :key="layout.id"
-              :class="{ 'is-active': (activeLayoutId ?? config.activeLayoutId) === layout.id }"
-              :aria-current="(activeLayoutId ?? config.activeLayoutId) === layout.id ? 'page' : undefined"
-              @click="activeLayoutId = layout.id"
-            >
-              {{ layout.title }}
-            </ElButton>
-          </nav>
-        </div>
-      </template>
-      <template #header-actions>
-        <div class="standalone-app__actions">
-          <span class="standalone-app__live"><i />实时在线</span>
-          <ElTooltip :content="`切换主题，当前：${themeModeLabel}`">
-            <ElButton circle data-action="cockpit-theme" :aria-label="`切换主题，当前：${themeModeLabel}`" @click="cycleThemeMode">
-              <LumaIcon :name="themeModeIcon" :size="18" />
-            </ElButton>
-          </ElTooltip>
-          <ElTooltip :content="fullscreenActive ? '退出全屏' : '进入全屏'">
-            <ElButton circle data-action="cockpit-fullscreen" :aria-label="fullscreenActive ? '退出全屏' : '进入全屏'" @click="toggleFullscreen">
-              <LumaIcon :name="fullscreenActive ? 'luma:fullscreen-exit' : 'luma:fullscreen'" :size="18" />
-            </ElButton>
-          </ElTooltip>
-          <ElTooltip :content="viewportMode === 'scale' ? '当前：等比缩放' : '当前：VW/VH 适配'">
-            <ElButton circle aria-label="切换大屏适配模式" @click="viewportMode = viewportMode === 'scale' ? 'vwvh' : 'scale'">
-              <LumaIcon name="luma:monitor" :size="18" />
-            </ElButton>
-          </ElTooltip>
-          <ElTooltip content="打开配置器">
-            <ElButton circle data-action="cockpit-configure" aria-label="打开配置器" @click="openDesigner">
-              <LumaIcon name="luma:settings" :size="18" />
-            </ElButton>
-          </ElTooltip>
-        </div>
-      </template>
-      <template #center="{ context }">
-        <SceneCenter :key="context.instanceId" :context="context" />
-      </template>
-    </LumaCockpit>
+        </template>
+        <template #header-actions>
+          <div class="standalone-app__actions">
+            <span class="standalone-app__live"><i />实时在线</span>
+            <ElTooltip :content="`切换主题，当前：${themeModeLabel}`">
+              <ElButton circle data-action="cockpit-theme" :aria-label="`切换主题，当前：${themeModeLabel}`" @click="cycleThemeMode">
+                <LumaIcon :name="themeModeIcon" :size="18" />
+              </ElButton>
+            </ElTooltip>
+            <ElTooltip :content="fullscreenActive ? '退出全屏' : '进入全屏'">
+              <ElButton circle data-action="cockpit-fullscreen" :aria-label="fullscreenActive ? '退出全屏' : '进入全屏'" @click="toggleFullscreen">
+                <LumaIcon :name="fullscreenActive ? 'luma:fullscreen-exit' : 'luma:fullscreen'" :size="18" />
+              </ElButton>
+            </ElTooltip>
+            <ElTooltip :content="`切换大屏适配，当前：${viewportModeLabel}`">
+              <ElButton circle aria-label="切换大屏适配模式" @click="cycleViewportMode">
+                <LumaIcon name="luma:monitor" :size="18" />
+              </ElButton>
+            </ElTooltip>
+            <ElTooltip content="打开配置器">
+              <ElButton circle data-action="cockpit-configure" aria-label="打开配置器" @click="openDesigner">
+                <LumaIcon name="luma:settings" :size="18" />
+              </ElButton>
+            </ElTooltip>
+          </div>
+        </template>
+        <template #center="{ context }">
+          <SceneCenter :key="context.instanceId" :context="context" />
+        </template>
+      </LumaCockpit>
+    </component>
 
     <div
       v-if="designerVisible"
@@ -178,11 +217,7 @@ onBeforeUnmount(() => {
         :theme-mode="standaloneResolvedThemeMode"
         @save="handleSave"
         @cancel="closeDesigner"
-      >
-        <template #center-preview="{ context }">
-          <SceneCenter :key="context.instanceId" :context="context" />
-        </template>
-      </LumaCockpitDesigner>
+      />
     </div>
   </div>
 </template>
@@ -190,6 +225,17 @@ onBeforeUnmount(() => {
 <style scoped>
 .standalone-app {
   position: fixed;
+  inset: 0;
+}
+
+/* 非 container 模式：透传包裹，不影响 LumaCockpit 原有 fixed 铺满定位 */
+.standalone-app__passthrough {
+  display: contents;
+}
+
+/* container 模式：LumaCockpit 相对全屏容器 stage 铺满，替代其自身 fixed 定位 */
+.standalone-app__stage :deep(.luma-cockpit) {
+  position: absolute;
   inset: 0;
 }
 

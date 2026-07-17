@@ -62,6 +62,8 @@ const props = withDefaults(defineProps<{
   tabMaxCount?: number
   fixedTabs?: LumaLayoutTabItem[]
   headerHeight?: string
+  /** 是否显示顶部 Header。内嵌到其他壳层时可置为 false 以隐藏。 */
+  showHeader?: boolean
   tabStorageKey?: string
   /** 解析当前路由是否应保留为可恢复标签（路由驱动模式下用于持久化恢复过滤）。 */
   isValidTabPath?: (path: string) => boolean
@@ -71,6 +73,7 @@ const props = withDefaults(defineProps<{
   activeMenuPath: '',
   activeTabPath: '',
   headerHeight: '64px',
+  showHeader: true,
   menus: () => [],
   fixedTabs: () => [],
   routeDriven: false,
@@ -649,6 +652,7 @@ defineExpose({
     direction="vertical"
   >
     <LumaHeader
+      v-if="showHeader"
       v-show="!isContentMaximized"
       :title="title"
       :collapsed="isMobileViewport ? !mobileMenuOpen : collapsed"

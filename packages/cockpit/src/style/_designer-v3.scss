@@ -164,223 +164,89 @@
   &__assembly-stage {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(220px, 29.5%) minmax(300px, 1fr) minmax(220px, 29.5%);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 12px;
     width: 100%;
     height: 100%;
     min-height: 0;
   }
 
-  &__center-preview {
-    min-width: 0;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  &__center-preview > * {
-    width: 100%;
-    height: 100%;
-  }
-
-  &__center-guide {
-    background: var(--luma-cockpit-center-bg, transparent);
-  }
-
   &__region {
-    position: relative;
-    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     min-width: 0;
     min-height: 0;
     height: 100%;
-    isolation: isolate;
-  }
-
-  &__region-tools,
-  &__grid-row-tools {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
-
-  &__region-tools {
-    z-index: 30;
-  }
-
-  &__grid-row-tools {
-    z-index: 20;
-  }
-
-  &__region-tools-trigger.el-button.is-circle,
-  &__grid-row-tools-trigger.el-button.is-circle {
-    position: absolute;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    min-width: 30px;
-    height: 30px;
-    min-height: 30px;
-    padding: 0;
-    border: 1px solid var(--luma-cockpit-border, rgb(6 183 253 / 50%));
-    border-image: none;
-    border-radius: 4px;
-    color: var(--luma-cockpit-text-secondary, #d7efff);
-    background: var(--luma-cockpit-control-bg, rgb(3 47 63 / 94%));
-    box-shadow: 0 4px 14px rgb(0 24 36 / 24%), inset 0 0 0 1px rgb(105 226 255 / 7%);
-    opacity: 0.58;
-    pointer-events: auto;
-    transition: opacity 160ms ease, border-color 160ms ease, color 160ms ease, background 160ms ease, box-shadow 160ms ease;
-  }
-
-  &__region-tools-trigger {
-    top: -12px;
-    left: -12px;
-  }
-
-  &__grid-row-tools-trigger {
-    top: -10px;
-    right: -10px;
-  }
-
-  &__region:hover > &__region-tools &__region-tools-trigger,
-  &__grid-row:hover > &__grid-row-tools &__grid-row-tools-trigger,
-  &__region-tools:hover &__region-tools-trigger,
-  &__region-tools:focus-within &__region-tools-trigger,
-  &__grid-row-tools:hover &__grid-row-tools-trigger,
-  &__grid-row-tools:focus-within &__grid-row-tools-trigger {
-    opacity: 1;
-    border-color: var(--luma-cockpit-accent, #00cbf4);
-    color: var(--luma-cockpit-title-text, #fff);
-    background: color-mix(in srgb, var(--luma-cockpit-control-bg, rgb(3 47 63 / 94%)), var(--luma-cockpit-accent, #00cbf4) 12%);
-    box-shadow: 0 5px 16px rgb(0 24 36 / 32%), 0 0 0 1px color-mix(in srgb, var(--luma-cockpit-accent, #00cbf4), transparent 56%);
-  }
-
-  &__region-tools-panel,
-  &__grid-row-head {
-    position: absolute;
-    z-index: 1;
-    border: 1px solid color-mix(in srgb, var(--luma-cockpit-border, rgb(6 183 253 / 50%)), var(--luma-cockpit-accent, #00cbf4) 24%);
-    border-radius: 5px;
-    background: color-mix(in srgb, var(--luma-cockpit-panel-bg, rgb(6 46 64 / 96%)), #00141e 12%);
-    box-shadow: 0 12px 26px rgb(0 18 28 / 42%), inset 0 0 18px rgb(6 183 253 / 7%);
-    backdrop-filter: blur(12px);
-    visibility: hidden;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 160ms ease, transform 160ms ease, visibility 0s linear 160ms;
-  }
-
-  &__region-tools-panel {
-    top: 6px;
-    left: 42px;
-    display: grid;
-    width: min(360px, calc(100% - 42px));
-    overflow: hidden;
-    transform: translateX(-6px) scale(0.985);
-    transform-origin: top left;
-  }
-
-  &__region-tools:hover &__region-tools-panel,
-  &__region-tools:focus-within &__region-tools-panel,
-  &__grid-row-tools:hover &__grid-row-head,
-  &__grid-row-tools:focus-within &__grid-row-head {
-    visibility: visible;
-    opacity: 1;
-    pointer-events: auto;
-    transform: translate(0) scale(1);
-    transition-delay: 0s;
-  }
-
-  &__region-tools:hover ~ &__grid-rows &__grid-row-tools-trigger,
-  &__region-tools:hover ~ &__grid-rows &__grid-row-head,
-  &__region-tools:focus-within ~ &__grid-rows &__grid-row-tools-trigger,
-  &__region-tools:focus-within ~ &__grid-rows &__grid-row-head {
-    visibility: hidden;
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  &__region:has(&__grid-row-tools:hover) > &__region-tools &__region-tools-trigger,
-  &__region:has(&__grid-row-tools:focus-within) > &__region-tools &__region-tools-trigger {
-    visibility: hidden;
-    opacity: 0;
-    pointer-events: none;
   }
 
   &__region-head {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
-    min-width: 0;
-    min-height: 46px;
-    padding: 5px 8px;
-    border-bottom: 1px solid color-mix(in srgb, var(--luma-cockpit-border, rgb(6 183 253 / 50%)), transparent 42%);
-    background: color-mix(in srgb, var(--luma-cockpit-control-bg, rgb(3 47 63 / 94%)), transparent 12%);
+    gap: 8px 10px;
+    min-height: 44px;
+    padding: 6px 10px;
+    border: 1px solid color-mix(in srgb, var(--luma-cockpit-border, rgb(6 183 253 / 50%)), var(--luma-cockpit-accent, #00cbf4) 24%);
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--luma-cockpit-panel-bg, rgb(6 46 64 / 96%)), #00141e 12%);
 
-    > div {
-      min-width: 86px;
-      margin-right: auto;
+    .el-input-number {
+      width: 72px;
     }
+  }
 
-    strong,
-    span {
-      display: block;
-    }
+  &__region-head-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 86px;
+    margin-right: auto;
 
     strong {
       color: var(--luma-cockpit-title-text, #fff);
       font-size: 13px;
     }
 
-    > div span {
+    span {
       margin-top: 1px;
       color: var(--luma-cockpit-text-muted, #9dcdf8);
-      font-size: 9px;
-    }
-
-    .el-input-number {
-      width: 48px;
+      font-size: 10px;
     }
   }
 
-  &__region-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 42px;
-    padding: 4px 8px;
-    background: color-mix(in srgb, var(--luma-cockpit-panel-bg, rgb(6 46 64 / 96%)), transparent 8%);
-    overflow-x: auto;
+  &__column-field.luma-cockpit-designer__field {
+    .el-input-number {
+      width: 76px;
+    }
   }
 
   &__grid-rows {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 12px;
     width: 100%;
-    height: 100%;
     min-height: 0;
   }
 
   &__grid-row {
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     min-width: 0;
     min-height: 0;
     isolation: isolate;
   }
 
   &__grid-row-head {
-    top: 6px;
-    right: 42px;
     display: flex;
     align-items: center;
-    gap: 6px;
-    max-width: calc(100% - 42px);
-    min-height: 42px;
-    padding: 3px 6px;
-    transform: translateX(6px) scale(0.985);
-    transform-origin: top right;
+    gap: 8px;
+    min-height: 36px;
+    padding: 4px 8px;
+    border: 1px solid color-mix(in srgb, var(--luma-cockpit-border, rgb(6 183 253 / 50%)), transparent 30%);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--luma-cockpit-control-bg, rgb(3 47 63 / 94%)), transparent 12%);
 
     > strong {
       margin-right: auto;
@@ -389,7 +255,7 @@
     }
 
     .el-input-number {
-      width: 62px;
+      width: 76px;
     }
   }
 
@@ -404,8 +270,8 @@
 
   &__grid-cells,
   &__tab-row {
+    flex: 1;
     width: 100%;
-    height: 100%;
     min-height: 0;
   }
 
@@ -781,6 +647,31 @@
     }
   }
 
+  // 行列 / 列宽 / 行高 的设置项：使用原生 InputNumber 控件，去掉实心背景与粗渐变边框
+  &__region-head,
+  &__grid-row-head {
+    .el-input-number .el-input__wrapper {
+      min-height: 30px;
+      border: 0;
+      border-image: none;
+      border-bottom: 1px solid color-mix(in srgb, var(--luma-cockpit-border, rgb(6 183 253 / 50%)), transparent 45%);
+      border-radius: 0;
+      background: transparent;
+
+      &.is-focus,
+      &:hover {
+        border-bottom-color: var(--luma-cockpit-accent, #00cbf4);
+        box-shadow: none;
+      }
+    }
+
+    .el-input-number__decrease,
+    .el-input-number__increase {
+      border: 0;
+      background: transparent;
+    }
+  }
+
   .el-input__inner,
   .el-select__input,
   .el-select__selected-item {
@@ -815,15 +706,6 @@
     width: 34px;
     min-width: 34px;
     padding: 0;
-  }
-
-  &__region-tools-trigger.el-button.is-circle,
-  &__grid-row-tools-trigger.el-button.is-circle {
-    width: 30px;
-    min-width: 30px;
-    height: 30px;
-    min-height: 30px;
-    border-image: none;
   }
 
   &__widget-action.el-button,
@@ -885,77 +767,6 @@
     box-shadow: 0 0 0 2px var(--luma-cockpit-drop-target, rgb(0 215 255 / 34%));
   }
 
-  // 清除旧版 Designer 的面板和行容器样式，避免出现多层套框。
-  &__assembly,
-  &__library {
-    border: 1.43px solid var(--luma-cockpit-panel-border, rgb(6 183 253 / 40%));
-    background: var(--luma-cockpit-stage-bg, rgb(0 74 106 / 20%));
-  }
-
-  &__assembly {
-    height: auto;
-    padding: 16px;
-  }
-
-  &__assembly-stage {
-    min-height: 0;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-  }
-
-  &__region {
-    display: block;
-    height: 100%;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    overflow: visible;
-  }
-
-  &__grid-rows {
-    padding: 0;
-    overflow: visible;
-  }
-
-  &__grid-row {
-    display: block;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-  }
-
-  &__placed-widget {
-    display: block;
-    padding: 0;
-  }
-
-  &__library {
-    display: block;
-    height: auto;
-  }
-
-  &__library-card {
-    padding: 0;
-  }
-}
-
-@media (max-width: 1500px) {
-  .luma-cockpit-designer {
-    &__region-tools-panel {
-      width: 360px;
-      max-width: calc(100vw - 96px);
-    }
-
-    &__region[data-side='right'] &__region-tools-panel {
-      right: calc(100% - 6px);
-      left: auto;
-      transform-origin: top right;
-    }
-  }
 }
 
 @media (max-width: 1180px) {
@@ -975,7 +786,7 @@
     }
 
     &__assembly-stage {
-      grid-template-columns: minmax(200px, 29%) minmax(260px, 1fr) minmax(200px, 29%);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 8px;
     }
 

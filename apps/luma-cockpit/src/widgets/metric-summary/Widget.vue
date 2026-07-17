@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { LumaDigitalFlop, LumaPercentPond } from '@luma/datav'
 import { computed } from 'vue'
+import WidgetState from '../../components/WidgetState.vue'
 import { metricSummaries } from '../../data/demo-scene'
 
 /***********************核心运行指标模块*********************/
@@ -12,16 +13,8 @@ const items = computed(() => metricSummaries)
 
 <template>
   <div class="metric-summary">
-    <div v-if="loading" class="metric-summary__state" role="status">
-      加载中
-    </div>
-    <div v-else-if="error" class="metric-summary__state" role="alert">
-      {{ error }}
-    </div>
-    <div v-else-if="items.length === 0" class="metric-summary__state" role="status">
-      暂无数据
-    </div>
-    <dl v-else class="metric-summary__grid">
+    <WidgetState :loading="loading" :error="error" :empty="items.length === 0" />
+    <dl v-if="!loading && !error && items.length > 0" class="metric-summary__grid">
       <div
         v-for="(item, index) in items"
         :key="item.label"
@@ -169,13 +162,5 @@ const items = computed(() => metricSummaries)
   margin: 4px 0 0;
   color: var(--luma-cockpit-text-muted);
   font-size: 10px;
-}
-
-.metric-summary__state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--luma-cockpit-text-secondary);
 }
 </style>

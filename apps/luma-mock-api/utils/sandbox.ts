@@ -1,6 +1,5 @@
 import type { AdminAccountKey, MockAccount } from '../domain/auth'
 import type { MockSystemState } from '../domain/system'
-import process from 'node:process'
 import { exportMockAccounts, importMockAccounts, resetMockAccounts } from '../domain/auth'
 import { exportMockRolePermissions, importMockRolePermissions, resetMockRolePermissions } from '../domain/permission'
 import {

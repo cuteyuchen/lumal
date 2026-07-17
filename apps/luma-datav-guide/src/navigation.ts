@@ -91,3 +91,35 @@ export const navGroups: GuideNavGroup[] = [
 ]
 
 export const flatNavItems: GuideNavItem[] = navGroups.flatMap(group => group.items)
+
+/**
+ * 转换为 @luma/core 布局菜单树：每个分组为一级菜单，其下条目为二级菜单。
+ * path 使用 `/${slug}`，与路由表一致，供侧边栏、面包屑和全文搜索复用。
+ */
+export interface LumaGuideMenuItem {
+  path: string
+  title: string
+  icon?: string
+  children?: LumaGuideMenuItem[]
+}
+
+const groupIcon: Record<string, string> = {
+  guide: 'guide:book',
+  border: 'guide:border',
+  decoration: 'guide:decoration',
+  digital: 'guide:digital',
+  chart: 'guide:chart',
+  flyline: 'guide:flyline',
+  board: 'guide:board',
+  container: 'guide:container',
+}
+
+export const guideMenus: LumaGuideMenuItem[] = navGroups.map(group => ({
+  path: `/group/${group.key}`,
+  title: group.label,
+  icon: groupIcon[group.key],
+  children: group.items.map(item => ({
+    path: `/${item.slug}`,
+    title: item.title,
+  })),
+}))

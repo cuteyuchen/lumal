@@ -72,20 +72,17 @@ registry.registerWidget({
   :saving="saving"
   @save="saveLayout"
   @cancel="closeDesigner"
->
-  <template #center-preview="{ context, layout }">
-    <ApplicationCenter :key="context.instanceId" :context="context" :layout="layout" />
-  </template>
-</LumaCockpitDesigner>
+/>
 ```
 
 - Designer 只编辑打开时创建的草稿副本。
-- 左右区域独立设置任意行列、像素列宽和百分比行高。
+- 装配区仅保留左右两侧网格，不再渲染中央大屏预览。
+- 左右区域头部常驻展示行列数与像素列宽，每行头部常驻展示百分比行高，无需悬浮或点击。
 - 每行独立切换普通网格或 Tab 行。
 - 模块库拖入时复制实例，已放置模块可以跨区域和普通槽/Tab 行移动。
 - 替换占用槽必须确认；缩减包含模块的行列会被阻止。
 - 拖拽操作同时提供可聚焦的选择、移动和目标按钮。
-- 中心预览与已放置模块共享 `mode: 'design'` 的消息总线；模块库预览保持隔离。
+- 已放置模块共享 `mode: 'design'` 的消息总线；模块库预览保持隔离。
 - 保存事件输出 `{ config, layout }`，包不调用 HTTP 或写入 localStorage。
 
 ## 公共 Card

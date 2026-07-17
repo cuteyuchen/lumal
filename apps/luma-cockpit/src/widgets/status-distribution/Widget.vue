@@ -1,34 +1,21 @@
 <script setup lang="ts">
 import type { EChartsOption, SetOptionOpts } from 'echarts'
-import type { ComponentPublicInstance } from 'vue'
 import type { SceneFilterPayload, SceneSelectionPayload } from '../../messages/topics'
-import { useChartResize } from '@luma/charts'
 import { useCockpitContext } from '@luma/cockpit'
-import { PieChart } from 'echarts/charts'
-import { AriaComponent, TooltipComponent } from 'echarts/components'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { computed, onBeforeUnmount, ref, useTemplateRef } from 'vue'
-import VChart from 'vue-echarts'
+import { LumaCharts } from '@luma/datav'
+import { computed, onBeforeUnmount, ref } from 'vue'
+import WidgetState from '../../components/WidgetState.vue'
 import { demoScene, getSceneEntity, statusDistribution } from '../../data/demo-scene'
 import { cockpitTopics } from '../../messages/topics'
 import { standaloneResolvedThemeMode } from '../../services/preferences'
 
-/***********************区域状态分布 ECharts 模块*********************/
-
-use([
-  CanvasRenderer,
-  AriaComponent,
-  TooltipComponent,
-  PieChart,
-])
+/***********************区域状态分布图（@luma/datav LumaCharts）*********************/
 
 const context = useCockpitContext()
 const loading = false
 const error = ''
 const filterStatus = ref<SceneFilterPayload['status']>()
 const selectedId = ref('')
-const chartRef = useTemplateRef<ComponentPublicInstance & { resize: () => void }>('chartRef')
 const updateOptions: SetOptionOpts = { notMerge: false }
 
 const items = computed(() => statusDistribution)
@@ -110,10 +97,12 @@ function filter(status: string): void {
   })
 }
 
-function handleChartClick(params: unknown): void {
-  const event = params as { data?: { status?: string } }
-  if (event.data?.status)
-    filter(event.data.status)
+const chartEvents = {
+  click: (params: unknown): void => {
+    const event = params as { data?: { status?: string } }
+    if (event.data?.status)
+      filter(event.data.status)
+  },
 }
 
 const unsubscribeFilter = context.messages.subscribe<SceneFilterPayload>(
@@ -129,8 +118,6 @@ const unsubscribeSelection = context.messages.subscribe<SceneSelectionPayload>(
   },
 )
 
-useChartResize(chartRef)
-
 onBeforeUnmount(() => {
   unsubscribeFilter()
   unsubscribeSelection()
@@ -139,26 +126,15 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="status-distribution">
-    <div v-if="loading" class="status-distribution__state" role="status">
-      加载中
-    </div>
-    <div v-else-if="error" class="status-distribution__state" role="alert">
-      {{ error }}
-    </div>
-    <div v-else-if="items.length === 0" class="status-distribution__state" role="status">
-      暂无数据
-    </div>
-    <div v-else class="status-distribution__content">
+    <WidgetState :loading="loading" :error="error" :empty="items.length === 0" />
+    <div v-if="!loading && !error && items.length > 0" class="status-distribution__content">
       <div class="status-distribution__chart-wrap">
-        <VChart
-          ref="chartRef"
+        <LumaCharts
           class="status-distribution__chart"
           :option="chartOption"
-          :update-options="updateOptions"
-          autoresize
-          role="img"
+          :set-option-options="updateOptions"
+          :events="chartEvents"
           aria-label="区域状态分布环形图"
-          @click="handleChartClick"
         />
         <div class="status-distribution__center" aria-hidden="true">
           <strong>{{ activeCount }}</strong>
@@ -312,13 +288,5 @@ onBeforeUnmount(() => {
 .status-distribution__items button:focus-visible {
   outline: 2px solid var(--luma-cockpit-focus-ring);
   outline-offset: 2px;
-}
-
-.status-distribution__state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--luma-cockpit-text-secondary);
 }
 </style>

@@ -20,6 +20,9 @@ const emit = defineEmits<{
 /***********************菜单状态*********************/
 const visibleChildren = computed(() => props.item.children?.filter(child => !child.hidden) ?? [])
 const hasChildren = computed(() => visibleChildren.value.length > 0)
+// 新开页外链只是“打开动作”，不是页面跳转，不能进入 ElMenu 的选中态追踪，
+// 否则点击后 ElMenu 内部 activeIndex 会停留在外链项，与实际显示的页面不一致。
+const isExternalAction = computed(() => Boolean(props.item.externalLink) && props.item.externalTarget !== '_self')
 
 /***********************事件处理*********************/
 function handleSelect(path: string): void {
@@ -59,6 +62,28 @@ function handleSelect(path: string): void {
       @select="handleSelect"
     />
   </ElSubMenu>
+
+  <li
+    v-else-if="isExternalAction"
+    class="el-menu-item luma-sidebar-menu-item luma-sidebar-menu-item--external"
+    role="menuitem"
+    tabindex="-1"
+    :title="collapsed ? item.title : undefined"
+    @click="handleSelect(item.path)"
+  >
+    <i
+      v-if="item.icon"
+      class="luma-sidebar-menu-item__icon"
+      aria-hidden="true"
+    >
+      <LumaIcon :name="item.icon" :size="16" />
+    </i>
+    <span class="luma-sidebar-menu-item__label">
+      <span class="luma-sidebar-menu-item__title">{{ item.title }}</span>
+      <LumaMenuBadge :badge="item.badge" :label="item.title" :tone="item.badgeTone" :type="item.badgeType" />
+    </span>
+    <span class="luma-sidebar-menu-item__external" aria-hidden="true">↗</span>
+  </li>
 
   <ElMenuItem
     v-else

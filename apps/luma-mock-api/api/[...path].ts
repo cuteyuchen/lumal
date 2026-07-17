@@ -9,7 +9,6 @@ import type {
   SystemMenuRecord,
   SystemUserRoleBatchMode,
 } from '../domain/system'
-import process from 'node:process'
 import {
   defineEventHandler,
   getHeader,

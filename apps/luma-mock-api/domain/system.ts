@@ -1,6 +1,6 @@
 import type { DictionaryOption } from '@luma/core/dictionary'
 import type { LumaMenuRecord } from '@luma/core/router'
-import { adminRouteRecords, staticAdminRouteRecords } from '../../luma-admin/src/router/routes'
+import { adminMenuSeed, staticAdminMenuSeed } from './menu-seed'
 import {
   resetMockAccountPassword,
   resetMockAccounts,
@@ -586,10 +586,10 @@ function createSystemMenusFromRoutes(
 }
 
 const initialSystemMenus = createSystemMenusFromRoutes(
-  adminRouteRecords,
+  adminMenuSeed,
   collectButtonSeeds(initialPermissionMenuSeed),
 )
-const staticPermissionMenus = createSystemMenusFromRoutes(staticAdminRouteRecords, new Map())
+const staticPermissionMenus = createSystemMenusFromRoutes(staticAdminMenuSeed, new Map())
 
 const initialSystemOrganizations: SystemOrganizationRecord[] = [
   {

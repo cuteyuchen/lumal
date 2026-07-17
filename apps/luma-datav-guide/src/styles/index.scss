@@ -1,49 +1,24 @@
 /**
- * DataV 指南站全局样式。深色科技风为基调，对齐 @luma/datav 的
- * --luma-datav-* 语义变量，提供布局、文档排版、演示块、代码块与表格样式。
- * 所有类名以组件实际使用为准：app-*、component-doc__*、guide-doc__*、
- * demo-block__*、props-table、code-block。
+ * DataV 指南站文档内容样式。
+ * 布局、顶栏、侧边栏、主题切换与全文搜索均由 @luma/core 的 LumaLayout 提供，
+ * 这里只负责文档正文（指南页 / 组件页 / 演示块 / 代码块 / 属性表）的排版。
+ * 颜色统一走 Element Plus CSS 变量，自动适配亮/暗主题。
  */
 
 :root {
-  color-scheme: dark;
-  --guide-bg: radial-gradient(120% 120% at 50% 0%, #0b1f3a 0%, #050d1c 60%, #030814 100%);
-  --guide-sidebar-width: 272px;
-  --guide-topbar-height: 56px;
-  --guide-surface: rgb(16 39 66 / 76%);
-  --guide-surface-muted: rgb(24 56 90 / 46%);
-  --guide-border: rgb(95 206 255 / 30%);
-  --guide-text: #edf9ff;
-  --guide-text-muted: #9fc4d7;
-  --guide-primary: #35c8ff;
-  --guide-accent: #6ff7cd;
-  --guide-code-bg: rgb(4 12 26 / 82%);
-  --guide-font: "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
   --guide-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#app {
-  margin: 0;
-  min-height: 100dvh;
-}
-
-body {
-  background: var(--guide-bg);
-  background-attachment: fixed;
-  color: var(--guide-text);
-  font-family: var(--guide-font);
-  font-size: 14px;
-  line-height: 1.65;
+/* 文档内容区：LumaContent 内的滚动容器留出阅读边距 */
+.luma-content .guide-doc,
+.luma-content .component-doc {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 28px 32px 72px;
 }
 
 a {
-  color: var(--guide-primary);
+  color: var(--el-color-primary);
   text-decoration: none;
 }
 
@@ -51,150 +26,7 @@ a:hover {
   text-decoration: underline;
 }
 
-code {
-  font-family: var(--guide-font-mono);
-}
-
-/* ---------- 顶栏 ---------- */
-.app-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  height: var(--guide-topbar-height);
-  padding: 0 20px;
-  border-bottom: 1px solid var(--guide-border);
-  background: rgb(6 16 32 / 82%);
-  backdrop-filter: blur(8px);
-}
-
-.app-topbar__brand {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.app-topbar__brand strong {
-  font-size: 16px;
-  letter-spacing: 0.02em;
-}
-
-.app-topbar__brand span {
-  font-size: 12px;
-  color: var(--guide-text-muted);
-}
-
-.app-topbar__link {
-  margin-left: auto;
-  font-size: 12px;
-  color: var(--guide-text-muted);
-}
-
-.app-topbar__toggle {
-  display: none;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-  width: 34px;
-  height: 34px;
-  padding: 0 7px;
-  border: 1px solid var(--guide-border);
-  border-radius: 8px;
-  background: transparent;
-  cursor: pointer;
-}
-
-.app-topbar__toggle span {
-  display: block;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--guide-text);
-}
-
-/* ---------- 主体布局 ---------- */
-.app-body {
-  display: grid;
-  grid-template-columns: var(--guide-sidebar-width) 1fr;
-  align-items: start;
-}
-
-.app-sidebar {
-  position: sticky;
-  top: var(--guide-topbar-height);
-  align-self: start;
-  height: calc(100dvh - var(--guide-topbar-height));
-  overflow-y: auto;
-  padding: 20px 14px 48px;
-  border-right: 1px solid var(--guide-border);
-  background: rgb(6 16 32 / 50%);
-}
-
-.app-nav__group {
-  margin-bottom: 18px;
-}
-
-.app-nav__title {
-  padding: 0 10px;
-  margin: 0 0 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--guide-text-muted);
-}
-
-.app-nav__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.app-nav__link {
-  display: flex;
-  flex-direction: column;
-  padding: 7px 10px;
-  border-radius: 8px;
-  color: var(--guide-text);
-  line-height: 1.35;
-}
-
-.app-nav__link:hover {
-  background: var(--guide-surface-muted);
-  text-decoration: none;
-}
-
-.app-nav__link.router-link-active {
-  background: linear-gradient(90deg, rgb(53 200 255 / 24%), rgb(53 200 255 / 6%));
-  box-shadow: inset 2px 0 0 var(--guide-primary);
-}
-
-.app-nav__link-title {
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.app-nav__link-summary {
-  font-size: 11px;
-  color: var(--guide-text-muted);
-}
-
-.app-content {
-  min-width: 0;
-  padding: 32px 40px 80px;
-}
-
-.app-scrim {
-  display: none;
-}
-
 /* ---------- 文档排版（指南页 + 组件页共用）---------- */
-.guide-doc,
-.component-doc {
-  max-width: 900px;
-}
-
 .guide-doc__head,
 .component-doc__head {
   margin-bottom: 28px;
@@ -206,7 +38,7 @@ code {
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--guide-accent);
+  color: var(--el-color-primary);
 }
 
 .guide-doc h1,
@@ -214,12 +46,13 @@ code {
   margin: 0 0 8px;
   font-size: 26px;
   font-weight: 700;
+  color: var(--el-text-color-primary);
 }
 
 .guide-doc__lead,
 .component-doc__intro {
   margin: 0;
-  color: var(--guide-text-muted);
+  color: var(--el-text-color-secondary);
   font-size: 15px;
 }
 
@@ -233,7 +66,7 @@ code {
 }
 
 .component-doc__map {
-  color: var(--guide-text-muted);
+  color: var(--el-text-color-secondary);
 }
 
 .guide-doc__section {
@@ -246,7 +79,8 @@ code {
   padding-bottom: 8px;
   font-size: 18px;
   font-weight: 600;
-  border-bottom: 1px solid var(--guide-border);
+  color: var(--el-text-color-primary);
+  border-bottom: 1px solid var(--el-border-color);
 }
 
 .guide-doc h3,
@@ -254,16 +88,19 @@ code {
   margin: 24px 0 10px;
   font-size: 15px;
   font-weight: 600;
+  color: var(--el-text-color-primary);
 }
 
 .guide-doc p,
 .component-doc p {
   margin: 0 0 14px;
+  color: var(--el-text-color-regular);
 }
 
 .guide-list {
   margin: 0 0 14px;
   padding-left: 20px;
+  color: var(--el-text-color-regular);
 }
 
 .guide-list li {
@@ -274,9 +111,10 @@ code {
 .component-doc :not(pre) > code {
   padding: 1px 6px;
   border-radius: 5px;
-  background: var(--guide-surface-muted);
+  background: var(--el-fill-color-light);
+  font-family: var(--guide-font-mono);
   font-size: 12.5px;
-  color: var(--guide-accent);
+  color: var(--el-color-primary);
 }
 
 /* ---------- 提示块 ---------- */
@@ -284,30 +122,31 @@ code {
   margin: 0 0 16px;
   padding: 12px 16px;
   border-radius: 10px;
-  border-left: 3px solid var(--guide-primary);
-  background: var(--guide-surface-muted);
+  border-left: 3px solid var(--el-color-primary);
+  background: var(--el-fill-color-light);
   font-size: 13px;
+  color: var(--el-text-color-regular);
 }
 
 .guide-doc__note--warn {
-  border-left-color: #ffcf5c;
+  border-left-color: var(--el-color-warning);
 }
 
 .brand-panel {
   padding: 16px 18px;
   margin: 0 0 16px;
-  border: 1px solid var(--guide-border);
+  border: 1px solid var(--el-border-color);
   border-radius: 12px;
-  background: var(--guide-surface);
+  background: var(--el-bg-color);
 }
 
 /* ---------- 代码块 ---------- */
 .code-block {
   position: relative;
   margin: 0 0 16px;
-  border: 1px solid var(--guide-border);
+  border: 1px solid var(--el-border-color);
   border-radius: 10px;
-  background: var(--guide-code-bg);
+  background: var(--el-fill-color-darker);
   overflow: hidden;
 }
 
@@ -318,7 +157,7 @@ code {
   font-family: var(--guide-font-mono);
   font-size: 12.5px;
   line-height: 1.6;
-  color: #d7ecff;
+  color: var(--el-text-color-primary);
 }
 
 .code-block code {
@@ -333,27 +172,27 @@ code {
   top: 8px;
   right: 8px;
   padding: 4px 10px;
-  border: 1px solid var(--guide-border);
+  border: 1px solid var(--el-border-color);
   border-radius: 6px;
-  background: rgb(16 39 66 / 90%);
-  color: var(--guide-text-muted);
+  background: var(--el-bg-color);
+  color: var(--el-text-color-secondary);
   font-size: 11px;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
 }
 
 .code-block__copy:hover {
-  color: var(--guide-accent);
-  border-color: var(--guide-accent);
+  color: var(--el-color-primary);
+  border-color: var(--el-color-primary);
 }
 
 /* ---------- 演示块 ---------- */
 .demo-block {
   margin: 0 0 24px;
-  border: 1px solid var(--guide-border);
+  border: 1px solid var(--el-border-color);
   border-radius: 12px;
   overflow: hidden;
-  background: var(--guide-surface);
+  background: var(--el-bg-color);
 }
 
 .demo-block__head {
@@ -368,29 +207,29 @@ code {
   margin: 0;
   font-size: 13px;
   font-weight: 600;
-  color: var(--guide-accent);
+  color: var(--el-color-primary);
 }
 
 .demo-block__desc {
   margin: 4px 0 0;
   font-size: 12.5px;
-  color: var(--guide-text-muted);
+  color: var(--el-text-color-secondary);
 }
 
 .demo-block__toggle {
   flex-shrink: 0;
   padding: 4px 12px;
-  border: 1px solid var(--guide-border);
+  border: 1px solid var(--el-border-color);
   border-radius: 6px;
   background: transparent;
-  color: var(--guide-text-muted);
+  color: var(--el-text-color-secondary);
   font-size: 12px;
   cursor: pointer;
 }
 
 .demo-block__toggle:hover {
-  color: var(--guide-accent);
-  border-color: var(--guide-accent);
+  color: var(--el-color-primary);
+  border-color: var(--el-color-primary);
 }
 
 .demo-block__stage {
@@ -401,20 +240,20 @@ code {
   padding: 28px 24px;
 }
 
+/* 演示舞台：驾驶舱组件多为深色底，这里固定深色科技底以还原真实观感 */
 .demo-block__stage--dark {
   background:
-    linear-gradient(rgb(8 22 44 / 42%), rgb(8 22 44 / 42%)),
-    repeating-linear-gradient(45deg, rgb(255 255 255 / 2%) 0 12px, transparent 12px 24px);
+    radial-gradient(120% 120% at 50% 0%, #0b1f3a 0%, #050d1c 70%, #030814 100%);
 }
 
 .demo-block__stage--plain {
-  background: transparent;
+  background: var(--el-fill-color-lighter);
 }
 
 .demo-block .code-block {
   margin: 0;
   border: none;
-  border-top: 1px solid var(--guide-border);
+  border-top: 1px solid var(--el-border-color);
   border-radius: 0;
 }
 
@@ -427,11 +266,12 @@ code {
   margin: 24px 0 10px;
   font-size: 15px;
   font-weight: 600;
+  color: var(--el-text-color-primary);
 }
 
 .props-table__scroll {
   overflow-x: auto;
-  border: 1px solid var(--guide-border);
+  border: 1px solid var(--el-border-color);
   border-radius: 10px;
 }
 
@@ -444,9 +284,10 @@ code {
 .props-table th,
 .props-table td {
   padding: 8px 12px;
-  border-bottom: 1px solid var(--guide-border);
+  border-bottom: 1px solid var(--el-border-color);
   text-align: left;
   vertical-align: top;
+  color: var(--el-text-color-regular);
 }
 
 .props-table tr:last-child td {
@@ -454,7 +295,8 @@ code {
 }
 
 .props-table th {
-  background: var(--guide-surface-muted);
+  background: var(--el-fill-color-light);
+  color: var(--el-text-color-primary);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -467,48 +309,12 @@ code {
 .props-table td code {
   padding: 1px 5px;
   border-radius: 4px;
-  background: var(--guide-surface-muted);
+  background: var(--el-fill-color-light);
+  font-family: var(--guide-font-mono);
   font-size: 12px;
-  color: var(--guide-accent);
+  color: var(--el-color-primary);
 }
 
 .props-table td:last-child {
-  color: var(--guide-text-muted);
-}
-
-/* ---------- 响应式 ---------- */
-@media (max-width: 900px) {
-  .app-topbar__toggle {
-    display: flex;
-  }
-
-  .app-body {
-    grid-template-columns: 1fr;
-  }
-
-  .app-sidebar {
-    position: fixed;
-    top: var(--guide-topbar-height);
-    left: 0;
-    z-index: 25;
-    width: min(84vw, var(--guide-sidebar-width));
-    transform: translateX(-100%);
-    transition: transform 0.22s ease;
-  }
-
-  .app-sidebar--open {
-    transform: translateX(0);
-  }
-
-  .app-scrim {
-    display: block;
-    position: fixed;
-    inset: var(--guide-topbar-height) 0 0;
-    z-index: 24;
-    background: rgb(2 8 20 / 60%);
-  }
-
-  .app-content {
-    padding: 24px 18px 60px;
-  }
+  color: var(--el-text-color-secondary);
 }

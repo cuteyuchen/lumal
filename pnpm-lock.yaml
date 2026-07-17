@@ -160,12 +160,21 @@ importers:
 
   apps/luma-datav-guide:
     dependencies:
+      '@luma/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@luma/datav':
         specifier: workspace:*
         version: link:../../packages/datav
+      '@luma/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
       echarts:
         specifier: ^5.6.0
         version: 5.6.0
+      element-plus:
+        specifier: ^2.11.0
+        version: 2.14.2(vue@3.5.39(typescript@6.0.3))
       vue:
         specifier: ^3.5.0
         version: 3.5.39(typescript@6.0.3)

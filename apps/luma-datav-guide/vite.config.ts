@@ -21,10 +21,14 @@ export default defineConfig(({ command }) => ({
         manualChunks(id) {
           if (id.includes('node_modules/vue') || id.includes('/@vue/') || id.includes('node_modules/vue-router'))
             return 'vendor-vue'
+          if (id.includes('node_modules/element-plus') || id.includes('node_modules/@element-plus'))
+            return 'vendor-element-plus'
           if (id.includes('node_modules/echarts') || id.includes('node_modules/zrender'))
             return 'vendor-echarts'
           if (id.includes('/packages/datav/'))
             return 'vendor-datav'
+          if (id.includes('/packages/core/') || id.includes('/packages/icons/'))
+            return 'vendor-luma'
         },
       },
     },
@@ -37,7 +41,7 @@ export default defineConfig(({ command }) => ({
       },
       ...(command === 'serve'
         ? createLumaAliases({
-            packages: ['datav'],
+            packages: ['core', 'datav', 'icons'],
             workspaceRoot,
           })
         : []),

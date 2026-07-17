@@ -19,7 +19,7 @@ import { resolveRouteComponent } from './components'
 import { staticAdminRouteRecords } from './routes'
 
 export { permissionStore } from '../services/permission'
-export { adminRouteRecords, staticAdminRouteRecords } from './routes'
+export { staticAdminRouteRecords } from './routes'
 
 interface AdminRouterRuntime {
   menuRoutes: MenuRouteRuntime

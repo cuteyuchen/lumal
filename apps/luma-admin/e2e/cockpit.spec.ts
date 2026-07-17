@@ -45,8 +45,7 @@ test.describe('驾驶舱', () => {
     const leftRegion = dialog.locator('[data-side="left"]')
     const rightRegion = dialog.locator('[data-side="right"]')
 
-    // 左右区域独立配置：只把左侧调整为两列。
-    await leftRegion.locator('[data-role="region-tools-trigger"]').click()
+    // 左右区域独立配置：行列与列宽直接可见，只把左侧调整为两列。
     const leftColumnInput = leftRegion.getByRole('spinbutton', { name: '左侧区域列数' })
     await leftColumnInput.fill('2')
     await leftColumnInput.press('Enter')
@@ -62,7 +61,6 @@ test.describe('驾驶舱', () => {
     await page.getByRole('button', { name: '替换', exact: true }).click()
 
     // 单行合并为 Tab 后新增第二个实例并切换 Tab。
-    await rightRegion.locator('[data-role="row-tools-trigger"]').click()
     await rightRegion.locator('.el-switch').click()
     await dialog.locator('.luma-cockpit-designer__library-select').first().click()
     await rightRegion.locator('.luma-cockpit-designer__tab-target').click()

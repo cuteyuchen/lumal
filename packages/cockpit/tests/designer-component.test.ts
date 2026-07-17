@@ -74,19 +74,21 @@ function mountDesigner(current = config(), slots: Record<string, unknown> = {}) 
 }
 
 describe('lumaCockpitDesigner', () => {
-  it('只保留左右独立的局部工具层，不渲染全局列控制', () => {
+  it('左右区域直接展示行列与列宽设置，不再依赖悬浮工具层', () => {
     const current = config()
     current.layouts[0].right.rows[0].cells[0].widget = { id: 'right-widget', type: 'stub', title: '右侧模块' }
     const wrapper = mountDesigner(current)
 
-    expect(wrapper.find('.luma-cockpit-designer__global-controls').exists()).toBe(false)
+    expect(wrapper.find('.luma-cockpit-designer__center-preview').exists()).toBe(false)
     expect(wrapper.findAll('[data-role="region-tools"]')).toHaveLength(2)
     expect(wrapper.findAll('[data-role="row-tools"]')).toHaveLength(2)
 
     const rightRegion = wrapper.get('[data-side="right"]')
-    expect(rightRegion.get('[data-role="region-tools-trigger"]').attributes('aria-label')).toBe('右侧区域设置')
-    expect(rightRegion.get('[data-role="region-tools-panel"] .luma-cockpit-designer__region-head').exists()).toBe(true)
-    expect(rightRegion.get('[data-role="row-tools"] [data-role="row-tools-panel"]').exists()).toBe(true)
+    const regionHead = rightRegion.get('[data-role="region-tools"]')
+    expect(regionHead.classes()).toContain('luma-cockpit-designer__region-head')
+    expect(regionHead.attributes('aria-label')).toBe('右侧区域布局设置')
+    expect(regionHead.findAll('.luma-cockpit-designer__column-field').length).toBeGreaterThan(0)
+    expect(rightRegion.get('[data-role="row-tools"]').classes()).toContain('luma-cockpit-designer__grid-row-head')
     expect(rightRegion.get('[data-role="remove-widget"]').attributes('aria-label')).toBe('移除模块 右侧模块')
   })
 
@@ -128,17 +130,16 @@ describe('lumaCockpitDesigner', () => {
     expect(rightRegion.get('.luma-cockpit-designer__tab-preview .designer-stub-widget').attributes('data-instance')).toBe('right-b')
   })
 
-  it('中心预览获得 design context，并与已放置模块共享消息总线', () => {
+  it('不再渲染中心预览，已放置模块仍拿到 design 消息总线', () => {
     const current = config()
     current.layouts[0].left.rows[0].cells[0].widget = { id: 'left-widget', type: 'stub' }
     const wrapper = mountDesigner(current, {
       'center-preview': () => h(CenterProbe),
     })
 
-    const center = wrapper.get('.designer-center-probe')
-    expect(center.attributes('data-layout')).toBe('layout-a')
-    expect(center.attributes('data-mode')).toBe('design')
-    expect(observedMessages.get('layout-a:center')).toBe(observedMessages.get('left-widget'))
+    expect(wrapper.find('.designer-center-probe').exists()).toBe(false)
+    expect(wrapper.find('.luma-cockpit-designer__center-preview').exists()).toBe(false)
+    expect(observedMessages.get('left-widget')).toBeDefined()
     expect(observedMessages.get('library-preview:stub')).not.toBe(observedMessages.get('left-widget'))
   })
 

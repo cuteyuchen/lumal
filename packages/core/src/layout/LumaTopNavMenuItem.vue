@@ -14,6 +14,8 @@ const emit = defineEmits<{
 }>()
 
 const visibleChildren = computed(() => props.item.children?.filter(child => !child.hidden) ?? [])
+// 新开页外链只是“打开动作”，不进入 ElMenu 选中态追踪，避免点击后高亮与实际页面错位。
+const isExternalAction = computed(() => Boolean(props.item.externalLink) && props.item.externalTarget !== '_self')
 
 function handleSelect(path: string): void {
   emit('select', path)
@@ -38,6 +40,21 @@ function handleSelect(path: string): void {
       @select="handleSelect"
     />
   </ElSubMenu>
+
+  <li
+    v-else-if="isExternalAction"
+    class="el-menu-item luma-top-nav-menu-item--external"
+    role="menuitem"
+    tabindex="-1"
+    @click="handleSelect(item.path)"
+  >
+    <LumaIcon v-if="item.icon" :name="item.icon" :size="16" />
+    <span class="luma-top-nav-menu-item__label">
+      <span>{{ item.title }}</span>
+      <LumaMenuBadge :badge="item.badge" :label="item.title" :tone="item.badgeTone" :type="item.badgeType" />
+    </span>
+    <span class="luma-top-nav-menu-item__external" aria-hidden="true">↗</span>
+  </li>
 
   <ElMenuItem v-else :index="item.path" @click="handleSelect(item.path)">
     <LumaIcon v-if="item.icon" :name="item.icon" :size="16" />

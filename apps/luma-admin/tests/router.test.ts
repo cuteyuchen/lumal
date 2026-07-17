@@ -8,7 +8,7 @@ import {
   getAdminRouteNames,
   permissionStore,
 } from '../src/router'
-import { adminRouteRecords, staticAdminRouteRecords } from '../src/router/routes'
+import { staticAdminRouteRecords } from '../src/router/routes'
 import { login, logout } from '../src/services/session'
 
 describe('luma admin router', () => {
@@ -16,76 +16,19 @@ describe('luma admin router', () => {
     await logout()
   })
 
-  it('示例路由配置使用标准 meta.authority 字段', () => {
-    const examplesRoute = adminRouteRecords.find(route => route.path === '/examples')
+  it('静态壳层路由仅包含工作台和个人中心且使用标准 meta 字段', () => {
+    // 动态菜单（系统管理、功能示例、项目等）改由后端 GET /menu 下发，
+    // 前端静态路由只保留不随权限变化的壳层页面。
+    const dashboardRoute = staticAdminRouteRecords.find(route => route.path === '/dashboard')
     const profileRoute = staticAdminRouteRecords.find(route => route.path === '/profile')
-    const projectRoute = adminRouteRecords.find(route => route.path === '/project')
-    const systemRoute = adminRouteRecords.find(route => route.path === '/system')
 
-    expect(staticAdminRouteRecords[0]).toMatchObject({
+    expect(staticAdminRouteRecords.map(route => route.path)).toEqual(['/dashboard', '/profile'])
+    expect(dashboardRoute).toMatchObject({
+      component: 'dashboard/index',
       path: '/dashboard',
       meta: {
         authority: ['dashboard:view'],
         title: '工作台',
-      },
-    })
-    expect(examplesRoute).toMatchObject({
-      path: '/examples',
-      meta: {
-        authority: ['examples:view'],
-        title: '功能示例',
-      },
-    })
-    expect(systemRoute).toMatchObject({
-      path: '/system',
-      meta: {
-        title: '系统管理',
-      },
-    })
-    expect(systemRoute?.children).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        path: 'user',
-        meta: expect.objectContaining({
-          authority: ['system:user:list'],
-          title: '用户管理',
-        }),
-      }),
-      expect.objectContaining({
-        path: 'organization',
-        meta: expect.objectContaining({
-          authority: ['system:organization:list'],
-          title: '机构管理',
-        }),
-      }),
-      expect.objectContaining({
-        path: 'dict',
-        meta: expect.objectContaining({
-          authority: ['system:dict:list'],
-          title: '字典分类',
-        }),
-      }),
-      expect.objectContaining({
-        path: 'dict-item',
-        meta: expect.objectContaining({
-          authority: ['system:dict:list'],
-          title: '字典项',
-        }),
-      }),
-    ]))
-    expect(examplesRoute?.children).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        path: 'overview',
-        meta: expect.objectContaining({
-          authority: ['examples:view'],
-          title: '示例总览',
-        }),
-      }),
-    ]))
-    expect(projectRoute).toMatchObject({
-      path: '/project',
-      meta: {
-        authority: ['project:list'],
-        title: '项目管理',
       },
     })
     expect(profileRoute).toMatchObject({
@@ -96,9 +39,8 @@ describe('luma admin router', () => {
         title: '个人中心',
       },
     })
-    expect(adminRouteRecords.some(route => route.path === '/dashboard' || route.path === '/profile')).toBe(false)
-    expect(JSON.stringify(adminRouteRecords)).not.toContain('"permissions"')
-    expect(JSON.stringify(adminRouteRecords)).not.toContain('"dictType"')
+    expect(JSON.stringify(staticAdminRouteRecords)).not.toContain('"permissions"')
+    expect(JSON.stringify(staticAdminRouteRecords)).not.toContain('"dictType"')
   })
 
   it('admin 会看到系统管理全量菜单', async () => {

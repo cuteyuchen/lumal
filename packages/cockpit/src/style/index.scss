@@ -78,6 +78,13 @@
     will-change: auto;
   }
 
+  // external：画布不自缩放，stage 铺满父容器，缩放交由外层 LumaFullScreenContainer
+  &[data-viewport-mode='external'] &__stage {
+    width: 100% !important;
+    height: 100% !important;
+    will-change: auto;
+  }
+
   &__header {
     display: flex;
     align-items: center;

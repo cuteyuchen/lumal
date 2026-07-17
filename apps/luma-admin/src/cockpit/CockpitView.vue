@@ -166,11 +166,7 @@ async function toggleFullscreen(): Promise<void> {
           :save-error="saveError"
           @save="handleSave"
           @cancel="closeDesigner"
-        >
-          <template #center-preview="{ context }">
-            <StubCenter :key="context.instanceId" :context="context" />
-          </template>
-        </LumaCockpitDesigner>
+        />
       </div>
     </template>
   </div>

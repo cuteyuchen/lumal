@@ -1,35 +1,21 @@
 <script setup lang="ts">
 import type { EChartsOption, SetOptionOpts } from 'echarts'
-import type { ComponentPublicInstance } from 'vue'
 import type { SceneFilterPayload, SceneSelectionPayload } from '../../messages/topics'
-import { useChartResize } from '@luma/charts'
 import { useCockpitContext } from '@luma/cockpit'
-import { LineChart } from 'echarts/charts'
-import { AriaComponent, GridComponent, TooltipComponent } from 'echarts/components'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { computed, onBeforeUnmount, ref, useTemplateRef } from 'vue'
-import VChart from 'vue-echarts'
+import { LumaCharts } from '@luma/datav'
+import { computed, onBeforeUnmount, ref } from 'vue'
+import WidgetState from '../../components/WidgetState.vue'
 import { getSceneEntity, trendSeries } from '../../data/demo-scene'
 import { cockpitTopics } from '../../messages/topics'
 import { standaloneResolvedThemeMode } from '../../services/preferences'
 
-/***********************运行趋势 ECharts 模块*********************/
-
-use([
-  CanvasRenderer,
-  AriaComponent,
-  GridComponent,
-  TooltipComponent,
-  LineChart,
-])
+/***********************运行趋势图（@luma/datav LumaCharts）*********************/
 
 const context = useCockpitContext()
 const loading = false
 const error = ''
 const filterStatus = ref<SceneFilterPayload['status']>()
 const selectedId = ref('')
-const chartRef = useTemplateRef<ComponentPublicInstance & { resize: () => void }>('chartRef')
 const updateOptions: SetOptionOpts = { notMerge: false }
 const timeLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '今日']
 
@@ -121,11 +107,13 @@ function filterByStatus(status: string): void {
   })
 }
 
-function handleChartClick(params: unknown): void {
-  const event = params as { seriesName?: string }
-  const item = series.value.find(seriesItem => seriesItem.label === event.seriesName)
-  if (item)
-    filterByStatus(item.status)
+const chartEvents = {
+  click: (params: unknown): void => {
+    const event = params as { seriesName?: string }
+    const item = series.value.find(seriesItem => seriesItem.label === event.seriesName)
+    if (item)
+      filterByStatus(item.status)
+  },
 }
 
 const unsubscribeFilter = context.messages.subscribe<SceneFilterPayload>(
@@ -141,8 +129,6 @@ const unsubscribeSelection = context.messages.subscribe<SceneSelectionPayload>(
   },
 )
 
-useChartResize(chartRef)
-
 onBeforeUnmount(() => {
   unsubscribeFilter()
   unsubscribeSelection()
@@ -151,30 +137,19 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="trend-panel">
-    <div v-if="loading" class="trend-panel__state" role="status">
-      加载中
-    </div>
-    <div v-else-if="error" class="trend-panel__state" role="alert">
-      {{ error }}
-    </div>
-    <div v-else-if="series.length === 0" class="trend-panel__state" role="status">
-      暂无数据
-    </div>
-    <div v-else class="trend-panel__content">
+    <WidgetState :loading="loading" :error="error" :empty="series.length === 0" />
+    <div v-if="!loading && !error && series.length > 0" class="trend-panel__content">
       <div class="trend-panel__summary">
         <span>{{ selectedName }}运行指数</span>
         <strong>{{ latestIndex }}</strong>
         <em>近 7 日 +2.8%</em>
       </div>
-      <VChart
-        ref="chartRef"
+      <LumaCharts
         class="trend-panel__chart"
         :option="chartOption"
-        :update-options="updateOptions"
-        autoresize
-        role="img"
+        :set-option-options="updateOptions"
+        :events="chartEvents"
         aria-label="近七日运行态势趋势图"
-        @click="handleChartClick"
       />
       <div class="trend-panel__legend" role="group" aria-label="运行状态筛选">
         <button
@@ -295,13 +270,5 @@ onBeforeUnmount(() => {
 .trend-panel__legend button:focus-visible {
   outline: 2px solid var(--luma-cockpit-focus-ring);
   outline-offset: 2px;
-}
-
-.trend-panel__state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--luma-cockpit-text-secondary);
 }
 </style>

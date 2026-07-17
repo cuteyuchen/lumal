@@ -28,7 +28,7 @@ const routes: RouteRecordRaw[] = [
         path: `/${item.slug}`,
         name: item.slug,
         component: loader,
-        meta: { title: item.title },
+        meta: { title: item.title, summary: item.summary },
       }
     })
     .filter((route): route is RouteRecordRaw => Boolean(route)),
