@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { LumaPreferences } from '@luma/core/theme'
 import { LumaThemeSettingsPanel } from '@luma/core/theme'
-import { LumaIcon } from '@luma/icons'
+import { LumaIcon } from '@luma/icons-vue'
 import { ElDrawer } from 'element-plus'
 import { computed } from 'vue'
 

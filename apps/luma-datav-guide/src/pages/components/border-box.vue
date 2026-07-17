@@ -1,11 +1,33 @@
 <script setup lang="ts">
+import type { BorderBoxVariant } from '@luma/datav'
+import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
 import { LumaBorderBox, LumaDigitalFlop } from '@luma/datav'
+import { reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
 import DemoBlock from '@/components/DemoBlock.vue'
+import Playground from '@/components/Playground.vue'
 import PropsTable from '@/components/PropsTable.vue'
 
 const variants = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] as const
+
+const playModel = reactive<Record<string, unknown>>({
+  variant: 8,
+  title: '区域负载',
+  titleWidth: 200,
+  duration: 3000,
+  reverse: false,
+  backgroundColor: 'rgb(8 22 44 / 60%)',
+})
+
+const playControls: PlaygroundControl[] = [
+  { key: 'variant', label: '变体 variant', type: 'select', options: variants.map(v => ({ label: `variant ${v}`, value: v })) },
+  { key: 'title', label: '标题 title', type: 'text', hint: 'variant 11 支持' },
+  { key: 'titleWidth', label: '标题宽 titleWidth', type: 'number', min: 80, max: 400, step: 10 },
+  { key: 'duration', label: '动画时长 duration', type: 'number', min: 0, max: 8000, step: 200, hint: '毫秒，动效边框生效' },
+  { key: 'reverse', label: '反转 reverse', type: 'boolean' },
+  { key: 'backgroundColor', label: '内容背景 backgroundColor', type: 'text' },
+]
 
 const basicCode = `<LumaBorderBox :variant="8" :duration="3000">
   <div class="panel-body">驾驶舱面板内容</div>
@@ -21,8 +43,8 @@ const colorCode = `<!-- 现代 props：colors 为两段渐变色 -->
   <LumaDigitalFlop :value="1286" suffix=" 台" :font-size="34" />
 </LumaBorderBox>`
 
-const titleCode = `<LumaBorderBox :variant="13" title="区域负载" :title-width="200">
-  <div class="panel-body">带标题的边框（variant 8 / 13 支持标题）</div>
+const titleCode = `<LumaBorderBox :variant="11" title="区域负载" :title-width="200">
+  <div class="panel-body">带标题的边框（variant 11 支持标题）</div>
 </LumaBorderBox>`
 
 const propRows: PropRow[] = [
@@ -34,8 +56,8 @@ const propRows: PropRow[] = [
   { name: 'duration', type: 'number', default: '按 variant', description: '动效边框（如 variant 8）的动画时长，毫秒。' },
   { name: 'dur', type: 'number', default: '按 variant', description: 'DataV 原生动画时长，单位秒。' },
   { name: 'reverse', type: 'boolean', default: 'false', description: '反转动画方向。' },
-  { name: 'title', type: 'string', default: "''", description: '标题文本（variant 8 / 13 支持）。' },
-  { name: 'titleWidth', type: 'number', default: '250', description: '标题栏宽度，像素。' },
+  { name: 'title', type: 'string', default: "''", description: '标题文本（variant 11 支持）。' },
+  { name: 'titleWidth', type: 'number', default: '250', description: '标题栏宽度，像素（variant 11）。' },
 ]
 </script>
 
@@ -46,6 +68,30 @@ const propRows: PropRow[] = [
     datav-name="borderBox1–13"
     intro="科技感边框容器，共 13 种变体。作为面板外壳包裹任意内容，部分变体带描边流光动画。"
   >
+    <Playground
+      title="在线调试"
+      description="实时修改属性，预览效果与代码同步更新。"
+      component-name="LumaBorderBox"
+      :controls="playControls"
+      :model-value="playModel"
+      :min-height="220"
+      slot-code="<LumaDigitalFlop :value=&quot;1286&quot; suffix=&quot; 台&quot; :font-size=&quot;34&quot; />"
+    >
+      <LumaBorderBox
+        :variant="playModel.variant as BorderBoxVariant"
+        :title="playModel.title as string"
+        :title-width="playModel.titleWidth as number"
+        :duration="playModel.duration as number"
+        :reverse="playModel.reverse as boolean"
+        :background-color="playModel.backgroundColor as string"
+        style="width: 380px; height: 180px;"
+      >
+        <div class="panel-body">
+          <LumaDigitalFlop :value="1286" suffix=" 台" :font-size="34" />
+        </div>
+      </LumaBorderBox>
+    </Playground>
+
     <DemoBlock
       title="全部 13 种变体"
       description="variant 1–13 的默认样式一览。"
@@ -77,10 +123,10 @@ const propRows: PropRow[] = [
 
     <DemoBlock
       title="带标题边框"
-      description="variant 8 与 13 支持 title / titleWidth。"
+      description="variant 11 支持 title / titleWidth，标题居中显示在顶部缺口。"
       :code="titleCode"
     >
-      <LumaBorderBox :variant="13" title="区域负载" :title-width="200" style="width: 360px; height: 170px;">
+      <LumaBorderBox :variant="11" title="区域负载" :title-width="200" style="width: 360px; height: 170px;">
         <div class="panel-body">
           带标题的边框
         </div>
@@ -95,13 +141,13 @@ const propRows: PropRow[] = [
 <style scoped>
 .variant-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
   width: 100%;
 }
 
 .variant-grid__cell {
-  height: 110px;
+  height: 180px;
 }
 
 .panel-body {

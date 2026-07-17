@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { SchemaFormMode, SchemaFormModel } from '@luma/core/components'
 import { LumaInfoTable, LumaPage, LumaSchemaForm } from '@luma/core/components'
-import { LumaIcon, LumaIconPickerDialog } from '@luma/icons'
+import { LumaIcon, LumaIconPickerDialog } from '@luma/icons-vue'
 import { computed, shallowRef } from 'vue'
 import { exampleFormSchemas } from './example-data'
 

@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
 import type { RankingItem, ScrollRankingBoardConfig } from '@luma/datav'
 import { LumaScrollRankingBoard } from '@luma/datav'
+import { reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
 import DemoBlock from '@/components/DemoBlock.vue'
+import Playground from '@/components/Playground.vue'
 import PropsTable from '@/components/PropsTable.vue'
 
 const items: RankingItem[] = [
@@ -13,6 +16,30 @@ const items: RankingItem[] = [
   { key: 'd', label: '数据中心 D', value: 6120 },
   { key: 'e', label: '数据中心 E', value: 4980 },
   { key: 'f', label: '数据中心 F', value: 3720 },
+]
+
+// 在线调试可调属性（items 数据保持固定，仅暴露标量/排序属性）
+const playModel = reactive<Record<string, unknown>>({
+  unit: '次',
+  visibleRows: 4,
+  interval: 2000,
+  sort: 'desc',
+})
+
+const playControls: PlaygroundControl[] = [
+  { key: 'unit', label: '单位 unit', type: 'text' },
+  { key: 'visibleRows', label: '可见行数 visibleRows', type: 'number', min: 1, max: 6, step: 1 },
+  { key: 'interval', label: '轮播间隔 interval', type: 'number', min: 0, max: 6000, step: 200, hint: '毫秒，0 停止轮播' },
+  {
+    key: 'sort',
+    label: '排序 sort',
+    type: 'select',
+    options: [
+      { label: '不排序 false', value: '' },
+      { label: '升序 asc', value: 'asc' },
+      { label: '降序 desc', value: 'desc' },
+    ],
+  },
 ]
 
 const config: ScrollRankingBoardConfig = {
@@ -83,6 +110,24 @@ const configRows: PropRow[] = [
     datav-name="scrollRankingBoard"
     intro="按数值排名的横向进度条轮播，自动计算占比与名次。支持现代 items 与 DataV 原生 config。"
   >
+    <Playground
+      title="在线调试"
+      description="实时修改属性，预览效果与代码同步更新。"
+      component-name="LumaScrollRankingBoard"
+      :controls="playControls"
+      :model-value="playModel"
+      :min-height="300"
+    >
+      <LumaScrollRankingBoard
+        :items="items"
+        :unit="playModel.unit as string"
+        :visible-rows="playModel.visibleRows as number"
+        :interval="playModel.interval as number"
+        :sort="(playModel.sort as 'asc' | 'desc') || false"
+        style="height: 240px; width: 100%;"
+      />
+    </Playground>
+
     <DemoBlock
       title="现代 items 用法"
       description="items 使用 label/value，自动排序并计算占比条。"

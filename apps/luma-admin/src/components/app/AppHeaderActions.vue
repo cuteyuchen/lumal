@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ResolvedThemeMode } from '@luma/core/theme'
-import { LumaIcon } from '@luma/icons'
+import { LumaIcon } from '@luma/icons-vue'
 import { ElButton } from 'element-plus'
 import { computed } from 'vue'
 

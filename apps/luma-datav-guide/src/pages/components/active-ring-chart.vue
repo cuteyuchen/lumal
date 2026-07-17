@@ -1,15 +1,29 @@
 <script setup lang="ts">
+import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
 import type { DataValueItem } from '@luma/datav'
 import { LumaActiveRingChart } from '@luma/datav'
+import { reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
 import DemoBlock from '@/components/DemoBlock.vue'
+import Playground from '@/components/Playground.vue'
 import PropsTable from '@/components/PropsTable.vue'
 
 const items: DataValueItem[] = [
   { key: 'online', label: '在线', value: 620 },
   { key: 'idle', label: '空闲', value: 240 },
   { key: 'offline', label: '离线', value: 90 },
+]
+
+// 在线调试可调属性（数据 items 为数组，保持固定，仅暴露标量属性）
+const playModel = reactive<Record<string, unknown>>({
+  interval: 2500,
+  autoplay: true,
+})
+
+const playControls: PlaygroundControl[] = [
+  { key: 'interval', label: '切换间隔 interval', type: 'number', min: 500, max: 6000, step: 250, hint: '毫秒' },
+  { key: 'autoplay', label: '自动轮播 autoplay', type: 'boolean' },
 ]
 
 const modernCode = `<script setup lang="ts">
@@ -70,6 +84,22 @@ const configRows: PropRow[] = [
     datav-name="activeRingChart"
     intro="使用 ECharts 双层 Pie 实现活动扇区，自动轮播高亮当前项并在中心以数字翻牌显示占比。"
   >
+    <Playground
+      title="在线调试"
+      description="实时修改属性，预览效果与代码同步更新。"
+      component-name="LumaActiveRingChart"
+      :controls="playControls"
+      :model-value="playModel"
+      :min-height="280"
+    >
+      <LumaActiveRingChart
+        :items="items"
+        :interval="playModel.interval as number"
+        :autoplay="playModel.autoplay as boolean"
+        style="height: 240px; width: 360px;"
+      />
+    </Playground>
+
     <DemoBlock
       title="现代 props"
       description="传入 items 即可，组件自动轮播高亮扇区并联动中心数字。"

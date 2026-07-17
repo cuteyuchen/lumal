@@ -31,7 +31,7 @@ describe('luma admin style entry', () => {
 
     expect(mainTs).toContain('import \'@luma/core/theme-chalk/index.scss\'')
     expect(mainTs).toContain('import \'@luma/core/style.css\'')
-    expect(mainTs).toContain('import \'@luma/icons/style.css\'')
+    expect(mainTs).toContain('import \'@luma/icons-vue/style.css\'')
     expect(mainTs).toContain('import \'./styles.scss\'')
   })
 

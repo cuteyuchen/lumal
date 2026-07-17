@@ -19,3 +19,4 @@ dist-*
 playwright-report/
 .playwright-mcp/
 output
+.tmp-ref

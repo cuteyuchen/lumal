@@ -1,9 +1,47 @@
 <script setup lang="ts">
+import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
 import { LumaLoading } from '@luma/datav'
+import { reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
 import DemoBlock from '@/components/DemoBlock.vue'
+import Playground from '@/components/Playground.vue'
 import PropsTable from '@/components/PropsTable.vue'
+
+// 在线调试可调属性（colors 为数组，保持内置，仅暴露标量属性）
+const playModel = reactive<Record<string, unknown>>({
+  label: '加载中...',
+  size: 50,
+  variant: 'ring',
+  status: 'loading',
+  duration: 1500,
+})
+
+const playControls: PlaygroundControl[] = [
+  { key: 'label', label: '文案 label', type: 'text' },
+  { key: 'size', label: '尺寸 size', type: 'number', min: 20, max: 160, step: 2 },
+  {
+    key: 'variant',
+    label: '变体 variant',
+    type: 'select',
+    options: [
+      { label: '圆环 ring', value: 'ring' },
+      { label: '圆点 dots', value: 'dots' },
+      { label: '脉冲 pulse', value: 'pulse' },
+    ],
+  },
+  {
+    key: 'status',
+    label: '状态 status',
+    type: 'select',
+    options: [
+      { label: '加载中 loading', value: 'loading' },
+      { label: '成功 success', value: 'success' },
+      { label: '失败 error', value: 'error' },
+    ],
+  },
+  { key: 'duration', label: '时长 duration', type: 'number', min: 500, max: 4000, step: 100, hint: '毫秒' },
+]
 
 const basicCode = `<LumaLoading label="加载中..." />`
 
@@ -28,6 +66,23 @@ const propRows: PropRow[] = [
     datav-name="loading"
     intro="驾驶舱加载动画，支持尺寸、渐变色与文案。动画在页面隐藏、离开视口或 prefers-reduced-motion 下自动暂停。"
   >
+    <Playground
+      title="在线调试"
+      description="实时修改属性，预览效果与代码同步更新。"
+      component-name="LumaLoading"
+      :controls="playControls"
+      :model-value="playModel"
+      :min-height="200"
+    >
+      <LumaLoading
+        :label="playModel.label as string"
+        :size="playModel.size as number"
+        :variant="playModel.variant as 'ring' | 'dots' | 'pulse'"
+        :status="playModel.status as 'loading' | 'success' | 'error'"
+        :duration="playModel.duration as number"
+      />
+    </Playground>
+
     <DemoBlock title="基础用法" description="默认渐变色加载动画。" :code="basicCode" :min-height="180">
       <LumaLoading label="加载中..." />
     </DemoBlock>

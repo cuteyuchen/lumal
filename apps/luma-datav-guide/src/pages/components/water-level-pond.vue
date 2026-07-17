@@ -1,9 +1,30 @@
 <script setup lang="ts">
+import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
 import { LumaWaterLevelPond } from '@luma/datav'
+import { reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
 import DemoBlock from '@/components/DemoBlock.vue'
+import Playground from '@/components/Playground.vue'
 import PropsTable from '@/components/PropsTable.vue'
+
+// 在线调试的属性模型与默认值
+const playModel = reactive<Record<string, unknown>>({
+  value: 65,
+  shape: 'round',
+  waveNum: 2,
+  waveHeight: 40,
+  duration: 4000,
+})
+
+// 在线调试的控件定义
+const playControls: PlaygroundControl[] = [
+  { key: 'value', label: '水位 value', type: 'number', min: 0, max: 100, step: 1 },
+  { key: 'shape', label: '外形 shape', type: 'select', options: [{ label: 'rect', value: 'rect' }, { label: 'round', value: 'round' }, { label: 'roundRect', value: 'roundRect' }] },
+  { key: 'waveNum', label: '波浪数 waveNum', type: 'number', min: 1, max: 8, step: 1 },
+  { key: 'waveHeight', label: '波峰高 waveHeight', type: 'number', min: 0, max: 100, step: 5 },
+  { key: 'duration', label: '滚动周期 duration', type: 'number', min: 0, max: 8000, step: 200, hint: '毫秒' },
+]
 
 const modernCode = `<LumaWaterLevelPond :value="65" shape="round" />
 <LumaWaterLevelPond :value="48" shape="roundRect" :colors="['#6ff7cd', '#35c8ff']" />`
@@ -33,6 +54,24 @@ const propRows: PropRow[] = [
     datav-name="waterLevelPond"
     intro="SVG 波浪水位，支持矩形、圆形、圆角矩形三种外形。使用响应式 SVG 波浪与裁剪实现，不依赖 Canvas 运行时。"
   >
+    <Playground
+      title="在线调试"
+      description="实时修改属性，预览效果与代码同步更新。"
+      component-name="LumaWaterLevelPond"
+      :controls="playControls"
+      :model-value="playModel"
+      :min-height="220"
+    >
+      <LumaWaterLevelPond
+        :value="playModel.value as number"
+        :shape="playModel.shape as 'rect' | 'round' | 'roundRect'"
+        :wave-num="playModel.waveNum as number"
+        :wave-height="playModel.waveHeight as number"
+        :duration="playModel.duration as number"
+        style="width: 140px; height: 150px;"
+      />
+    </Playground>
+
     <DemoBlock
       title="三种外形"
       description="shape 切换 rect / round / roundRect。"

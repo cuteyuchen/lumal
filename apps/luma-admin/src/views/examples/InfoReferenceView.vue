@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { LumaInfoTable, LumaPage } from '@luma/core/components'
-import { LumaIconPicker } from '@luma/icons'
+import { LumaIconPicker } from '@luma/icons-vue'
 import { ElButton, ElInput, ElSwitch } from 'element-plus'
 import { computed, shallowRef } from 'vue'
 import { frameworkInfoItems } from './example-data'

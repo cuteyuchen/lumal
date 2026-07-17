@@ -1,11 +1,29 @@
 <script setup lang="ts">
+import type { DecorationVariant } from '@luma/datav'
+import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
 import { LumaDecoration } from '@luma/datav'
+import { reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
 import DemoBlock from '@/components/DemoBlock.vue'
+import Playground from '@/components/Playground.vue'
 import PropsTable from '@/components/PropsTable.vue'
 
 const variants = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const
+
+// 在线调试的属性模型与默认值
+const playModel = reactive<Record<string, unknown>>({
+  variant: 8,
+  reverse: false,
+  duration: 3000,
+})
+
+// 在线调试的控件定义
+const playControls: PlaygroundControl[] = [
+  { key: 'variant', label: '变体 variant', type: 'select', options: variants.map(v => ({ label: `variant ${v}`, value: v })) },
+  { key: 'reverse', label: '反转 reverse', type: 'boolean' },
+  { key: 'duration', label: '动画时长 duration', type: 'number', min: 0, max: 8000, step: 200, hint: '毫秒' },
+]
 
 const basicCode = `<div style="height: 60px">
   <LumaDecoration :variant="8" />
@@ -33,6 +51,23 @@ const propRows: PropRow[] = [
     datav-name="decoration1–12"
     intro="氛围装饰件，共 12 种变体。多用于面板标题旁、分隔线或角落点缀，自带循环动画。"
   >
+    <Playground
+      title="在线调试"
+      description="实时修改属性，预览效果与代码同步更新。"
+      component-name="LumaDecoration"
+      :controls="playControls"
+      :model-value="playModel"
+      :min-height="160"
+    >
+      <div style="width: 360px; height: 60px;">
+        <LumaDecoration
+          :variant="playModel.variant as DecorationVariant"
+          :reverse="playModel.reverse as boolean"
+          :duration="playModel.duration as number"
+        />
+      </div>
+    </Playground>
+
     <DemoBlock
       title="全部 12 种变体"
       description="variant 1–12 的默认样式一览。"

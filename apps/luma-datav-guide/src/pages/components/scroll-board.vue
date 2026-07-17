@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
 import type { ScrollBoardConfig } from '@luma/datav'
 import { LumaScrollBoard } from '@luma/datav'
+import { computed, reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
 import DemoBlock from '@/components/DemoBlock.vue'
+import Playground from '@/components/Playground.vue'
 import PropsTable from '@/components/PropsTable.vue'
 
 const config: ScrollBoardConfig = {
@@ -22,6 +25,41 @@ const config: ScrollBoardConfig = {
   oddRowBGC: 'rgb(16 39 66 / 60%)',
   evenRowBGC: 'rgb(24 56 90 / 40%)',
 }
+
+// 在线调试可调属性（header/data 等复杂数据保持固定，仅暴露标量/开关型配置字段）
+const playModel = reactive<Record<string, unknown>>({
+  rowNum: 4,
+  waitTime: 2000,
+  hoverPause: true,
+  carousel: 'single',
+  index: true,
+})
+
+const playControls: PlaygroundControl[] = [
+  { key: 'rowNum', label: '可见行数 rowNum', type: 'number', min: 1, max: 6, step: 1 },
+  { key: 'waitTime', label: '轮播间隔 waitTime', type: 'number', min: 0, max: 6000, step: 200, hint: '毫秒，0 停止轮播' },
+  { key: 'hoverPause', label: '悬停暂停 hoverPause', type: 'boolean' },
+  {
+    key: 'carousel',
+    label: '轮播模式 carousel',
+    type: 'select',
+    options: [
+      { label: '单行 single', value: 'single' },
+      { label: '整页 page', value: 'page' },
+    ],
+  },
+  { key: 'index', label: '序号列 index', type: 'boolean' },
+]
+
+// 把固定数据与可调字段合并成一份 config 传给组件
+const playConfig = computed<ScrollBoardConfig>(() => ({
+  ...config,
+  rowNum: playModel.rowNum as number,
+  waitTime: playModel.waitTime as number,
+  hoverPause: playModel.hoverPause as boolean,
+  carousel: playModel.carousel as 'single' | 'page',
+  index: playModel.index as boolean,
+}))
 
 const configCode = `<script setup lang="ts">
 import { LumaScrollBoard } from '@luma/datav'
@@ -56,6 +94,22 @@ const modernCode = `<LumaScrollBoard
   :interval="2000"
 />`
 
+// 生成 config 用法代码（属性无法平铺表达，改为渲染完整 config 对象）
+function playCodeGen(model: Record<string, unknown>): string {
+  return `<LumaScrollBoard
+  :config="{
+    header: ['区域', '任务', '完成率'],
+    data: [/* ... */],
+    index: ${model.index},
+    rowNum: ${model.rowNum},
+    waitTime: ${model.waitTime},
+    hoverPause: ${model.hoverPause},
+    carousel: '${model.carousel}',
+  }"
+  style="height: 240px"
+/>`
+}
+
 const propRows: PropRow[] = [
   { name: 'config', type: 'ScrollBoardConfig', description: 'DataV 原生配置（header/data/rowNum 等）。' },
   { name: 'rows', type: 'T[]', description: '现代 API 数据源（对象数组）。' },
@@ -89,6 +143,18 @@ const configRows: PropRow[] = [
     datav-name="scrollBoard"
     intro="表格行自动轮播，使用循环窗口索引不复制整份数据。支持 DataV 原生 config 与对象数组 + 列定义的现代 API。"
   >
+    <Playground
+      title="在线调试"
+      description="实时修改属性，预览效果与代码同步更新。"
+      component-name="LumaScrollBoard"
+      :controls="playControls"
+      :model-value="playModel"
+      :min-height="300"
+      :code-gen="playCodeGen"
+    >
+      <LumaScrollBoard :config="playConfig" style="height: 240px; width: 100%;" />
+    </Playground>
+
     <DemoBlock
       title="config 用法"
       description="header + 二维 data，与 DataV 原生写法一致。悬停可暂停。"

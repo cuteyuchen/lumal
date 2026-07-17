@@ -114,12 +114,23 @@ const groupIcon: Record<string, string> = {
   container: 'guide:container',
 }
 
-export const guideMenus: LumaGuideMenuItem[] = navGroups.map(group => ({
-  path: `/group/${group.key}`,
-  title: group.label,
-  icon: groupIcon[group.key],
-  children: group.items.map(item => ({
-    path: `/${item.slug}`,
-    title: item.title,
-  })),
-}))
+export const guideMenus: LumaGuideMenuItem[] = navGroups.map((group) => {
+  // 只有一个条目的分组直接升为一级菜单项，不再嵌套二级（如「边框」「装饰」）。
+  if (group.items.length === 1) {
+    const [item] = group.items
+    return {
+      path: `/${item.slug}`,
+      title: group.label,
+      icon: groupIcon[group.key],
+    }
+  }
+  return {
+    path: `/group/${group.key}`,
+    title: group.label,
+    icon: groupIcon[group.key],
+    children: group.items.map(item => ({
+      path: `/${item.slug}`,
+      title: item.title,
+    })),
+  }
+})

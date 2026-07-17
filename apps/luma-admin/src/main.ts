@@ -10,7 +10,7 @@ import { mockDictionaryFetcher } from './views/examples/dictionary'
 import './echarts'
 import '@luma/core/theme-chalk/index.scss'
 import '@luma/core/style.css'
-import '@luma/icons/style.css'
+import '@luma/icons-vue/style.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import './styles.scss'
 

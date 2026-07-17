@@ -1,10 +1,32 @@
 <script setup lang="ts">
+import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
 import { LumaDigitalFlop } from '@luma/datav'
-import { onBeforeUnmount, ref } from 'vue'
+import { onBeforeUnmount, reactive, ref } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
 import DemoBlock from '@/components/DemoBlock.vue'
+import Playground from '@/components/Playground.vue'
 import PropsTable from '@/components/PropsTable.vue'
+
+const playModel = reactive<Record<string, unknown>>({
+  value: 1286,
+  prefix: '',
+  suffix: ' 台',
+  precision: 0,
+  duration: 1000,
+  color: '#6ff7cd',
+  fontSize: 40,
+})
+
+const playControls: PlaygroundControl[] = [
+  { key: 'value', label: '数值 value', type: 'number', min: 0, max: 100000, step: 1 },
+  { key: 'prefix', label: '前缀 prefix', type: 'text' },
+  { key: 'suffix', label: '后缀 suffix', type: 'text' },
+  { key: 'precision', label: '小数位 precision', type: 'number', min: 0, max: 4, step: 1 },
+  { key: 'duration', label: '动画时长 duration', type: 'number', min: 0, max: 4000, step: 100, hint: '毫秒' },
+  { key: 'color', label: '颜色 color', type: 'color' },
+  { key: 'fontSize', label: '字号 fontSize', type: 'number', min: 12, max: 96, step: 2 },
+]
 
 const live = ref(1286)
 const timer = window.setInterval(() => {
@@ -49,6 +71,25 @@ const propRows: PropRow[] = [
     datav-name="digitalFlop"
     intro="数字滚动翻牌，数值变化时以动画过渡。支持前后缀、小数位、模板串与自定义格式化。"
   >
+    <Playground
+      title="在线调试"
+      description="实时修改属性，预览效果与代码同步更新。"
+      component-name="LumaDigitalFlop"
+      :controls="playControls"
+      :model-value="playModel"
+      :min-height="180"
+    >
+      <LumaDigitalFlop
+        :value="playModel.value as number"
+        :prefix="playModel.prefix as string"
+        :suffix="playModel.suffix as string"
+        :precision="playModel.precision as number"
+        :duration="playModel.duration as number"
+        :color="playModel.color as string"
+        :font-size="playModel.fontSize as number"
+      />
+    </Playground>
+
     <DemoBlock
       title="现代 props"
       description="value + suffix + precision 直接表达常见指标。"

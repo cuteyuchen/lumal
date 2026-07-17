@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { LumaLayout, LumaRouterView } from '@luma/core/layout'
 import { LumaThemeSettingsPanel } from '@luma/core/theme'
-import { LumaIcon } from '@luma/icons'
+import { LumaIcon } from '@luma/icons-vue'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { guideMenus } from './navigation'

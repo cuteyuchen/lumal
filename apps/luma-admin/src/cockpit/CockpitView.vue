@@ -2,7 +2,7 @@
 import type { CockpitConfig, CockpitDesignerSavePayload, CockpitViewportMode } from '@luma/cockpit'
 import { LumaCockpitDesigner } from '@luma/cockpit/designer'
 import { LumaCockpit } from '@luma/cockpit/runtime'
-import { LumaIcon } from '@luma/icons'
+import { LumaIcon } from '@luma/icons-vue'
 import { ElButton, ElTooltip } from 'element-plus'
 import { computed, ref, shallowRef, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'

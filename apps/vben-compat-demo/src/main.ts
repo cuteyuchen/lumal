@@ -3,7 +3,7 @@ import { createLumaAdmin } from '@luma/core'
 import App from './App.vue'
 import '@luma/core/theme-chalk/index.scss'
 import '@luma/core/style.css'
-import '@luma/icons/style.css'
+import '@luma/icons-vue/style.css'
 import './styles.scss'
 
 /***********************本地图标定义*********************/

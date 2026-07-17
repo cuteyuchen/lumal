@@ -5,7 +5,7 @@ import {
   LumaThemeSettingsPanel,
   resolveThemeMode,
 } from '@luma/core/theme'
-import { LumaIcon } from '@luma/icons'
+import { LumaIcon } from '@luma/icons-vue'
 import { ElButton, ElTag } from 'element-plus'
 import { computed } from 'vue'
 import {

@@ -1,11 +1,32 @@
 <script setup lang="ts">
+import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
 import type { LumaChartsOption } from '@luma/datav'
 import { LumaCharts } from '@luma/datav'
-import { computed } from 'vue'
+import { computed, reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
 import DemoBlock from '@/components/DemoBlock.vue'
+import Playground from '@/components/Playground.vue'
 import PropsTable from '@/components/PropsTable.vue'
+
+// 在线调试可调属性（option 为对象无法平铺，保持固定，仅暴露标量属性 theme / autoResize）
+const playModel = reactive<Record<string, unknown>>({
+  theme: 'dark',
+  autoResize: true,
+})
+
+const playControls: PlaygroundControl[] = [
+  {
+    key: 'theme',
+    label: '主题 theme',
+    type: 'select',
+    options: [
+      { label: '暗色 dark', value: 'dark' },
+      { label: '默认 default', value: '' },
+    ],
+  },
+  { key: 'autoResize', label: '自动重绘 autoResize', type: 'boolean' },
+]
 
 const lineOption = computed<LumaChartsOption>(() => ({
   grid: { left: 44, right: 20, top: 30, bottom: 32 },
@@ -124,6 +145,22 @@ const methodRows: PropRow[] = [
     datav-name="charts"
     intro="直接封装原生 ECharts。option 使用完整 EChartsOption，不过滤或转换任何图表属性，并暴露 ECharts 实例、事件与常用实例方法。"
   >
+    <Playground
+      title="在线调试"
+      description="实时修改属性，预览效果与代码同步更新。"
+      component-name="LumaCharts"
+      :controls="playControls"
+      :model-value="playModel"
+      :min-height="300"
+    >
+      <LumaCharts
+        :option="lineOption"
+        :theme="(playModel.theme as string) || undefined"
+        :auto-resize="playModel.autoResize as boolean"
+        style="height: 260px; width: 360px;"
+      />
+    </Playground>
+
     <DemoBlock
       title="折线面积图"
       description="option 就是原生 EChartsOption，已有的 ECharts 配置可直接迁移。"
