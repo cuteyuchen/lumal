@@ -25,7 +25,7 @@ pnpm dev
 - Element Plus 作为 UI 基础。
 - `@luma/core/theme-chalk/index.scss`、`@luma/core/style.css` 和 SCSS 样式入口。
 - `createLumaAdmin` 应用启动代码。
-- `LumaLayout` 后台布局壳和 `LumaRouterView` 路由出口。
+- `LumaLayout` 后台布局壳和 `LumaRouterView` 路由出口，采用路由驱动标签模式：固定首页页签、`routeTabResolver` 按导航动态追加页签、`tabStorageKey` 会话级持久化、标签刷新重载视图。
 - 登录页、会话状态、权限菜单和路由守卫。
 - 工作台、受保护业务占位页、403 与独立 404 页面。
 - 主题切换、布局与标签偏好持久化、全局设置抽屉。

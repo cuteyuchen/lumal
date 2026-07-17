@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import type { CockpitRegistry, CockpitWidgetDefinition } from '../registry/types'
-import type { CockpitCenterContext, CockpitConfig, CockpitConfigIssue, CockpitDesignerSavePayload, CockpitThemeMode } from '../types'
+import type { CockpitConfig, CockpitConfigIssue, CockpitDesignerSavePayload, CockpitThemeMode } from '../types'
 import type { DesignerPlacementSelection } from './types'
 import { LumaIcon } from '@luma/icons'
 import { ElAlert, ElButton, ElInput, ElMessageBox, ElOption, ElSelect, ElTooltip } from 'element-plus'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { createCockpitMessageBus } from '../messaging/createCockpitMessageBus'
 import CockpitComponentLibrary from './CockpitComponentLibrary.vue'
 import CockpitLayoutEditor from './CockpitLayoutEditor.vue'
-import CockpitPreviewContextHost from './CockpitPreviewContextHost.vue'
 import { useCockpitDraft } from './useCockpitDraft'
 
 /***********************驾驶舱装配 Designer*********************/
@@ -33,15 +32,6 @@ const placementSelection = ref<DesignerPlacementSelection>()
 const activeLayout = computed(() => draft.activeLayout.value)
 const errors = computed(() => issues.value.filter(issue => issue.level === 'error'))
 const previewMessages = createCockpitMessageBus()
-const centerPreviewContext = computed<CockpitCenterContext | undefined>(() => activeLayout.value
-  ? {
-      cockpitId: props.config.id,
-      layoutId: activeLayout.value.id,
-      instanceId: `${activeLayout.value.id}:center`,
-      mode: 'design',
-      messages: previewMessages,
-    }
-  : undefined)
 const placementStatus = computed(() => {
   const selection = placementSelection.value
   if (!selection)
@@ -51,16 +41,8 @@ const placementStatus = computed(() => {
     : `正在移动“${selection.title}”，请选择目标槽位或 Tab 行，按 Esc 取消。`
 })
 
-watch(() => activeLayout.value?.id, (next, previous) => {
+watch(() => activeLayout.value?.id, () => {
   placementSelection.value = undefined
-  if (previous && previous !== next)
-    previewMessages.clearInstance(`${previous}:center`)
-})
-
-onBeforeUnmount(() => {
-  const context = centerPreviewContext.value
-  if (context)
-    previewMessages.clearInstance(context.instanceId)
 })
 
 function selectLibraryWidget(widget: CockpitWidgetDefinition): void {
@@ -200,13 +182,6 @@ defineExpose({ toggleTheme })
             @select-placed="selectPlacedWidget"
             @clear-placement="clearPlacementSelection"
           />
-          <div class="luma-cockpit-designer__center-preview">
-            <CockpitPreviewContextHost v-if="centerPreviewContext" :key="centerPreviewContext.instanceId" :context="centerPreviewContext">
-              <slot name="center-preview" :context="centerPreviewContext" :layout="activeLayout">
-                <div class="luma-cockpit-designer__center-guide" aria-hidden="true" />
-              </slot>
-            </CockpitPreviewContextHost>
-          </div>
           <CockpitLayoutEditor
             :cockpit-id="config.id"
             :draft="draft"

@@ -201,8 +201,13 @@ body { padding: 20px; font-family: Arial, sans-serif; }
   position: absolute !important;
   width: 400px !important;
   height: 200px !important;
-  transform: none !important;
   z-index: 0 !important;
+}
+.fidelity-item[data-component="fullScreenContainer"] .luma-full-screen-container__stage {
+  position: absolute !important;
+  width: 400px !important;
+  height: 200px !important;
+  transform: none !important;
 }
 .fullscreen-sample { display: grid; width: 100%; height: 100%; border: 1px solid #00baff; place-items: center; }
 </style>

@@ -1,6 +1,6 @@
 # Luma
 
-Luma 是一套面向中小型后台项目的轻量 Vue Admin 基础设施。它以 Vue 3、TypeScript、Vite 和 Element Plus 为基础，提供应用安装、布局导航、主题、权限、路由、请求、字典、Schema 表单、Schema 表格、CRUD、图标、图表和迁移兼容能力。
+Luma 是一套面向中小型后台项目的轻量 Vue Admin 基础设施。它以 Vue 3、TypeScript、Vite 和 Element Plus 为基础，提供应用安装、布局导航、主题、权限、路由、请求、字典、Schema 表单、Schema 表格、CRUD、图标、图表、驾驶舱编排、DataV 可视化组件和迁移兼容能力。
 
 `apps/luma-admin` 是公开 API 的集成示例与验收入口；可复用能力必须沉淀到 `packages/*`，业务接口字段、状态码和页面逻辑不得进入框架包。
 
@@ -42,10 +42,15 @@ createLumaAdmin({
 | `packages/icons` | 独立图标注册、渲染、选择和构建能力 |
 | `packages/core` | 安装器、布局、路由、权限、请求、主题、字典和核心组件 |
 | `packages/charts` | 可选 ECharts 面板与自适应能力 |
+| `packages/datav` | 面向驾驶舱的 Vue 3 DataV 可视化组件包（38 个组件重构） |
+| `packages/cockpit` | 通用驾驶舱编排框架：布局运行时、组件注册、设计器与消息总线 |
 | `packages/vben-compat` | 常用旧项目写法到 Luma 原生 API 的迁移层 |
 | `packages/vite` | 组件 resolver、工作区 alias 和可选 Devtools 配置助手 |
 | `packages/create-luma-admin` | 轻量后台项目脚手架 |
 | `apps/luma-admin` | 原生 Admin 集成、系统管理示例和浏览器验收入口 |
+| `apps/luma-cockpit` | 独立驾驶舱示例应用 |
+| `apps/luma-datav-guide` | `@luma/datav` 组件指南站，可静态托管并作为 Admin 外链嵌入 |
+| `apps/luma-mock-api` | Nitro/H3 演示接口服务 |
 | `apps/vben-compat-demo` | 兼容层构建示例 |
 
 依赖方向固定为：
@@ -55,12 +60,17 @@ createLumaAdmin({
      ↑
 @luma/core  ←  apps/luma-admin
      ↑
+@luma/cockpit  ←  apps/luma-admin, apps/luma-cockpit
+     ↑
 @luma/vben-compat  ←  apps/vben-compat-demo
 
 @luma/charts  ←  apps/luma-admin
+@luma/datav   ←  apps/luma-admin, apps/luma-cockpit, apps/luma-datav-guide
 @luma/vite    →  Vite 配置与构建辅助
 create-luma-admin  →  生成消费公开包入口的应用
 ```
+
+`@luma/datav` 是独立可视化包，只把 `vue` 和 `echarts` 作为 peer dependency，不依赖 `@luma/core`；驾驶舱和 Admin 直接按需消费其组件。
 
 ## 当前稳定能力
 
@@ -73,6 +83,7 @@ create-luma-admin  →  生成消费公开包入口的应用
 - fetch 请求客户端、统一错误、接口适配、Token 刷新单飞和安全重放。
 - 用户、角色、菜单、字典和系统配置 Mock CRUD 页面。
 - 响应式图标系统、图表工作流、迁移兼容层、Vite 助手和后台脚手架。
+- DataV 可视化组件包：15 个组件覆盖边框、装饰、数字翻牌、胶囊图、水位图、飞线图、滚动表和原生 ECharts 封装，支持 DataV `config` 与现代 props 双套 API。
 - Playwright 关键流程验收、跨平台 CI、Changesets、CodeQL、明确 vendor 分包和发布产物体积门禁。
 
 全量重构已完成，阶段实施记录和最终验收结果统一维护在 [开发路线图](docs/development-roadmap.md)。
@@ -124,6 +135,7 @@ pnpm release:check
 - [Core API](docs/core-api.md)
 - [Mock API 与线上 Demo 部署](docs/mock-api.md)
 - [图标系统](docs/icons.md)
+- [DataV 组件示例](docs/datav-examples.md)
 - [包边界](docs/package-boundaries.md)
 - [发布检查清单](docs/release-checklist.md)
 - [从 Vben 迁移](docs/migration-from-vben.md)

@@ -408,7 +408,7 @@ describe('luma admin router', () => {
       }),
       expect.objectContaining({
         externalTarget: '_self',
-        path: '/resources/preview',
+        path: '/resources/datav-guide',
       }),
     ]))
   })

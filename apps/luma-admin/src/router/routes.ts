@@ -1,5 +1,10 @@
 import type { LumaMenuRecord, LumaStaticMenuRecord } from '@luma/core/router'
 
+/***********************外链地址*********************/
+// DataV 组件指南站按环境区分：开发用本地 dev server，生产用独立部署域名，
+// 均通过 VITE_DATAV_GUIDE_URL 注入，缺省时回退到本地地址。
+const datavGuideUrl = import.meta.env.VITE_DATAV_GUIDE_URL || 'http://localhost:5175/'
+
 /***********************静态菜单配置*********************/
 export const staticAdminRouteRecords = [
   {
@@ -320,25 +325,26 @@ export const adminRouteRecords: LumaMenuRecord[] = [
           externalTarget: '_blank',
           icon: 'app:examples',
           order: 1,
-          title: '外部文档',
+          title: 'Element Plus',
         },
       },
       {
+        // 地址按环境从 VITE_DATAV_GUIDE_URL 注入；此处以内嵌方式在 Admin 壳层展示。
         component: 'shared/external-frame',
-        externalLink: 'https://example.com/',
-        name: 'ExternalPreview',
-        path: 'preview',
+        externalLink: datavGuideUrl,
+        name: 'DatavGuide',
+        path: 'datav-guide',
         meta: {
           externalTarget: '_self',
           icon: 'app:examples',
           order: 2,
-          title: '内嵌页面',
+          title: 'DataV 组件指南',
         },
       },
     ],
     name: 'Resources',
     path: '/resources',
-    redirect: '/resources/preview',
+    redirect: '/resources/datav-guide',
     meta: {
       icon: 'app:examples',
       order: 5,

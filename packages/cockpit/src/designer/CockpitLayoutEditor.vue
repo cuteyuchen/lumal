@@ -175,103 +175,79 @@ async function handleTabKeydown(row: CockpitGridRowConfig, index: number, event:
 
 <template>
   <section class="luma-cockpit-designer__region" :data-side="side">
-    <div class="luma-cockpit-designer__region-tools" data-role="region-tools">
-      <ElButton
-        circle
-        class="luma-cockpit-designer__region-tools-trigger"
-        data-role="region-tools-trigger"
-        :aria-label="`${side === 'left' ? '左侧' : '右侧'}区域设置`"
-        :title="`${side === 'left' ? '左侧' : '右侧'}区域设置`"
-      >
-        <LumaIcon name="luma:grid" :size="14" />
-      </ElButton>
-      <div
-        class="luma-cockpit-designer__region-tools-panel"
-        data-role="region-tools-panel"
-        role="group"
-        :aria-label="`${side === 'left' ? '左侧' : '右侧'}区域布局设置`"
-      >
-        <header class="luma-cockpit-designer__region-head">
-          <div>
-            <strong>{{ side === 'left' ? '左侧区域' : '右侧区域' }}</strong>
-            <span>调整网格结构与列宽</span>
-          </div>
-          <label class="luma-cockpit-designer__field">
-            <span>行</span>
-            <ElInputNumber
-              :model-value="region?.rows.length ?? 1"
-              :min="1"
-              :controls="false"
-              :aria-label="`${side === 'left' ? '左侧' : '右侧'}区域行数`"
-              @change="resize($event ?? 1, region?.columns.length ?? 1)"
-            />
-          </label>
-          <label class="luma-cockpit-designer__field">
-            <span>列</span>
-            <ElInputNumber
-              :model-value="region?.columns.length ?? 1"
-              :min="1"
-              :controls="false"
-              :aria-label="`${side === 'left' ? '左侧' : '右侧'}区域列数`"
-              @change="resize(region?.rows.length ?? 1, $event ?? 1)"
-            />
-          </label>
-        </header>
-
-        <div v-if="region" class="luma-cockpit-designer__region-controls">
-          <label v-for="(column, index) in region.columns" :key="column.id" class="luma-cockpit-designer__field">
-            <span>列 {{ index + 1 }}</span>
-            <ElInputNumber
-              :model-value="column.width"
-              :min="1"
-              :controls="false"
-              :aria-label="`列 ${index + 1} 宽度像素`"
-              @change="draft.setColumnWidth(side, column.id, $event ?? column.width)"
-            />
-            <em>px</em>
-          </label>
-        </div>
+    <header
+      class="luma-cockpit-designer__region-head"
+      data-role="region-tools"
+      role="group"
+      :aria-label="`${side === 'left' ? '左侧' : '右侧'}区域布局设置`"
+    >
+      <div class="luma-cockpit-designer__region-head-meta">
+        <strong>{{ side === 'left' ? '左侧区域' : '右侧区域' }}</strong>
+        <span>调整网格结构与列宽</span>
       </div>
+      <label class="luma-cockpit-designer__field">
+        <span>行</span>
+        <ElInputNumber
+          :model-value="region?.rows.length ?? 1"
+          :min="1"
+          :controls="false"
+          :aria-label="`${side === 'left' ? '左侧' : '右侧'}区域行数`"
+          @change="resize($event ?? 1, region?.columns.length ?? 1)"
+        />
+      </label>
+      <label class="luma-cockpit-designer__field">
+        <span>列</span>
+        <ElInputNumber
+          :model-value="region?.columns.length ?? 1"
+          :min="1"
+          :controls="false"
+          :aria-label="`${side === 'left' ? '左侧' : '右侧'}区域列数`"
+          @change="resize(region?.rows.length ?? 1, $event ?? 1)"
+        />
+      </label>
+    </header>
+
+    <div v-if="region" class="luma-cockpit-designer__region-columns" :style="{ gridTemplateColumns: columnTemplate() }">
+      <label v-for="(column, index) in region.columns" :key="column.id" class="luma-cockpit-designer__field luma-cockpit-designer__column-field">
+        <span>列 {{ index + 1 }}</span>
+        <ElInputNumber
+          :model-value="column.width"
+          :min="1"
+          :controls="false"
+          :aria-label="`列 ${index + 1} 宽度像素`"
+          @change="draft.setColumnWidth(side, column.id, $event ?? column.width)"
+        />
+        <em>px</em>
+      </label>
     </div>
 
     <div v-if="region" class="luma-cockpit-designer__grid-rows">
       <section v-for="(row, rowIndex) in region.rows" :key="row.id" class="luma-cockpit-designer__grid-row" :style="{ flexBasis: `${row.height}%` }">
-        <div class="luma-cockpit-designer__grid-row-tools" data-role="row-tools">
-          <ElButton
-            circle
-            class="luma-cockpit-designer__grid-row-tools-trigger"
-            data-role="row-tools-trigger"
-            :aria-label="`${side === 'left' ? '左侧' : '右侧'}第 ${rowIndex + 1} 行设置`"
-            :title="`${side === 'left' ? '左侧' : '右侧'}第 ${rowIndex + 1} 行设置`"
-          >
-            <LumaIcon name="luma:more" :size="14" />
-          </ElButton>
-          <header
-            class="luma-cockpit-designer__grid-row-head"
-            data-role="row-tools-panel"
-            role="group"
-            :aria-label="`${side === 'left' ? '左侧' : '右侧'}第 ${rowIndex + 1} 行布局设置`"
-          >
-            <strong>第 {{ rowIndex + 1 }} 行</strong>
-            <label class="luma-cockpit-designer__field">
-              <span>高</span>
-              <ElInputNumber
-                :model-value="row.height"
-                :min="1"
-                :max="100"
-                :precision="3"
-                :controls="false"
-                :aria-label="`第 ${rowIndex + 1} 行高度百分比`"
-                @change="draft.setRowHeight(side, row.id, $event ?? row.height)"
-              />
-              <em>%</em>
-            </label>
-            <label class="luma-cockpit-designer__tabs-switch">
-              <span>合并列</span>
-              <ElSwitch :model-value="row.mode === 'tabs'" @change="setTabs(row, Boolean($event))" />
-            </label>
-          </header>
-        </div>
+        <header
+          class="luma-cockpit-designer__grid-row-head"
+          data-role="row-tools"
+          role="group"
+          :aria-label="`${side === 'left' ? '左侧' : '右侧'}第 ${rowIndex + 1} 行布局设置`"
+        >
+          <strong>第 {{ rowIndex + 1 }} 行</strong>
+          <label class="luma-cockpit-designer__field">
+            <span>行高</span>
+            <ElInputNumber
+              :model-value="row.height"
+              :min="1"
+              :max="100"
+              :precision="3"
+              :controls="false"
+              :aria-label="`第 ${rowIndex + 1} 行高度百分比`"
+              @change="draft.setRowHeight(side, row.id, $event ?? row.height)"
+            />
+            <em>%</em>
+          </label>
+          <label class="luma-cockpit-designer__tabs-switch">
+            <span>合并列</span>
+            <ElSwitch :model-value="row.mode === 'tabs'" @change="setTabs(row, Boolean($event))" />
+          </label>
+        </header>
 
         <div v-if="row.mode === 'grid'" class="luma-cockpit-designer__grid-cells" :style="{ gridTemplateColumns: columnTemplate() }">
           <CockpitWidgetDropZone

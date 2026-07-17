@@ -1,5 +1,13 @@
 export type BorderBoxVariant = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
 export type DecorationVariant = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
+
+/**
+ * 全屏容器适配类别：
+ * - `width` 按设计稿宽度等比缩放（DataV 原生行为，默认）
+ * - `scale` 按设计稿宽高等比缩放并居中（保持完整可见，四周留边）
+ * - `vwvh` 拉伸铺满视口，暴露 `--luma-fsc-x-unit` / `--luma-fsc-y-unit` 供子元素按设计像素布局
+ */
+export type FullScreenContainerMode = 'width' | 'scale' | 'vwvh'
 export type DataValueKey = string | number
 export type { EChartsOption as LumaChartsOption } from 'echarts'
 

@@ -251,8 +251,11 @@ function createApiContractMd(): string {
 
 function createAppVue(): string {
   return `<script setup lang="ts">
+import type { LumaLayoutTabItem } from '@luma/core/layout'
 import type { LumaPreferences } from '@luma/core/theme'
+import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import {
+  findMenuItemByPath,
   LumaLayout,
   LumaRouterView,
 } from '@luma/core/layout'
@@ -267,19 +270,21 @@ import {
   adminResolvedThemeMode,
   patchAdminPreferences,
 } from './services/preferences'
-import { currentUser, logout } from './services/session'
+import { adminTabSnapshotStorageKey, currentUser, logout } from './services/session'
 
 /***********************页面状态*********************/
 const title = 'Luma Admin'
 const settingsVisible = shallowRef(false)
+const routeRefreshKey = shallowRef(0)
 
 /***********************路由状态*********************/
 const route = useRoute()
 const router = useRouter()
 const isPublicLayout = computed(() => route.meta.layout === 'public')
 const allMenus = computed(() => createAdminSidebarMenus())
-const tabs = computed(() => createAdminTabs(route.path))
-const routeViewKey = computed(() => route.fullPath)
+const fixedTabs = computed<LumaLayoutTabItem[]>(() => createAdminTabs())
+const routeViewKey = computed(() => \`\${route.fullPath}:\${routeRefreshKey.value}\`)
+const routeViewCache = computed(() => adminPreferences.value.tabbar.enable && adminPreferences.value.tabbar.cache)
 const activePath = computed({
   get: () => route.path,
   set: (path: string) => {
@@ -301,6 +306,13 @@ watch([
 
 /***********************导航事件*********************/
 function handleMenuSelect(path: string): void {
+  const item = findMenuItemByPath(allMenus.value, path)
+
+  if (item?.externalLink && item.externalTarget !== '_self') {
+    window.open(item.externalLink, item.externalTarget ?? '_blank', 'noopener,noreferrer')
+    return
+  }
+
   activePath.value = path
 }
 
@@ -312,6 +324,34 @@ function handleToggleSidebar(): void {
 
 function handleTabChange(path: string): void {
   activePath.value = path
+}
+
+function resolveAdminRouteTab(currentRoute: RouteLocationNormalizedLoaded): LumaLayoutTabItem | undefined {
+  if (currentRoute.meta.layout === 'public' || currentRoute.meta.hideInTab === true) {
+    return undefined
+  }
+
+  const menu = findMenuItemByPath(allMenus.value, currentRoute.path)
+  const tabTitle = menu?.title ?? (typeof currentRoute.meta.title === 'string' ? currentRoute.meta.title : undefined)
+
+  if (!tabTitle) {
+    return undefined
+  }
+
+  return {
+    closable: !['/403', '/404'].includes(currentRoute.path),
+    icon: menu?.icon ?? (typeof currentRoute.meta.icon === 'string' ? currentRoute.meta.icon : undefined),
+    path: currentRoute.path,
+    title: tabTitle,
+  }
+}
+
+async function handleTabRefresh(path: string): Promise<void> {
+  if (path !== route.path) {
+    await router.push(path)
+  }
+
+  routeRefreshKey.value += 1
 }
 
 function handlePreferencesChange(preferences: LumaPreferences): void {
@@ -327,7 +367,7 @@ function toggleTheme(): void {
 }
 
 async function handleLogout(): Promise<void> {
-  logout()
+  await logout()
   await router.replace('/login')
 }
 </script>
@@ -346,11 +386,16 @@ async function handleLogout(): Promise<void> {
     :title="title"
     :menus="allMenus"
     :preferences="adminPreferences"
-    :tabs="tabs"
+    route-driven
+    :fixed-tabs="fixedTabs"
+    :route-tab-resolver="resolveAdminRouteTab"
+    tab-fallback-path="/dashboard"
+    :tab-storage-key="adminTabSnapshotStorageKey"
     :active-menu-path="activePath"
     @menu-select="handleMenuSelect"
     @toggle-sidebar="handleToggleSidebar"
     @tab-change="handleTabChange"
+    @tab-refresh="handleTabRefresh"
   >
     <template #headerActions>
       <AppHeaderActions
@@ -366,7 +411,7 @@ async function handleLogout(): Promise<void> {
       :view-key="routeViewKey"
       :progress="true"
       :loading="true"
-      :cache="adminPreferences.tabbar.cache"
+      :cache="routeViewCache"
       :cache-max="adminPreferences.tabbar.maxCount"
       :transition="adminPreferences.transition.enable"
       :transition-name="adminPreferences.transition.name"
@@ -444,6 +489,7 @@ function flattenMenuTabs(menus: SidebarMenuItem[]): LumaLayoutTabItem[] {
     }
 
     return {
+      icon: menu.icon,
       path: menu.path,
       title: menu.title,
     }
@@ -454,21 +500,15 @@ export function createAdminSidebarMenus(): SidebarMenuItem[] {
   return menuRuntimes.get(router)?.sidebarMenus ?? []
 }
 
-export function createAdminTabs(activePath?: string): LumaLayoutTabItem[] {
-  const tabs = flattenMenuTabs(createAdminSidebarMenus()).map(tab => ({
-    ...tab,
-    closable: false,
-  }))
+/**
+ * 路由驱动模式下的固定页签：仅返回首页，其余页签由 LumaLayout 依据
+ * routeTabResolver 在导航时动态追加，并按 tabStorageKey 做会话级持久化。
+ */
+export function createAdminTabs(): LumaLayoutTabItem[] {
+  const menuTabs = flattenMenuTabs(createAdminSidebarMenus())
+  const homeTab = menuTabs.find(tab => tab.path === '/dashboard') ?? menuTabs[0]
 
-  if (['/403', '/404'].includes(activePath ?? '') && !tabs.some(tab => tab.path === activePath)) {
-    tabs.push({
-      closable: false,
-      path: activePath!,
-      title: activePath === '/403' ? '无权限' : '页面不存在',
-    })
-  }
-
-  return tabs
+  return homeTab ? [{ ...homeTab, closable: false }] : []
 }
 
 /***********************路由创建*********************/

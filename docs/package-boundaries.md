@@ -9,6 +9,7 @@ Luma 按职责拆包，兼容层不能反向污染核心包。
 - `@luma/vben-compat` 可以依赖 `@luma/core`。
 - `@luma/core` 不能依赖 `@luma/vben-compat`。
 - `@luma/charts` 独立可选包，不依赖 `@luma/core`；`@luma/core` 也不能依赖 `@luma/charts`。
+- `@luma/datav` 独立驾驶舱可视化组件包，不依赖 `@luma/core`、`@luma/charts` 或 `@luma/cockpit`；上述包也不能反向依赖 `@luma/datav`。
 - `@luma/cockpit` 可选驾驶舱编排包，可以依赖 `@luma/core`；`@luma/core` 不能反向依赖 `@luma/cockpit`。
 - `@luma/cockpit` 不能依赖 `@luma/charts`，也不能依赖 ECharts、OpenLayers、Cesium、Mapbox、Leaflet 等可视化或地图运行时。
 - `@luma/vite` 是独立构建辅助包，不依赖 `@luma/core` 运行时。
@@ -21,6 +22,7 @@ Luma 按职责拆包，兼容层不能反向污染核心包。
 - `@luma/core` 默认不依赖 VXE。
 - `@luma/core` 默认不依赖 ECharts / vue-echarts，图表能力由 `@luma/charts` 单独承载。
 - `@luma/charts` 必须把 `echarts`、`vue-echarts` 作为 peer dependency，不能放进普通 dependencies。
+- `@luma/datav` 必须把 `vue`、`echarts` 作为 peer dependency，不能放进普通 dependencies；DataV 2.10.0 只作为 MIT 许可下的重构基准，版权声明维护在包内 `THIRD_PARTY_NOTICES.md`，不得引入业务接口、状态码、权限码或字段映射。
 - `@luma/cockpit` 只提供容器、布局运行时、组件注册、配置编辑和消息传递能力；不得内置地图引擎、图表引擎、业务模块、行业分类、固定标题/Logo/背景，也不得包含业务接口地址、状态码、权限码或字段映射。
 - `@luma/cockpit` 必须把 `vue` 作为 peer dependency；`runtime` 与 `designer` 保持独立构建入口，只读驾驶舱可只加载 `runtime`。
 - `@luma/icons` 必须能独立构建。
@@ -46,6 +48,6 @@ pnpm release:boundaries
 pnpm release:artifacts
 ```
 
-该脚本检查七个发布包和 Admin 的必要产物、明确 vendor 分包，以及 Admin 单个 JavaScript 块不超过 500 KB。`@luma/cockpit` 需产出 ESM、CJS、`cockpit.css` 以及独立的 `runtime`、`designer` 入口。
+该脚本检查八个发布包和 Admin 的必要产物、明确 vendor 分包，以及 Admin 单个 JavaScript 块不超过 500 KB。`@luma/cockpit` 需产出 ESM、CJS、`cockpit.css` 以及独立的 `runtime`、`designer` 入口；`@luma/datav` 需产出 ESM、CJS 和 `datav.css`。
 
 当前 Windows 开发环境直接执行项目声明的 pnpm 10.33.0；不要使用可能切换到其他 pnpm 版本的包装命令。

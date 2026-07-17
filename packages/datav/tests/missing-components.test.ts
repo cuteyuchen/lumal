@@ -89,17 +89,57 @@ describe('remaining DataV components', () => {
     expect(Number.isInteger(duration * 10)).toBe(true)
   })
 
-  it('full screen container preserves upstream screen-sized width scaling', async () => {
-    vi.spyOn(document.body, 'clientWidth', 'get').mockReturnValue(960)
+  it('full screen container width mode scales the stage by container width', async () => {
+    // 容器 clientWidth=400（见 beforeEach），设计宽 800 → scale 0.5
     const wrapper = mount(LumaFullScreenContainer, {
-      props: { height: 1080, width: 1920 },
+      props: { height: 400, mode: 'width', width: 800 },
       slots: { default: '全屏内容' },
     })
     await flushFrames()
+    const stage = wrapper.get('.luma-full-screen-container__stage')
     expect(wrapper.text()).toBe('全屏内容')
-    expect(wrapper.attributes('style')).toContain('width: 1920px')
-    expect(wrapper.attributes('style')).toContain('height: 1080px')
-    expect(wrapper.attributes('style')).toContain('scale(0.5)')
+    expect(stage.attributes('style')).toContain('width: 800px')
+    expect(stage.attributes('style')).toContain('height: 400px')
+    expect(stage.attributes('style')).toContain('scale(0.5)')
+  })
+
+  it('full screen container defaults to width mode', async () => {
+    const wrapper = mount(LumaFullScreenContainer, {
+      props: { height: 400, width: 800 },
+      slots: { default: '内容' },
+    })
+    await flushFrames()
+    expect(wrapper.get('.luma-full-screen-container').attributes('data-mode')).toBe('width')
+  })
+
+  it('full screen container scale mode preserves aspect ratio and centers the stage', async () => {
+    // 容器 400×200，设计 800×800 → scale=min(0.5,0.25)=0.25，水平居中
+    const wrapper = mount(LumaFullScreenContainer, {
+      props: { height: 800, mode: 'scale', width: 800 },
+      slots: { default: '内容' },
+    })
+    await flushFrames()
+    const stage = wrapper.get('.luma-full-screen-container__stage')
+    const style = stage.attributes('style') ?? ''
+    expect(style).toContain('width: 800px')
+    expect(style).toContain('scale(0.25)')
+    // offsetX = (400 - 800*0.25)/2 = 100, offsetY = (200 - 800*0.25)/2 = 0
+    expect(style).toContain('translate(100px, 0px)')
+  })
+
+  it('full screen container vwvh mode stretches to the viewport with design units', async () => {
+    const wrapper = mount(LumaFullScreenContainer, {
+      props: { height: 1000, mode: 'vwvh', width: 2000 },
+      slots: { default: '内容' },
+    })
+    await flushFrames()
+    const stage = wrapper.get('.luma-full-screen-container__stage')
+    const style = stage.attributes('style') ?? ''
+    expect(style).toContain('width: 100vw')
+    expect(style).toContain('height: 100vh')
+    // 100/2000 = 0.05vw, 100/1000 = 0.1vh
+    expect(style).toContain('--luma-fsc-x-unit: 0.05vw')
+    expect(style).toContain('--luma-fsc-y-unit: 0.1vh')
   })
 
   it('renders the original flyline quadratic path and emits dev coordinates', async () => {
