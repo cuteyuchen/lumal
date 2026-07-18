@@ -10,6 +10,9 @@ const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
 export default defineConfig(({ command }) => ({
   plugins: [vue()],
   server: {
+    // 固定端口，便于 admin 与 mock-api、datav-guide 之间的稳定联调
+    port: 5170,
+    strictPort: true,
     proxy: {
       '/api': {
         changeOrigin: true,
@@ -45,7 +48,7 @@ export default defineConfig(({ command }) => ({
               maxSize: 420 * 1024,
               name: 'vendor-luma',
               priority: 20,
-              test: /[\\/]packages[\\/](?:charts|core|icons)[\\/](?:dist|src)[\\/]/,
+              test: /[\\/]packages[\\/](?:charts|core|icons|icons-vue)[\\/](?:dist|src)[\\/]/,
             },
             {
               entriesAware: true,
@@ -67,7 +70,7 @@ export default defineConfig(({ command }) => ({
       },
       ...(command === 'serve'
         ? createLumaAliases({
-            packages: ['charts', 'cockpit', 'core', 'icons'],
+            packages: ['charts', 'cockpit', 'core', 'icons', 'icons-vue'],
             workspaceRoot,
           })
         : []),

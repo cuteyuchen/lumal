@@ -18,6 +18,8 @@
     "test:datav:visual": "playwright test --config playwright.datav.config.ts",
     "test:e2e": "playwright test",
     "lint": "eslint .",
+    "dev": "pnpm apps:dev",
+    "apps:dev": "pnpm --parallel --filter \"./apps/*\" dev",
     "admin:dev": "pnpm --parallel --filter luma-mock-api --filter luma-admin dev",
     "admin:build": "pnpm build && pnpm --filter luma-admin build",
     "admin:preview": "pnpm --parallel --filter luma-mock-api --filter luma-admin preview",

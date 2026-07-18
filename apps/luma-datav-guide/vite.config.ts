@@ -11,8 +11,9 @@ export default defineConfig(({ command }) => ({
   base: './',
   plugins: [vue()],
   server: {
+    // 固定端口，admin 通过 VITE_DATAV_GUIDE_URL(默认 5175) 外链嵌入本站
     port: 5175,
-    strictPort: false,
+    strictPort: true,
   },
   build: {
     chunkSizeWarningLimit: 500,
@@ -27,7 +28,7 @@ export default defineConfig(({ command }) => ({
             return 'vendor-echarts'
           if (id.includes('/packages/datav/'))
             return 'vendor-datav'
-          if (id.includes('/packages/core/') || id.includes('/packages/icons/'))
+          if (id.includes('/packages/core/') || id.includes('/packages/icons/') || id.includes('/packages/icons-vue/'))
             return 'vendor-luma'
         },
       },
@@ -41,7 +42,7 @@ export default defineConfig(({ command }) => ({
       },
       ...(command === 'serve'
         ? createLumaAliases({
-            packages: ['core', 'datav', 'icons'],
+            packages: ['core', 'datav', 'icons', 'icons-vue'],
             workspaceRoot,
           })
         : []),

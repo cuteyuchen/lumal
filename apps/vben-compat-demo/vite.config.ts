@@ -8,6 +8,11 @@ const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
 /***********************应用开发配置*********************/
 export default defineConfig(({ command }) => ({
   plugins: [vue()],
+  server: {
+    // 固定端口，便于 vben 兼容层示例稳定联调
+    port: 5185,
+    strictPort: true,
+  },
   build: {
     chunkSizeWarningLimit: 500,
     rolldownOptions: {
@@ -30,7 +35,7 @@ export default defineConfig(({ command }) => ({
               maxSize: 420 * 1024,
               name: 'vendor-luma',
               priority: 10,
-              test: /[\\/]packages[\\/](?:core|icons|vben-compat)[\\/](?:dist|src)[\\/]/,
+              test: /[\\/]packages[\\/](?:core|icons|icons-vue|vben-compat)[\\/](?:dist|src)[\\/]/,
             },
           ],
         },
@@ -45,7 +50,7 @@ export default defineConfig(({ command }) => ({
       },
       ...(command === 'serve'
         ? createLumaAliases({
-            packages: ['core', 'icons', 'vben-compat'],
+            packages: ['core', 'icons', 'icons-vue', 'vben-compat'],
             workspaceRoot,
           })
         : []),

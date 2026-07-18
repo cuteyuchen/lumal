@@ -28,6 +28,11 @@ export default defineConfig(({ command }) => ({
   define: {
     CESIUM_BASE_URL: JSON.stringify(`./${cesiumBaseUrl}/`),
   },
+  server: {
+    // 固定端口，便于独立驾驶舱应用稳定联调
+    port: 5180,
+    strictPort: true,
+  },
   plugins: [
     vue(),
     viteStaticCopy({
@@ -45,7 +50,7 @@ export default defineConfig(({ command }) => ({
             return 'vendor-element-plus'
           if (id.includes('node_modules/echarts') || id.includes('node_modules/vue-echarts'))
             return 'vendor-echarts'
-          if (id.includes('/packages/core/') || id.includes('/packages/icons/') || id.includes('/packages/charts/') || id.includes('/packages/datav/'))
+          if (id.includes('/packages/core/') || id.includes('/packages/icons/') || id.includes('/packages/icons-vue/') || id.includes('/packages/charts/') || id.includes('/packages/datav/'))
             return 'vendor-luma'
         },
       },
@@ -59,7 +64,7 @@ export default defineConfig(({ command }) => ({
       },
       ...(command === 'serve'
         ? createLumaAliases({
-            packages: ['charts', 'cockpit', 'core', 'datav', 'icons'],
+            packages: ['charts', 'cockpit', 'core', 'datav', 'icons', 'icons-vue'],
             workspaceRoot,
           })
         : []),
