@@ -1,5 +1,5 @@
-import type { ComputedRef } from 'vue'
 import type { IconDefinition, IconGroupDefinition, IconKey } from '@luma/icons'
+import type { ComputedRef } from 'vue'
 import {
   getRegisteredIconDefinitions,
   getRegisteredIconGroups,

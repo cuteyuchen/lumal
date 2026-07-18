@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { Component } from 'vue'
 import type { IconDefinition, IconGradientOptions } from '@luma/icons'
-import { applySvgGradient, recolorSvgString } from '@luma/icons'
+import type { Component } from 'vue'
 import { Icon as IconifyIcon } from '@iconify/vue'
+import { applySvgGradient, recolorSvgString } from '@luma/icons'
 import { computed, useId } from 'vue'
 import { useIconRegistry } from '../composables/useIconRegistry'
 

@@ -1,5 +1,5 @@
-import { mount } from '@vue/test-utils'
 import { registerIcons } from '@luma/icons'
+import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { LumaIcon, LumaIconPicker, LumaIconPickerDialog } from '../src'

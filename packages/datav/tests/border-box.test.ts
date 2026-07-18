@@ -97,7 +97,7 @@ describe('lumaBorderBox DataV SVG fidelity', () => {
     flushAnimationFrames()
     await nextTick()
 
-    expect(wrapper.findAll('g')).toHaveLength(4)
+    expect(wrapper.findAll('svg.luma-border-box__bb1-corner')).toHaveLength(4)
     expect(wrapper.findAll('animate')).toHaveLength(12)
     expect(wrapper.find('svg > polygon').attributes('fill')).toBe('#010203')
     expect(wrapper.find('animate').attributes('dur')).toBe('0.5s')
@@ -108,7 +108,7 @@ describe('lumaBorderBox DataV SVG fidelity', () => {
 
   it('13 种边框均输出上游对应的 SVG 元素签名和默认颜色', async () => {
     const cases = [
-      { circles: 0, color: '#4fd2dd', groups: 4, paths: 0, polygons: 13, polylines: 0, variant: 1 },
+      { circles: 0, color: '#4fd2dd', groups: 0, paths: 0, polygons: 13, polylines: 0, variant: 1 },
       { circles: 4, color: '#fff', groups: 0, paths: 0, polygons: 1, polylines: 2, variant: 2 },
       { circles: 0, color: '#2862b7', groups: 0, paths: 0, polygons: 1, polylines: 4, variant: 3 },
       { circles: 0, color: 'red', groups: 0, paths: 0, polygons: 1, polylines: 10, variant: 4 },

@@ -18,6 +18,7 @@ export {
   resolveIconDefinition,
 } from './registry/icons'
 export { subscribeIconRegistry } from './registry/state'
+export type { IconRegistryListener } from './registry/state'
 export {
   applySvgGradient,
   clearIconDataUriCache,
@@ -42,4 +43,3 @@ export type {
   IconKey,
   IconSource,
 } from './types'
-export type { IconRegistryListener } from './registry/state'
