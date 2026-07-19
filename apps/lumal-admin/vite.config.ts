@@ -22,45 +22,6 @@ export default defineConfig(({ command }) => ({
   },
   build: {
     chunkSizeWarningLimit: 500,
-    rolldownOptions: {
-      output: {
-        codeSplitting: {
-          groups: [
-            {
-              maxSize: 420 * 1024,
-              name: 'vendor-echarts',
-              priority: 50,
-              test: /node_modules[\\/](?:echarts|vue-echarts|zrender)[\\/]/,
-            },
-            {
-              maxSize: 420 * 1024,
-              name: 'vendor-element-plus',
-              priority: 40,
-              test: /node_modules[\\/]element-plus[\\/]/,
-            },
-            {
-              maxSize: 420 * 1024,
-              name: 'vendor-vue',
-              priority: 30,
-              test: /node_modules[\\/](?:@vue|pinia|vue|vue-router)[\\/]/,
-            },
-            {
-              maxSize: 420 * 1024,
-              name: 'vendor-lumal',
-              priority: 20,
-              test: /[\\/]packages[\\/](?:charts|core|icons|icons-vue)[\\/](?:dist|src)[\\/]/,
-            },
-            {
-              entriesAware: true,
-              maxSize: 420 * 1024,
-              name: 'vendor',
-              priority: 10,
-              test: /node_modules[\\/]/,
-            },
-          ],
-        },
-      },
-    },
   },
   resolve: {
     alias: [
