@@ -9,12 +9,12 @@
   --guide-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
-/* 文档内容区：占满内容区全宽 */
+/* 文档内容区：限制桌面端阅读宽度，避免超宽屏上的表单与代码块无限拉伸。 */
 .lumal-content .guide-doc,
 .lumal-content .component-doc {
   width: 100%;
-  max-width: none;
-  margin: 0;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 28px 36px 72px;
   box-sizing: border-box;
 }
@@ -155,7 +155,8 @@ a:hover {
 .code-block pre {
   margin: 0;
   padding: 16px 18px;
-  overflow-x: auto;
+  max-height: min(60vh, 560px);
+  overflow: auto;
   font-family: var(--guide-font-mono);
   font-size: 12.5px;
   line-height: 1.6;
@@ -186,6 +187,12 @@ a:hover {
 .code-block__copy:hover {
   color: var(--el-color-primary);
   border-color: var(--el-color-primary);
+}
+
+.code-block__copy:focus-visible,
+.demo-block__toggle:focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 2px;
 }
 
 /* ---------- 演示块 ---------- */
@@ -227,11 +234,13 @@ a:hover {
   color: var(--el-text-color-secondary);
   font-size: 12px;
   cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
 }
 
 .demo-block__toggle:hover {
   color: var(--el-color-primary);
   border-color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
 }
 
 .demo-block__stage {
@@ -332,4 +341,16 @@ a:hover {
 
 .props-table td:last-child {
   color: var(--el-text-color-secondary);
+}
+
+@media (max-width: 768px) {
+  .lumal-content .guide-doc,
+  .lumal-content .component-doc {
+    padding: 20px 16px 48px;
+  }
+
+  .demo-block__stage,
+  .playground__stage {
+    padding: 20px 12px;
+  }
 }

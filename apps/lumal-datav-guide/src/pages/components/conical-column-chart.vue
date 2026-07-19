@@ -23,7 +23,7 @@ const playModel = reactive<Record<string, unknown>>({
   sort: false,
   max: 0,
   fontSize: 12,
-  columnColor: '#35c8ff',
+  columnColor: 'rgba(0, 194, 255, 0.4)',
   textColor: '#cfeeff',
 })
 
@@ -42,7 +42,12 @@ const playControls: PlaygroundControl[] = [
   },
   { key: 'max', label: '满刻度 max', type: 'number', min: 0, max: 200, step: 5, hint: '0 表示按数据' },
   { key: 'fontSize', label: '文字大小 fontSize', type: 'number', min: 8, max: 32, step: 1 },
-  { key: 'columnColor', label: '锥柱颜色 columnColor', type: 'color' },
+  {
+    key: 'columnColor',
+    label: '锥柱颜色 columnColor',
+    type: 'text',
+    hint: '支持 rgba() 等带透明度的 CSS 颜色，DataV 默认透明度为 0.4。',
+  },
   { key: 'textColor', label: '文字颜色 textColor', type: 'color' },
 ]
 
@@ -69,7 +74,7 @@ const configCode = `<LumalConicalColumnChart
       { name: '水电', value: 66 },
     ],
     showValue: true,
-    columnColor: '#35c8ff',
+    columnColor: 'rgba(0, 194, 255, 0.4)',
   }"
   style="height: 260px"
 />`
@@ -84,7 +89,7 @@ const propRows: PropRow[] = [
   { name: 'images', type: 'string[]', description: '锥柱贴图数组。' },
   { name: 'imageSideLength', type: 'number', description: '贴图边长。' },
   { name: 'fontSize', type: 'number', description: '文字大小。' },
-  { name: 'columnColor', type: 'string', description: '锥柱颜色。' },
+  { name: 'columnColor', type: 'string', default: "'rgba(0, 194, 255, 0.4)'", description: '锥柱颜色，支持 rgba() 透明度。' },
   { name: 'textColor', type: 'string', description: '文字颜色。' },
 ]
 </script>
@@ -140,7 +145,7 @@ const propRows: PropRow[] = [
             { name: '水电', value: 66 },
           ],
           showValue: true,
-          columnColor: '#35c8ff',
+          columnColor: 'rgba(0, 194, 255, 0.4)',
         }"
         style="height: 260px"
       />

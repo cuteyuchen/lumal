@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, useId } from 'vue'
 import CodeBlock from './CodeBlock.vue'
 
 defineProps<{
@@ -13,6 +13,7 @@ defineProps<{
 }>()
 
 const showCode = ref(false)
+const codeId = `demo-code-${useId()}`
 </script>
 
 <template>
@@ -26,7 +27,13 @@ const showCode = ref(false)
           {{ description }}
         </p>
       </div>
-      <button type="button" class="demo-block__toggle" @click="showCode = !showCode">
+      <button
+        type="button"
+        class="demo-block__toggle"
+        :aria-controls="codeId"
+        :aria-expanded="showCode"
+        @click="showCode = !showCode"
+      >
         {{ showCode ? '收起代码' : '查看代码' }}
       </button>
     </header>
@@ -39,6 +46,6 @@ const showCode = ref(false)
       <slot />
     </div>
 
-    <CodeBlock v-if="showCode" :code="code" language="vue" />
+    <CodeBlock v-if="showCode" :id="codeId" :code="code" language="vue" />
   </section>
 </template>

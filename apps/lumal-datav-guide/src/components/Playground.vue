@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { SchemaFormItem } from '@lumal/core/components'
 import { LumalSchemaForm } from '@lumal/core/components'
-import { computed } from 'vue'
+import { computed, ref, useId } from 'vue'
 import CodeBlock from './CodeBlock.vue'
 
 /** 单个可调属性的控件定义。 */
@@ -64,6 +64,8 @@ const props = withDefaults(defineProps<{
  * 避免引用断开导致预览不更新。
  */
 const model = defineModel<Record<string, unknown>>({ required: true })
+const showCode = ref(false)
+const codeId = `playground-code-${useId()}`
 
 function handleModelUpdate(next: Record<string, unknown>): void {
   // 只合并回写，不删除隐藏控件对应的键，避免切换 variant 后丢失暂存值。
@@ -192,6 +194,15 @@ const generatedCode = computed(() => {
           {{ description }}
         </p>
       </div>
+      <button
+        type="button"
+        class="playground__toggle"
+        :aria-controls="codeId"
+        :aria-expanded="showCode"
+        @click="showCode = !showCode"
+      >
+        {{ showCode ? '收起代码' : '查看代码' }}
+      </button>
     </header>
 
     <div
@@ -213,7 +224,7 @@ const generatedCode = computed(() => {
       />
     </div>
 
-    <CodeBlock :code="generatedCode" language="vue" />
+    <CodeBlock v-if="showCode" :id="codeId" :code="generatedCode" language="vue" />
   </section>
 </template>
 
@@ -227,6 +238,10 @@ const generatedCode = computed(() => {
 }
 
 .playground__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   padding: 12px 16px 10px;
 }
 
@@ -241,6 +256,30 @@ const generatedCode = computed(() => {
   margin: 4px 0 0;
   font-size: 12.5px;
   color: var(--el-text-color-secondary);
+}
+
+.playground__toggle {
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1px solid var(--el-border-color);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+}
+
+.playground__toggle:hover {
+  border-color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+}
+
+.playground__toggle:focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 2px;
 }
 
 .playground__stage {
