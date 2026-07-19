@@ -6,7 +6,7 @@
 | --- | --- |
 | 包名 | `@lumal/datav` |
 | 本地路径 | `packages/datav` |
-| 文档（本地占位） | http://localhost:5173/packages/datav |
+| 在线文档 | https://lumal-docs-cf.pages.dev/packages/datav |
 | 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/datav` |
 | 示例 | [DataV 示例](/reference/datav-examples)、`apps/lumal-datav-guide` |
 

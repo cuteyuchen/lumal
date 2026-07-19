@@ -6,7 +6,7 @@
 | --- | --- |
 | 包名 | `create-lumal-admin` |
 | 本地路径 | `packages/create-lumal-admin` |
-| 文档（本地占位） | http://localhost:5173/packages/create-lumal-admin |
+| 在线文档 | https://lumal-docs-cf.pages.dev/packages/create-lumal-admin |
 | 正式地址（上线后） | `https://www.npmjs.com/package/create-lumal-admin` |
 | CLI | `create-lumal-admin` |
 

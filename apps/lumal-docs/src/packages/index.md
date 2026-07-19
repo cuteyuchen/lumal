@@ -18,17 +18,17 @@ Lumal 按职责拆包。应用只消费 **公开 `exports` 入口** 与样式路
 
 | 包 | 说明 | 文档 | 本地路径 |
 | --- | --- | --- | --- |
-| [@lumal/core](./core) | 安装器、布局、路由权限、请求、主题、Schema 组件 | [本地](http://localhost:5173/packages/core) | `packages/core` |
-| [@lumal/icons](./icons) | 框架无关图标内核 | [本地](http://localhost:5173/packages/icons) | `packages/icons` |
-| [@lumal/icons-vue](./icons-vue) | Vue 图标组件 | [本地](http://localhost:5173/packages/icons-vue) | `packages/icons-vue` |
-| [@lumal/charts](./charts) | ECharts 图表与面板 | [本地](http://localhost:5173/packages/charts) | `packages/charts` |
-| [@lumal/datav](./datav) | DataV 风格可视化组件 | [本地](http://localhost:5173/packages/datav) | `packages/datav` |
-| [@lumal/cockpit](./cockpit) | 驾驶舱编排框架 | [本地](http://localhost:5173/packages/cockpit) | `packages/cockpit` |
-| [@lumal/vite](./vite) | Resolver 与 workspace alias | [本地](http://localhost:5173/packages/vite) | `packages/vite` |
-| [@lumal/vben-compat](./vben-compat) | Vben 常用 API 兼容 | [本地](http://localhost:5173/packages/vben-compat) | `packages/vben-compat` |
-| [create-lumal-admin](./create-lumal-admin) | 脚手架 CLI | [本地](http://localhost:5173/packages/create-lumal-admin) | `packages/create-lumal-admin` |
+| [@lumal/core](./core) | 安装器、布局、路由权限、请求、主题、Schema 组件 | [在线文档](https://lumal-docs-cf.pages.dev/packages/core) | `packages/core` |
+| [@lumal/icons](./icons) | 框架无关图标内核 | [在线文档](https://lumal-docs-cf.pages.dev/packages/icons) | `packages/icons` |
+| [@lumal/icons-vue](./icons-vue) | Vue 图标组件 | [在线文档](https://lumal-docs-cf.pages.dev/packages/icons-vue) | `packages/icons-vue` |
+| [@lumal/charts](./charts) | ECharts 图表与面板 | [在线文档](https://lumal-docs-cf.pages.dev/packages/charts) | `packages/charts` |
+| [@lumal/datav](./datav) | DataV 风格可视化组件 | [在线文档](https://lumal-docs-cf.pages.dev/packages/datav) | `packages/datav` |
+| [@lumal/cockpit](./cockpit) | 驾驶舱编排框架 | [在线文档](https://lumal-docs-cf.pages.dev/packages/cockpit) | `packages/cockpit` |
+| [@lumal/vite](./vite) | Resolver 与 workspace alias | [在线文档](https://lumal-docs-cf.pages.dev/packages/vite) | `packages/vite` |
+| [@lumal/vben-compat](./vben-compat) | Vben 常用 API 兼容 | [在线文档](https://lumal-docs-cf.pages.dev/packages/vben-compat) | `packages/vben-compat` |
+| [create-lumal-admin](./create-lumal-admin) | 脚手架 CLI | [在线文档](https://lumal-docs-cf.pages.dev/packages/create-lumal-admin) | `packages/create-lumal-admin` |
 
-> 上线后将「本地」列替换为正式文档域名或 npm 包页，见 [安装与版本](/guide/installation)。
+> npm 包地址与安装方式见 [安装与版本](/guide/installation)。
 
 ## 安装顺序（典型 Admin）
 

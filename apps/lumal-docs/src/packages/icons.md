@@ -6,7 +6,7 @@
 | --- | --- |
 | 包名 | `@lumal/icons` |
 | 本地路径 | `packages/icons` |
-| 文档（本地占位） | http://localhost:5173/packages/icons |
+| 在线文档 | https://lumal-docs-cf.pages.dev/packages/icons |
 | 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/icons` |
 | 详细说明 | [图标系统](/reference/icons) |
 

@@ -6,7 +6,7 @@
 | --- | --- |
 | 包名 | `@lumal/icons-vue` |
 | 本地路径 | `packages/icons-vue` |
-| 文档（本地占位） | http://localhost:5173/packages/icons-vue |
+| 在线文档 | https://lumal-docs-cf.pages.dev/packages/icons-vue |
 | 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/icons-vue` |
 
 ## 安装

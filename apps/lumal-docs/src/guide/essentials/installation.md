@@ -2,12 +2,11 @@
 
 ## 包列表
 
-> **占位说明**：未发布 npm 时使用「本地路径」与「文档本地地址」；上线后将 npm 列替换为正式 registry 链接。  
-> 文档默认：`http://localhost:5173`（`pnpm docs:dev`）
+> 在线文档：[https://lumal-docs-cf.pages.dev](https://lumal-docs-cf.pages.dev)
 
 | 包名 | 本地路径 | 文档 | npm / 外链（占位→正式） |
 | --- | --- | --- | --- |
-| `@lumal/core` | `packages/core` | [/packages/core](/packages/core) | `http://localhost:5173/packages/core` → `https://www.npmjs.com/package/@lumal/core` |
+| `@lumal/core` | `packages/core` | [/packages/core](/packages/core) | `https://www.npmjs.com/package/@lumal/core` |
 | `@lumal/icons` | `packages/icons` | [/packages/icons](/packages/icons) | 同上规则 |
 | `@lumal/icons-vue` | `packages/icons-vue` | [/packages/icons-vue](/packages/icons-vue) | 同上 |
 | `@lumal/charts` | `packages/charts` | [/packages/charts](/packages/charts) | 同上 |
@@ -52,12 +51,12 @@ pnpm add @lumal/core@file:../lumal/packages/core
 
 | 变量 | 含义 | 默认 |
 | --- | --- | --- |
-| `LUMAL_DOCS_URL` | 文档站根 | `http://localhost:5173` |
-| `LUMAL_ADMIN_DEMO_URL` | Admin 演示 | `http://localhost:5174` |
-| `LUMAL_COCKPIT_DEMO_URL` | 驾驶舱演示 | `http://localhost:5175` |
-| `LUMAL_DATAV_GUIDE_URL` | DataV 指南 | `http://localhost:5176` |
-| `LUMAL_GITHUB_URL` | 仓库 | `https://github.com/example/lumal` |
-| `LUMAL_NPM_*` | 各包 npm 页 | 指向本地文档包页 |
+| `LUMAL_DOCS_URL` | 文档站根 | `https://lumal-docs-cf.pages.dev` |
+| `LUMAL_ADMIN_DEMO_URL` | Admin 演示 | `https://lumal-admin-demo.vercel.app` |
+| `LUMAL_COCKPIT_DEMO_URL` | 驾驶舱演示 | `https://lumal-cockpit-demo.vercel.app` |
+| `LUMAL_DATAV_GUIDE_URL` | DataV 指南 | `https://lumal-datav-guide.vercel.app` |
+| `LUMAL_GITHUB_URL` | 仓库 | `https://github.com/cuteyuchen/lumal` |
+| `LUMAL_NPM_*` | 各包 npm 页 | 对应的 npm 正式包页面 |
 
 配置文件：`apps/lumal-docs/src/.vitepress/config/links.ts`。
 

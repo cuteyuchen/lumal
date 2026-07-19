@@ -6,7 +6,7 @@
 | --- | --- |
 | 包名 | `@lumal/core` |
 | 本地路径 | `packages/core` |
-| 文档（本地占位） | http://localhost:5173/packages/core |
+| 在线文档 | https://lumal-docs-cf.pages.dev/packages/core |
 | 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/core` |
 | 详细 API | [Core API](/reference/core-api) |
 

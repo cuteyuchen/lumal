@@ -6,7 +6,7 @@
 | --- | --- |
 | 包名 | `@lumal/vben-compat` |
 | 本地路径 | `packages/vben-compat` |
-| 文档（本地占位） | http://localhost:5173/packages/vben-compat |
+| 在线文档 | https://lumal-docs-cf.pages.dev/packages/vben-compat |
 | 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/vben-compat` |
 | 迁移指南 | [从 Vben 迁移](/reference/migration-from-vben) |
 | 示例 | `apps/vben-compat-demo` |
