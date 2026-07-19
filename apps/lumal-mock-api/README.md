@@ -28,7 +28,7 @@ pnpm dev
 
 ## 路由说明
 
-采用单一 catch-all 路由 `api/[...path].ts` 统一分发，业务逻辑按领域拆分在 `domain/` 下：
+采用单一 catch-all 路由 `routes/api/[...path].ts` 统一分发，业务逻辑按领域拆分在 `domain/` 下：
 
 ```
 api/

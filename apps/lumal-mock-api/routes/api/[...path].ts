@@ -1,4 +1,4 @@
-import type { AdminLoginRequest, AdminUser } from '../domain/auth'
+import type { AdminLoginRequest, AdminUser } from '../../domain/auth'
 import type {
   SaveSystemDictionaryItemInput,
   SaveSystemDictionaryTypeInput,
@@ -8,7 +8,7 @@ import type {
   SaveSystemUserInput,
   SystemMenuRecord,
   SystemUserRoleBatchMode,
-} from '../domain/system'
+} from '../../domain/system'
 import {
   defineEventHandler,
   getHeader,
@@ -25,7 +25,7 @@ import {
   changeMockAccountPassword,
   mockAccounts,
   verifyMockAccount,
-} from '../domain/auth'
+} from '../../domain/auth'
 import {
   mockBatchUpdateSystemUserRoles,
   mockBatchUpdateSystemUserStatus,
@@ -62,16 +62,16 @@ import {
   mockUpdateSystemUser,
   mockUpdateSystemUserRoles,
   mockUpdateSystemUserStatus,
-} from '../domain/system'
-import { ApiError, fail, ok, page } from '../utils/http'
+} from '../../domain/system'
+import { ApiError, fail, ok, page } from '../../utils/http'
 import {
   createSandbox,
   deleteSandbox,
   getSandbox,
   resetSandbox,
   withSandbox,
-} from '../utils/sandbox'
-import { createSessionId, issueTokens, verifyToken } from '../utils/token'
+} from '../../utils/sandbox'
+import { createSessionId, issueTokens, verifyToken } from '../../utils/token'
 
 interface AuthContext {
   sid: string
