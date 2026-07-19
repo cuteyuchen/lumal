@@ -41,7 +41,7 @@ jobs:
           name: luma-static-sites-${{ github.sha }}
           if-no-files-found: error
           path: |
-            apps/luma-docs/src/.vitepress/dist
+            apps/luma-docs/dist
             apps/luma-admin/dist
             apps/luma-cockpit/dist
             apps/luma-datav-guide/dist

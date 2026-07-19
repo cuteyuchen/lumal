@@ -12,7 +12,7 @@
 
 | Project | Build Command | Output Directory |
 | --- | --- | --- |
-| luma-docs | `pnpm docs:build` | `apps/luma-docs/src/.vitepress/dist` |
+| luma-docs | `pnpm docs:build` | `apps/luma-docs/dist` |
 | luma-admin-demo | `pnpm admin:build` | `apps/luma-admin/dist` |
 | luma-cockpit-demo | `pnpm --filter @luma/cockpit build && pnpm --filter luma-cockpit build` | `apps/luma-cockpit/dist` |
 | luma-datav-guide | `pnpm --filter @luma/datav build && pnpm --filter luma-datav-guide build` | `apps/luma-datav-guide/dist` |
