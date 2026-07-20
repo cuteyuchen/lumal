@@ -1,58 +1,35 @@
 import type { RouteRecordRaw } from 'vue-router'
-import DashboardView from '../views/dashboard/DashboardView.vue'
-import ChartPanelView from '../views/examples/ChartPanelView.vue'
-import ChartView from '../views/examples/ChartView.vue'
-import ComposablesView from '../views/examples/ComposablesView.vue'
-import CrudTableView from '../views/examples/CrudTableView.vue'
-import DictionaryView from '../views/examples/DictionaryView.vue'
-import InfoReferenceView from '../views/examples/InfoReferenceView.vue'
-import OverviewView from '../views/examples/OverviewView.vue'
-import PageLayoutView from '../views/examples/PageLayoutView.vue'
-import SchemaFormView from '../views/examples/SchemaFormView.vue'
-import SchemaTableView from '../views/examples/SchemaTableView.vue'
-import ServicesView from '../views/examples/ServicesView.vue'
-import ThemeSettingsView from '../views/examples/ThemeSettingsView.vue'
-import UtilsView from '../views/examples/UtilsView.vue'
-import ProfileView from '../views/profile/ProfileView.vue'
-import ProjectView from '../views/project/ProjectView.vue'
-import ExternalFrameView from '../views/shared/ExternalFrameView.vue'
-import ConfigView from '../views/system/ConfigView.vue'
-import DictionaryItemView from '../views/system/DictionaryItemView.vue'
-import DictionaryTypeView from '../views/system/DictionaryTypeView.vue'
-import MenuView from '../views/system/MenuView.vue'
-import OrganizationView from '../views/system/OrganizationView.vue'
-import RoleView from '../views/system/RoleView.vue'
-import UserView from '../views/system/UserView.vue'
 
 /***********************组件映射*********************/
-const routeComponents: Record<string, RouteRecordRaw['component']> = {
-  'dashboard/index': DashboardView,
-  'examples/chart': ChartView,
-  'examples/chart-panel': ChartPanelView,
-  'examples/composables': ComposablesView,
-  'examples/crud-table': CrudTableView,
-  'examples/dictionary': DictionaryView,
-  'examples/info-reference': InfoReferenceView,
-  'examples/overview': OverviewView,
-  'examples/page-layout': PageLayoutView,
-  'examples/schema-form': SchemaFormView,
-  'examples/schema-table': SchemaTableView,
-  'examples/services': ServicesView,
-  'examples/theme-settings': ThemeSettingsView,
-  'examples/utils': UtilsView,
-  'profile/index': ProfileView,
-  'project/index': ProjectView,
-  'shared/external-frame': ExternalFrameView,
-  'system/config': ConfigView,
-  'system/dict': DictionaryTypeView,
-  'system/dict-item': DictionaryItemView,
-  'system/menu': MenuView,
-  'system/organization': OrganizationView,
-  'system/role': RoleView,
-  'system/user': UserView,
+// 全部页面组件改为动态 import，交由 Vite 拆分独立 chunk，避免首包吞下所有视图。
+const routeComponents: Record<string, () => Promise<unknown>> = {
+  'dashboard/index': () => import('../views/dashboard/DashboardView.vue'),
+  'examples/chart': () => import('../views/examples/ChartView.vue'),
+  'examples/chart-panel': () => import('../views/examples/ChartPanelView.vue'),
+  'examples/composables': () => import('../views/examples/ComposablesView.vue'),
+  'examples/crud-table': () => import('../views/examples/CrudTableView.vue'),
+  'examples/dictionary': () => import('../views/examples/DictionaryView.vue'),
+  'examples/info-reference': () => import('../views/examples/InfoReferenceView.vue'),
+  'examples/overview': () => import('../views/examples/OverviewView.vue'),
+  'examples/page-layout': () => import('../views/examples/PageLayoutView.vue'),
+  'examples/schema-form': () => import('../views/examples/SchemaFormView.vue'),
+  'examples/schema-table': () => import('../views/examples/SchemaTableView.vue'),
+  'examples/services': () => import('../views/examples/ServicesView.vue'),
+  'examples/theme-settings': () => import('../views/examples/ThemeSettingsView.vue'),
+  'examples/utils': () => import('../views/examples/UtilsView.vue'),
+  'profile/index': () => import('../views/profile/ProfileView.vue'),
+  'project/index': () => import('../views/project/ProjectView.vue'),
+  'shared/external-frame': () => import('../views/shared/ExternalFrameView.vue'),
+  'system/config': () => import('../views/system/ConfigView.vue'),
+  'system/dict': () => import('../views/system/DictionaryTypeView.vue'),
+  'system/dict-item': () => import('../views/system/DictionaryItemView.vue'),
+  'system/menu': () => import('../views/system/MenuView.vue'),
+  'system/organization': () => import('../views/system/OrganizationView.vue'),
+  'system/role': () => import('../views/system/RoleView.vue'),
+  'system/user': () => import('../views/system/UserView.vue'),
 }
 
 /***********************组件解析*********************/
 export function resolveRouteComponent(component: string): RouteRecordRaw['component'] | undefined {
-  return routeComponents[component]
+  return routeComponents[component] as RouteRecordRaw['component'] | undefined
 }

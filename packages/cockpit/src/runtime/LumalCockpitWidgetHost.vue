@@ -2,7 +2,7 @@
 import type { CockpitBaseContext, CockpitWidgetInstance } from '../types'
 import { LumalIcon } from '@lumal/icons-vue'
 import { ElButton } from 'element-plus'
-import { computed, onBeforeUnmount } from 'vue'
+import { computed, onBeforeUnmount, shallowReactive, watchEffect } from 'vue'
 import { provideCockpitContext } from '../composables/useCockpitContext'
 import CockpitErrorBoundary from './CockpitErrorBoundary.vue'
 import { useCockpitRuntimeEnv } from './context'
@@ -26,16 +26,24 @@ const resolved = computed(() => {
   return def ? resolveCockpitComponent(def.component) : null
 })
 
-const context = computed<CockpitBaseContext>(() => ({
+const context = shallowReactive<CockpitBaseContext>({
   cockpitId: env.cockpitId,
   layoutId: props.layoutId,
   instanceId: props.widget.id,
   mode: env.mode,
   messages: env.messages,
-}))
+})
+
+watchEffect(() => {
+  context.cockpitId = env.cockpitId
+  context.layoutId = props.layoutId
+  context.instanceId = props.widget.id
+  context.mode = env.mode
+  context.messages = env.messages
+})
 
 // per-instance 提供上下文，相同 type 的多实例各自独立
-provideCockpitContext(context.value)
+provideCockpitContext(context)
 
 // 卸载时清理该实例遗留的消息订阅
 onBeforeUnmount(() => {

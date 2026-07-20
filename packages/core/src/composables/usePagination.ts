@@ -60,8 +60,10 @@ export function usePagination<T = unknown, TResponse = unknown>(
   const page = ref(normalizedOptions.initialPage ?? 1)
   const pageSize = ref(normalizedOptions.initialPageSize ?? 10)
   const loading = ref(false)
+  let requestGeneration = 0
 
   async function fetchData(): Promise<void> {
+    const generation = ++requestGeneration
     loading.value = true
 
     try {
@@ -72,11 +74,15 @@ export function usePagination<T = unknown, TResponse = unknown>(
         [pageSizeKey]: pageSize.value,
       })
       const parsed = parser(response)
-      items.value = parsed.items
-      total.value = parsed.total
+      if (generation === requestGeneration) {
+        items.value = parsed.items
+        total.value = parsed.total
+      }
     }
     finally {
-      loading.value = false
+      if (generation === requestGeneration) {
+        loading.value = false
+      }
     }
   }
 
@@ -86,6 +92,7 @@ export function usePagination<T = unknown, TResponse = unknown>(
   }
 
   async function setPageSize(value: number): Promise<void> {
+    page.value = 1
     pageSize.value = value
     await fetchData()
   }

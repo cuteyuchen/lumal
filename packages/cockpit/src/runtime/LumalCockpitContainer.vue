@@ -99,7 +99,11 @@ watch(activeTabId, (id) => {
           <component :is="env.slots['widget-title']" :widget="tab.widget" :title="tab.title" />
         </template>
         <template v-for="widget in row.widgets" :key="widget.id">
-          <div v-if="visitedTabIds.has(widget.id)" v-show="widget.id === activeTabId" class="lumal-cockpit-container__tabpanel">
+          <div
+            v-if="env.cachePages ? visitedTabIds.has(widget.id) : widget.id === activeTabId"
+            v-show="widget.id === activeTabId"
+            class="lumal-cockpit-container__tabpanel"
+          >
             <LumalCockpitWidgetHost embedded :layout-id="layoutId" :side="side" :widget="widget" />
           </div>
         </template>

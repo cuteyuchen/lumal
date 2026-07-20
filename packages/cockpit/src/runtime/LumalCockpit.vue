@@ -12,12 +12,12 @@ import type {
 } from '../types'
 import type { CockpitCardComponent } from './card'
 import { ElSwitch, ElTooltip } from 'element-plus'
-import { computed, provide, ref, useSlots, watch } from 'vue'
+import { computed, provide, ref, shallowReactive, shallowRef, useSlots, watch, watchEffect } from 'vue'
+import { useCockpit } from '../composables/useCockpit'
 import {
   DEFAULT_COCKPIT_AUTO_REFRESH_INTERVAL_MS,
   useCockpitAutoRefresh,
 } from '../composables/useCockpitAutoRefresh'
-import { useCockpit } from '../composables/useCockpit'
 import { normalizeCockpitConfig } from '../config/normalize'
 import { createCockpitMessageBus } from '../messaging/createCockpitMessageBus'
 import { cockpitRuntimeEnvKey } from './context'
@@ -62,15 +62,37 @@ const themeMode = defineModel<CockpitThemeMode>('themeMode', { default: 'dark' }
 const autoRefreshEnabled = defineModel<boolean>('autoRefreshEnabled', { default: false })
 const slots = useSlots()
 
-const normalizedResult = computed<{ config: CockpitConfig | null, error: unknown }>(() => {
+const normalized = shallowRef<CockpitConfig | null>(null)
+const normalizationError = shallowRef<unknown>(null)
+let sourceSignature = ''
+let normalizedSignature = ''
+
+watchEffect(() => {
   try {
-    return { config: normalizeCockpitConfig(props.config), error: null }
+    const nextSourceSignature = JSON.stringify(props.config)
+    if (nextSourceSignature === sourceSignature) {
+      normalizationError.value = null
+      return
+    }
+
+    const nextConfig = normalizeCockpitConfig(props.config)
+    const nextNormalizedSignature = JSON.stringify(nextConfig)
+    sourceSignature = nextSourceSignature
+    normalizationError.value = null
+    if (nextNormalizedSignature !== normalizedSignature) {
+      normalized.value = nextConfig
+      normalizedSignature = nextNormalizedSignature
+    }
   }
   catch (error) {
-    return { config: null, error }
+    normalizationError.value = error
   }
 })
-const normalized = computed(() => normalizedResult.value.config)
+
+const normalizedResult = computed<{ config: CockpitConfig | null, error: unknown }>(() => ({
+  config: normalized.value,
+  error: normalizationError.value,
+}))
 
 watch(() => normalizedResult.value.error, (error) => {
   if (error)
@@ -78,17 +100,23 @@ watch(() => normalizedResult.value.error, (error) => {
 }, { immediate: true })
 
 const messages = props.messageBus ?? createCockpitMessageBus()
-provide(cockpitRuntimeEnvKey, {
+const runtimeEnv = shallowReactive({
   cockpitId: props.config.id,
   mode: props.renderMode,
   registry: props.registry,
   messages,
   cachePages: props.cachePages,
   slots: slots as Slots,
-  get cardComponent() {
-    return props.cardComponent ?? LumalCockpitCard
-  },
+  cardComponent: props.cardComponent ?? LumalCockpitCard,
 })
+watchEffect(() => {
+  runtimeEnv.cockpitId = normalized.value?.id ?? props.config.id
+  runtimeEnv.mode = props.renderMode
+  runtimeEnv.registry = props.registry
+  runtimeEnv.cachePages = props.cachePages
+  runtimeEnv.cardComponent = props.cardComponent ?? LumalCockpitCard
+})
+provide(cockpitRuntimeEnvKey, runtimeEnv)
 
 const orchestration = useCockpit({
   config: () => normalized.value ?? props.config,

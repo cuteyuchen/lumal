@@ -1,6 +1,6 @@
 import type { DictionaryLabelValue, DictionaryOption } from '../../dictionary'
 import type { NormalizedSchemaTableColumn, SchemaTableRow } from './types'
-import { getDictionaryLabel } from '../../dictionary'
+import { createDictionaryOptionIndex, getDictionaryLabel } from '../../dictionary'
 
 export interface SchemaTableDictionaryTag {
   color?: string
@@ -31,10 +31,11 @@ function isDictionaryLabelValue(value: unknown): value is DictionaryLabelValue {
 function resolveDictionaryTags(
   options: readonly DictionaryOption[],
   value: DictionaryLabelValue,
+  optionIndex: ReadonlyMap<string, DictionaryOption> = createDictionaryOptionIndex(options),
 ): SchemaTableDictionaryTag[] {
   const values = Array.isArray(value) ? value : [value]
   const tags = values.map((currentValue, index) => {
-    const option = options.find(item => String(item.value) === String(currentValue))
+    const option = optionIndex.get(String(currentValue))
 
     return {
       ...(option?.color ? { color: option.color } : {}),
@@ -51,6 +52,7 @@ export function resolveSchemaTableCellDisplay(
   column: NormalizedSchemaTableColumn,
   index: number,
   options: readonly DictionaryOption[] = [],
+  optionIndex?: ReadonlyMap<string, DictionaryOption>,
 ): SchemaTableCellDisplay {
   const rawValue = row[column.field]
   const formattedValue = column.formatter?.(rawValue, row, index) ?? rawValue
@@ -70,8 +72,8 @@ export function resolveSchemaTableCellDisplay(
 
   if (options.length > 0 && isDictionaryLabelValue(formattedValue)) {
     return {
-      tags: resolveDictionaryTags(options, formattedValue),
-      text: getDictionaryLabel(options, formattedValue),
+      tags: resolveDictionaryTags(options, formattedValue, optionIndex),
+      text: getDictionaryLabel(options, formattedValue, optionIndex),
     }
   }
 

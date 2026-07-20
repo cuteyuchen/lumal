@@ -1,8 +1,8 @@
 import type { MaybeRefOrGetter, Ref } from 'vue'
-import type { CockpitMessageBus } from '../messaging/types'
 import type { CockpitRefreshPayload } from '../messaging/topics'
-import { COCKPIT_REFRESH_TOPIC } from '../messaging/topics'
+import type { CockpitMessageBus } from '../messaging/types'
 import { onBeforeUnmount, ref, toValue, watch } from 'vue'
+import { COCKPIT_REFRESH_TOPIC } from '../messaging/topics'
 
 /***********************全局自动刷新*********************/
 
@@ -54,9 +54,19 @@ export function useCockpitAutoRefresh(options: UseCockpitAutoRefreshOptions): Us
     clearTimer()
     const intervalMs = Math.max(1000, toValue(options.intervalMs) ?? DEFAULT_COCKPIT_AUTO_REFRESH_INTERVAL_MS)
     timer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden)
+        return
       refreshNow('interval')
     }, intervalMs)
   }
+
+  function handleVisibilityChange(): void {
+    if (!document.hidden && enabled.value)
+      refreshNow('interval')
+  }
+
+  if (typeof document !== 'undefined')
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
   watch(enabled, (value) => {
     if (value)
@@ -70,7 +80,11 @@ export function useCockpitAutoRefresh(options: UseCockpitAutoRefreshOptions): Us
       startTimer()
   })
 
-  onBeforeUnmount(clearTimer)
+  onBeforeUnmount(() => {
+    clearTimer()
+    if (typeof document !== 'undefined')
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+  })
 
   return { enabled, refreshNow }
 }

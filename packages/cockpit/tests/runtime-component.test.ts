@@ -11,7 +11,13 @@ const StubWidget = defineComponent({
   name: 'StubWidget',
   setup() {
     const context = useCockpitContext()
-    return () => h('div', { 'class': 'stub-widget', 'data-layout': context.layoutId, 'data-instance': context.instanceId }, context.instanceId)
+    return () => h('div', {
+      'class': 'stub-widget',
+      'data-cockpit': context.cockpitId,
+      'data-instance': context.instanceId,
+      'data-layout': context.layoutId,
+      'data-mode': context.mode,
+    }, context.instanceId)
   },
 })
 
@@ -124,6 +130,41 @@ describe('lumalCockpit v3 运行时', () => {
     expect(wrapper.findAll('.stub-widget')).toHaveLength(3)
     await tabs[0].trigger('click')
     expect(wrapper.findAll('.stub-widget')).toHaveLength(3)
+  })
+
+  it('关闭页面缓存时切换 Tab 会卸载非活动模块', async () => {
+    const wrapper = mount(LumalCockpit, {
+      props: { cachePages: false, config: config(), registry: registry() },
+    })
+    const tabs = wrapper.findAll('[role="tab"]')
+
+    expect(wrapper.findAll('.stub-widget')).toHaveLength(2)
+    expect(wrapper.find('[data-instance-id="right-a"]').exists()).toBe(true)
+    expect(wrapper.find('[data-instance-id="right-b"]').exists()).toBe(false)
+
+    await tabs[1].trigger('click')
+    expect(wrapper.findAll('.stub-widget')).toHaveLength(2)
+    expect(wrapper.find('[data-instance-id="right-a"]').exists()).toBe(false)
+    expect(wrapper.find('[data-instance-id="right-b"]').exists()).toBe(true)
+  })
+
+  it('运行时环境会响应 renderMode、registry 和 cockpitId 更新', async () => {
+    const wrapper = mount(LumalCockpit, { props: { config: config(), registry: registry() } })
+    expect(wrapper.get('[data-instance-id="left-widget"] .stub-widget').attributes('data-mode')).toBe('runtime')
+    expect(wrapper.get('[data-instance-id="left-widget"] .lumal-cockpit-card__title').text()).toBe('Stub')
+
+    const nextConfig = config()
+    nextConfig.id = 'cockpit-next'
+    await wrapper.setProps({
+      config: nextConfig,
+      registry: registry('更新后的标题'),
+      renderMode: 'design',
+    })
+
+    const widget = wrapper.get('[data-instance-id="left-widget"] .stub-widget')
+    expect(widget.attributes('data-cockpit')).toBe('cockpit-next')
+    expect(widget.attributes('data-mode')).toBe('design')
+    expect(wrapper.get('[data-instance-id="left-widget"] .lumal-cockpit-card__title').text()).toBe('更新后的标题')
   })
 
   it('配置中的 activeWidgetId 更新后同步切换合并行', async () => {

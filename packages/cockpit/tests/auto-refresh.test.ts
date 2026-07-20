@@ -12,6 +12,7 @@ describe('useCockpitAutoRefresh', () => {
 
   afterEach(() => {
     vi.useRealTimers()
+    vi.restoreAllMocks()
   })
 
   it('关闭时不广播；开启后按间隔广播 cockpit:refresh', async () => {
@@ -61,6 +62,43 @@ describe('useCockpitAutoRefresh', () => {
     refreshNow()
     expect(handler).toHaveBeenCalledTimes(4)
     expect(handler.mock.calls[3]?.[0].payload).toMatchObject({ reason: 'manual' })
+
+    wrapper.unmount()
+  })
+
+  it('页面隐藏时跳过定时刷新，恢复可见时立即刷新一次', async () => {
+    let hidden = false
+    vi.spyOn(document, 'hidden', 'get').mockImplementation(() => hidden)
+    const messages = createCockpitMessageBus()
+    const handler = vi.fn()
+    messages.subscribe(COCKPIT_REFRESH_TOPIC, handler)
+
+    const Host = defineComponent({
+      setup() {
+        useCockpitAutoRefresh({
+          messages,
+          sourceId: 'cockpit-1',
+          intervalMs: 1000,
+          defaultEnabled: true,
+        })
+        return () => h('div')
+      },
+    })
+    const wrapper = mount(Host)
+
+    vi.advanceTimersByTime(1000)
+    expect(handler).toHaveBeenCalledTimes(1)
+
+    hidden = true
+    document.dispatchEvent(new Event('visibilitychange'))
+    vi.advanceTimersByTime(3000)
+    expect(handler).toHaveBeenCalledTimes(1)
+
+    hidden = false
+    document.dispatchEvent(new Event('visibilitychange'))
+    await nextTick()
+    expect(handler).toHaveBeenCalledTimes(2)
+    expect(handler.mock.calls[1]?.[0].payload).toMatchObject({ reason: 'interval' })
 
     wrapper.unmount()
   })

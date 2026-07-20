@@ -15,6 +15,7 @@ export {
   createDictionaryFetcherWithFallback,
 } from './fetcher'
 export {
+  createDictionaryOptionIndex,
   getDictionaryLabel,
   normalizeDictionaryOptionList,
   normalizeDictionaryOptions,

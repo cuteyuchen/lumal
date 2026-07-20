@@ -80,7 +80,7 @@ describe('lumal admin preferences', () => {
     expect(document.documentElement.dataset.lumalTheme).toBeTruthy()
   })
 
-  it('系统配置会同时更新默认偏好和当前会话偏好', () => {
+  it('系统配置只更新当前会话，不污染默认偏好', () => {
     const config = updateAdminSystemConfig({
       appName: '运营后台',
       colorPrimary: '#7c3aed',
@@ -104,10 +104,10 @@ describe('lumal admin preferences', () => {
       transition: { enable: false },
     })
     expect(createAdminPreferences()).toMatchObject({
-      app: { layout: 'top-nav' },
-      tabbar: { enable: false },
-      theme: { colorPrimary: '#7c3aed' },
-      transition: { enable: false },
+      app: { layout: 'mixed-nav' },
+      tabbar: { enable: true },
+      theme: { colorPrimary: '#1677ff' },
+      transition: { enable: true },
     })
     expect(getAdminSystemConfig()).toEqual(config)
   })

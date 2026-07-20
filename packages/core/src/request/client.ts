@@ -189,24 +189,29 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
       return cache.get(cacheKey) as TResult
     }
 
-    const duplicateHeaders = new Headers(options.headers)
-    const duplicateBody = resolveBody(method, options.body, duplicateHeaders)
-    const duplicateKey = `${method}:${resolvedUrl}:${typeof duplicateBody === 'string' ? duplicateBody : ''}`
+    let duplicateKey: string | undefined
+    if (clientOptions.duplicateSubmit) {
+      const duplicateHeaders = new Headers(options.headers)
+      const duplicateBody = resolveBody(method, options.body, duplicateHeaders)
+      duplicateKey = `${method}:${resolvedUrl}:${typeof duplicateBody === 'string' ? duplicateBody : ''}`
 
-    if (clientOptions.duplicateSubmit && pendingKeys.has(duplicateKey)) {
-      throw new RequestError('Duplicate request', {
-        code: 'DUPLICATE_REQUEST',
-        kind: 'duplicate',
-      })
+      if (pendingKeys.has(duplicateKey)) {
+        throw new RequestError('Duplicate request', {
+          code: 'DUPLICATE_REQUEST',
+          kind: 'duplicate',
+        })
+      }
+
+      pendingKeys.add(duplicateKey)
     }
-
-    pendingKeys.add(duplicateKey)
 
     try {
       return await executeRequest<TResult>(0)
     }
     finally {
-      pendingKeys.delete(duplicateKey)
+      if (duplicateKey) {
+        pendingKeys.delete(duplicateKey)
+      }
     }
 
     async function executeRequest<TValue>(attempt: number): Promise<TValue> {

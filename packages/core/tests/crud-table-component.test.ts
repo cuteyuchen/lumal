@@ -1,8 +1,9 @@
 import type { CrudToolbarSlotProps } from '../src/exports/components'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-import { h, nextTick } from 'vue'
+import { computed, h, nextTick } from 'vue'
 import { deriveCrudFormSchemas, LumalCrudTable } from '../src/components/crud-table'
+import { useCrudDialog } from '../src/components/crud-table/useCrudDialog'
 import { LumalPagination } from '../src/components/pagination'
 import { LumalSchemaForm } from '../src/components/schema-form'
 import { LumalSchemaTable } from '../src/components/schema-table'
@@ -712,6 +713,7 @@ describe('lumal crud table', () => {
     wrapper.findAllComponents(LumalSchemaForm).at(-1)?.vm.$emit('submit', { name: '新名称' })
     await flushPromises()
     expect(dataSource.create).toHaveBeenCalledWith({ name: '新名称' })
+    await vi.waitFor(() => expect(wrapper.find('.el-dialog').exists()).toBe(false))
 
     api.openEdit(row)
     await nextTick()
@@ -727,6 +729,34 @@ describe('lumal crud table', () => {
     await wrapper.find('[data-action="batch-remove"]').trigger('click')
     await flushPromises()
     expect(dataSource.removeMany).toHaveBeenCalledWith([row])
+  })
+
+  it('表单校验期间重复提交只会校验并保存一次', async () => {
+    let resolveValidation!: (valid: boolean) => void
+    const validation = new Promise<boolean>((resolve) => {
+      resolveValidation = resolve
+    })
+    const create = vi.fn().mockResolvedValue({})
+    const afterSave = vi.fn().mockResolvedValue(undefined)
+    const dialog = useCrudDialog({
+      dataSource: computed(() => ({ create })),
+      afterSave,
+    })
+    const validate = vi.fn().mockReturnValue(validation)
+    dialog.open('create')
+
+    const firstSubmit = dialog.submit({ name: '新项目' }, validate)
+    const secondSubmit = dialog.submit({ name: '新项目' }, validate)
+
+    expect(validate).toHaveBeenCalledTimes(1)
+    expect(create).not.toHaveBeenCalled()
+    await expect(secondSubmit).resolves.toBe(false)
+
+    resolveValidation(true)
+    await expect(firstSubmit).resolves.toBe(true)
+    expect(create).toHaveBeenCalledTimes(1)
+    expect(create).toHaveBeenCalledWith({ name: '新项目' })
+    expect(afterSave).toHaveBeenCalledTimes(1)
   })
 
   it('删除确认优先使用 actions 配置并可阻止数据变更', async () => {

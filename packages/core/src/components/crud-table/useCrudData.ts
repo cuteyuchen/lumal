@@ -21,6 +21,7 @@ export function useCrudData(options: {
   const remoteTotal = shallowRef(0)
   const internalLoading = shallowRef(false)
   const error = shallowRef('')
+  let requestGeneration = 0
 
   const currentRows = computed(() => options.dataSource.value ? remoteRows.value : options.rows.value)
   const currentTotal = computed(() => options.dataSource.value ? remoteTotal.value : options.total.value)
@@ -38,8 +39,11 @@ export function useCrudData(options: {
   }
 
   async function load(): Promise<void> {
+    const generation = ++requestGeneration
     const source = options.dataSource.value
     if (!source) {
+      internalLoading.value = false
+      error.value = ''
       return
     }
     internalLoading.value = true
@@ -51,16 +55,22 @@ export function useCrudData(options: {
         query: { ...options.queryModel.value },
       })
       const result = parseResponse(response)
-      remoteRows.value = result.items
-      remoteTotal.value = result.total
+      if (generation === requestGeneration) {
+        remoteRows.value = result.items
+        remoteTotal.value = result.total
+      }
     }
     catch (reason) {
-      error.value = reason instanceof Error ? reason.message : String(reason)
-      remoteRows.value = []
-      remoteTotal.value = 0
+      if (generation === requestGeneration) {
+        error.value = reason instanceof Error ? reason.message : String(reason)
+        remoteRows.value = []
+        remoteTotal.value = 0
+      }
     }
     finally {
-      internalLoading.value = false
+      if (generation === requestGeneration) {
+        internalLoading.value = false
+      }
     }
   }
 

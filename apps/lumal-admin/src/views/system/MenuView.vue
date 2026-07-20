@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type {
   SchemaFormItem,
-  SchemaFormMode,
   SchemaFormModel,
   SchemaFormOption,
   SchemaTableColumn,
@@ -9,7 +8,7 @@ import type {
 } from '@lumal/core/components'
 import type { SaveSystemMenuInput, SystemMenuRecord } from '../../api/system'
 import { LumalPage, LumalSchemaForm, LumalSchemaTable } from '@lumal/core/components'
-import { ElAlert, ElButton, ElDialog, ElMessage, ElMessageBox } from 'element-plus'
+import { ElAlert, ElButton, ElDialog } from 'element-plus'
 import { computed, onMounted, shallowRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
 import {
@@ -18,16 +17,33 @@ import {
   fetchSystemMenus,
   updateSystemMenu,
 } from '../../api/system'
+import { useSchemaEntityCrud } from '../../composables/useSchemaEntityCrud'
 
 /***********************页面状态*********************/
 const menus = shallowRef<SystemMenuRecord[]>([])
 const loading = shallowRef(false)
-const dialogVisible = shallowRef(false)
-const formMode = shallowRef<SchemaFormMode>('create')
-const editingMenu = shallowRef<SystemMenuRecord>()
-const formModel = shallowRef<SchemaFormModel>({})
-const saving = shallowRef(false)
-const operationError = shallowRef('')
+const {
+  error: operationError,
+  mode: formMode,
+  model: formModel,
+  openCreate: openCreateDialog,
+  openEdit: openEditDialog,
+  remove: removeMenu,
+  saving,
+  submit: handleSubmit,
+  visible: dialogVisible,
+} = useSchemaEntityCrud<SystemMenuRecord, SaveSystemMenuInput>({
+  create: createSystemMenu,
+  update: (record, input) => updateSystemMenu(record.id, input),
+  remove: record => deleteSystemMenu(record.id),
+  reload: loadMenus,
+  toInput: toMenuInput,
+  confirmRemove: record => ({ message: `确定删除“${record.title}”及其子节点吗？` }),
+  saveSuccess: '菜单已保存，将在下次登录时加载',
+  saveError: '菜单保存失败',
+  removeSuccess: '菜单已删除，将在下次登录时生效',
+  removeError: '菜单删除失败',
+})
 
 const tableRows = computed(() => menus.value as unknown as SchemaTableRow[])
 const dialogTitle = computed(() => formMode.value === 'edit' ? '编辑菜单' : '新增菜单')
@@ -280,9 +296,7 @@ function toMenuInput(model: SchemaFormModel): SaveSystemMenuInput {
 
 /***********************弹窗操作*********************/
 function openCreate(parentId = ''): void {
-  formMode.value = 'create'
-  editingMenu.value = undefined
-  formModel.value = {
+  openCreateDialog({
     badgeTone: 'primary',
     badgeType: 'text',
     hidden: false,
@@ -290,69 +304,19 @@ function openCreate(parentId = ''): void {
     order: 0,
     parentId,
     type: parentId ? 'menu' : 'directory',
-  }
-  operationError.value = ''
-  dialogVisible.value = true
+  })
 }
 
 function openEdit(row: SchemaTableRow): void {
   const menu = toMenuRecord(row)
-  formMode.value = 'edit'
-  editingMenu.value = menu
-  formModel.value = {
+  openEditDialog(menu, {
     ...menu,
     permissions: menu.permissions.join(', '),
-  }
-  operationError.value = ''
-  dialogVisible.value = true
-}
-
-async function handleSubmit(model: SchemaFormModel): Promise<void> {
-  saving.value = true
-  operationError.value = ''
-
-  try {
-    if (formMode.value === 'edit' && editingMenu.value) {
-      await updateSystemMenu(editingMenu.value.id, toMenuInput(model))
-    }
-    else {
-      await createSystemMenu(toMenuInput(model))
-    }
-
-    dialogVisible.value = false
-    await loadMenus()
-    ElMessage.success('菜单已保存，将在下次登录时加载')
-  }
-  catch (error) {
-    operationError.value = error instanceof Error ? error.message : '菜单保存失败'
-  }
-  finally {
-    saving.value = false
-  }
+  })
 }
 
 async function removeMenuRow(row: SchemaTableRow): Promise<void> {
-  const menu = toMenuRecord(row)
-
-  try {
-    await ElMessageBox.confirm(`确定删除“${menu.title}”及其子节点吗？`, '删除确认', {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
-  }
-  catch {
-    return
-  }
-
-  try {
-    await deleteSystemMenu(menu.id)
-    await loadMenus()
-    ElMessage.success('菜单已删除，将在下次登录时生效')
-  }
-  catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : '菜单删除失败')
-  }
+  await removeMenu(toMenuRecord(row))
 }
 
 function canAddChild(type: unknown): boolean {

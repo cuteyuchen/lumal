@@ -414,6 +414,51 @@ describe('lumal schema form', () => {
     expect(wrapper.find('.lumal-schema-form__description').text()).toBe('可选择全部级别')
   })
 
+  it('无关字段变化不会重新执行其他字段的动态解析器', async () => {
+    const statusDisabled = vi.fn((context: { model: Record<string, unknown> }) => context.model.advanced !== true)
+    const wrapper = mount(LumalSchemaForm, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        modelValue: { advanced: false, name: '旧名称', status: 'normal' },
+        schemas: [
+          { component: 'switch', field: 'advanced', label: '高级模式' },
+          { field: 'name', label: '名称' },
+          { component: 'select', disabled: statusDisabled, field: 'status', label: '状态' },
+        ],
+      },
+    })
+    statusDisabled.mockClear()
+
+    await wrapper.find('input[name="name"]').setValue('新名称')
+    await nextTick()
+    expect(statusDisabled).not.toHaveBeenCalled()
+
+    await wrapper.find('input[name="advanced"]').setValue(true)
+    await nextTick()
+    expect(statusDisabled).toHaveBeenCalledTimes(1)
+  })
+
+  it('schemas 运行时增加字段时会补入新增字段默认值', async () => {
+    const wrapper = mount(LumalSchemaForm, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        modelValue: { name: '初始值' },
+        schemas: [{ field: 'name', label: '名称' }],
+      },
+    })
+
+    await wrapper.setProps({
+      schemas: [
+        { field: 'name', label: '名称' },
+        { component: 'input', defaultValue: 'enabled', field: 'status', label: '状态' },
+      ],
+    })
+    await nextTick()
+
+    expect(wrapper.find('input[name="status"]').element).toHaveProperty('value', 'enabled')
+    expect((wrapper.vm as unknown as { getValues: () => Record<string, unknown> }).getValues()).toMatchObject({ status: 'enabled' })
+  })
+
   it('支持重置按钮、回车提交和扩展控制器方法', async () => {
     const wrapper = mount(LumalSchemaForm, {
       global: { stubs: elementPlusStubs },

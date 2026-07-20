@@ -13,6 +13,15 @@ function serialize(value: unknown): string {
   }
 }
 
+function cloneModel(value: SchemaFormModel): SchemaFormModel {
+  try {
+    return structuredClone(value)
+  }
+  catch {
+    return JSON.parse(JSON.stringify(value)) as SchemaFormModel
+  }
+}
+
 export function useCrudDialog(options: {
   dataSource: ComputedRef<CrudDataSource | undefined>
   afterSave: () => Promise<void>
@@ -20,23 +29,26 @@ export function useCrudDialog(options: {
   const visible = shallowRef(false)
   const mode = shallowRef<CrudFormMode>('create')
   const model = shallowRef<SchemaFormModel>({})
-  const initialModel = shallowRef<SchemaFormModel>({})
+  const initialSerialized = shallowRef('{}')
   const editingRow = shallowRef<SchemaTableRow>()
   const saving = shallowRef(false)
   const error = shallowRef('')
-  const dirty = computed(() => mode.value !== 'view' && serialize(model.value) !== serialize(initialModel.value))
+  const dirty = computed(() => mode.value !== 'view' && serialize(model.value) !== initialSerialized.value)
 
   function open(nextMode: CrudFormMode, row?: SchemaTableRow): void {
-    const nextModel = row ? { ...row } : {}
+    const nextModel = row ? cloneModel(row) : {}
     mode.value = nextMode
     editingRow.value = row
     model.value = nextModel
-    initialModel.value = { ...nextModel }
+    initialSerialized.value = serialize(nextModel)
     error.value = ''
     visible.value = true
   }
 
-  async function submit(nextModel: SchemaFormModel): Promise<boolean> {
+  async function submit(nextModel: SchemaFormModel, validate?: () => Promise<boolean>): Promise<boolean> {
+    if (saving.value) {
+      return false
+    }
     const source = options.dataSource.value
     if (!source) {
       visible.value = false
@@ -45,14 +57,18 @@ export function useCrudDialog(options: {
     saving.value = true
     error.value = ''
     try {
+      if (validate && !await validate()) {
+        return false
+      }
       if (mode.value === 'edit' && editingRow.value) {
         await source.update?.(editingRow.value, nextModel)
       }
       else {
         await source.create?.(nextModel)
       }
-      initialModel.value = { ...nextModel }
+      initialSerialized.value = serialize(nextModel)
       visible.value = false
+      saving.value = false
       await options.afterSave()
       return true
     }

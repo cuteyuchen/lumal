@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { CockpitMessageBus } from '../messaging/types'
 import type { CockpitWidgetDefinition } from '../registry/types'
 import type { CockpitBaseContext } from '../types'
-import type { CockpitMessageBus } from '../messaging/types'
 import { LumalIcon } from '@lumal/icons-vue'
 import { computed, onBeforeUnmount, ref, shallowReactive, watchEffect } from 'vue'
 import { useCanvasScale } from '../composables/useCanvasScale'
@@ -20,9 +20,11 @@ const props = withDefaults(defineProps<{
   messageBus?: CockpitMessageBus
   baseWidth?: number
   baseHeight?: number
+  live?: boolean
 }>(), {
   baseWidth: 480,
   baseHeight: 270,
+  live: false,
 })
 
 const previewRef = ref<HTMLElement | null>(null)
@@ -47,6 +49,7 @@ const resolved = computed(() => resolveCockpitComponent(props.definition.compone
 const { result } = useCanvasScale(previewRef, {
   baseWidth: () => props.baseWidth,
   baseHeight: () => props.baseHeight,
+  enabled: () => props.live,
 })
 const stageStyle = computed(() => ({
   width: `${props.baseWidth}px`,
@@ -68,7 +71,7 @@ onBeforeUnmount(() => {
       :alt="`${definition.label}预览`"
       class="lumal-cockpit-designer__widget-preview-image"
     >
-    <div v-else class="lumal-cockpit-designer__widget-preview-stage" :style="stageStyle" inert aria-hidden="true">
+    <div v-else-if="live" class="lumal-cockpit-designer__widget-preview-stage" :style="stageStyle" inert aria-hidden="true">
       <CockpitErrorBoundary>
         <component :is="resolved" :context="context" />
         <template #error>
@@ -78,6 +81,9 @@ onBeforeUnmount(() => {
           </div>
         </template>
       </CockpitErrorBoundary>
+    </div>
+    <div v-else class="lumal-cockpit-designer__widget-preview-placeholder" aria-hidden="true">
+      <LumalIcon :name="definition.icon || 'lumal:grid'" :size="28" />
     </div>
   </div>
 </template>

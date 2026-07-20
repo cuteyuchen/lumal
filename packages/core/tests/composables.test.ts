@@ -45,8 +45,39 @@ describe('usePagination', () => {
     expect(pagination.page.value).toBe(2)
     expect(pagination.items.value).toEqual([{ id: 2 }])
 
+    await pagination.setPageSize(20)
+    expect(pagination.page.value).toBe(1)
+    expect(fetchFn).toHaveBeenLastCalledWith({ keyword: 'Lumal', page: 1, pageSize: 20 })
+
     await pagination.query()
     expect(pagination.page.value).toBe(1)
+  })
+
+  it('只采用最新请求结果，较晚返回的旧请求不会覆盖数据', async () => {
+    interface Result {
+      items: Array<{ id: number }>
+      total: number
+    }
+    const pending = new Map<number, (result: Result) => void>()
+    const fetchFn = vi.fn((params: Record<string, unknown>) => new Promise<Result>((resolve) => {
+      pending.set(params.page as number, resolve)
+    }))
+    const pagination = usePagination(fetchFn)
+
+    const firstRequest = pagination.fetchData()
+    const latestRequest = pagination.setPage(2)
+
+    pending.get(2)?.({ items: [{ id: 2 }], total: 20 })
+    await latestRequest
+    expect(pagination.items.value).toEqual([{ id: 2 }])
+    expect(pagination.total.value).toBe(20)
+    expect(pagination.loading.value).toBe(false)
+
+    pending.get(1)?.({ items: [{ id: 1 }], total: 10 })
+    await firstRequest
+    expect(pagination.items.value).toEqual([{ id: 2 }])
+    expect(pagination.total.value).toBe(20)
+    expect(pagination.loading.value).toBe(false)
   })
 })
 

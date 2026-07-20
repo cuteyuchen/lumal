@@ -1,13 +1,10 @@
 import type { IconDefinition } from '@lumal/icons'
 import { createLumalAdmin } from '@lumal/core'
 import { registerAuthorityDirectives } from '@lumal/core/directives'
-import ElementPlus from 'element-plus'
-import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import App from './App.vue'
 import { router } from './router'
 import { permissionStore } from './services/permission'
 import { mockDictionaryFetcher } from './views/examples/dictionary'
-import './echarts'
 import '@lumal/core/theme-chalk/index.scss'
 import '@lumal/core/style.css'
 import '@lumal/icons-vue/style.css'
@@ -111,12 +108,6 @@ const localIcons: IconDefinition[] = [
 /***********************应用启动*********************/
 void createLumalAdmin({
   components: false,
-  elementPlus: {
-    options: {
-      locale: zhCn,
-    },
-    plugin: ElementPlus,
-  },
   rootComponent: App,
   router,
   dictionary: {

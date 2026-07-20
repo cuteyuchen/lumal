@@ -1,5 +1,6 @@
 <script setup lang="ts" generic="T extends SchemaFormRecord = Record<string, unknown>">
 import type { FormInstance } from 'element-plus'
+import type { ComputedRef } from 'vue'
 import type { NormalizedSchemaFormItem, SchemaFormAuthority, SchemaFormContext, SchemaFormItem, SchemaFormMode, SchemaFormModel, SchemaFormRecord } from './types'
 import {
   ElButton,
@@ -21,7 +22,7 @@ import {
   ElTreeSelect,
   ElUpload,
 } from 'element-plus'
-import { computed, shallowRef, useTemplateRef, watch } from 'vue'
+import { computed, reactive, shallowRef, useTemplateRef, watch } from 'vue'
 import { useDictionaryMap } from '../../dictionary'
 import { normalizeSchemaFormItems, resolveSchemaFormInitialModel } from './normalize'
 
@@ -90,7 +91,6 @@ const model = defineModel<SchemaFormModel<T>>({
 /***********************模板引用*********************/
 const formRef = useTemplateRef<FormInstance>('formRef')
 const vLoading = ElLoading.directive
-const initialModel = shallowRef<SchemaFormModel<T>>({ ...model.value })
 
 /***********************模式状态*********************/
 const activeMode = shallowRef<SchemaFormMode>(props.mode)
@@ -103,18 +103,65 @@ watch(
 )
 
 /***********************字段状态*********************/
-const normalizedSchemas = computed(() => normalizeSchemaFormItems(props.schemas, {
+const initialModel = shallowRef<SchemaFormModel<T>>({ ...model.value })
+const initialSchemas = normalizeSchemaFormItems(props.schemas, {
   canAccess: props.canAccess,
   mode: activeMode.value,
   model: model.value,
   setFieldValue,
-}))
+})
+const formModel = reactive(
+  resolveSchemaFormInitialModel(initialSchemas, model.value),
+) as SchemaFormModel<T>
+const normalizedModel = computed<SchemaFormModel<T>>(() => formModel)
+const normalizedSchemaRefs = shallowRef<Array<ComputedRef<NormalizedSchemaFormItem<T> | undefined>>>([])
+
+function rebuildNormalizedSchemaRefs(): void {
+  normalizedSchemaRefs.value = props.schemas.map(schema => computed(() =>
+    normalizeSchemaFormItems([schema], {
+      canAccess: props.canAccess,
+      mode: activeMode.value,
+      model: formModel,
+      setFieldValue,
+    })[0],
+  ))
+
+  // schemas 可在运行时增加字段；保持粒度优化的同时补入新增字段默认值。
+  const defaults = normalizeSchemaFormItems(props.schemas, {
+    canAccess: props.canAccess,
+    mode: activeMode.value,
+    model: formModel,
+    setFieldValue,
+  })
+  const nextModel = resolveSchemaFormInitialModel(defaults, formModel)
+  Object.keys(nextModel).forEach((field) => {
+    if (!Object.hasOwn(formModel, field)) {
+      ;(formModel as Record<string, unknown>)[field] = (nextModel as Record<string, unknown>)[field]
+    }
+  })
+}
+
+watch(() => props.schemas, rebuildNormalizedSchemaRefs, { deep: true, immediate: true })
+
+const normalizedSchemas = computed(() => normalizedSchemaRefs.value
+  .map(schema => schema.value)
+  .filter((schema): schema is NormalizedSchemaFormItem<T> => Boolean(schema)))
 
 const renderableSchemas = computed(() => normalizedSchemas.value.filter(schema => schema.renderable))
 
-const normalizedModel = computed<SchemaFormModel<T>>(() =>
-  resolveSchemaFormInitialModel(normalizedSchemas.value, model.value),
-)
+function replaceFormModel(nextModel: SchemaFormModel<T>): void {
+  const current = formModel as Record<string, unknown>
+  const next = nextModel as Record<string, unknown>
+
+  Object.keys(current).forEach((field) => {
+    if (!Object.hasOwn(next, field)) {
+      delete current[field]
+    }
+  })
+  Object.assign(current, next)
+}
+
+watch(() => model.value, replaceFormModel, { deep: true })
 
 const { dictionaryMap } = useDictionaryMap(() =>
   normalizedSchemas.value.map(schema => schema.dictionary ?? schema.dictType),
@@ -293,9 +340,9 @@ function createFieldContext(field: string, value: unknown): SchemaFormContext<T>
 }
 
 function setFieldValue(field: Extract<keyof T, string>, value: unknown): void {
+  (formModel as Record<string, unknown>)[field] = value
   const nextModel = {
-    ...normalizedModel.value,
-    [field]: value,
+    ...formModel,
   } as SchemaFormModel<T>
   model.value = nextModel
   normalizedSchemas.value.find(schema => schema.field === field)?.onChange?.(
@@ -347,10 +394,12 @@ function resolveSuffixSlotName(schema: NormalizedSchemaFormItem<T>): string {
 }
 
 function setValues(value: SchemaFormModel): void {
-  model.value = {
-    ...normalizedModel.value,
+  const nextModel = {
+    ...formModel,
     ...value,
   } as SchemaFormModel<T>
+  replaceFormModel(nextModel)
+  model.value = nextModel
 }
 
 function setMode(mode: SchemaFormMode): void {
@@ -375,7 +424,9 @@ async function validate(): Promise<boolean> {
 
 function resetFields(): void {
   formRef.value?.resetFields?.()
-  model.value = resolveSchemaFormInitialModel(normalizedSchemas.value, initialModel.value)
+  const nextModel = resolveSchemaFormInitialModel(normalizedSchemas.value, initialModel.value)
+  replaceFormModel(nextModel)
+  model.value = nextModel
 }
 
 function clearValidate(field?: string | string[]): void {
@@ -778,4 +829,3 @@ defineExpose({
   }
 }
 </style>
-

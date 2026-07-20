@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { SchemaFormItem, SchemaFormMode, SchemaFormModel, SchemaTableColumn, SchemaTableRow } from '@lumal/core/components'
+import type { SchemaFormItem, SchemaFormModel, SchemaTableColumn, SchemaTableRow } from '@lumal/core/components'
 import type { SaveSystemDictionaryTypeInput, SystemDictionaryTypeRecord } from '../../api/system'
 import { LumalPage, LumalSchemaForm, LumalSchemaTable } from '@lumal/core/components'
-import { ElButton, ElDialog, ElMessage, ElMessageBox } from 'element-plus'
+import { ElAlert, ElButton, ElDialog } from 'element-plus'
 import { computed, onMounted, shallowRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
 import {
@@ -11,14 +11,41 @@ import {
   fetchDictionaryTypes,
   updateDictionaryType,
 } from '../../api/system'
+import { useSchemaEntityCrud } from '../../composables/useSchemaEntityCrud'
 import { refreshAdminDictionaryCache } from '../../services/dictionary'
 
 const records = shallowRef<SystemDictionaryTypeRecord[]>([])
 const loading = shallowRef(false)
-const dialogVisible = shallowRef(false)
-const formMode = shallowRef<SchemaFormMode>('create')
-const editingRecord = shallowRef<SystemDictionaryTypeRecord>()
-const formModel = shallowRef<SchemaFormModel>({})
+const {
+  error: operationError,
+  mode: formMode,
+  model: formModel,
+  openCreate: openCreateDialog,
+  openEdit: openEditDialog,
+  remove: removeRecord,
+  saving,
+  submit: save,
+  visible: dialogVisible,
+} = useSchemaEntityCrud<SystemDictionaryTypeRecord, SaveSystemDictionaryTypeInput>({
+  create: createDictionaryType,
+  update: (record, input) => updateDictionaryType(record.id, input),
+  remove: record => deleteDictionaryType(record.id),
+  reload: loadData,
+  toInput,
+  confirmRemove: record => ({
+    message: `删除分类“${record.name}”会同时删除其字典项，是否继续？`,
+    title: '删除字典分类',
+  }),
+  saveSuccess: '字典分类已保存',
+  saveError: '字典分类保存失败',
+  removeSuccess: '字典分类已删除',
+  removeError: '字典分类删除失败',
+  afterSave: async ({ mode, record }) => {
+    if (mode === 'edit' && record)
+      await refreshAdminDictionaryCache(record.code, { reload: false })
+  },
+  afterRemove: ({ record }) => refreshAdminDictionaryCache(record.code, { reload: false }),
+})
 const rows = computed(() => records.value as unknown as SchemaTableRow[])
 
 const columns: SchemaTableColumn[] = [
@@ -49,56 +76,26 @@ function toRecord(row: SchemaTableRow): SystemDictionaryTypeRecord {
   return row as unknown as SystemDictionaryTypeRecord
 }
 
-function openCreate(): void {
-  formMode.value = 'create'
-  editingRecord.value = undefined
-  formModel.value = { status: 'enabled' }
-  dialogVisible.value = true
-}
-
-function openEdit(row: SchemaTableRow): void {
-  const record = toRecord(row)
-  formMode.value = 'edit'
-  editingRecord.value = record
-  formModel.value = { ...record }
-  dialogVisible.value = true
-}
-
-async function save(model: SchemaFormModel): Promise<void> {
-  const input: SaveSystemDictionaryTypeInput = {
+function toInput(model: SchemaFormModel): SaveSystemDictionaryTypeInput {
+  return {
     code: model.code,
     description: model.description,
     name: model.name,
     status: model.status,
   }
-  if (formMode.value === 'edit' && editingRecord.value) {
-    await updateDictionaryType(editingRecord.value.id, input)
-    await refreshAdminDictionaryCache(editingRecord.value.code, { reload: false })
-  }
-  else {
-    await createDictionaryType(input)
-  }
-  dialogVisible.value = false
-  await loadData()
-  ElMessage.success('字典分类已保存')
+}
+
+function openCreate(): void {
+  openCreateDialog({ status: 'enabled' })
+}
+
+function openEdit(row: SchemaTableRow): void {
+  const record = toRecord(row)
+  openEditDialog(record)
 }
 
 async function remove(row: SchemaTableRow): Promise<void> {
-  const record = toRecord(row)
-  try {
-    await ElMessageBox.confirm(`删除分类“${record.name}”会同时删除其字典项，是否继续？`, '删除字典分类', {
-      cancelButtonText: '取消',
-      confirmButtonText: '删除',
-      type: 'warning',
-    })
-  }
-  catch {
-    return
-  }
-  await deleteDictionaryType(record.id)
-  await refreshAdminDictionaryCache(record.code, { reload: false })
-  await loadData()
-  ElMessage.success('字典分类已删除')
+  await removeRecord(toRecord(row))
 }
 
 onMounted(() => void loadData())
@@ -125,7 +122,8 @@ onMounted(() => void loadData())
     </LumalPage>
 
     <ElDialog v-model="dialogVisible" append-to-body class="lumal-admin-dialog" :title="formMode === 'edit' ? '编辑字典分类' : '新增字典分类'" width="720px">
-      <LumalSchemaForm v-model="formModel" :mode="formMode" :schemas="schemas" :columns="2" show-actions submit-text="保存分类" @submit="save" />
+      <ElAlert v-if="operationError" :title="operationError" type="error" show-icon :closable="false" />
+      <LumalSchemaForm v-model="formModel" :mode="formMode" :schemas="schemas" :columns="2" :submit-loading="saving" show-actions submit-text="保存分类" @submit="save" />
     </ElDialog>
   </main>
 </template>

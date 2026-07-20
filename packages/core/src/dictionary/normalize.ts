@@ -105,6 +105,7 @@ export function normalizeDictionaryOptions(
 function resolveLabelFromOptions(
   options: readonly DictionaryOption[],
   value: DictionaryLabelValue,
+  optionIndex: ReadonlyMap<string, DictionaryOption> = createDictionaryOptionIndex(options),
 ): string {
   if (value === undefined || value === null) {
     return '-'
@@ -117,14 +118,29 @@ function resolveLabelFromOptions(
   }
 
   return values.map((currentValue) => {
-    const found = options.find(item => String(item.value) === String(currentValue))
+    const found = optionIndex.get(String(currentValue))
     return found?.label ?? String(currentValue)
   }).join(', ')
+}
+
+/** 为表格等高频回显场景建立一次字典值索引。重复值保持原有的首项优先语义。 */
+export function createDictionaryOptionIndex(
+  options: readonly DictionaryOption[],
+): Map<string, DictionaryOption> {
+  const index = new Map<string, DictionaryOption>()
+  options.forEach((option) => {
+    const key = String(option.value)
+    if (!index.has(key)) {
+      index.set(key, option)
+    }
+  })
+  return index
 }
 
 export function getDictionaryLabel(
   options: readonly DictionaryOption[],
   value: DictionaryLabelValue,
+  optionIndex?: ReadonlyMap<string, DictionaryOption>,
 ): string {
-  return resolveLabelFromOptions(options, value)
+  return resolveLabelFromOptions(options, value, optionIndex)
 }

@@ -7,6 +7,8 @@ import {
   LumalLayout,
   LumalRouterView,
 } from '@lumal/core/layout'
+import { ElConfigProvider } from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import { computed, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeaderActions from './components/app/AppHeaderActions.vue'
@@ -169,65 +171,67 @@ async function handleTabRefresh(path: string): Promise<void> {
 </script>
 
 <template>
-  <LumalRouterView
-    v-if="isPublicLayout"
-    :view-key="routeViewKey"
-    :progress="preferences.transition.progress"
-    :loading="preferences.transition.loading"
-    :cache="false"
-    :cache-max="preferences.tabbar.maxCount"
-    :transition="preferences.transition.enable"
-    :transition-name="preferences.transition.name"
-  />
-
-  <LumalLayout
-    v-else
-    v-model:active-tab-path="activePath"
-    :title="title"
-    :menus="allMenus"
-    :preferences="preferences"
-    route-driven
-    :fixed-tabs="fixedTabs"
-    :route-tab-resolver="resolveAdminRouteTab"
-    tab-fallback-path="/dashboard"
-    :tab-storage-key="adminTabSnapshotStorageKey"
-    :active-menu-path="activePath"
-    @menu-select="handleMenuSelect"
-    @toggle-sidebar="handleToggleSidebar"
-    @tab-change="handleTabChange"
-    @tab-refresh="handleTabRefresh"
-  >
-    <template #logo>
-      <LumalBrand compact />
-    </template>
-
-    <template #headerActions>
-      <AppHeaderActions
-        :cockpit-url="cockpitUrl"
-        :resolved-theme-mode="resolvedThemeMode"
-        :user-name="userName"
-        @logout="handleLogout"
-        @open-profile="handleOpenProfile"
-        @open-settings="handleOpenSettings"
-        @toggle-theme="handleToggleTheme"
-      />
-    </template>
-
+  <ElConfigProvider :locale="zhCn">
     <LumalRouterView
+      v-if="isPublicLayout"
       :view-key="routeViewKey"
       :progress="preferences.transition.progress"
       :loading="preferences.transition.loading"
-      :cache="routeViewCache"
+      :cache="false"
       :cache-max="preferences.tabbar.maxCount"
       :transition="preferences.transition.enable"
       :transition-name="preferences.transition.name"
     />
 
-    <AppSettingsDrawer
-      v-model:visible="settingsVisible"
-      :defaults="adminPreferenceDefaults"
+    <LumalLayout
+      v-else
+      v-model:active-tab-path="activePath"
+      :title="title"
+      :menus="allMenus"
       :preferences="preferences"
-      @update:preferences="handlePreferencesChange"
-    />
-  </LumalLayout>
+      route-driven
+      :fixed-tabs="fixedTabs"
+      :route-tab-resolver="resolveAdminRouteTab"
+      tab-fallback-path="/dashboard"
+      :tab-storage-key="adminTabSnapshotStorageKey"
+      :active-menu-path="activePath"
+      @menu-select="handleMenuSelect"
+      @toggle-sidebar="handleToggleSidebar"
+      @tab-change="handleTabChange"
+      @tab-refresh="handleTabRefresh"
+    >
+      <template #logo>
+        <LumalBrand compact />
+      </template>
+
+      <template #headerActions>
+        <AppHeaderActions
+          :cockpit-url="cockpitUrl"
+          :resolved-theme-mode="resolvedThemeMode"
+          :user-name="userName"
+          @logout="handleLogout"
+          @open-profile="handleOpenProfile"
+          @open-settings="handleOpenSettings"
+          @toggle-theme="handleToggleTheme"
+        />
+      </template>
+
+      <LumalRouterView
+        :view-key="routeViewKey"
+        :progress="preferences.transition.progress"
+        :loading="preferences.transition.loading"
+        :cache="routeViewCache"
+        :cache-max="preferences.tabbar.maxCount"
+        :transition="preferences.transition.enable"
+        :transition-name="preferences.transition.name"
+      />
+
+      <AppSettingsDrawer
+        v-model:visible="settingsVisible"
+        :defaults="adminPreferenceDefaults"
+        :preferences="preferences"
+        @update:preferences="handlePreferencesChange"
+      />
+    </LumalLayout>
+  </ElConfigProvider>
 </template>

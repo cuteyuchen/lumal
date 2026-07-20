@@ -5,6 +5,8 @@ import { LumalInfoTable, LumalPage } from '@lumal/core/components'
 import { ElButton, ElRadioButton, ElRadioGroup, ElSlider } from 'element-plus'
 import { computed, shallowRef } from 'vue'
 import { chartRows } from './example-data'
+// ECharts 按需注册（副作用），随图表 chunk 一起加载，避免进入首包
+import '../../echarts'
 
 const chartType = shallowRef<'bar' | 'line'>('bar')
 const scale = shallowRef(100)

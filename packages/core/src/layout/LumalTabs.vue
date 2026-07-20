@@ -92,12 +92,36 @@ let returnFocusTo: HTMLElement | null = null
 const openMenu = computed(() => (contextMenu.value.visible ? contextMenu.value : moreMenu.value))
 const menuActivePath = computed(() => openMenu.value.path)
 
-const isDesktop = computed(() => {
+const isDesktop = shallowRef(true)
+let desktopMediaQuery: MediaQueryList | undefined
+
+function syncDesktopViewport(): void {
+  isDesktop.value = desktopMediaQuery ? !desktopMediaQuery.matches : true
+}
+
+function setupDesktopViewport(): void {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    return true
+    return
   }
-  return !window.matchMedia('(max-width: 768px)').matches
-})
+  desktopMediaQuery = window.matchMedia('(max-width: 768px)')
+  syncDesktopViewport()
+  if (typeof desktopMediaQuery.addEventListener === 'function') {
+    desktopMediaQuery.addEventListener('change', syncDesktopViewport)
+  }
+  else {
+    desktopMediaQuery.addListener?.(syncDesktopViewport)
+  }
+}
+
+function teardownDesktopViewport(): void {
+  if (typeof desktopMediaQuery?.removeEventListener === 'function') {
+    desktopMediaQuery.removeEventListener('change', syncDesktopViewport)
+  }
+  else {
+    desktopMediaQuery?.removeListener?.(syncDesktopViewport)
+  }
+  desktopMediaQuery = undefined
+}
 
 const draggableEnabled = computed(() => props.draggable && isDesktop.value)
 
@@ -540,6 +564,7 @@ function handleDocumentKeydown(event: KeyboardEvent): void {
 }
 
 onMounted(() => {
+  setupDesktopViewport()
   document.addEventListener('click', handleDocumentClick)
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   document.addEventListener('keydown', handleDocumentKeydown)
@@ -556,6 +581,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  teardownDesktopViewport()
   document.removeEventListener('click', handleDocumentClick)
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
   document.removeEventListener('keydown', handleDocumentKeydown)

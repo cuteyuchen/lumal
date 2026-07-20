@@ -24,7 +24,7 @@ import {
   useTemplateRef,
   watch,
 } from 'vue'
-import { useDictionaryMap } from '../../dictionary'
+import { createDictionaryOptionIndex, useDictionaryMap } from '../../dictionary'
 import { LumalPagination } from '../pagination'
 import { resolveSchemaTableCellDisplay } from './cell'
 import LumalSchemaTableCell from './LumalSchemaTableCell.vue'
@@ -119,7 +119,6 @@ let draggedColumnField = ''
 
 const normalizedColumns = computed(() => normalizeSchemaTableColumns<T>(props.columns, {
   canAccess: props.canAccess,
-  rows: props.rows,
 }))
 const orderedColumns = computed(() => {
   const order = columnOrder.value
@@ -146,13 +145,22 @@ const { dictionaryMap } = useDictionaryMap(() =>
   normalizedColumns.value.map(column => column.dictionary ?? column.dictType),
 )
 
+const columnOptionIndexes = computed(() => new Map(
+  normalizedColumns.value.map((column) => {
+    const options = resolveColumnOptions(column)
+    return [String(column.field), createDictionaryOptionIndex(options)] as const
+  }),
+))
+
+const rowIndexMap = computed(() => new Map(props.rows.map((row, index) => [row, index])))
 const elementRowKey = computed(() => {
   if (typeof props.rowKey !== 'function') {
     return props.rowKey
   }
 
   const rowKey = props.rowKey
-  return (row: T): string => String(rowKey(row, props.rows.indexOf(row)))
+  const indexes = rowIndexMap.value
+  return (row: T): string => String(rowKey(row, indexes.get(row) ?? -1))
 })
 const showPagination = computed(() => props.pagination && props.total > 0)
 const showColumnSettingsPanel = computed(() => props.showColumnSettings || props.columnSettings?.enabled)
@@ -293,12 +301,21 @@ function resolveCellDisplay(row: T, column: NormalizedSchemaTableColumn<T>, inde
     column as NormalizedSchemaTableColumn,
     index,
     resolveColumnOptions(column),
+    columnOptionIndexes.value.get(String(column.field)),
   )
 }
 
 function createColumnFormatter(column: NormalizedSchemaTableColumn<T>) {
   return (row: T, _column: unknown, _cellValue: unknown, index: number): string =>
     isCellHidden(row, column, index) ? '' : resolveCellDisplay(row, column, index).text
+}
+
+const columnFormatters = computed(() => new Map(
+  normalizedColumns.value.map(column => [String(column.field), createColumnFormatter(column)]),
+))
+
+function resolveColumnFormatter(column: NormalizedSchemaTableColumn<T>) {
+  return columnFormatters.value.get(String(column.field))
 }
 
 function resolveColumnMinWidth(column: NormalizedSchemaTableColumn<T>): number | string | undefined {
@@ -359,7 +376,7 @@ function closeMobileActions(): void {
 function handleSelectionChange(rows: T[]): void {
   selectedRows.value = rows
   selectedRowKeys.value = rows
-    .map(row => resolveRowKey(row, props.rows.indexOf(row)))
+    .map(row => resolveRowKey(row, rowIndexMap.value.get(row) ?? -1))
     .filter((key): key is string | number => key !== undefined)
   emit('selectionChange', rows, selectedRowKeys.value)
 }
@@ -430,7 +447,10 @@ watch(() => props.autoResize, () => {
   teardownResizeObserver()
   setupResizeObserver()
 })
-watch(() => [props.columns, props.columnSettings?.storageKey], restoreColumnSettings, { deep: true })
+watch(
+  () => [props.columns.map(column => String(column.field)).join('\u0000'), props.columnSettings?.storageKey],
+  restoreColumnSettings,
+)
 watch(openMobileActionKey, (key) => {
   if (typeof document === 'undefined') {
     return
@@ -458,12 +478,15 @@ defineExpose({
   getSelectedRowKeys: () => [...selectedRowKeys.value],
   getSelectedRows: () => [...selectedRows.value],
   getColumnOrder: () => [...columnOrder.value],
-  getExportData: (sourceRows: T[] = props.rows) => ({
-    columns: renderableColumns.value.map(column => ({ field: String(column.field), label: column.label })),
-    rows: sourceRows.map(row => renderableColumns.value.map(column =>
-      resolveCellDisplay(row, column, props.rows.indexOf(row)).text,
-    )),
-  }),
+  getExportData: (sourceRows: T[] = props.rows) => {
+    const indexes = new Map(sourceRows.map((row, index) => [row, index]))
+    return {
+      columns: renderableColumns.value.map(column => ({ field: String(column.field), label: column.label })),
+      rows: sourceRows.map(row => renderableColumns.value.map(column =>
+        resolveCellDisplay(row, column, indexes.get(row) ?? -1).text,
+      )),
+    }
+  },
   getVisibleColumns: () => [...renderableColumns.value],
   resetColumnSettings,
   getTableElement: () => tableRef.value?.$el as HTMLElement | undefined,
@@ -569,7 +592,7 @@ defineExpose({
           :fixed="column.fixed"
           :resizable="columnResizable"
           :show-overflow-tooltip="column.showOverflowTooltip ?? true"
-          :formatter="createColumnFormatter(column)"
+          :formatter="resolveColumnFormatter(column)"
           :data-field="String(column.field)"
         >
           <template #default="{ row, $index }">

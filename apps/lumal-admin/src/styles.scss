@@ -184,12 +184,12 @@ button {
     min-height: auto;
   }
 
-  .lumal-admin-example.is-fill :deep(.lumal-page) {
+  .lumal-admin-example.is-fill .lumal-page {
     height: auto;
     min-height: auto;
   }
 
-  .lumal-admin-example.is-fill :deep(.lumal-page__body) {
+  .lumal-admin-example.is-fill .lumal-page__body {
     overflow: visible;
   }
 }

@@ -433,11 +433,10 @@ function openView(row: SchemaTableRow): void {
 }
 
 async function handleFormSubmit(model: SchemaFormModel): Promise<void> {
-  const valid = await dialogFormRef.value?.validate()
-  if (valid === false) {
-    return
-  }
-  const saved = await dialogState.submit(model)
+  const saved = await dialogState.submit(model, async () => {
+    const valid = await dialogFormRef.value?.validate()
+    return valid !== false
+  })
   if (!saved && dialogState.error.value) {
     emit('operationError', new Error(dialogState.error.value))
   }

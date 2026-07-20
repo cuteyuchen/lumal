@@ -273,4 +273,66 @@ describe('DataV chart fidelity', () => {
     await flushFrames()
     expect(wrapper.get('path').attributes('fill')).toBe('#ff0000')
   })
+
+  it('conical 对全零、非法数值和非正 max 生成有限路径', async () => {
+    const wrapper = mount(LumalConicalColumnChart, {
+      props: {
+        fontSize: Number.NaN,
+        imageSideLength: Number.POSITIVE_INFINITY,
+        items: [
+          { key: 'zero', label: '零值', value: 0 },
+          { key: 'negative', label: '负值', value: -10 },
+          { key: 'invalid', label: '非法值', value: Number.NaN },
+        ],
+        max: 0,
+        showValue: true,
+      },
+    })
+    await flushFrames()
+
+    const paths = wrapper.findAll('path')
+    expect(paths).toHaveLength(3)
+    paths.forEach((path) => {
+      expect(path.attributes('d')).not.toMatch(/NaN|Infinity/)
+    })
+    expect(wrapper.findAll('g').map(group => group.findAll('text')[1]!.text())).toEqual(['0', '0', '0'])
+
+    boxHeight = 10
+    ResizeObserverMock.instances.at(-1)!.emit()
+    await flushFrames()
+    wrapper.findAll('path').forEach((path) => {
+      expect(path.attributes('d')).not.toMatch(/NaN|Infinity|,-/)
+    })
+  })
+
+  it('conical 不让小于数据最大值的 max 把锥柱绘制到容器外', async () => {
+    const wrapper = mount(LumalConicalColumnChart, {
+      props: {
+        items: [
+          { key: 'a', label: '甲', value: 100 },
+          { key: 'b', label: '乙', value: 50 },
+        ],
+        max: 10,
+      },
+    })
+    await flushFrames()
+
+    expect(wrapper.get('path').attributes('d')).not.toMatch(/,-/)
+  })
+
+  it('conical 的 DataV config 支持重复名称', async () => {
+    const wrapper = mount(LumalConicalColumnChart, {
+      props: {
+        config: {
+          data: [
+            { name: '同名', value: 20 },
+            { name: '同名', value: 10 },
+          ],
+        },
+      },
+    })
+    await flushFrames()
+
+    expect(wrapper.findAll('g')).toHaveLength(2)
+  })
 })

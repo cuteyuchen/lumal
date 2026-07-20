@@ -31,15 +31,50 @@ const region = computed(() => {
   const layout = props.draft.activeLayout.value
   if (!layout)
     return undefined
-  return props.side === 'left' ? layout.left : layout.right
+  const resolved = props.side === 'left' ? layout.left : layout.right
+  return resolved ? { ...resolved } : undefined
+})
+
+const cellLocationMap = computed(() => {
+  const map = new Map<string, { location: DraftWidgetLocation, serialized: string }>()
+  region.value?.rows.forEach((row) => {
+    row.cells.forEach((cell) => {
+      const location = { kind: 'cell', side: props.side, rowId: row.id, cellId: cell.id } as const
+      map.set(cell.id, { location, serialized: JSON.stringify(location) })
+    })
+  })
+  return map
+})
+
+const tabLocationMap = computed(() => {
+  const map = new Map<string, { location: DraftWidgetLocation, serialized: string }>()
+  region.value?.rows.forEach((row) => {
+    const rowLocation = { kind: 'tabs', side: props.side, rowId: row.id } as const
+    map.set(`row:${row.id}`, { location: rowLocation, serialized: JSON.stringify(rowLocation) })
+    row.widgets.forEach((widget) => {
+      const location = { ...rowLocation, widgetId: widget.id } as const
+      map.set(`widget:${widget.id}`, { location, serialized: JSON.stringify(location) })
+    })
+  })
+  return map
 })
 
 function locationForCell(row: CockpitGridRowConfig, cellId: string): DraftWidgetLocation {
-  return { kind: 'cell', side: props.side, rowId: row.id, cellId }
+  return cellLocationMap.value.get(cellId)?.location ?? { kind: 'cell', side: props.side, rowId: row.id, cellId }
 }
 
 function locationForTabs(row: CockpitGridRowConfig, widgetId?: string): DraftWidgetLocation {
-  return { kind: 'tabs', side: props.side, rowId: row.id, widgetId }
+  const key = widgetId ? `widget:${widgetId}` : `row:${row.id}`
+  return tabLocationMap.value.get(key)?.location ?? { kind: 'tabs', side: props.side, rowId: row.id, widgetId }
+}
+
+function serializedLocationForCell(row: CockpitGridRowConfig, cellId: string): string {
+  return cellLocationMap.value.get(cellId)?.serialized ?? JSON.stringify(locationForCell(row, cellId))
+}
+
+function serializedLocationForTabs(row: CockpitGridRowConfig, widgetId?: string): string {
+  const key = widgetId ? `widget:${widgetId}` : `row:${row.id}`
+  return tabLocationMap.value.get(key)?.serialized ?? JSON.stringify(locationForTabs(row, widgetId))
 }
 
 function definitionFor(type: string): CockpitWidgetDefinition | undefined {
@@ -48,7 +83,7 @@ function definitionFor(type: string): CockpitWidgetDefinition | undefined {
 
 function columnTemplate(): string {
   const count = region.value?.columns.length ?? 1
-  return Array.from({ length: Math.max(1, count) }, () => 'minmax(0, 1fr)').join(' ')
+  return Array.from({ length: Math.max(1, count) }).fill('minmax(0, 1fr)').join(' ')
 }
 
 function activeWidgetFor(row: CockpitGridRowConfig): CockpitWidgetInstance | undefined {
@@ -85,8 +120,9 @@ function setTabs(row: CockpitGridRowConfig, enabled: boolean): void {
   }
   if (props.placementSelection?.kind === 'placed'
     && props.placementSelection.location.side === props.side
-    && props.placementSelection.location.rowId === row.id)
+    && props.placementSelection.location.rowId === row.id) {
     emit('clearPlacement')
+  }
 }
 
 function selectPlaced(location: DraftWidgetLocation, widget: CockpitWidgetInstance): void {
@@ -142,14 +178,17 @@ function handleDrop(target: DraftWidgetLocation, payload: { source?: DraftWidget
       ElMessage.warning('目标槽位已有模块，请确认替换后再操作。')
     return
   }
-  if (!payload.source)
+  if (!payload.source) {
     return
+  }
   const result = props.draft.moveWidget(payload.source, target, payload.replace)
-  if (!result.moved && !result.requiresReplace)
+  if (!result.moved && !result.requiresReplace) {
     ElMessage.error('模块移动失败。')
+  }
   else if (result.moved && props.placementSelection?.kind === 'placed'
-    && sameLocation(props.placementSelection.location, payload.source))
+    && sameLocation(props.placementSelection.location, payload.source)) {
     emit('clearPlacement')
+  }
 }
 
 async function handleTabKeydown(row: CockpitGridRowConfig, index: number, event: KeyboardEvent): Promise<void> {
@@ -258,7 +297,7 @@ async function handleTabKeydown(row: CockpitGridRowConfig, index: number, event:
               v-if="cell.widget"
               class="lumal-cockpit-designer__placed-widget lumal-cockpit-designer__drag-item"
               :class="{ 'is-keyboard-selected': isSelectedLocation(locationForCell(row, cell.id)) }"
-              :data-cockpit-drag-source="JSON.stringify(locationForCell(row, cell.id))"
+              :data-cockpit-drag-source="serializedLocationForCell(row, cell.id)"
               data-role="placed-widget"
             >
               <!-- 与 Tab 多模块一致：名称与操作区固定在顶部 -->
@@ -309,6 +348,7 @@ async function handleTabKeydown(row: CockpitGridRowConfig, index: number, event:
                   :instance-id="cell.widget.id"
                   :layout-id="draft.activeLayout.value?.id ?? ''"
                   :message-bus="previewMessageBus"
+                  live
                 />
                 <div v-else class="lumal-cockpit-designer__widget-preview-fallback">
                   未注册模块
@@ -344,13 +384,13 @@ async function handleTabKeydown(row: CockpitGridRowConfig, index: number, event:
                 :key="widget.id"
                 class="lumal-cockpit-designer__tab-item lumal-cockpit-designer__drag-item"
                 :class="{ 'is-active': row.activeWidgetId === widget.id, 'is-keyboard-selected': isSelectedLocation(locationForTabs(row, widget.id)) }"
-                :data-cockpit-drag-source="JSON.stringify(locationForTabs(row, widget.id))"
+                :data-cockpit-drag-source="serializedLocationForTabs(row, widget.id)"
               >
                 <ElButton
+                  :id="`designer-tab-${widget.id}`"
                   text
                   class="lumal-cockpit-designer__tab-widget-title"
                   role="tab"
-                  :id="`designer-tab-${widget.id}`"
                   :aria-controls="`designer-tabpanel-${row.id}`"
                   :aria-selected="row.activeWidgetId === widget.id"
                   :tabindex="row.activeWidgetId === widget.id ? 0 : -1"
@@ -396,9 +436,9 @@ async function handleTabKeydown(row: CockpitGridRowConfig, index: number, event:
               </ElTooltip>
             </header>
             <div
+              :id="`designer-tabpanel-${row.id}`"
               class="lumal-cockpit-designer__tab-preview"
               role="tabpanel"
-              :id="`designer-tabpanel-${row.id}`"
               :aria-labelledby="activeWidgetFor(row) ? `designer-tab-${activeWidgetFor(row)!.id}` : undefined"
             >
               <template v-if="activeWidgetFor(row)">
@@ -410,6 +450,7 @@ async function handleTabKeydown(row: CockpitGridRowConfig, index: number, event:
                   :instance-id="activeWidgetFor(row)!.id"
                   :layout-id="draft.activeLayout.value?.id ?? ''"
                   :message-bus="previewMessageBus"
+                  live
                 />
                 <div v-else class="lumal-cockpit-designer__widget-preview-fallback">
                   未注册模块

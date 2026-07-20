@@ -90,6 +90,8 @@ const roleAssignmentError = shallowRef('')
 const isMobileViewport = shallowRef(typeof window !== 'undefined' && window.innerWidth <= 768)
 const mobileOrganizationExpanded = shallowRef(false)
 let roleAssignmentClearSelection: ClearSelection | undefined
+let mobileMediaQuery: MediaQueryList | undefined
+let usingWindowResizeFallback = false
 
 const organizationTree = computed<OrganizationTreeNode[]>(() => [{
   children: organizationOptions.value.map(toOrganizationTreeNode),
@@ -373,9 +375,48 @@ function handleOrganizationSearch(keyword: string): void {
 }
 
 function syncMobileViewport(): void {
-  if (typeof window !== 'undefined') {
-    isMobileViewport.value = window.innerWidth <= 768
+  isMobileViewport.value = mobileMediaQuery?.matches
+    ?? (typeof window !== 'undefined' && window.innerWidth <= 768)
+}
+
+function setupMobileViewport(): void {
+  if (typeof window === 'undefined') {
+    return
   }
+  if (typeof window.matchMedia !== 'function') {
+    usingWindowResizeFallback = true
+    syncMobileViewport()
+    window.addEventListener('resize', syncMobileViewport)
+    return
+  }
+  mobileMediaQuery = window.matchMedia('(max-width: 768px)')
+  syncMobileViewport()
+  if (typeof mobileMediaQuery.addEventListener === 'function') {
+    mobileMediaQuery.addEventListener('change', syncMobileViewport)
+  }
+  else {
+    if (typeof mobileMediaQuery.addListener === 'function') {
+      mobileMediaQuery.addListener(syncMobileViewport)
+    }
+    else {
+      usingWindowResizeFallback = true
+      window.addEventListener('resize', syncMobileViewport)
+    }
+  }
+}
+
+function teardownMobileViewport(): void {
+  if (typeof mobileMediaQuery?.removeEventListener === 'function') {
+    mobileMediaQuery.removeEventListener('change', syncMobileViewport)
+  }
+  else {
+    mobileMediaQuery?.removeListener?.(syncMobileViewport)
+  }
+  if (usingWindowResizeFallback && typeof window !== 'undefined') {
+    window.removeEventListener('resize', syncMobileViewport)
+  }
+  usingWindowResizeFallback = false
+  mobileMediaQuery = undefined
 }
 
 function toggleOrganizationPanel(): void {
@@ -526,8 +567,7 @@ const roleAssignmentSchemas = computed<SchemaFormItem[]>(() => [
 ])
 
 onMounted(() => {
-  syncMobileViewport()
-  window.addEventListener('resize', syncMobileViewport)
+  setupMobileViewport()
   void Promise.all([
     fetchSystemRoleOptions(),
     fetchSystemOrganizationOptions(),
@@ -540,7 +580,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', syncMobileViewport)
+  teardownMobileViewport()
 })
 </script>
 
@@ -850,7 +890,7 @@ onBeforeUnmount(() => {
     justify-content: flex-end;
     gap: 4px;
     color: var(--el-text-color-secondary);
-    font-size: var(--lumal-font-size-small, 12px);
+    font-size: var(--lumal-font-size-small, var(--lumal-font-size-base, 12px));
   }
 
   .lumal-admin-user-page__organization-summary > span {

@@ -1,5 +1,5 @@
-import type { Ref } from 'vue'
-import { onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
+import type { MaybeRefOrGetter, Ref } from 'vue'
+import { onBeforeUnmount, ref, shallowRef, toValue, watch } from 'vue'
 
 /***********************画布等比缩放*********************/
 
@@ -41,6 +41,7 @@ export function computeCanvasScale(
 export interface UseCanvasScaleOptions {
   baseWidth: () => number
   baseHeight: () => number
+  enabled?: MaybeRefOrGetter<boolean>
 }
 
 /**
@@ -89,19 +90,32 @@ export function useCanvasScale(
     })
   }
 
-  onMounted(() => {
+  function stopObserving(): void {
+    observer?.disconnect()
+    observer = null
+  }
+
+  function syncObservation(): void {
+    stopObserving()
+    if (options.enabled !== undefined && !toValue(options.enabled))
+      return
     measure()
     if (typeof ResizeObserver !== 'undefined' && containerRef.value) {
       observer = new ResizeObserver(scheduleMeasure)
       observer.observe(containerRef.value)
     }
-  })
+  }
+
+  watch(
+    [containerRef, options.baseWidth, options.baseHeight, () => options.enabled === undefined || toValue(options.enabled)],
+    syncObservation,
+    { flush: 'post', immediate: true },
+  )
 
   onBeforeUnmount(() => {
     if (frame && typeof cancelAnimationFrame !== 'undefined')
       cancelAnimationFrame(frame)
-    observer?.disconnect()
-    observer = null
+    stopObserving()
   })
 
   return { result, ready, measure }

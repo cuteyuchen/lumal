@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { SchemaFormItem, SchemaFormMode, SchemaFormModel, SchemaTableColumn, SchemaTableRow } from '@lumal/core/components'
+import type { SchemaFormItem, SchemaFormModel, SchemaTableColumn, SchemaTableRow } from '@lumal/core/components'
 import type { SaveSystemDictionaryItemInput, SystemDictionaryItemRecord, SystemDictionaryTypeRecord } from '../../api/system'
 import { LumalPage, LumalSchemaForm, LumalSchemaTable } from '@lumal/core/components'
-import { ElButton, ElDialog, ElMessage, ElMessageBox, ElOption, ElSelect } from 'element-plus'
+import { ElAlert, ElButton, ElDialog, ElMessage, ElOption, ElSelect } from 'element-plus'
 import { computed, onMounted, shallowRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
 import {
@@ -12,6 +12,7 @@ import {
   fetchDictionaryTypes,
   updateDictionaryItem,
 } from '../../api/system'
+import { useSchemaEntityCrud } from '../../composables/useSchemaEntityCrud'
 import { refreshAdminDictionaryCache } from '../../services/dictionary'
 
 const types = shallowRef<SystemDictionaryTypeRecord[]>([])
@@ -19,10 +20,33 @@ const items = shallowRef<SystemDictionaryItemRecord[]>([])
 const typeCode = shallowRef('')
 const loading = shallowRef(false)
 const refreshing = shallowRef(false)
-const dialogVisible = shallowRef(false)
-const formMode = shallowRef<SchemaFormMode>('create')
-const editingRecord = shallowRef<SystemDictionaryItemRecord>()
-const formModel = shallowRef<SchemaFormModel>({})
+const {
+  error: operationError,
+  mode: formMode,
+  model: formModel,
+  openCreate: openCreateDialog,
+  openEdit: openEditDialog,
+  remove: removeRecord,
+  saving,
+  submit: save,
+  visible: dialogVisible,
+} = useSchemaEntityCrud<SystemDictionaryItemRecord, SaveSystemDictionaryItemInput>({
+  create: createDictionaryItem,
+  update: (record, input) => updateDictionaryItem(record.id, input),
+  remove: record => deleteDictionaryItem(record.id),
+  reload: loadItems,
+  toInput,
+  confirmRemove: record => ({
+    message: `确定删除字典项“${record.label}”吗？`,
+    title: '删除字典项',
+  }),
+  saveSuccess: '字典项已保存',
+  saveError: '字典项保存失败',
+  removeSuccess: '字典项已删除',
+  removeError: '字典项删除失败',
+  afterSave: () => refreshAdminDictionaryCache(typeCode.value),
+  afterRemove: () => refreshAdminDictionaryCache(typeCode.value),
+})
 const rows = computed(() => items.value as unknown as SchemaTableRow[])
 const currentType = computed(() => types.value.find(item => item.code === typeCode.value))
 
@@ -64,23 +88,8 @@ function toRecord(row: SchemaTableRow): SystemDictionaryItemRecord {
   return row as unknown as SystemDictionaryItemRecord
 }
 
-function openCreate(): void {
-  formMode.value = 'create'
-  editingRecord.value = undefined
-  formModel.value = { color: '#1677ff', order: items.value.length + 1, status: 'enabled' }
-  dialogVisible.value = true
-}
-
-function openEdit(row: SchemaTableRow): void {
-  const record = toRecord(row)
-  formMode.value = 'edit'
-  editingRecord.value = record
-  formModel.value = { ...record }
-  dialogVisible.value = true
-}
-
-async function save(model: SchemaFormModel): Promise<void> {
-  const input: SaveSystemDictionaryItemInput = {
+function toInput(model: SchemaFormModel): SaveSystemDictionaryItemInput {
+  return {
     color: model.color,
     label: model.label,
     order: model.order,
@@ -88,34 +97,19 @@ async function save(model: SchemaFormModel): Promise<void> {
     typeCode: typeCode.value,
     value: model.value,
   }
-  if (formMode.value === 'edit' && editingRecord.value) {
-    await updateDictionaryItem(editingRecord.value.id, input)
-  }
-  else {
-    await createDictionaryItem(input)
-  }
-  dialogVisible.value = false
-  await loadItems()
-  await refreshAdminDictionaryCache(typeCode.value)
-  ElMessage.success('字典项已保存')
+}
+
+function openCreate(): void {
+  openCreateDialog({ color: '#1677ff', order: items.value.length + 1, status: 'enabled' })
+}
+
+function openEdit(row: SchemaTableRow): void {
+  const record = toRecord(row)
+  openEditDialog(record)
 }
 
 async function remove(row: SchemaTableRow): Promise<void> {
-  const record = toRecord(row)
-  try {
-    await ElMessageBox.confirm(`确定删除字典项“${record.label}”吗？`, '删除字典项', {
-      cancelButtonText: '取消',
-      confirmButtonText: '删除',
-      type: 'warning',
-    })
-  }
-  catch {
-    return
-  }
-  await deleteDictionaryItem(record.id)
-  await loadItems()
-  await refreshAdminDictionaryCache(typeCode.value)
-  ElMessage.success('字典项已删除')
+  await removeRecord(toRecord(row))
 }
 
 async function refreshCache(): Promise<void> {
@@ -168,7 +162,8 @@ onMounted(() => void loadData())
     </LumalPage>
 
     <ElDialog v-model="dialogVisible" append-to-body class="lumal-admin-dialog" :title="formMode === 'edit' ? '编辑字典项' : '新增字典项'" width="720px">
-      <LumalSchemaForm v-model="formModel" :mode="formMode" :schemas="schemas" :columns="2" show-actions submit-text="保存字典项" @submit="save" />
+      <ElAlert v-if="operationError" :title="operationError" type="error" show-icon :closable="false" />
+      <LumalSchemaForm v-model="formModel" :mode="formMode" :schemas="schemas" :columns="2" :submit-loading="saving" show-actions submit-text="保存字典项" @submit="save" />
     </ElDialog>
   </main>
 </template>

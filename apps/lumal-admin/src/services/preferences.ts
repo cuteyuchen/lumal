@@ -152,20 +152,6 @@ export function updateAdminSystemConfig(config: AdminSystemConfig): AdminSystemC
   const appName = config.appName.trim() || initialAdminSystemConfig.appName
   const colorPrimary = config.colorPrimary.trim() || initialAdminSystemConfig.colorPrimary
 
-  adminPreferenceDefaults.app = { ...adminPreferenceDefaults.app, layout: config.layout }
-  adminPreferenceDefaults.tabbar = {
-    ...adminPreferenceDefaults.tabbar,
-    enable: config.tabbarEnable,
-  }
-  adminPreferenceDefaults.theme = {
-    ...adminPreferenceDefaults.theme,
-    colorPrimary,
-  }
-  adminPreferenceDefaults.transition = {
-    ...adminPreferenceDefaults.transition,
-    enable: config.transitionEnable,
-  }
-
   adminAppNameState.value = appName
   adminPreferencesStore.patch({
     app: { layout: config.layout },
@@ -178,19 +164,6 @@ export function updateAdminSystemConfig(config: AdminSystemConfig): AdminSystemC
 }
 
 export function resetAdminSystemConfig(): void {
-  adminPreferenceDefaults.app = { ...adminPreferenceDefaults.app, layout: initialAdminSystemConfig.layout }
-  adminPreferenceDefaults.tabbar = {
-    ...adminPreferenceDefaults.tabbar,
-    enable: initialAdminSystemConfig.tabbarEnable,
-  }
-  adminPreferenceDefaults.theme = {
-    ...adminPreferenceDefaults.theme,
-    colorPrimary: initialAdminSystemConfig.colorPrimary,
-  }
-  adminPreferenceDefaults.transition = {
-    ...adminPreferenceDefaults.transition,
-    enable: initialAdminSystemConfig.transitionEnable,
-  }
   adminAppNameState.value = initialAdminSystemConfig.appName
   adminPreferencesStore.reset()
 }

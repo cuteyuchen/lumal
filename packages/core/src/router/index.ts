@@ -975,6 +975,7 @@ export function createMenuRouteRuntime(options: CreateMenuRouteRuntimeOptions): 
   let disposed = false
   let loadGeneration = 0
   let loadingRemote: Promise<NormalizedMenuNode[]> | undefined
+  let combinedState = mergeMenuRouteStates(staticState, remoteState)
 
   try {
     assertNoMenuRouteConflicts(staticState.menus, [], options.router, new Set())
@@ -987,7 +988,11 @@ export function createMenuRouteRuntime(options: CreateMenuRouteRuntimeOptions): 
   }
 
   function getCombinedState(): MenuRouteState {
-    return mergeMenuRouteStates(staticState, remoteState)
+    return combinedState
+  }
+
+  function refreshCombinedState(): void {
+    combinedState = mergeMenuRouteStates(staticState, remoteState)
   }
 
   function getOwnedRouteNames(): Set<string> {
@@ -1010,6 +1015,7 @@ export function createMenuRouteRuntime(options: CreateMenuRouteRuntimeOptions): 
 
     remoteState = nextState
     remoteLoaded = true
+    refreshCombinedState()
   }
 
   function startRemoteLoad(force: boolean): Promise<NormalizedMenuNode[]> {
@@ -1080,6 +1086,7 @@ export function createMenuRouteRuntime(options: CreateMenuRouteRuntimeOptions): 
     remoteRegistry.reset()
     remoteState = emptyState()
     remoteLoaded = false
+    refreshCombinedState()
   }
 
   function dispose(): void {
@@ -1091,6 +1098,7 @@ export function createMenuRouteRuntime(options: CreateMenuRouteRuntimeOptions): 
     resetRemote()
     staticRegistry.reset()
     staticState = emptyState()
+    refreshCombinedState()
   }
 
   return {

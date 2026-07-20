@@ -43,13 +43,17 @@ interface ConicalColumn extends DataValueItem {
 const rootRef = useTemplateRef<HTMLElement>('rootRef')
 const size = useElementSize(rootRef)
 
+function normalizeNonNegative(value: number, fallback = 0): number {
+  return Number.isFinite(value) ? Math.max(0, value) : fallback
+}
+
 const sourceItems = computed<DataValueItem[]>(() => {
   if (props.items !== undefined)
-    return props.items.map(item => ({ ...item }))
+    return props.items.map(item => ({ ...item, value: normalizeNonNegative(item.value) }))
   return (props.config.data ?? []).map((item, index) => ({
-    key: item.name || index,
+    key: item.name ? `${item.name}-${index}` : index,
     label: item.name,
-    value: item.value,
+    value: normalizeNonNegative(item.value),
   }))
 })
 
@@ -60,18 +64,20 @@ const chartItems = computed(() => {
 })
 
 const images = computed(() => props.images ?? props.config.img ?? [])
-const imageSideLength = computed(() => props.imageSideLength ?? props.config.imgSideLength ?? 30)
-const fontSize = computed(() => props.fontSize ?? props.config.fontSize ?? 12)
+const imageSideLength = computed(() => normalizeNonNegative(props.imageSideLength ?? props.config.imgSideLength ?? 30, 30))
+const fontSize = computed(() => normalizeNonNegative(props.fontSize ?? props.config.fontSize ?? 12, 12))
 const columnColor = computed(() => props.columnColor ?? props.config.columnColor ?? 'rgba(0, 194, 255, 0.4)')
 const textColor = computed(() => props.textColor ?? props.config.textColor ?? '#fff')
 const showValue = computed(() => props.showValue ?? props.config.showValue ?? false)
 
 const columns = computed<ConicalColumn[]>(() => {
   const data = chartItems.value
-  const maximum = props.max ?? (data.length ? Math.max(...data.map(item => item.value)) : 10)
+  const dataMaximum = data.length ? Math.max(...data.map(item => item.value)) : 0
+  const configuredMaximum = normalizeNonNegative(props.max ?? 0)
+  const maximum = Math.max(dataMaximum, configuredMaximum, 1)
   const gap = size.value.width / (data.length + 1)
-  const usableHeight = size.value.height - imageSideLength.value - fontSize.value - 5
-  const svgBottom = size.value.height - fontSize.value - 5
+  const svgBottom = Math.max(0, size.value.height - fontSize.value - 5)
+  const usableHeight = Math.max(0, svgBottom - imageSideLength.value)
 
   return data.map((item, index) => {
     const percent = item.value / maximum

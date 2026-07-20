@@ -13,7 +13,7 @@ import type {
   SystemRoleRecord,
 } from '../../api/system'
 import { LumalCrudTable } from '@lumal/core/components'
-import { ElAlert, ElButton, ElDialog, ElMessage, ElMessageBox, ElTree } from 'element-plus'
+import { ElAlert, ElButton, ElDialog, ElLoading, ElMessage, ElMessageBox, ElTree } from 'element-plus'
 import { nextTick, onMounted, shallowRef, useTemplateRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
 import {
@@ -25,6 +25,8 @@ import {
   updateSystemRole,
   updateSystemRolePermissions,
 } from '../../api/system'
+
+const vLoading = ElLoading.directive
 
 interface RoleCrudTableExpose {
   openEdit: (row: SchemaTableRow) => void

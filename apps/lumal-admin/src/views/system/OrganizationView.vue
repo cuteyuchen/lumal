@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type {
   SchemaFormItem,
-  SchemaFormMode,
   SchemaFormModel,
   SchemaFormOption,
   SchemaTableColumn,
@@ -9,7 +8,7 @@ import type {
 } from '@lumal/core/components'
 import type { SaveSystemOrganizationInput, SystemOrganizationRecord } from '../../api/system'
 import { LumalPage, LumalSchemaForm, LumalSchemaTable } from '@lumal/core/components'
-import { ElAlert, ElButton, ElDialog, ElMessage, ElMessageBox } from 'element-plus'
+import { ElAlert, ElButton, ElDialog, ElMessage } from 'element-plus'
 import { computed, onMounted, shallowRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
 import {
@@ -18,16 +17,34 @@ import {
   fetchSystemOrganizations,
   updateSystemOrganization,
 } from '../../api/system'
+import { useSchemaEntityCrud } from '../../composables/useSchemaEntityCrud'
 
 /***********************页面状态*********************/
 const organizations = shallowRef<SystemOrganizationRecord[]>([])
 const loading = shallowRef(false)
-const dialogVisible = shallowRef(false)
-const formMode = shallowRef<SchemaFormMode>('create')
-const editingOrganization = shallowRef<SystemOrganizationRecord>()
-const formModel = shallowRef<SchemaFormModel>({})
-const saving = shallowRef(false)
-const operationError = shallowRef('')
+const {
+  editingRecord: editingOrganization,
+  error: operationError,
+  mode: formMode,
+  model: formModel,
+  openCreate: openCreateDialog,
+  openEdit: openEditDialog,
+  remove: removeOrganization,
+  saving,
+  submit: handleSubmit,
+  visible: dialogVisible,
+} = useSchemaEntityCrud<SystemOrganizationRecord, SaveSystemOrganizationInput>({
+  create: createSystemOrganization,
+  update: (record, input) => updateSystemOrganization(record.id, input),
+  remove: record => deleteSystemOrganization(record.id),
+  reload: loadOrganizations,
+  toInput: toOrganizationInput,
+  confirmRemove: record => ({ message: `确定删除机构“${record.name}”吗？` }),
+  saveSuccess: '机构已保存',
+  saveError: '机构保存失败',
+  removeSuccess: '机构已删除',
+  removeError: '机构删除失败',
+})
 
 const tableRows = computed(() => organizations.value as unknown as SchemaTableRow[])
 const dialogTitle = computed(() => formMode.value === 'edit' ? '编辑机构' : '新增机构')
@@ -157,68 +174,16 @@ function toOrganizationInput(model: SchemaFormModel): SaveSystemOrganizationInpu
 
 /***********************交互处理*********************/
 function openCreate(parentId = ''): void {
-  formMode.value = 'create'
-  editingOrganization.value = undefined
-  formModel.value = { order: 0, parentId, status: 'enabled' }
-  operationError.value = ''
-  dialogVisible.value = true
+  openCreateDialog({ order: 0, parentId, status: 'enabled' })
 }
 
 function openEdit(row: SchemaTableRow): void {
   const organization = toOrganizationRecord(row)
-  formMode.value = 'edit'
-  editingOrganization.value = organization
-  formModel.value = { ...organization }
-  operationError.value = ''
-  dialogVisible.value = true
-}
-
-async function handleSubmit(model: SchemaFormModel): Promise<void> {
-  saving.value = true
-  operationError.value = ''
-
-  try {
-    if (formMode.value === 'edit' && editingOrganization.value) {
-      await updateSystemOrganization(editingOrganization.value.id, toOrganizationInput(model))
-    }
-    else {
-      await createSystemOrganization(toOrganizationInput(model))
-    }
-
-    dialogVisible.value = false
-    await loadOrganizations()
-    ElMessage.success('机构已保存')
-  }
-  catch (error) {
-    operationError.value = error instanceof Error ? error.message : '机构保存失败'
-  }
-  finally {
-    saving.value = false
-  }
+  openEditDialog(organization)
 }
 
 async function removeOrganizationRow(row: SchemaTableRow): Promise<void> {
-  const organization = toOrganizationRecord(row)
-
-  try {
-    await ElMessageBox.confirm(`确定删除机构“${organization.name}”吗？`, '删除确认', {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
-  }
-  catch {
-    return
-  }
-
-  try {
-    await deleteSystemOrganization(organization.id)
-    await loadOrganizations()
-    ElMessage.success('机构已删除')
-  }
-  catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : '机构删除失败')
-  }
+  await removeOrganization(toOrganizationRecord(row))
 }
 
 onMounted(() => {
