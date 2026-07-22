@@ -39,7 +39,15 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <aside class="lumal-cockpit-designer__library" aria-label="模块库">
+  <aside class="lumal-cockpit-designer__library" aria-label="模块选择">
+    <header class="lumal-cockpit-designer__library-head">
+      <div class="lumal-cockpit-designer__library-head-copy">
+        <strong>模块选择</strong>
+        <span>拖拽模块到左侧或右侧区域，也可点击后选择目标槽位</span>
+      </div>
+      <span class="lumal-cockpit-designer__library-count">{{ widgets.length }} 个</span>
+    </header>
+
     <div ref="libraryRef" class="lumal-cockpit-designer__library-grid">
       <article
         v-for="widget in widgets"
