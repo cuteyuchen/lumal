@@ -1,0 +1,53 @@
+/* 设计稿细节：仅替换展示文案并补充区域操作提示。 */
+
+.standalone-app__designer .lumal-cockpit-designer__region-head {
+  min-height: 132px;
+}
+
+.standalone-app__designer .lumal-cockpit-designer__region-head-meta > span {
+  font-size: 0;
+}
+
+.standalone-app__designer .lumal-cockpit-designer__region-head-meta > span::after {
+  color: var(--lumal-cockpit-text-muted);
+  font-size: 11px;
+  content: '编辑该区域的布局和模块';
+}
+
+.standalone-app__designer .lumal-cockpit-designer__region-head > .lumal-cockpit-designer__field:nth-of-type(1) > span,
+.standalone-app__designer .lumal-cockpit-designer__region-head > .lumal-cockpit-designer__field:nth-of-type(2) > span,
+.standalone-app__designer .lumal-cockpit-designer__region-head > .lumal-cockpit-designer__field:nth-of-type(3) > span {
+  font-size: 0;
+}
+
+.standalone-app__designer .lumal-cockpit-designer__region-head > .lumal-cockpit-designer__field:nth-of-type(1) > span::after {
+  font-size: 12px;
+  content: '行数';
+}
+
+.standalone-app__designer .lumal-cockpit-designer__region-head > .lumal-cockpit-designer__field:nth-of-type(2) > span::after {
+  font-size: 12px;
+  content: '列数';
+}
+
+.standalone-app__designer .lumal-cockpit-designer__region-head > .lumal-cockpit-designer__field:nth-of-type(3) > span::after {
+  font-size: 12px;
+  content: '宽度';
+}
+
+.standalone-app__designer .lumal-cockpit-designer__region-head::after {
+  display: block;
+  flex-basis: 100%;
+  width: 100%;
+  padding-top: 2px;
+  color: var(--lumal-cockpit-text-muted);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  content: '⠿  拖拽模块进行位置调整，开启“合并列”可合并该行';
+}
+
+@media (max-width: 1560px) {
+  .standalone-app__designer .lumal-cockpit-designer__region-head {
+    min-height: 140px;
+  }
+}
