@@ -11,7 +11,6 @@ import { cockpitTopics } from '../../messages/topics'
 import { standaloneResolvedThemeMode } from '../../services/preferences'
 
 /***********************区域状态分布图（@lumal/datav LumalCharts）*********************/
-
 const context = useCockpitContext()
 const { loading } = useDemoRefresh()
 const error = ''
@@ -31,11 +30,11 @@ const activeLabel = computed(() => (
 
 const chartOption = computed<EChartsOption>(() => {
   const dark = standaloneResolvedThemeMode.value === 'dark'
-  const text = dark ? '#d7eeff' : '#173c4d'
+  const text = dark ? '#dceef4' : '#173c4d'
   const colors = {
-    stable: dark ? '#20d8ff' : '#087faf',
-    active: dark ? '#23df7b' : '#00966d',
-    watch: dark ? '#ffc857' : '#b77900',
+    stable: dark ? '#24d8ee' : '#087fa8',
+    active: dark ? '#2de2b8' : '#008c70',
+    watch: dark ? '#ffc45e' : '#b67800',
   }
 
   return {
@@ -49,28 +48,28 @@ const chartOption = computed<EChartsOption>(() => {
       trigger: 'item',
       confine: true,
       formatter: '{b}<br/>{c} 个区域（{d}%）',
-      backgroundColor: dark ? 'rgba(3, 24, 37, 0.96)' : 'rgba(247, 252, 255, 0.98)',
-      borderColor: dark ? 'rgba(116, 239, 255, 0.48)' : 'rgba(8, 127, 175, 0.34)',
+      backgroundColor: dark ? 'rgba(7, 27, 42, 0.97)' : 'rgba(250, 253, 254, 0.98)',
+      borderColor: dark ? 'rgba(72, 187, 211, 0.34)' : 'rgba(8, 127, 168, 0.26)',
       textStyle: { color: text },
     },
     series: [
       {
         name: '运行状态',
         type: 'pie',
-        radius: ['53%', '76%'],
+        radius: ['54%', '76%'],
         center: ['50%', '50%'],
         minAngle: 8,
         selectedMode: 'single',
-        selectedOffset: 5,
+        selectedOffset: 4,
         avoidLabelOverlap: true,
         itemStyle: {
-          borderColor: dark ? '#052234' : '#edf7fb',
+          borderColor: dark ? '#071b2a' : '#edf7fb',
           borderWidth: 3,
-          shadowBlur: dark ? 8 : 2,
+          shadowBlur: dark ? 5 : 1,
         },
         label: { show: false },
         emphasis: {
-          scaleSize: 5,
+          scaleSize: 4,
           label: { show: false },
         },
         data: items.value.map(item => ({
@@ -175,9 +174,9 @@ onBeforeUnmount(() => {
 
 .status-distribution__content {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(116px, 0.85fr);
-  gap: 8px;
+  grid-template-columns: minmax(0, 1.08fr) minmax(120px, 0.92fr);
   align-items: center;
+  gap: 10px;
 }
 
 .status-distribution__chart-wrap {
@@ -196,8 +195,8 @@ onBeforeUnmount(() => {
   top: 50%;
   left: 50%;
   display: grid;
-  gap: 2px;
-  width: 76px;
+  gap: 3px;
+  width: 78px;
   text-align: center;
   transform: translate(-50%, -50%);
   pointer-events: none;
@@ -205,10 +204,9 @@ onBeforeUnmount(() => {
 
 .status-distribution__center strong {
   color: var(--lumal-cockpit-title-text);
-  font-size: 28px;
+  font-size: 29px;
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  text-shadow: 0 0 12px color-mix(in srgb, var(--lumal-cockpit-accent), transparent 48%);
 }
 
 .status-distribution__center span {
@@ -221,23 +219,28 @@ onBeforeUnmount(() => {
 
 .status-distribution__items {
   display: grid;
-  gap: 7px;
+  gap: 8px;
 }
 
 .status-distribution__items button {
   display: grid;
   grid-template-columns: 8px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 3px 7px;
-  min-height: 46px;
-  padding: 6px 8px;
-  border: 1px solid color-mix(in srgb, var(--lumal-cockpit-border), transparent 18%);
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--lumal-cockpit-floating-bg), transparent 24%);
+  gap: 3px 8px;
+  min-height: 48px;
+  padding: 7px 9px;
+  border: 1px solid color-mix(in srgb, var(--lumal-cockpit-border), transparent 12%);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--lumal-cockpit-floating-bg), transparent 20%);
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 180ms ease, background-color 180ms ease;
+  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.status-distribution__items button:hover {
+  border-color: color-mix(in srgb, var(--lumal-cockpit-accent), transparent 58%);
+  transform: translateX(1px);
 }
 
 .status-distribution__marker {
@@ -246,23 +249,24 @@ onBeforeUnmount(() => {
   height: 7px;
   border-radius: 50%;
   background: var(--lumal-cockpit-accent);
-  box-shadow: 0 0 8px var(--lumal-cockpit-accent);
+  box-shadow: 0 0 7px var(--lumal-cockpit-accent);
 }
 
 .status-distribution__items button[data-status='active'] .status-distribution__marker {
   background: var(--lumal-cockpit-success);
-  box-shadow: 0 0 8px var(--lumal-cockpit-success);
+  box-shadow: 0 0 7px var(--lumal-cockpit-success);
 }
 
 .status-distribution__items button[data-status='watch'] .status-distribution__marker {
   background: var(--lumal-cockpit-warning);
-  box-shadow: 0 0 8px var(--lumal-cockpit-warning);
+  box-shadow: 0 0 7px var(--lumal-cockpit-warning);
 }
 
 .status-distribution__label {
   overflow: hidden;
   color: var(--lumal-cockpit-text-secondary);
   font-size: 11px;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -281,9 +285,9 @@ onBeforeUnmount(() => {
 
 .status-distribution__items button.is-contextual,
 .status-distribution__items button.is-filtered {
-  border-color: var(--lumal-cockpit-accent);
-  background: color-mix(in srgb, var(--lumal-cockpit-selected), transparent 12%);
-  box-shadow: inset 2px 0 0 var(--lumal-cockpit-accent);
+  border-color: color-mix(in srgb, var(--lumal-cockpit-accent), transparent 50%);
+  background: color-mix(in srgb, var(--lumal-cockpit-selected), transparent 14%);
+  box-shadow: inset 3px 0 0 var(--lumal-cockpit-accent);
 }
 
 .status-distribution__items button:focus-visible {
