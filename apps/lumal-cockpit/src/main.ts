@@ -7,5 +7,6 @@ import '@lumal/icons-vue/style.css'
 import './styles/index.css'
 import './styles/designer.css'
 import './styles/designer-detail.css'
+import './styles/motion.css'
 
 createApp(App).mount('#app')
