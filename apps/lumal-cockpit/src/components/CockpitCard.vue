@@ -24,6 +24,8 @@ const widgetCodes: Record<string, string> = {
   'status-distribution': 'STATE 03',
   'event-list': 'ALERT 04',
   'region-ranking': 'RANK 05',
+  'node-pulse': 'NODE 06',
+  'capacity-monitor': 'FLOW 07',
 }
 
 function widgetCode(type?: string): string {
