@@ -86,7 +86,7 @@ const PACKAGE_ENTRIES: PackageEntry[] = [
   {
     dist: 'packages/cockpit/dist/cockpit.css',
     packageName: 'cockpit',
-    source: 'packages/cockpit/src/style/index.scss',
+    source: 'packages/cockpit/src/source-style.scss',
     specifier: '@lumal/cockpit/style.css',
   },
   {
