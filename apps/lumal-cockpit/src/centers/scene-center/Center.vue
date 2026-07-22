@@ -195,11 +195,26 @@ onBeforeUnmount(() => {
 <style scoped>
 .scene-center {
   position: relative;
+  isolation: isolate;
   width: 100%;
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  background: color-mix(in srgb, var(--lumal-cockpit-bg), #020817 28%);
+  background:
+    radial-gradient(circle at 50% 46%, color-mix(in srgb, var(--lumal-cockpit-accent), transparent 93%), transparent 58%),
+    transparent;
+}
+
+.scene-center::before {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  background:
+    linear-gradient(rgb(86 211 236 / 1.2%) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(90deg, rgb(86 211 236 / 1.2%) 1px, transparent 1px) 0 0 / 48px 48px;
+  content: '';
+  pointer-events: none;
 }
 
 .scene-center__loading {
@@ -212,41 +227,45 @@ onBeforeUnmount(() => {
 
 .scene-center__engine-switch {
   position: absolute;
-  top: 16px;
+  top: 18px;
   left: 50%;
   z-index: 10;
   display: grid;
-  grid-template-columns: repeat(3, 112px);
-  min-height: 44px;
-  padding: 3px;
+  grid-template-columns: repeat(3, 108px);
+  min-height: 42px;
+  padding: 4px;
   border: 1px solid color-mix(in srgb, var(--lumal-cockpit-border), transparent 12%);
-  border-radius: var(--lumal-cockpit-radius);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--lumal-cockpit-floating-bg), transparent 5%);
+  box-shadow:
+    0 14px 32px rgb(0 0 0 / 22%),
+    inset 0 1px 0 rgb(255 255 255 / 4%);
   transform: translateX(-50%);
-  background: color-mix(in srgb, var(--lumal-cockpit-floating-bg), transparent 6%);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(14px);
 }
 
 .scene-center__engine-switch button {
   min-width: 0;
-  min-height: 44px;
+  min-height: 34px;
   padding: 0 12px;
-  border: 0;
-  border-radius: 2px;
+  border: 1px solid transparent;
+  border-radius: 9px;
   background: transparent;
-  color: var(--lumal-cockpit-text-secondary);
-  font-weight: 600;
+  color: var(--lumal-cockpit-text-muted);
+  font-size: 12px;
+  font-weight: 650;
   cursor: pointer;
-  transition: color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .scene-center__engine-switch button:hover {
+  background: color-mix(in srgb, var(--lumal-cockpit-accent), transparent 93%);
   color: var(--lumal-cockpit-title-text);
-  background: color-mix(in srgb, var(--lumal-cockpit-accent), transparent 90%);
 }
 
 .scene-center__engine-switch button.is-active {
-  background: color-mix(in srgb, var(--lumal-cockpit-selected), var(--lumal-cockpit-floating-bg) 42%);
+  border-color: color-mix(in srgb, var(--lumal-cockpit-accent), transparent 72%);
+  background: color-mix(in srgb, var(--lumal-cockpit-accent), transparent 90%);
   color: var(--lumal-cockpit-title-text);
   box-shadow: inset 0 -2px 0 var(--lumal-cockpit-accent);
 }
@@ -258,22 +277,24 @@ onBeforeUnmount(() => {
 
 .scene-center__status {
   position: absolute;
-  bottom: 16px;
+  bottom: 18px;
   left: 50%;
   z-index: 10;
   display: grid;
   grid-template-columns: 8px auto minmax(80px, auto) auto;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   min-height: 44px;
-  padding: 8px 12px;
-  border: 1px solid color-mix(in srgb, var(--lumal-cockpit-border), transparent 18%);
-  border-radius: var(--lumal-cockpit-radius);
+  padding: 8px 14px;
+  border: 1px solid color-mix(in srgb, var(--lumal-cockpit-border), transparent 12%);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--lumal-cockpit-floating-bg), transparent 5%);
+  color: var(--lumal-cockpit-text-muted);
+  box-shadow:
+    0 14px 32px rgb(0 0 0 / 20%),
+    inset 0 1px 0 rgb(255 255 255 / 4%);
   transform: translateX(-50%);
-  background: color-mix(in srgb, var(--lumal-cockpit-floating-bg), transparent 6%);
-  color: var(--lumal-cockpit-text-secondary);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(14px);
 }
 
 .scene-center__status strong,
@@ -282,12 +303,19 @@ onBeforeUnmount(() => {
   font-variant-numeric: tabular-nums;
 }
 
+.scene-center__status-value {
+  padding-left: 4px;
+  color: var(--lumal-cockpit-accent);
+  font-size: 17px;
+  font-weight: 700;
+}
+
 .scene-center__status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--lumal-cockpit-accent);
-  box-shadow: 0 0 8px currentcolor;
+  box-shadow: 0 0 9px currentcolor;
 }
 
 .scene-center__status-dot[data-status='active'] {
@@ -300,12 +328,18 @@ onBeforeUnmount(() => {
 
 @media (max-width: 900px) {
   .scene-center__engine-switch {
-    grid-template-columns: repeat(3, minmax(92px, 1fr));
-    width: min(348px, calc(100% - 32px));
+    grid-template-columns: repeat(3, minmax(88px, 1fr));
+    width: min(340px, calc(100% - 32px));
   }
 
   .scene-center__status {
     max-width: calc(100% - 32px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-center__engine-switch button {
+    transition: none;
   }
 }
 </style>
