@@ -11,7 +11,6 @@ import { cockpitTopics } from '../../messages/topics'
 import { standaloneResolvedThemeMode } from '../../services/preferences'
 
 /***********************运行趋势图（@lumal/datav LumalCharts）*********************/
-
 const context = useCockpitContext()
 const { loading } = useDemoRefresh()
 const error = ''
@@ -30,13 +29,13 @@ const latestIndex = computed(() => selectedEntity.value?.value ?? Math.round(
 
 const chartOption = computed<EChartsOption>(() => {
   const dark = standaloneResolvedThemeMode.value === 'dark'
-  const text = dark ? '#d7eeff' : '#173c4d'
-  const muted = dark ? 'rgba(169, 210, 223, 0.72)' : 'rgba(45, 88, 105, 0.72)'
-  const grid = dark ? 'rgba(116, 239, 255, 0.12)' : 'rgba(8, 127, 175, 0.14)'
+  const text = dark ? '#dceef4' : '#173c4d'
+  const muted = dark ? 'rgba(162, 193, 204, 0.72)' : 'rgba(45, 88, 105, 0.72)'
+  const grid = dark ? 'rgba(86, 211, 236, 0.10)' : 'rgba(8, 127, 168, 0.12)'
   const colors = {
-    stable: dark ? '#20d8ff' : '#087faf',
-    active: dark ? '#23df7b' : '#00966d',
-    watch: dark ? '#ffc857' : '#b77900',
+    stable: dark ? '#24d8ee' : '#087fa8',
+    active: dark ? '#2de2b8' : '#008c70',
+    watch: dark ? '#ffc45e' : '#b67800',
   }
 
   return {
@@ -51,8 +50,8 @@ const chartOption = computed<EChartsOption>(() => {
     tooltip: {
       trigger: 'axis',
       confine: true,
-      backgroundColor: dark ? 'rgba(3, 24, 37, 0.96)' : 'rgba(247, 252, 255, 0.98)',
-      borderColor: dark ? 'rgba(116, 239, 255, 0.48)' : 'rgba(8, 127, 175, 0.34)',
+      backgroundColor: dark ? 'rgba(7, 27, 42, 0.97)' : 'rgba(250, 253, 254, 0.98)',
+      borderColor: dark ? 'rgba(72, 187, 211, 0.34)' : 'rgba(8, 127, 168, 0.26)',
       textStyle: { color: text },
     },
     xAxis: {
@@ -85,13 +84,13 @@ const chartOption = computed<EChartsOption>(() => {
         lineStyle: {
           color: colors[item.status],
           opacity: faded ? 0.18 : 1,
-          shadowBlur: emphasized ? 9 : 4,
+          shadowBlur: emphasized ? 7 : 2,
           shadowColor: colors[item.status],
           width: emphasized ? 3 : 2,
         },
         areaStyle: {
           color: colors[item.status],
-          opacity: faded ? 0.01 : emphasized ? 0.18 : 0.07,
+          opacity: faded ? 0.01 : emphasized ? 0.16 : 0.06,
         },
         emphasis: { focus: 'series', lineStyle: { width: 3 } },
       }
@@ -184,36 +183,37 @@ onBeforeUnmount(() => {
 .trend-panel__content {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 6px;
+  gap: 8px;
 }
 
 .trend-panel__summary {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
-  gap: 2px 10px;
+  gap: 3px 12px;
   padding: 2px 4px 0;
 }
 
 .trend-panel__summary span {
   color: var(--lumal-cockpit-text-secondary);
   font-size: 12px;
+  font-weight: 600;
 }
 
 .trend-panel__summary strong {
   grid-row: 1 / 3;
   grid-column: 2;
   color: var(--lumal-cockpit-title-text);
-  font-size: 28px;
+  font-size: 30px;
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  text-shadow: 0 0 12px color-mix(in srgb, var(--lumal-cockpit-accent), transparent 52%);
 }
 
 .trend-panel__summary em {
   color: var(--lumal-cockpit-success);
   font-size: 11px;
   font-style: normal;
+  font-weight: 600;
 }
 
 .trend-panel__chart {
@@ -224,24 +224,24 @@ onBeforeUnmount(() => {
 
 .trend-panel__legend {
   display: flex;
-  gap: 6px;
   align-items: center;
+  gap: 7px;
 }
 
 .trend-panel__legend button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 7px;
   min-width: 0;
-  min-height: 44px;
-  padding: 0 9px;
-  border: 1px solid color-mix(in srgb, var(--lumal-cockpit-border), transparent 18%);
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--lumal-cockpit-floating-bg), transparent 24%);
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid color-mix(in srgb, var(--lumal-cockpit-border), transparent 12%);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--lumal-cockpit-floating-bg), transparent 20%);
   color: var(--lumal-cockpit-text-secondary);
   cursor: pointer;
-  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
 
 .trend-panel__legend span {
@@ -249,7 +249,7 @@ onBeforeUnmount(() => {
   height: 7px;
   border-radius: 50%;
   background: var(--lumal-cockpit-accent);
-  box-shadow: 0 0 8px currentcolor;
+  box-shadow: 0 0 7px currentcolor;
 }
 
 .trend-panel__legend button[data-status='active'] span {
@@ -260,10 +260,15 @@ onBeforeUnmount(() => {
   background: var(--lumal-cockpit-warning);
 }
 
+.trend-panel__legend button:hover {
+  border-color: color-mix(in srgb, var(--lumal-cockpit-accent), transparent 58%);
+  color: var(--lumal-cockpit-title-text);
+}
+
 .trend-panel__legend button.is-contextual,
 .trend-panel__legend button.is-filtered {
-  border-color: var(--lumal-cockpit-accent);
-  background: color-mix(in srgb, var(--lumal-cockpit-selected), transparent 12%);
+  border-color: color-mix(in srgb, var(--lumal-cockpit-accent), transparent 50%);
+  background: color-mix(in srgb, var(--lumal-cockpit-selected), transparent 14%);
   color: var(--lumal-cockpit-title-text);
   box-shadow: inset 0 -2px 0 var(--lumal-cockpit-accent);
 }
