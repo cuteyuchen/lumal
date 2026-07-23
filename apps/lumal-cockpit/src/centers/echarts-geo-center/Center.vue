@@ -7,7 +7,7 @@ import { EffectScatterChart, LinesChart, MapChart } from 'echarts/charts'
 import { AriaComponent, GeoComponent, TooltipComponent } from 'echarts/components'
 import { registerMap, use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { computed, useTemplateRef } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
 import VChart from 'vue-echarts'
 import { demoScene, getSceneEntity } from '../../data/demo-scene'
 
@@ -30,10 +30,26 @@ use([
 ])
 registerMap(MAP_NAME, demoScene.geoJson as never)
 
+const rootRef = useTemplateRef<HTMLElement>('rootRef')
 const chartRef = useTemplateRef<ComponentPublicInstance & { resize: () => void }>('chartRef')
+const renderReady = ref(false)
 const updateOptions: SetOptionOpts = { notMerge: false }
 const isDark = computed(() => props.theme === 'dark')
 const regionByName = new Map(demoScene.regions.map(region => [region.name, region]))
+let sizeObserver: ResizeObserver | undefined
+
+function syncRenderableSize(): void {
+  const element = rootRef.value
+  const ready = Boolean(element && element.clientWidth > 0 && element.clientHeight > 0)
+  if (renderReady.value === ready)
+    return
+  renderReady.value = ready
+  if (ready) {
+    void nextTick(() => {
+      requestAnimationFrame(() => chartRef.value?.resize())
+    })
+  }
+}
 
 function isSelected(id: string): boolean {
   return props.selectedIds.includes(id) || props.focusedId === id
@@ -215,17 +231,29 @@ function handleChartClick(params: unknown): void {
     emit('select', id)
 }
 
-useChartResize(chartRef)
+useChartResize(chartRef, rootRef)
+
+onMounted(() => {
+  syncRenderableSize()
+  if (rootRef.value && typeof ResizeObserver !== 'undefined') {
+    sizeObserver = new ResizeObserver(syncRenderableSize)
+    sizeObserver.observe(rootRef.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  sizeObserver?.disconnect()
+})
 </script>
 
 <template>
-  <div class="echarts-geo-center" data-center-renderer="echarts">
+  <div ref="rootRef" class="echarts-geo-center" data-center-renderer="echarts">
     <VChart
+      v-if="renderReady"
       ref="chartRef"
       class="echarts-geo-center__chart"
       :option="option"
       :update-options="updateOptions"
-      autoresize
       role="img"
       aria-label="全国运行态势 ECharts 飞线图"
       @click="handleChartClick"
