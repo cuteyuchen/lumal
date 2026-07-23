@@ -94,6 +94,7 @@ const digitalFlopConfig = computed<DigitalFlopConfig>(() => ({
   toFixed: props.config.digitalFlopToFixed ?? 0,
 }))
 const nameStyle = computed<CSSProperties>(() => ({ fontSize: `${digitalStyle.value.fontSize}px` }))
+const hasRenderableSize = computed(() => size.value.width > 0 && size.value.height > 0)
 
 function radiusPixels(radius: number | string | undefined, fallback: string): number {
   const value = radius ?? fallback
@@ -159,6 +160,7 @@ const autoplayDelay = computed(() => props.interval ?? props.config.activeTimeGa
 const autoplayEnabled = computed(() => props.autoplay
   && autoplayDelay.value > 0
   && entries.value.length > 1
+  && hasRenderableSize.value
   && !reducedMotion.value)
 
 function clearAnimation(): void {
