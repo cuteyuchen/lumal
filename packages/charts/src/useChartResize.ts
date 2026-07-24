@@ -13,8 +13,8 @@ export interface UseChartResizeOptions {
 
 /**
  * 监听容器尺寸变化并触发图表实例 resize。
- * 优先使用 ResizeObserver 观察容器元素，回退到 window resize 事件。
- * 隐藏 Tab、折叠区域和过渡中的 0×0 容器不会触发 resize，避免 Canvas 被重设为零尺寸。
+ * 优先使用 ResizeObserver 观察容器元素；浏览器不支持或未提供容器时，
+ * 回退到 window resize。隐藏 Tab、折叠区域和过渡中的 0×0 容器不会触发 resize。
  */
 export function useChartResize(
   chartRef: Ref<ChartResizeTarget | null | undefined>,
@@ -26,6 +26,7 @@ export function useChartResize(
 
   let observer: ResizeObserver | undefined
   let resizeFrame = 0
+  let windowFallbackAttached = false
 
   function hasRenderableSize(): boolean {
     const element = containerRef?.value
@@ -35,7 +36,10 @@ export function useChartResize(
   function cancelResize(): void {
     if (!resizeFrame)
       return
-    cancelAnimationFrame(resizeFrame)
+    if (typeof cancelAnimationFrame === 'function')
+      cancelAnimationFrame(resizeFrame)
+    else
+      clearTimeout(resizeFrame)
     resizeFrame = 0
   }
 
@@ -43,37 +47,57 @@ export function useChartResize(
     if (!hasRenderableSize())
       return
     cancelResize()
-    resizeFrame = requestAnimationFrame(() => {
+    const run = (): void => {
       resizeFrame = 0
       if (hasRenderableSize())
         chartRef.value?.resize()
-    })
+    }
+    if (typeof requestAnimationFrame === 'function')
+      resizeFrame = requestAnimationFrame(run)
+    else
+      resizeFrame = setTimeout(run, 16) as unknown as number
   }
 
   function observe(element: HTMLElement | null | undefined): void {
     observer?.disconnect()
+    observer = undefined
     if (element && typeof ResizeObserver !== 'undefined') {
-      observer = new ResizeObserver(() => triggerResize())
+      observer = new ResizeObserver(triggerResize)
       observer.observe(element)
     }
+    triggerResize()
   }
 
-  watch(chartRef, () => triggerResize(), { flush: 'post' })
+  function attachWindowFallback(): void {
+    if (windowFallbackAttached || typeof window === 'undefined')
+      return
+    window.addEventListener('resize', triggerResize, { passive: true })
+    windowFallbackAttached = true
+  }
+
+  function detachWindowFallback(): void {
+    if (!windowFallbackAttached || typeof window === 'undefined')
+      return
+    window.removeEventListener('resize', triggerResize)
+    windowFallbackAttached = false
+  }
+
+  watch(chartRef, triggerResize, { flush: 'post' })
 
   onMounted(() => {
-    if (containerRef) {
+    if (containerRef && typeof ResizeObserver !== 'undefined') {
       observe(containerRef.value)
-      watch(containerRef, element => observe(element))
+      watch(containerRef, observe)
     }
-
-    if (typeof window !== 'undefined')
-      window.addEventListener('resize', triggerResize)
+    else {
+      attachWindowFallback()
+      triggerResize()
+    }
   })
 
   onBeforeUnmount(() => {
     cancelResize()
     observer?.disconnect()
-    if (typeof window !== 'undefined')
-      window.removeEventListener('resize', triggerResize)
+    detachWindowFallback()
   })
 }
