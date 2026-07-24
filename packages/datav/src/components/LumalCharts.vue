@@ -57,6 +57,8 @@ let resizeObserver: ResizeObserver | undefined
 let resizeFrame = 0
 let pendingOption = false
 let pendingConfig = false
+let mounted = false
+let windowResizeFallbackAttached = false
 
 interface ChartHostSize {
   height: number
@@ -65,7 +67,7 @@ interface ChartHostSize {
 
 function chartHostSize(): ChartHostSize | undefined {
   const element = chartHostRef.value
-  if (!element)
+  if (!element || !element.isConnected)
     return undefined
   const width = Math.floor(element.clientWidth)
   const height = Math.floor(element.clientHeight)
@@ -77,7 +79,10 @@ function chartHostSize(): ChartHostSize | undefined {
 function cancelScheduledResize(): void {
   if (!resizeFrame)
     return
-  cancelAnimationFrame(resizeFrame)
+  if (typeof cancelAnimationFrame === 'function')
+    cancelAnimationFrame(resizeFrame)
+  else
+    clearTimeout(resizeFrame)
   resizeFrame = 0
 }
 
@@ -186,7 +191,7 @@ function createChart(): void {
 
 function scheduleResize(options?: ResizeOpts): void {
   cancelScheduledResize()
-  resizeFrame = requestAnimationFrame(() => {
+  const run = (): void => {
     resizeFrame = 0
     const size = chartHostSize()
     if (!size)
@@ -202,7 +207,44 @@ function scheduleResize(options?: ResizeOpts): void {
     else
       echartsRef.value?.resize({ ...options, height: options?.height ?? size.height, width: options?.width ?? size.width })
     flushPendingRender()
-  })
+  }
+  if (typeof requestAnimationFrame === 'function')
+    resizeFrame = requestAnimationFrame(run)
+  else
+    resizeFrame = setTimeout(run, 16) as unknown as number
+}
+
+function handleAutoResize(): void {
+  if (!chartHostSize())
+    return
+  if (dataVRef.value || echartsRef.value)
+    scheduleResize()
+  else
+    createChart()
+}
+
+function startAutoResize(): void {
+  if (!props.autoResize)
+    return
+  const element = rootRef.value
+  if (element && typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(handleAutoResize)
+    resizeObserver.observe(element)
+    return
+  }
+  if (typeof window !== 'undefined' && !windowResizeFallbackAttached) {
+    window.addEventListener('resize', handleAutoResize, { passive: true })
+    windowResizeFallbackAttached = true
+  }
+}
+
+function stopAutoResize(): void {
+  resizeObserver?.disconnect()
+  resizeObserver = undefined
+  if (windowResizeFallbackAttached && typeof window !== 'undefined') {
+    window.removeEventListener('resize', handleAutoResize)
+    windowResizeFallbackAttached = false
+  }
 }
 
 watch(() => props.config, (config) => {
@@ -236,26 +278,25 @@ watch(() => [props.theme, props.initOptions] as const, () => {
   if (!dataVMode.value)
     void nextTick(createChart)
 }, { deep: false })
+watch(() => props.autoResize, () => {
+  if (!mounted)
+    return
+  stopAutoResize()
+  startAutoResize()
+  handleAutoResize()
+})
 
 onMounted(async () => {
+  mounted = true
   await nextTick()
-  if (props.autoResize && rootRef.value && typeof ResizeObserver !== 'undefined') {
-    resizeObserver = new ResizeObserver(() => {
-      if (!chartHostSize())
-        return
-      if (dataVRef.value || echartsRef.value)
-        scheduleResize()
-      else
-        createChart()
-    })
-    resizeObserver.observe(rootRef.value)
-  }
+  startAutoResize()
   createChart()
 })
 
 onBeforeUnmount(() => {
+  mounted = false
   cancelScheduledResize()
-  resizeObserver?.disconnect()
+  stopAutoResize()
   disposeCharts()
 })
 
