@@ -19,6 +19,7 @@ const statusLabels = {
   stable: '运行平稳',
   watch: '待关注',
 } as const
+const scanColors = ['var(--lumal-cockpit-accent)', 'var(--lumal-cockpit-success)'] as const
 
 const nodeItems = computed<DataValueItem[]>(() => [...demoScene.points]
   .sort((left, right) => right.value - left.value)
@@ -80,7 +81,7 @@ onBeforeUnmount(unsubscribeSelection)
     <LumalDecoration
       class="node-pulse__scan"
       :variant="2"
-      :colors="['var(--lumal-cockpit-accent)', 'var(--lumal-cockpit-success)']"
+      :colors="scanColors"
       :duration="5200"
     />
 
