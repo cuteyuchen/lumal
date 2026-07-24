@@ -36,8 +36,8 @@ jobs:
       - name: Build documentation
         run: pnpm docs:build
 
-      - name: Build Cockpit application
-        run: pnpm --filter lumal-cockpit build:app
+      - name: Build Cockpit through package script
+        run: pnpm --filter lumal-cockpit build
 
-      - name: Build DataV guide
-        run: pnpm --filter lumal-datav-guide build:app
+      - name: Build DataV guide through package script
+        run: pnpm --filter lumal-datav-guide build
