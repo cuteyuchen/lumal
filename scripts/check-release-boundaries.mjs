@@ -214,11 +214,12 @@ assert(!hasDependency(chartsPackage, 'dependencies', 'echarts'), '@lumal/charts 
 assert(!chartsAllDependencies.has('@lumal/core'), '@lumal/charts 不应依赖 @lumal/core')
 assert(hasDependency(datavPackage, 'peerDependencies', 'vue'), '@lumal/datav 应把 vue 放在 peerDependencies')
 assert(hasDependency(datavPackage, 'peerDependencies', 'echarts'), '@lumal/datav 应把 echarts 放在 peerDependencies')
-assert(datavAllDependencies.size === 2, '@lumal/datav 运行时依赖应仅包含 vue 与 echarts peer')
+assert(hasDependency(datavPackage, 'dependencies', '@jiaminghi/charts'), '@lumal/datav config 模式应声明 @jiaminghi/charts 运行时依赖')
+assert(datavAllDependencies.size === 3, '@lumal/datav 运行时依赖应仅包含 vue、echarts peer 与 @jiaminghi/charts')
 assert(!hasDependency(datavPackage, 'dependencies', 'vue'), '@lumal/datav 不能把 vue 放在 dependencies')
 assert(!hasDependency(datavPackage, 'dependencies', 'echarts'), '@lumal/datav 不能把 echarts 放在 dependencies')
 assert(!hasDependency(datavPackage, 'optionalDependencies', 'vue'), '@lumal/datav 不能把 vue 放在 optionalDependencies')
-for (const forbiddenName of ['@lumal/cockpit', '@lumal/charts', 'element-plus', '@jiaminghi/data-view', '@jiaminghi/charts', '@jiaminghi/c-render']) {
+for (const forbiddenName of ['@lumal/cockpit', '@lumal/charts', 'element-plus', '@jiaminghi/data-view', '@jiaminghi/c-render']) {
   assert(!datavAllDependencies.has(forbiddenName), `@lumal/datav 不能依赖 ${forbiddenName}`)
 }
 assert(viteAllDependencies.size === 0, '@lumal/vite 不应引入强制运行时依赖')
@@ -280,7 +281,7 @@ for (const match of cockpitForbiddenMatches) {
 /***********************@lumal/datav 源码边界*********************/
 const datavForbiddenMatches = findTextMatches(
   join(packageDirs.datav, 'src'),
-  /@lumal\/cockpit|@lumal\/charts|@jiaminghi\/|from 'element-plus'|from "element-plus"/,
+  /@lumal\/cockpit|@lumal\/charts|from 'element-plus'|from "element-plus"/,
 )
 
 for (const match of datavForbiddenMatches) {

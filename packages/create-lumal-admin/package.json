@@ -28,7 +28,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json && node ../../scripts/clean-package-dist.mjs dist",
+    "build": "tsc -p tsconfig.json && node ../../scripts/clean-package-dist.mjs dist && node ../../scripts/sync-create-lumal-admin-version.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --config ../../vitest.config.ts tests"
   }

@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
+      version:
+        description: 'package version, for example 0.0.1-beta'
+        required: true
       tag:
         description: 'npm dist-tag'
         required: true
@@ -20,6 +23,7 @@ concurrency:
 
 env:
   NPM_DIST_TAG: ${{ inputs.tag || 'beta' }}
+  RELEASE_VERSION: ${{ inputs.version || '' }}
 
 jobs:
   publish:
@@ -45,22 +49,24 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify tag and package versions
+      - name: Verify release and package versions
         shell: bash
         run: |
           node --input-type=module <<'NODE'
-          import { readFileSync } from 'node:fs'
-          import { readdirSync } from 'node:fs'
-          const tag = process.env.GITHUB_REF_NAME
-          const expected = tag?.replace(/^v/, '')
-          if (!expected) throw new Error('无法读取 Git tag')
+          import { readFileSync, readdirSync } from 'node:fs'
+          const manualVersion = process.env.RELEASE_VERSION?.trim()
+          const tagVersion = process.env.GITHUB_REF_NAME?.replace(/^v/, '')
+          const expected = manualVersion || tagVersion
+          if (!expected || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(expected)) {
+            throw new Error(`无法解析合法发布版本：${expected || '空值'}`)
+          }
           for (const dir of readdirSync('packages', { withFileTypes: true })) {
             if (!dir.isDirectory()) continue
             const path = `packages/${dir.name}/package.json`
             try {
               const pkg = JSON.parse(readFileSync(path, 'utf8'))
               if (pkg.private) continue
-              if (pkg.version !== expected) throw new Error(`${pkg.name} 版本 ${pkg.version} 与 tag ${expected} 不一致`)
+              if (pkg.version !== expected) throw new Error(`${pkg.name} 版本 ${pkg.version} 与发布版本 ${expected} 不一致`)
             } catch (error) {
               if (error.code !== 'ENOENT') throw error
             }
