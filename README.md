@@ -6,7 +6,7 @@ Lumal 是一套面向中小型后台项目的轻量 Vue Admin 基础设施。它
 
 ## 快速开始
 
-环境要求：Node.js 20+、pnpm 10.33.0。
+环境要求：Node.js 22.12+、pnpm 10.33.0。
 
 ```bash
 pnpm install
@@ -71,7 +71,7 @@ createLumalAdmin({
 create-lumal-admin  →  生成消费公开包入口的应用
 ```
 
-`@lumal/datav` 是独立可视化包，只把 `vue` 和 `echarts` 作为 peer dependency，不依赖 `@lumal/core`；驾驶舱和 Admin 直接按需消费其组件。
+`@lumal/datav` 是独立可视化包，不依赖 `@lumal/core`；它把 `vue` 和 `echarts` 作为 peer dependency，并为 DataV `config` 模式声明 `@jiaminghi/charts` 运行时依赖。驾驶舱和 Admin 可直接按需消费其组件。
 
 ## 当前稳定能力
 
