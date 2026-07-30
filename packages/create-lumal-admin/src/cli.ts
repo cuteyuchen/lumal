@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { basename, resolve } from 'node:path'
 import process from 'node:process'
-import { createLumalAdminProject } from './scaffold.js'
+import { createLumalAdminProject } from './create.js'
 
 /***********************参数解析*********************/
 function resolveApiMode(argv: string[]): 'http' | 'local' {
