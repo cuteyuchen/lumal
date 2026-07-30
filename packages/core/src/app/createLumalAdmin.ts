@@ -41,12 +41,13 @@ function installCorePlugins(app: LumalAdminInstance['app'], options: CreateLumal
     installDictionary(app, options.dictionary)
   }
 
-  if (options.router) {
-    app.use(options.router)
-  }
-
+  // Pinia 必须先于 Router 安装，避免首次导航守卫读取尚未激活的 store。
   if (options.pinia) {
     app.use(options.pinia)
+  }
+
+  if (options.router) {
+    app.use(options.router)
   }
 
   if (options.elementPlus) {
