@@ -9,7 +9,6 @@ on:
       version:
         description: 'package version, for example 0.0.1-beta'
         required: true
-        default: 0.0.1-beta
       tag:
         description: 'npm dist-tag'
         required: true
