@@ -109,7 +109,7 @@ async function main() {
     ))
     const generatedPackagePath = join(projectDir, 'package.json')
     const generatedPackage = await readJson(generatedPackagePath)
-    const expectedLumalVersion = `^${createPackage.version}`
+    const expectedLumalVersion = createPackage.version
 
     for (const packageName of ['@lumal/core', '@lumal/icons', '@lumal/icons-vue']) {
       if (generatedPackage.dependencies?.[packageName] !== expectedLumalVersion) {
