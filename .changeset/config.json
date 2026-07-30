@@ -2,7 +2,19 @@
   "$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [],
+  "fixed": [
+    [
+      "@lumal/icons",
+      "@lumal/icons-vue",
+      "@lumal/core",
+      "@lumal/charts",
+      "@lumal/datav",
+      "@lumal/cockpit",
+      "@lumal/vben-compat",
+      "@lumal/vite",
+      "create-lumal-admin"
+    ]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "master",
