@@ -20,6 +20,7 @@
     "typecheck": "pnpm --filter @lumal/icons typecheck && pnpm --filter @lumal/icons build && pnpm --filter @lumal/icons-vue typecheck && pnpm --filter @lumal/icons-vue build && pnpm --filter @lumal/core typecheck && pnpm --filter @lumal/core build && pnpm --filter @lumal/charts typecheck && pnpm --filter @lumal/datav typecheck && pnpm --filter @lumal/datav build && pnpm --filter @lumal/cockpit typecheck && pnpm --filter @lumal/cockpit build && pnpm --filter @lumal/vben-compat typecheck && pnpm --filter @lumal/vite typecheck && pnpm --filter create-lumal-admin typecheck && pnpm --filter lumal-mock-api typecheck && pnpm --filter lumal-cockpit typecheck && pnpm --filter lumal-datav-guide typecheck",
     "test": "pnpm test:scripts && pnpm --filter @lumal/icons test && pnpm --filter @lumal/icons build && pnpm --filter @lumal/icons-vue test && pnpm --filter @lumal/icons-vue build && pnpm --filter @lumal/core test && pnpm --filter @lumal/core build && pnpm --filter @lumal/charts test && pnpm --filter @lumal/charts build && pnpm --filter @lumal/datav test && pnpm --filter @lumal/datav build && pnpm --filter @lumal/cockpit test && pnpm --filter @lumal/cockpit build && pnpm --filter @lumal/vben-compat test && pnpm --filter @lumal/vite test && pnpm --filter create-lumal-admin test && pnpm --filter lumal-mock-api test && pnpm --filter lumal-admin test && pnpm --filter lumal-cockpit test",
     "test:scripts": "vitest run --config vitest.config.ts scripts",
+    "test:create-consumer": "node scripts/check-create-lumal-admin-consumer.mjs",
     "test:datav:visual": "playwright test --config playwright.datav.config.ts",
     "test:e2e": "playwright test",
     "lint": "eslint .",
@@ -36,7 +37,7 @@
     "release:boundaries": "node scripts/check-release-boundaries.mjs",
     "release:artifacts": "node scripts/check-release-artifacts.mjs",
     "release:names": "node scripts/check-npm-package-names.mjs",
-    "release:check": "pnpm lint && pnpm release:boundaries && pnpm test && pnpm typecheck && pnpm build && pnpm admin:build && pnpm compat:build && pnpm release:artifacts && pnpm test:e2e && pnpm pack:dry-run"
+    "release:check": "pnpm lint && pnpm release:boundaries && pnpm test && pnpm typecheck && pnpm build && pnpm test:create-consumer && pnpm admin:build && pnpm compat:build && pnpm release:artifacts && pnpm test:e2e && pnpm pack:dry-run"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^8.2.0",
