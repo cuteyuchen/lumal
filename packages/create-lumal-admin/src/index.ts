@@ -1,6 +1,6 @@
 export {
   createLumalAdminProject,
-} from './scaffold.js'
+} from './create.js'
 export type {
   CreateLumalAdminProjectOptions,
   CreateLumalAdminProjectResult,
