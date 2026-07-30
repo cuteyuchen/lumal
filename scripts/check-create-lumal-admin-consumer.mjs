@@ -109,6 +109,7 @@ async function main() {
     ))
     const generatedPackagePath = join(projectDir, 'package.json')
     const generatedPackage = await readJson(generatedPackagePath)
+    const generatedTsConfig = await readJson(join(projectDir, 'tsconfig.json'))
     const expectedLumalVersion = createPackage.version
 
     for (const packageName of ['@lumal/core', '@lumal/icons', '@lumal/icons-vue']) {
@@ -123,8 +124,16 @@ async function main() {
       throw new Error('生成项目缺少 @iconify/vue 运行时依赖')
     }
 
+    if (generatedPackage.devDependencies?.['@types/node'] !== '^24.6.1') {
+      throw new Error('生成项目缺少 @types/node 开发依赖')
+    }
+
     if (generatedPackage.devDependencies?.['sass-embedded'] !== '^1.95.1') {
       throw new Error('生成项目缺少 sass-embedded 开发依赖')
+    }
+
+    if (!generatedTsConfig.compilerOptions?.types?.includes('node')) {
+      throw new Error('生成项目 tsconfig 未启用 node 类型')
     }
 
     generatedPackage.pnpm = {
