@@ -9,15 +9,15 @@ import { fileURLToPath } from 'node:url'
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
 const packageDirectories = {
-  '@lumal/core': 'packages/core',
   '@lumal/icons': 'packages/icons',
   '@lumal/icons-vue': 'packages/icons-vue',
+  '@lumal/core': 'packages/core',
   'create-lumal-admin': 'packages/create-lumal-admin',
 }
 const requiredBuildArtifacts = [
-  'packages/core/dist/index.js',
   'packages/icons/dist/index.js',
   'packages/icons-vue/dist/index.js',
+  'packages/core/dist/index.js',
   'packages/create-lumal-admin/dist/cli.js',
 ]
 
