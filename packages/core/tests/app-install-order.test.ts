@@ -14,9 +14,9 @@ describe('createLumalAdmin plugin order', () => {
       components: false,
       dictionary: false,
       elementPlus: createPlugin('element-plus'),
-      pinia: createPlugin('pinia') as CreateLumalAdminOptions['pinia'],
+      pinia: createPlugin('pinia') as unknown as CreateLumalAdminOptions['pinia'],
       rootComponent: defineComponent({ render: () => null }),
-      router: createPlugin('router') as CreateLumalAdminOptions['router'],
+      router: createPlugin('router') as unknown as CreateLumalAdminOptions['router'],
     })
 
     expect(order).toEqual(['pinia', 'router', 'element-plus'])
