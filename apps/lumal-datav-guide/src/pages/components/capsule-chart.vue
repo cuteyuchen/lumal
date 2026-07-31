@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { DataValueItem } from '@lumal/datav'
 import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
-import type { DataValueItem } from '@lumal/datav'
 import { LumalCapsuleChart } from '@lumal/datav'
 import { reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
@@ -81,9 +81,9 @@ const propRows: PropRow[] = [
   { name: 'colors', type: 'string[]', description: '胶囊配色数组。' },
   { name: 'max', type: 'number', description: '满刻度基准值，默认取最大值。' },
   { name: 'unit', type: 'string', description: '数值单位。' },
-  { name: 'sort', type: "false | 'asc' | 'desc'", description: '排序方式。' },
+  { name: 'sort', type: 'false | \'asc\' | \'desc\'', description: '排序方式。' },
   { name: 'showValue', type: 'boolean', description: '是否显示数值。' },
-  { name: 'ariaLabel', type: 'string', default: "'胶囊图'", description: '无障碍标签。' },
+  { name: 'ariaLabel', type: 'string', default: '\'胶囊图\'', description: '无障碍标签。' },
 ]
 </script>
 
@@ -95,11 +95,11 @@ const propRows: PropRow[] = [
     intro="横向胶囊排行图，按数值绘制填充比例，适合区域或指标对比。"
   >
     <Playground
+      v-model="playModel"
       title="在线调试"
       description="实时修改属性，预览效果与代码同步更新。"
       component-name="LumalCapsuleChart"
       :controls="playControls"
-      v-model="playModel"
       :min-height="200"
     >
       <LumalCapsuleChart

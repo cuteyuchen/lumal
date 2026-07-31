@@ -113,17 +113,17 @@ const propRows: PropRow[] = [
   { name: 'numbers', type: 'number[]', default: 'undefined', description: '多段数字（对应 DataV number 数组）。' },
   { name: 'config', type: 'DigitalFlopConfig', default: 'undefined', description: 'DataV 原生配置对象。' },
   { name: 'content', type: 'string', default: 'undefined', description: '模板串，{nt} 为数字占位符。' },
-  { name: 'prefix', type: 'string', default: "''", description: '数字前缀文本。' },
-  { name: 'suffix', type: 'string', default: "''", description: '数字后缀文本。' },
+  { name: 'prefix', type: 'string', default: '\'\'', description: '数字前缀文本。' },
+  { name: 'suffix', type: 'string', default: '\'\'', description: '数字后缀文本。' },
   { name: 'precision', type: 'number', default: '0', description: '小数位数（等价 config.toFixed）。' },
   { name: 'duration', type: 'number', default: 'undefined', description: '滚动动画时长，毫秒。' },
-  { name: 'animationCurve', type: 'string', default: "'easeOutCubic'", description: 'DataV/CRender 缓动曲线名称。' },
+  { name: 'animationCurve', type: 'string', default: '\'easeOutCubic\'', description: 'DataV/CRender 缓动曲线名称。' },
   { name: 'animationFrame', type: 'number', default: '50', description: 'DataV config 动画帧数；未传 duration 时换算为时长。' },
   { name: 'formatter', type: '(value, index) => string', default: 'undefined', description: '自定义每段数字格式化。' },
-  { name: 'color', type: 'string', default: "'#3de7c9'", description: '数字颜色。' },
+  { name: 'color', type: 'string', default: '\'#3de7c9\'', description: '数字颜色。' },
   { name: 'fontSize', type: 'number', default: '30', description: '字号，像素。' },
-  { name: 'fontWeight', type: 'number | string', default: "'normal'", description: '字重。' },
-  { name: 'textAlign', type: "'left' | 'center' | 'right'", default: "'center'", description: '对齐方式。' },
+  { name: 'fontWeight', type: 'number | string', default: '\'normal\'', description: '字重。' },
+  { name: 'textAlign', type: '\'left\' | \'center\' | \'right\'', default: '\'center\'', description: '对齐方式。' },
 ]
 </script>
 
@@ -135,11 +135,11 @@ const propRows: PropRow[] = [
     intro="对齐 DataV numberText：数值按 CRender 缓动曲线过渡，并映射填充、描边、虚线与阴影等原生 style。"
   >
     <Playground
+      v-model="playModel"
       title="在线调试"
       description="实时修改属性，预览效果与代码同步更新。"
       component-name="LumalDigitalFlop"
       :controls="playControls"
-      v-model="playModel"
       :min-height="180"
     >
       <LumalDigitalFlop

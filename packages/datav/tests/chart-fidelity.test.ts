@@ -16,8 +16,14 @@ const chartMocks = vi.hoisted(() => ({
 vi.mock('echarts', () => ({
   init: vi.fn(() => {
     const instance = {
-      dispose: vi.fn(), group: '', hideLoading: vi.fn(), off: vi.fn(), on: vi.fn(),
-      resize: vi.fn(), setOption: vi.fn(), showLoading: vi.fn(),
+      dispose: vi.fn(),
+      group: '',
+      hideLoading: vi.fn(),
+      off: vi.fn(),
+      on: vi.fn(),
+      resize: vi.fn(),
+      setOption: vi.fn(),
+      showLoading: vi.fn(),
     }
     chartMocks.instances.push(instance)
     return instance
@@ -74,6 +80,7 @@ beforeEach(() => {
   vi.stubGlobal('cancelAnimationFrame', vi.fn((id: number) => frames.delete(id)))
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => boxWidth)
   vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(() => boxHeight)
+  vi.spyOn(HTMLElement.prototype, 'isConnected', 'get').mockReturnValue(true)
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
     value: vi.fn().mockReturnValue({
@@ -91,7 +98,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('DataV chart fidelity', () => {
+describe('dataV chart fidelity', () => {
   it('active ring 保留上游 pie option、半径动画、中心翻牌和销毁清理', async () => {
     const wrapper = mount(LumalActiveRingChart, {
       props: {
@@ -139,13 +146,13 @@ describe('DataV chart fidelity', () => {
     expect(firstOption.series[1]!.data.map(item => item.itemStyle.opacity)).toEqual([1, 0])
     expect(wrapper.get('.active-ring-name').text()).toBe('甲')
     expect(wrapper.get('.dv-digital-flop text').attributes()).toMatchObject({
-      fill: '#abcdef',
+      'fill': '#abcdef',
       'font-family': 'monospace',
       'font-style': 'italic',
       'font-variant': 'small-caps',
       'font-weight': '700',
-      opacity: '0.6',
-      stroke: '#123456',
+      'opacity': '0.6',
+      'stroke': '#123456',
     })
     expect(wrapper.getComponent(LumalDigitalFlop).props('config').style).toMatchObject({
       shadowBlur: 4,
@@ -180,8 +187,19 @@ describe('DataV chart fidelity', () => {
 
     const option = chartMocks.instances[0]!.setOption.mock.calls.at(-1)![0] as { color: string[] }
     expect(option.color).toEqual([
-      '#37a2da', '#32c5e9', '#67e0e3', '#9fe6b8', '#ffdb5c', '#ff9f7f', '#fb7293',
-      '#e062ae', '#e690d1', '#e7bcf3', '#9d96f5', '#8378ea', '#96bfff',
+      '#37a2da',
+      '#32c5e9',
+      '#67e0e3',
+      '#9fe6b8',
+      '#ffdb5c',
+      '#ff9f7f',
+      '#fb7293',
+      '#e062ae',
+      '#e690d1',
+      '#e7bcf3',
+      '#9d96f5',
+      '#8378ea',
+      '#96bfff',
     ])
 
     await vi.advanceTimersByTimeAsync(101)

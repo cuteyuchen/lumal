@@ -1,12 +1,12 @@
 import type { IconDefinition } from '@lumal/icons'
-// 确保内置 lumal:* 图标完成注册（侧栏 guide:* 与顶栏主题按钮依赖）
-import '@lumal/icons'
 import { createLumalAdmin } from '@lumal/core'
 import LumalDatav from '@lumal/datav'
 import ElementPlus from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import App from './App.vue'
 import { router } from './router'
+// 确保内置 lumal:* 图标完成注册（侧栏 guide:* 与顶栏主题按钮依赖）
+import '@lumal/icons'
 import '@lumal/core/theme-chalk/index.scss'
 import '@lumal/core/style.css'
 import '@lumal/icons-vue/style.css'

@@ -1,7 +1,7 @@
-import type { CockpitMessage } from '../messaging/types'
 import type { CockpitRefreshPayload } from '../messaging/topics'
-import { COCKPIT_REFRESH_TOPIC } from '../messaging/topics'
+import type { CockpitMessage } from '../messaging/types'
 import { onBeforeUnmount } from 'vue'
+import { COCKPIT_REFRESH_TOPIC } from '../messaging/topics'
 import { useCockpitContext } from './useCockpitContext'
 
 /***********************模块刷新订阅*********************/

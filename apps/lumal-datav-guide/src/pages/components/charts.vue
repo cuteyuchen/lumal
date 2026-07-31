@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { DataVChartsOption, LumalChartsOption } from '@lumal/datav'
 import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
-import type { DataVChartsOption, LumalChartsOption } from '@lumal/datav'
 import { LumalCharts } from '@lumal/datav'
 import { computed, reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
@@ -166,11 +166,11 @@ const methodRows: PropRow[] = [
     intro="同时提供两条明确协议：config 使用 DataV 官方 @jiaminghi/charts Canvas 运行时；option 保留既有 ECharts 兼容扩展。两者不做配置互转。"
   >
     <Playground
+      v-model="playModel"
       title="DataV 原生运行时"
       description="切换折线与柱状示例，传入的均是 @jiaminghi/charts 原生 config。"
       component-name="LumalCharts"
       :controls="playControls"
-      v-model="playModel"
       :min-height="300"
     >
       <LumalCharts

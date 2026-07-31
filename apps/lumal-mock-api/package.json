@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "build": "nitro build",
+    "build:test": "nitro build --preset node-server",
     "dev": "nitro dev --host 127.0.0.1 --port 5320",
     "preview": "node .output/server/index.mjs",
     "start": "node .output/server/index.mjs",

@@ -83,10 +83,10 @@ describe('createLumalAdmin', () => {
       },
     })
 
-    expect(order).toEqual(['router', 'pinia', 'elementPlus'])
+    expect(order).toEqual(['pinia', 'router', 'elementPlus'])
     await framework.mount(document.createElement('div'))
 
-    expect(order).toEqual(['router', 'pinia', 'elementPlus', 'setup', 'routerReady'])
+    expect(order).toEqual(['pinia', 'router', 'elementPlus', 'setup', 'routerReady'])
     expect(framework.app.component('GlobalWidget')).toBe(GlobalWidget)
   })
 

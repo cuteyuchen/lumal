@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { FlylineChartConfig, FlylineCoordinate } from '@lumal/datav'
 import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
-import type { FlylineChartConfig, FlylineCoordinate } from '@lumal/datav'
 import { LumalFlylineChart } from '@lumal/datav'
 import { computed, reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
@@ -16,15 +16,43 @@ const centerIconUrl = '/img/flylineChart/mapCenterPoint.png'
 const pointIconUrl = '/img/flylineChart/mapPoint.png'
 
 const cityNames = [
-  '新乡', '焦作', '开封', '许昌', '平顶山', '洛阳', '周口', '漯河', '南阳',
-  '信阳', '驻马店', '济源', '三门峡', '商丘', '鹤壁', '濮阳', '安阳',
+  '新乡',
+  '焦作',
+  '开封',
+  '许昌',
+  '平顶山',
+  '洛阳',
+  '周口',
+  '漯河',
+  '南阳',
+  '信阳',
+  '驻马店',
+  '济源',
+  '三门峡',
+  '商丘',
+  '鹤壁',
+  '濮阳',
+  '安阳',
 ] as const
 
 const cityPoints: readonly FlylineCoordinate[] = [
-  [0.52, 0.23], [0.43, 0.29], [0.59, 0.35], [0.53, 0.47], [0.45, 0.54],
-  [0.36, 0.38], [0.62, 0.55], [0.56, 0.56], [0.37, 0.66], [0.55, 0.81],
-  [0.55, 0.67], [0.37, 0.29], [0.20, 0.36], [0.76, 0.41], [0.59, 0.18],
-  [0.68, 0.17], [0.59, 0.10],
+  [0.52, 0.23],
+  [0.43, 0.29],
+  [0.59, 0.35],
+  [0.53, 0.47],
+  [0.45, 0.54],
+  [0.36, 0.38],
+  [0.62, 0.55],
+  [0.56, 0.56],
+  [0.37, 0.66],
+  [0.55, 0.81],
+  [0.55, 0.67],
+  [0.37, 0.29],
+  [0.20, 0.36],
+  [0.76, 0.41],
+  [0.59, 0.18],
+  [0.68, 0.17],
+  [0.59, 0.10],
 ]
 
 // DataV 官方文档「基本示例」。
@@ -193,7 +221,7 @@ const code = componentCode(config)
 const propRows: PropRow[] = [
   { name: 'config', type: 'Partial<FlylineChartConfig>', description: '飞线配置，中心点向各点辐射飞线。' },
   { name: 'dev', type: 'boolean', default: 'false', description: '开发模式，配合 position 事件标定坐标。' },
-  { name: 'ariaLabel', type: 'string', default: "'飞线图'", description: '无障碍标签。' },
+  { name: 'ariaLabel', type: 'string', default: '\'飞线图\'', description: '无障碍标签。' },
 ]
 
 const configRows: PropRow[] = [
@@ -223,11 +251,11 @@ const configRows: PropRow[] = [
     intro="设置一个中心点和若干飞线起始点即可生成动态飞线图；本页主示例使用 DataV 官方河南地图数据。"
   >
     <Playground
+      v-model="playModel"
       title="官方基本示例 · 全属性在线调试"
       description="所有 DataV 原生配置均可实时修改；图标、文本、光晕和背景图使用开关渐进显示相关配置。"
       component-name="LumalFlylineChart"
       :controls="playControls"
-      v-model="playModel"
       :columns="3"
       :min-height="656"
       :code-gen="playCodeGen"

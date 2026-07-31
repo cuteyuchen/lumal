@@ -78,11 +78,11 @@ export function createDecoration1Points(): AnimatedPoint[] {
   return decoration1Grid
     .filter(() => Math.random() > 0.6)
     .map(point => ({
-    animated: Math.random() > 0.6,
-    beginSeconds: Math.random() * 2,
-    durationSeconds: 1,
-    point,
-  }))
+      animated: Math.random() > 0.6,
+      beginSeconds: Math.random() * 2,
+      durationSeconds: 1,
+      point,
+    }))
 }
 
 export const decoration1Rects = [

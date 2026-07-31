@@ -45,14 +45,14 @@ const configCode = `<LumalPercentPond :config="{ value: 72, borderRadius: 24, co
 const propRows: PropRow[] = [
   { name: 'value', type: 'number', default: 'undefined', description: '百分比数值（0–100）。' },
   { name: 'config', type: 'PercentPondConfig', default: 'undefined', description: 'DataV 原生配置对象。' },
-  { name: 'shape', type: "'bar' | 'capsule'", default: "'bar'", description: '外形：条形或胶囊。' },
+  { name: 'shape', type: '\'bar\' | \'capsule\'', default: '\'bar\'', description: '外形：条形或胶囊。' },
   { name: 'colors', type: 'string[]', default: '内置渐变', description: '填充渐变色。' },
-  { name: 'formatter', type: '(value) => string', default: "'{value}%'", description: '文本格式化。' },
+  { name: 'formatter', type: '(value) => string', default: '\'{value}%\'', description: '文本格式化。' },
   { name: 'showLabel', type: 'boolean', default: 'true', description: '是否显示中间文本。' },
   { name: 'borderWidth', type: 'number', default: '3', description: '边框宽度。' },
   { name: 'borderGap', type: 'number', default: '3', description: '边框与填充间距。' },
   { name: 'borderRadius', type: 'number', default: '5', description: '边框圆角；与上游一致，不额外裁剪内部进度线。' },
-  { name: 'textColor', type: 'string', default: "'#fff'", description: '文本颜色。' },
+  { name: 'textColor', type: 'string', default: '\'#fff\'', description: '文本颜色。' },
   { name: 'localGradient', type: 'boolean', default: 'false', description: '渐变是否随填充长度局部计算。' },
 ]
 </script>
@@ -65,11 +65,11 @@ const propRows: PropRow[] = [
     intro="对齐 DataV 百分比池：圆角只作用于渐变边框，内部虚线进度保持原生 polyline 几何；另保留 capsule 外形扩展。"
   >
     <Playground
+      v-model="playModel"
       title="在线调试"
       description="实时调整 borderRadius；较大圆角只改变边框，不会裁剪内部进度线。"
       component-name="LumalPercentPond"
       :controls="playControls"
-      v-model="playModel"
       :min-height="160"
     >
       <LumalPercentPond

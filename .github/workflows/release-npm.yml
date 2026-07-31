@@ -7,10 +7,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'package version, for example 0.0.1-beta'
+        description: package version, for example 0.0.1-beta
         required: true
       tag:
-        description: 'npm dist-tag'
+        description: npm dist-tag
         required: true
         default: beta
 

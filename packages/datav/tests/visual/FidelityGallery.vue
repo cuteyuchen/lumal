@@ -162,7 +162,9 @@ const scrollRankingConfig = {
     </div>
     <div class="fidelity-item fidelity-item--core" data-component="fullScreenContainer">
       <LumalFullScreenContainer :width="400" :height="200">
-        <div class="fullscreen-sample">全屏容器</div>
+        <div class="fullscreen-sample">
+          全屏容器
+        </div>
       </LumalFullScreenContainer>
     </div>
     <div class="fidelity-item fidelity-item--core" data-component="charts">

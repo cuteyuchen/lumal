@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { ScrollBoardConfig } from '@lumal/datav'
 import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
-import type { ScrollBoardConfig } from '@lumal/datav'
 import { LumalScrollBoard } from '@lumal/datav'
 import { computed, reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
@@ -129,7 +129,7 @@ const propRows: PropRow[] = [
   { name: 'rowKey', type: 'keyof T | fn', description: '行唯一键。' },
   { name: 'visibleRows', type: 'number', description: '可见行数（等价 rowNum）。' },
   { name: 'interval', type: 'number', description: '轮播间隔（ms）。' },
-  { name: 'step', type: "number | 'page'", description: '每次滚动行数或整页。' },
+  { name: 'step', type: 'number | \'page\'', description: '每次滚动行数或整页。' },
   { name: 'autoplay', type: 'boolean', default: 'true', description: '是否自动轮播。' },
 ]
 
@@ -144,7 +144,7 @@ const configRows: PropRow[] = [
   { name: 'oddRowBGC / evenRowBGC', type: 'string', description: '奇偶行背景色。' },
   { name: 'waitTime', type: 'number', description: '轮播间隔（ms）。' },
   { name: 'hoverPause', type: 'boolean', description: '悬停暂停。' },
-  { name: 'carousel', type: "'page' | 'single'", description: '整页或单行轮播。' },
+  { name: 'carousel', type: '\'page\' | \'single\'', description: '整页或单行轮播。' },
 ]
 </script>
 
@@ -156,11 +156,11 @@ const configRows: PropRow[] = [
     intro="表格行自动轮播，使用循环窗口索引不复制整份数据。支持 DataV 原生 config 与对象数组 + 列定义的现代 API。"
   >
     <Playground
+      v-model="playModel"
       title="在线调试"
       description="实时修改属性，预览效果与代码同步更新。"
       component-name="LumalScrollBoard"
       :controls="playControls"
-      v-model="playModel"
       :min-height="300"
       :code-gen="playCodeGen"
     >

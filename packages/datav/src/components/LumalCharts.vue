@@ -321,8 +321,9 @@ defineExpose({
   resize: (options?: ResizeOpts) => scheduleResize(options),
   setConfig: (config: DataVChartsOption, animationEnd = true) => applyDataVConfig(config, animationEnd),
   setOption: (option: EChartsOption | DataVChartsOption, options?: SetOptionOpts | boolean) => {
-    if (dataVRef.value)
+    if (dataVRef.value) {
       applyDataVConfig(option as DataVChartsOption, typeof options === 'boolean' ? options : true)
+    }
     else if (typeof options === 'object') {
       if (!chartHostSize()) {
         pendingOption = true
@@ -330,8 +331,9 @@ defineExpose({
       }
       echartsRef.value?.setOption(option as EChartsOption, options)
     }
-    else
+    else {
       applyEChartsOption(option as EChartsOption)
+    }
   },
   showLoading: (...args: Parameters<EChartsType['showLoading']>) => echartsRef.value?.showLoading(...args),
 })

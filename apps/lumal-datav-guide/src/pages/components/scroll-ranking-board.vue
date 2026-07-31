@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { RankingItem, ScrollRankingBoardConfig } from '@lumal/datav'
 import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
-import type { RankingItem, ScrollRankingBoardConfig } from '@lumal/datav'
 import { LumalScrollRankingBoard } from '@lumal/datav'
 import { reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
@@ -89,7 +89,7 @@ const propRows: PropRow[] = [
   { name: 'visibleRows', type: 'number', description: '可见行数（等价 rowNum）。' },
   { name: 'interval', type: 'number', description: '轮播间隔（ms）。' },
   { name: 'autoplay', type: 'boolean', default: 'true', description: '是否自动轮播。' },
-  { name: 'sort', type: "false | 'asc' | 'desc'", description: '排序方式。' },
+  { name: 'sort', type: 'false | \'asc\' | \'desc\'', description: '排序方式。' },
   { name: 'unit', type: 'string', description: '数值单位。' },
   { name: 'formatter', type: '(value, item, index) => string', description: '数值格式化。' },
 ]
@@ -99,7 +99,7 @@ const configRows: PropRow[] = [
   { name: 'rowNum', type: 'number', description: '可见行数。' },
   { name: 'unit', type: 'string', description: '数值单位。' },
   { name: 'sort', type: 'boolean', description: '是否按值排序。' },
-  { name: 'carousel', type: "'page' | 'single'", description: '整页或单行轮播。' },
+  { name: 'carousel', type: '\'page\' | \'single\'', description: '整页或单行轮播。' },
   { name: 'waitTime', type: 'number', description: '轮播间隔（ms）。' },
   { name: 'valueFormatter', type: '(item) => string | number', description: '数值格式化。' },
 ]
@@ -113,11 +113,11 @@ const configRows: PropRow[] = [
     intro="按数值排名的横向进度条轮播，自动计算占比与名次。支持现代 items 与 DataV 原生 config。"
   >
     <Playground
+      v-model="playModel"
       title="在线调试"
       description="实时修改属性，预览效果与代码同步更新。"
       component-name="LumalScrollRankingBoard"
       :controls="playControls"
-      v-model="playModel"
       :min-height="300"
     >
       <LumalScrollRankingBoard

@@ -12,7 +12,9 @@ const modernExample = `<LumalBorderBox :variant="8" :duration="3000">
 <template>
   <article class="guide-doc">
     <header class="guide-doc__head">
-      <p class="guide-doc__eyebrow">指南</p>
+      <p class="guide-doc__eyebrow">
+        指南
+      </p>
       <h1>@lumal/datav 介绍</h1>
       <p class="guide-doc__lead">
         面向 Lumal 驾驶舱的 Vue 3 DataV 组件包。以 DataV 2.10.0（MIT）为基准，

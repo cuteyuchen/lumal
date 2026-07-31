@@ -33,8 +33,14 @@ const dataVChartMocks = vi.hoisted(() => ({
 vi.mock('echarts', () => ({
   init: chartMocks.init.mockImplementation(() => {
     const instance = {
-      dispose: vi.fn(), group: '', hideLoading: vi.fn(), off: vi.fn(), on: vi.fn(),
-      resize: vi.fn(), setOption: vi.fn(), showLoading: vi.fn(),
+      dispose: vi.fn(),
+      group: '',
+      hideLoading: vi.fn(),
+      off: vi.fn(),
+      on: vi.fn(),
+      resize: vi.fn(),
+      setOption: vi.fn(),
+      showLoading: vi.fn(),
     }
     chartMocks.instances.push(instance)
     return instance
@@ -49,6 +55,7 @@ vi.mock('@jiaminghi/charts', () => ({
     setOption = vi.fn((option: Record<string, unknown>) => {
       this.option = option
     })
+
     constructor(_element: HTMLElement) {
       dataVChartMocks.instances.push(this)
     }
@@ -98,6 +105,7 @@ beforeEach(() => {
   })
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(400)
   vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(200)
+  vi.spyOn(HTMLElement.prototype, 'isConnected', 'get').mockReturnValue(true)
 })
 
 afterEach(() => {
@@ -264,7 +272,7 @@ describe('remaining DataV components', () => {
     await flushFrames()
     await nextTick()
     const instance = chartMocks.instances[0]!
-    expect(chartMocks.init).toHaveBeenCalledWith(expect.any(HTMLElement), 'dark', initOptions)
+    expect(chartMocks.init).toHaveBeenCalledWith(expect.any(HTMLElement), 'dark', { ...initOptions, height: 200, width: 400 })
     expect(instance.setOption).toHaveBeenCalledWith(option, { lazyUpdate: true })
     expect(instance.on).toHaveBeenCalledWith('click', click)
     await wrapper.setProps({ option: { title: { text: '更新' } } })

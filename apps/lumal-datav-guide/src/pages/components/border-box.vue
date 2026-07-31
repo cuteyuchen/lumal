@@ -151,12 +151,12 @@ const propRows: PropRow[] = [
   { name: 'variant', type: 'BorderBoxVariant (1–13)', default: '1', description: '边框样式编号，对应 DataV borderBox1–13。' },
   { name: 'colors', type: '[string, string]', default: '按 variant 内置', description: '现代 props：两段渐变边框色。' },
   { name: 'color', type: 'string[]', default: '按 variant 内置', description: 'DataV 原生 props：边框色数组，等价 colors。' },
-  { name: 'background', type: 'string', default: "'transparent'", description: '内容区背景色（现代 props）。' },
-  { name: 'backgroundColor', type: 'string', default: "'transparent'", description: 'DataV 原生背景色 prop。' },
+  { name: 'background', type: 'string', default: '\'transparent\'', description: '内容区背景色（现代 props）。' },
+  { name: 'backgroundColor', type: 'string', default: '\'transparent\'', description: 'DataV 原生背景色 prop。' },
   { name: 'duration', type: 'number', default: '按 variant', description: '动效时长（毫秒），对 variant 1 / 8 / 9 / 11 / 12 生效。' },
   { name: 'dur', type: 'number', default: '按 variant', description: 'DataV 原生动画时长（秒），主要兼容 borderBox8。' },
   { name: 'reverse', type: 'boolean', default: 'false', description: '反转方向；对 variant 4 / 5 / 8 生效。' },
-  { name: 'title', type: 'string', default: "''", description: '标题文本（仅 variant 11）。' },
+  { name: 'title', type: 'string', default: '\'\'', description: '标题文本（仅 variant 11）。' },
   { name: 'titleWidth', type: 'number', default: '250', description: '标题栏宽度，像素（仅 variant 11）。' },
 ]
 </script>
@@ -169,11 +169,11 @@ const propRows: PropRow[] = [
     intro="科技感边框容器，共 13 种变体。作为面板外壳包裹任意内容，部分变体带描边流光动画。"
   >
     <Playground
+      v-model="playModel"
       title="在线调试"
       description="按当前变体仅展示该边框支持的属性。背景色与透明度仅在 demo 中组装为 backgroundColor。"
       component-name="LumalBorderBox"
       :controls="playControls"
-      v-model="playModel"
       :min-height="220"
       :code-gen="generatePlaygroundCode"
       slot-code="<LumalDigitalFlop :value=&quot;1286&quot; suffix=&quot; 台&quot; :font-size=&quot;34&quot; />"

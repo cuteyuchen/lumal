@@ -14,8 +14,14 @@ import {
 
 vi.mock('echarts', () => ({
   init: vi.fn(() => ({
-    dispose: vi.fn(), group: '', hideLoading: vi.fn(), off: vi.fn(), on: vi.fn(),
-    resize: vi.fn(), setOption: vi.fn(), showLoading: vi.fn(),
+    dispose: vi.fn(),
+    group: '',
+    hideLoading: vi.fn(),
+    off: vi.fn(),
+    on: vi.fn(),
+    resize: vi.fn(),
+    setOption: vi.fn(),
+    showLoading: vi.fn(),
   })),
 }))
 

@@ -1,6 +1,5 @@
 import type { DictionaryOption } from '@lumal/core/dictionary'
 import type { LumalMenuRecord } from '@lumal/core/router'
-import { adminMenuSeed, staticAdminMenuSeed } from './menu-seed'
 import {
   resetMockAccountPassword,
   resetMockAccounts,
@@ -8,6 +7,7 @@ import {
   updateMockAccountRoles,
   updateMockAccountStatus,
 } from './auth'
+import { adminMenuSeed, staticAdminMenuSeed } from './menu-seed'
 import {
   adminPermissionCodes,
   deleteMockRolePermissions,
