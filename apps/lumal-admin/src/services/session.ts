@@ -89,6 +89,13 @@ function clearAdminTabSnapshot(): void {
   }
 }
 
+export const adminSession = createAuthSession({
+  onSessionExpired: clearCurrentSessionState,
+  redirect: { loginPath, redirectQueryKey: 'redirect' },
+  storage: sessionStorage,
+  tokenKey: tokenStorageKey,
+})
+
 let reLoginPrompt: Promise<void> | undefined
 
 /**
@@ -133,13 +140,6 @@ export async function handleAdminSessionExpired(): Promise<void> {
   await adminSession.handleSessionExpired()
   await promptReLoginAndRedirect()
 }
-
-export const adminSession = createAuthSession({
-  onSessionExpired: clearCurrentSessionState,
-  redirect: { loginPath, redirectQueryKey: 'redirect' },
-  storage: sessionStorage,
-  tokenKey: tokenStorageKey,
-})
 
 const storedUser = adminSession.isAuthenticated() ? readStoredUser() : null
 
