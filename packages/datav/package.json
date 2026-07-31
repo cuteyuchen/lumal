@@ -111,7 +111,7 @@
   "scripts": {
     "build": "vite build --config vite.config.ts && vue-tsc -p tsconfig.json --emitDeclarationOnly --outDir dist && node ../../scripts/clean-package-dist.mjs dist",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",
-    "test": "vitest run --config ../../vitest.config.ts tests --exclude tests/visual/**"
+    "test": "vitest run --config ../../vitest.config.ts tests --exclude \"tests/visual/**\""
   },
   "peerDependencies": {
     "echarts": "^5.5.0",

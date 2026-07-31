@@ -80,6 +80,7 @@ beforeEach(() => {
   vi.stubGlobal('cancelAnimationFrame', vi.fn((id: number) => frames.delete(id)))
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => boxWidth)
   vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(() => boxHeight)
+  vi.spyOn(HTMLElement.prototype, 'isConnected', 'get').mockReturnValue(true)
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
     value: vi.fn().mockReturnValue({

@@ -105,6 +105,7 @@ beforeEach(() => {
   })
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(400)
   vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(200)
+  vi.spyOn(HTMLElement.prototype, 'isConnected', 'get').mockReturnValue(true)
 })
 
 afterEach(() => {
