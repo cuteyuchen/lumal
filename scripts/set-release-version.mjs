@@ -13,7 +13,7 @@ import process from 'node:process'
 
 const version = process.argv[2]?.trim()
 
-if (!version || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version))
+if (!version || !/^\d+\.\d+\.\d+(?:-[\d.a-z-]+)?$/i.test(version))
   throw new Error(`版本号不合法：${version || '空值'}`)
 
 // 先收集所有 workspace 包名，只改写指向这些包的依赖

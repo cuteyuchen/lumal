@@ -8,7 +8,9 @@ COPY packages ./packages
 COPY apps/lumal-mock-api ./apps/lumal-mock-api
 
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter lumal-mock-api build
+# 必须显式指定 node-server preset：nitro.config.ts 的默认 preset 是 'vercel'，
+# 它产出 .vercel/output 而非下方 COPY 需要的 .output，会导致镜像构建失败。
+RUN pnpm --filter lumal-mock-api build:test
 
 FROM node:22-bookworm-slim
 
