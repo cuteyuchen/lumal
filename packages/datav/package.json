@@ -1,7 +1,7 @@
 {
   "name": "@lumal/datav",
   "type": "module",
-  "version": "0.0.1-beta",
+  "version": "0.0.2-beta",
   "description": "High-fidelity Vue 3 refactors of DataV cockpit visualization components.",
   "license": "MIT",
   "keywords": [

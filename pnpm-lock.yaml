@@ -63,16 +63,16 @@ importers:
   apps/lumal-admin:
     dependencies:
       '@lumal/charts':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/charts
       '@lumal/core':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/core
       '@lumal/icons':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/icons
       '@lumal/icons-vue':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/icons-vue
       echarts:
         specifier: ^5.5.0
@@ -106,19 +106,19 @@ importers:
   apps/lumal-cockpit:
     dependencies:
       '@lumal/charts':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/charts
       '@lumal/cockpit':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/cockpit
       '@lumal/core':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/core
       '@lumal/datav':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/datav
       '@lumal/icons-vue':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/icons-vue
       cesium:
         specifier: 1.143.0
@@ -164,16 +164,16 @@ importers:
   apps/lumal-datav-guide:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/core
       '@lumal/datav':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/datav
       '@lumal/icons':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/icons
       '@lumal/icons-vue':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/icons-vue
       echarts:
         specifier: ^5.6.0
@@ -210,7 +210,7 @@ importers:
   apps/lumal-mock-api:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/core
       h3:
         specifier: 1.15.11
@@ -232,16 +232,16 @@ importers:
   apps/vben-compat-demo:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/core
       '@lumal/icons':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/icons
       '@lumal/icons-vue':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/icons-vue
       '@lumal/vben-compat':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../../packages/vben-compat
       element-plus:
         specifier: ^2.11.0
@@ -279,10 +279,10 @@ importers:
   packages/cockpit:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../core
       '@lumal/icons-vue':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../icons-vue
       element-plus:
         specifier: ^2.11.0
@@ -301,10 +301,10 @@ importers:
   packages/core:
     dependencies:
       '@lumal/icons':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../icons
       '@lumal/icons-vue':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../icons-vue
       element-plus:
         specifier: ^2.11.0
@@ -349,7 +349,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.1(vue@3.5.39(typescript@6.0.3))
       '@lumal/icons':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../icons
       vue:
         specifier: ^3.5.0
@@ -358,7 +358,7 @@ importers:
   packages/vben-compat:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.1-beta
+        specifier: 0.0.2-beta
         version: link:../core
       vue:
         specifier: ^3.5.0

@@ -9,10 +9,10 @@
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
-    "@lumal/core": "0.0.1-beta",
-    "@lumal/icons": "0.0.1-beta",
-    "@lumal/icons-vue": "0.0.1-beta",
-    "@lumal/vben-compat": "0.0.1-beta",
+    "@lumal/core": "0.0.2-beta",
+    "@lumal/icons": "0.0.2-beta",
+    "@lumal/icons-vue": "0.0.2-beta",
+    "@lumal/vben-compat": "0.0.2-beta",
     "element-plus": "^2.11.0",
     "vue": "^3.5.0"
   },

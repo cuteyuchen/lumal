@@ -1,7 +1,7 @@
 {
   "name": "@lumal/icons",
   "type": "module",
-  "version": "0.0.1-beta",
+  "version": "0.0.2-beta",
   "description": "Framework-agnostic Lumal icon registry and SVG utilities.",
   "license": "MIT",
   "keywords": [

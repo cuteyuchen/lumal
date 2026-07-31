@@ -1,7 +1,7 @@
 {
   "name": "@lumal/vite",
   "type": "module",
-  "version": "0.0.1-beta",
+  "version": "0.0.2-beta",
   "description": "Lumal Vite component resolver, workspace aliases and optional devtools helpers.",
   "license": "MIT",
   "keywords": [

@@ -12,11 +12,11 @@
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
-    "@lumal/charts": "0.0.1-beta",
-    "@lumal/cockpit": "0.0.1-beta",
-    "@lumal/core": "0.0.1-beta",
-    "@lumal/datav": "0.0.1-beta",
-    "@lumal/icons-vue": "0.0.1-beta",
+    "@lumal/charts": "0.0.2-beta",
+    "@lumal/cockpit": "0.0.2-beta",
+    "@lumal/core": "0.0.2-beta",
+    "@lumal/datav": "0.0.2-beta",
+    "@lumal/icons-vue": "0.0.2-beta",
     "cesium": "1.143.0",
     "china-geojson": "1.0.0",
     "echarts": "^5.6.0",

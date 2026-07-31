@@ -1,7 +1,7 @@
 {
   "name": "@lumal/cockpit",
   "type": "module",
-  "version": "0.0.1-beta",
+  "version": "0.0.2-beta",
   "description": "Lumal generic cockpit orchestration framework: layout runtime, component registry, designer and message bus.",
   "license": "MIT",
   "keywords": [
@@ -63,8 +63,8 @@
     }
   },
   "dependencies": {
-    "@lumal/core": "0.0.1-beta",
-    "@lumal/icons-vue": "0.0.1-beta",
+    "@lumal/core": "0.0.2-beta",
+    "@lumal/icons-vue": "0.0.2-beta",
     "sortablejs": "^1.15.7"
   },
   "devDependencies": {
