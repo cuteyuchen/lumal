@@ -75,8 +75,23 @@ jobs:
           }
           NODE
 
-      - name: Run release checks
-        run: pnpm release:check
+      # 完整门禁（lint/test/typecheck/E2E/pack 验证）由同一个 tag 上的
+      # release-gate.yml 承担，这里只做发布必需的构建与边界校验，避免重复跑一遍。
+      # 注：原先在此调用 pnpm release:check，但本 job 未安装 Chromium，
+      # 其中的 test:e2e 必然失败。
+      - name: Release boundaries
+        run: pnpm release:boundaries
+
+      - name: Build packages
+        run: pnpm build
+
+      # release:artifacts 会校验 apps/lumal-admin/dist 的分包与体积，
+      # 而 pnpm build 不构建 admin，需显式补一步。
+      - name: Build admin demo
+        run: pnpm admin:build
+
+      - name: Verify release artifacts
+        run: pnpm release:artifacts
 
       - name: Publish packages
         env:
