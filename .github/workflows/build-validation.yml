@@ -7,7 +7,7 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: build-validation-${{ github.ref }}
@@ -19,8 +19,6 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
 
       - uses: pnpm/action-setup@v4
 
@@ -31,36 +29,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Update DataV init assertion
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path('packages/datav/tests/missing-components.test.ts')
-          source = path.read_text()
-          old = "expect(chartMocks.init).toHaveBeenCalledWith(expect.any(HTMLElement), 'dark', initOptions)"
-          new = "expect(chartMocks.init).toHaveBeenCalledWith(expect.any(HTMLElement), 'dark', { ...initOptions, height: 200, width: 400 })"
-          if old in source:
-              path.write_text(source.replace(old, new))
-          PY
-
-      - name: Commit DataV assertion fix
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git restore --source=HEAD -- .github/workflows
-          if git diff --quiet; then
-            echo "No assertion changes"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add packages/datav/tests/missing-components.test.ts
-          git commit -m "test: align DataV chart init expectation"
-          git push origin HEAD:${{ github.head_ref }}
 
       - name: Build packages
         run: pnpm build
