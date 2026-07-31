@@ -272,7 +272,7 @@ describe('remaining DataV components', () => {
     await flushFrames()
     await nextTick()
     const instance = chartMocks.instances[0]!
-    expect(chartMocks.init).toHaveBeenCalledWith(expect.any(HTMLElement), 'dark', initOptions)
+    expect(chartMocks.init).toHaveBeenCalledWith(expect.any(HTMLElement), 'dark', { ...initOptions, height: 200, width: 400 })
     expect(instance.setOption).toHaveBeenCalledWith(option, { lazyUpdate: true })
     expect(instance.on).toHaveBeenCalledWith('click', click)
     await wrapper.setProps({ option: { title: { text: '更新' } } })
