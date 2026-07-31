@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vue-tsc --noEmit -p tsconfig.json && vite build",
-    "test": "pnpm --filter lumal-mock-api build && vitest run --config vitest.config.ts tests",
+    "test": "pnpm --filter lumal-mock-api build && vitest run --config vitest.config.ts",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
