@@ -4,12 +4,16 @@ on:
   push:
     branches:
       - fix/lint-cleanup-20260731
+  pull_request:
+    branches:
+      - master
 
 permissions:
   contents: write
 
 jobs:
   autofix:
+    if: github.event_name == 'push' || github.head_ref == 'fix/lint-cleanup-20260731'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -42,5 +46,3 @@ jobs:
           git add .
           git commit -m "style: apply eslint autofixes"
           git push origin HEAD:fix/lint-cleanup-20260731
-
-# Triggered after the workflow became available on the branch.
