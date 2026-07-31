@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { ConicalColumnChartConfig, DataValueItem } from '@lumal/datav'
 import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
-import type { ConicalColumnChartConfig, DataValueItem } from '@lumal/datav'
 import { LumalConicalColumnChart } from '@lumal/datav'
 import { computed, reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
@@ -164,7 +164,7 @@ function buildPlaygroundCode(model: Record<string, unknown>): string {
   const imageSideLength = normalizePositive(model.imageSideLength, 30)
   const scriptLines = [
     '<script setup lang="ts">',
-    "import { LumalConicalColumnChart } from '@lumal/datav'",
+    'import { LumalConicalColumnChart } from \'@lumal/datav\'',
     '',
     'const items = [',
     formatItems(items),
@@ -233,15 +233,15 @@ const propRows: PropRow[] = [
   { name: 'items', type: 'readonly DataValueItem[]', default: 'undefined', description: '现代数据项：key、label、value，可用 color 覆盖单柱颜色。' },
   { name: 'config', type: 'ConicalColumnChartConfig', default: '{}', description: 'DataV 兼容配置，data 使用 name/value。' },
   { name: 'max', type: 'number', default: '数据最大值', description: '满刻度基准值；非正值或小于数据最大值时按数据最大值计算。' },
-  { name: 'unit', type: 'string', default: "''", description: '数值单位。' },
-  { name: 'sort', type: "false | 'asc' | 'desc'", default: "'desc'", description: '排序方式；DataV 原版固定降序。' },
+  { name: 'unit', type: 'string', default: '\'\'', description: '数值单位。' },
+  { name: 'sort', type: 'false | \'asc\' | \'desc\'', default: '\'desc\'', description: '排序方式；DataV 原版固定降序。' },
   { name: 'showValue', type: 'boolean', default: 'false', description: '是否显示数值。' },
   { name: 'images', type: 'readonly string[]', default: '[]', description: '柱顶图片数组，排序后按名次依次使用。' },
   { name: 'imageSideLength', type: 'number', default: '30', description: '柱顶图片边长。' },
   { name: 'fontSize', type: 'number', default: '12', description: '文字大小。' },
-  { name: 'columnColor', type: 'string', default: "'rgba(0, 194, 255, 0.4)'", description: '锥柱颜色，支持 rgba() 透明度。' },
-  { name: 'textColor', type: 'string', default: "'#fff'", description: '文字颜色。' },
-  { name: 'ariaLabel', type: 'string', default: "'锥形柱图'", description: '图表无障碍标签。' },
+  { name: 'columnColor', type: 'string', default: '\'rgba(0, 194, 255, 0.4)\'', description: '锥柱颜色，支持 rgba() 透明度。' },
+  { name: 'textColor', type: 'string', default: '\'#fff\'', description: '文字颜色。' },
+  { name: 'ariaLabel', type: 'string', default: '\'锥形柱图\'', description: '图表无障碍标签。' },
 ]
 
 const configRows: PropRow[] = [
@@ -249,8 +249,8 @@ const configRows: PropRow[] = [
   { name: 'img', type: 'readonly string[]', default: '[]', description: '柱顶图片 URL，排序后按名次依次使用。' },
   { name: 'fontSize', type: 'number', default: '12', description: '文字大小。' },
   { name: 'imgSideLength', type: 'number', default: '30', description: '柱顶图片边长。' },
-  { name: 'columnColor', type: 'string', default: "'rgba(0, 194, 255, 0.4)'", description: '锥柱颜色。' },
-  { name: 'textColor', type: 'string', default: "'#fff'", description: '文字颜色。' },
+  { name: 'columnColor', type: 'string', default: '\'rgba(0, 194, 255, 0.4)\'', description: '锥柱颜色。' },
+  { name: 'textColor', type: 'string', default: '\'#fff\'', description: '文字颜色。' },
   { name: 'showValue', type: 'boolean', default: 'false', description: '是否显示柱数值。' },
 ]
 </script>

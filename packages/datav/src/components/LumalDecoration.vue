@@ -15,11 +15,11 @@ import { useAnimationPause } from '../composables/useAnimationPause'
 import { useElementSize } from '../composables/useElementSize'
 import { colorStyle } from '../utils'
 import {
-  createDecorationInstanceId,
   createDecoration1Points,
   createDecoration3Points,
   createDecoration6Bars,
   createDecoration9Fills,
+  createDecorationInstanceId,
   createRadarGeometry,
   decoration1Rects,
   DECORATION_DEFAULT_COLORS,
@@ -27,13 +27,6 @@ import {
   fadeColor,
   polylineLength,
 } from './decorationGeometry'
-
-// DataV intentionally creates these layouts with Math.random on each mount.
-// Keep that behavior instance-local instead of freezing a package-wide seed.
-const decoration1Points = createDecoration1Points()
-const decoration3Points = createDecoration3Points()
-const decoration6Bars = createDecoration6Bars()
-const decoration9Fills = createDecoration9Fills()
 
 const props = withDefaults(defineProps<{
   variant?: DecorationVariant
@@ -56,6 +49,12 @@ const props = withDefaults(defineProps<{
   scanDur: undefined,
   variant: 1,
 })
+// DataV intentionally creates these layouts with Math.random on each mount.
+// Keep that behavior instance-local instead of freezing a package-wide seed.
+const decoration1Points = createDecoration1Points()
+const decoration3Points = createDecoration3Points()
+const decoration6Bars = createDecoration6Bars()
+const decoration9Fills = createDecoration9Fills()
 
 const animationRef = useTemplateRef<HTMLElement>('animationRef')
 const size = useElementSize(animationRef)

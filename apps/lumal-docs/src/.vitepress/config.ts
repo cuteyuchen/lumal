@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress'
+import { siteLinks } from './config/links'
 import { nav } from './config/nav'
 import { sidebar } from './config/sidebar'
-import { siteLinks } from './config/links'
 
 export default defineConfig({
   title: 'Lumal',

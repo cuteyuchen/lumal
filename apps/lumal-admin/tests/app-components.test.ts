@@ -167,11 +167,11 @@ describe('app header actions', () => {
     const mobileStyles = source.slice(mobileStart)
 
     expect(mobileStart).toBeGreaterThan(-1)
-    expect(source.slice(0, mobileStart)).toMatch(/:deep\(\.el-button\)\s*{\s*width:\s*44px;\s*height:\s*44px;/)
-    expect(mobileStyles).toMatch(/\.lumal-admin-header-actions__desktop-only\s*{\s*display:\s*none;/)
-    expect(mobileStyles).toMatch(/\.lumal-admin-header-actions__mobile-menu\s*{\s*display:\s*inline-flex;/)
-    expect(mobileStyles).toMatch(/:deep\(\.el-button\)\s*{\s*width:\s*36px;\s*height:\s*36px;/)
-    expect(source).toMatch(/\.lumal-admin-header-actions__mobile-trigger\s*{[\s\S]*?width:\s*36px;[\s\S]*?height:\s*36px;/)
+    expect(source.slice(0, mobileStart)).toMatch(/:deep\(\.el-button\)\s*\{\s*width:\s*44px;\s*height:\s*44px;/)
+    expect(mobileStyles).toMatch(/\.lumal-admin-header-actions__desktop-only\s*\{\s*display:\s*none;/)
+    expect(mobileStyles).toMatch(/\.lumal-admin-header-actions__mobile-menu\s*\{\s*display:\s*inline-flex;/)
+    expect(mobileStyles).toMatch(/:deep\(\.el-button\)\s*\{\s*width:\s*36px;\s*height:\s*36px;/)
+    expect(source).toMatch(/\.lumal-admin-header-actions__mobile-trigger\s*\{[\s\S]*?width:\s*36px;[\s\S]*?height:\s*36px;/)
   })
 })
 

@@ -31,7 +31,7 @@ export default defineConfig({
         'flyline-chart': resolve(packageRoot, 'src/components/LumalFlylineChart.vue'),
         'flyline-chart-enhanced': resolve(packageRoot, 'src/components/LumalFlylineChartEnhanced.vue'),
         'full-screen-container': resolve(packageRoot, 'src/components/LumalFullScreenContainer.vue'),
-        index: resolve(packageRoot, 'src/index.ts'),
+        'index': resolve(packageRoot, 'src/index.ts'),
         'loading': resolve(packageRoot, 'src/components/LumalLoading.vue'),
         'percent-pond': resolve(packageRoot, 'src/components/LumalPercentPond.vue'),
         'scroll-board': resolve(packageRoot, 'src/components/LumalScrollBoard.vue'),

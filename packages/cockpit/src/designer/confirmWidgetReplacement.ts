@@ -15,4 +15,3 @@ export async function confirmWidgetReplacement(): Promise<boolean> {
     return false
   }
 }
-

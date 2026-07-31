@@ -58,7 +58,7 @@ const propRows: PropRow[] = [
   { name: 'label', type: 'string', description: '动画下方的文案。' },
   { name: 'status', type: 'LoadingStatus', description: '加载状态，可用于切换动画表现。' },
   { name: 'variant', type: 'LoadingVariant', description: '动画变体。' },
-  { name: 'colors', type: '[string, string]', default: "['#02bcfe', '#3be6cb']", description: '渐变起止色。' },
+  { name: 'colors', type: '[string, string]', default: '[\'#02bcfe\', \'#3be6cb\']', description: '渐变起止色。' },
   { name: 'duration', type: 'number', description: '一个动画循环的时长（毫秒）。' },
 ]
 </script>
@@ -71,11 +71,11 @@ const propRows: PropRow[] = [
     intro="驾驶舱加载动画，支持尺寸、渐变色与文案。动画在页面隐藏、离开视口或 prefers-reduced-motion 下自动暂停。"
   >
     <Playground
+      v-model="playModel"
       title="在线调试"
       description="实时修改属性，预览效果与代码同步更新。"
       component-name="LumalLoading"
       :controls="playControls"
-      v-model="playModel"
       :min-height="200"
     >
       <LumalLoading

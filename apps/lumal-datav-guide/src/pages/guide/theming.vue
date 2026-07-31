@@ -56,7 +56,9 @@ const cockpitExample = `/* Cockpit / Admin 应用层：把 datav 语义变量映
 <template>
   <article class="guide-doc">
     <header class="guide-doc__head">
-      <p class="guide-doc__eyebrow">指南</p>
+      <p class="guide-doc__eyebrow">
+        指南
+      </p>
       <h1>主题变量</h1>
       <p class="guide-doc__lead">
         组件默认值与 DataV 一致。现代 API 的外观由一组 <code>--lumal-datav-*</code> 语义变量驱动，

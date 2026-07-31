@@ -3,16 +3,6 @@ import type { CSSProperties } from 'vue'
 import type { CapsuleChartConfig, DataValueItem } from '../types'
 import { computed } from 'vue'
 
-const DEFAULT_COLORS = [
-  '#37a2da',
-  '#32c5e9',
-  '#67e0e3',
-  '#9fe6b8',
-  '#ffdb5c',
-  '#ff9f7f',
-  '#fb7293',
-] as const
-
 const props = withDefaults(defineProps<{
   items?: readonly DataValueItem[]
   config?: CapsuleChartConfig
@@ -32,6 +22,16 @@ const props = withDefaults(defineProps<{
   sort: false,
   unit: undefined,
 })
+
+const DEFAULT_COLORS = [
+  '#37a2da',
+  '#32c5e9',
+  '#67e0e3',
+  '#9fe6b8',
+  '#ffdb5c',
+  '#ff9f7f',
+  '#fb7293',
+] as const
 
 const sourceItems = computed<DataValueItem[]>(() => {
   if (props.items !== undefined)
@@ -68,7 +68,7 @@ const maximum = computed(() => props.max ?? (
 const lengths = computed(() => chartItems.value.map(item => maximum.value ? item.value / maximum.value : 0))
 const labels = computed(() => {
   const oneFifth = maximum.value / 5
-  return Array.from(new Set(new Array(6).fill(0).map((_, index) => Math.ceil(index * oneFifth))))
+  return Array.from(new Set(Array.from({ length: 6 }).fill(0).map((_, index) => Math.ceil(index * oneFifth))))
 })
 
 function columnStyle(length: number, index: number): CSSProperties {

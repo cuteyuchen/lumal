@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { FullScreenContainerMode } from '@lumal/datav'
 import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
-import type { FullScreenContainerMode } from '@lumal/datav'
 import { computed, reactive } from 'vue'
 import CodeBlock from '@/components/CodeBlock.vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
@@ -144,11 +144,11 @@ const propRows: PropRow[] = [
     intro="按设计稿尺寸等比缩放铺满屏幕的驾驶舱根容器。内部内容按固定设计尺寸布局，容器负责随视口缩放。"
   >
     <Playground
+      v-model="playModel"
       title="在线调试（迷你预览）"
       description="真实组件会 fixed 铺满浏览器视口。下方用同等缩放公式在固定画布内模拟，可调 mode / 设计尺寸 / 模拟视口。"
       component-name="LumalFullScreenContainer"
       :controls="playControls"
-      v-model="playModel"
       :min-height="320"
       :code-gen="playCodeGen"
       slot-code="<YourCockpit />"

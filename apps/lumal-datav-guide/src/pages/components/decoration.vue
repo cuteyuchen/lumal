@@ -172,11 +172,11 @@ const propRows: PropRow[] = [
     intro="氛围装饰件，共 12 种变体。多用于面板标题旁、分隔线或角落点缀，自带循环动画。展示尺寸对齐官方文档。"
   >
     <Playground
+      v-model="playModel"
       title="在线调试"
       description="按当前变体仅展示支持的属性；预览区高度与官方文档一致（约 200px 容器）。"
       component-name="LumalDecoration"
       :controls="playControls"
-      v-model="playModel"
       :min-height="200"
       :code-gen="generatePlaygroundCode"
     >

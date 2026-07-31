@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { FlylineCoordinate, FlylineEnhancedConfig, FlylineEnhancedLine, FlylineEnhancedPoint } from '@lumal/datav'
 import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
-import type { FlylineCoordinate, FlylineEnhancedConfig, FlylineEnhancedLine, FlylineEnhancedPoint } from '@lumal/datav'
 import { LumalFlylineChartEnhanced } from '@lumal/datav'
 import { computed, reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
@@ -199,7 +199,7 @@ const code = componentCode(config)
 const propRows: PropRow[] = [
   { name: 'config', type: 'FlylineEnhancedConfig', description: '增强飞线配置，支持任意起止点连线。' },
   { name: 'dev', type: 'boolean', default: 'false', description: '开发模式，点击图表可输出绝对坐标与相对坐标。' },
-  { name: 'ariaLabel', type: 'string', default: "'增强飞线图'", description: '无障碍标签。' },
+  { name: 'ariaLabel', type: 'string', default: '\'增强飞线图\'', description: '无障碍标签。' },
 ]
 
 const configRows: PropRow[] = [
@@ -224,11 +224,11 @@ const configRows: PropRow[] = [
     intro="配置命名点后可在任意两点之间设置飞线；本页主示例使用 DataV 官方河南地图与郑州汇聚拓扑。"
   >
     <Playground
+      v-model="playModel"
       title="官方基本示例 · 全属性在线调试"
       description="所有 DataV 原生全局配置均可实时修改；点图标、点名称、光晕和背景图使用开关渐进显示相关配置。"
       component-name="LumalFlylineChartEnhanced"
       :controls="playControls"
-      v-model="playModel"
       :columns="3"
       :min-height="656"
       :code-gen="playCodeGen"

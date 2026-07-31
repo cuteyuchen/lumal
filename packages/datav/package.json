@@ -117,10 +117,10 @@
     "echarts": "^5.5.0",
     "vue": "^3.5.0"
   },
-  "devDependencies": {
-    "echarts": "^5.5.0"
-  },
   "dependencies": {
     "@jiaminghi/charts": "0.2.18"
+  },
+  "devDependencies": {
+    "echarts": "^5.5.0"
   }
 }

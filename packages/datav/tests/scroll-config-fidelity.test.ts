@@ -52,7 +52,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('DataV scrollBoard config fidelity', () => {
+describe('dataV scrollBoard config fidelity', () => {
   it('复原 header、index、列宽、奇偶背景与安全事件 payload', async () => {
     const onClick = vi.fn()
     const onMouseover = vi.fn()
@@ -138,7 +138,7 @@ describe('DataV scrollBoard config fidelity', () => {
   })
 })
 
-describe('DataV scrollRankingBoard config fidelity', () => {
+describe('dataV scrollRankingBoard config fidelity', () => {
   it('复原负数百分比、排名、formatter、DOM 与两阶段滚动', async () => {
     const valueFormatter = vi.fn(item => `第${item.ranking}名 ${item.value}`)
     const wrapper = mount(LumalScrollRankingBoard, {

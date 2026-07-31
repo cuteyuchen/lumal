@@ -157,7 +157,7 @@ function rowStyle(entry: RenderEntry): CSSProperties {
   return {
     '--lumal-ranking-color': color,
     '--lumal-ranking-ratio': ratio(entry),
-    height: `${height}%`,
+    'height': `${height}%`,
   } as CSSProperties
 }
 
@@ -198,9 +198,15 @@ watch(() => props.config, () => animation.reset(0))
         <div class="lumal-scroll-ranking-board__slot">
           <slot :item="entry.item" :index="entry.sourceIndex" :ratio="ratio(entry)">
             <div class="ranking-info lumal-scroll-ranking-board__summary">
-              <div class="rank lumal-scroll-ranking-board__rank">No.{{ entry.ranking }}</div>
-              <div class="info-name lumal-scroll-ranking-board__label">{{ entry.item.label }}</div>
-              <div class="ranking-value"><strong>{{ formattedValue(entry) }}</strong></div>
+              <div class="rank lumal-scroll-ranking-board__rank">
+                No.{{ entry.ranking }}
+              </div>
+              <div class="info-name lumal-scroll-ranking-board__label">
+                {{ entry.item.label }}
+              </div>
+              <div class="ranking-value">
+                <strong>{{ formattedValue(entry) }}</strong>
+              </div>
             </div>
             <div class="ranking-column lumal-scroll-ranking-board__track" aria-hidden="true">
               <div class="inside-column" :style="{ width: `${entry.percent}%` }">

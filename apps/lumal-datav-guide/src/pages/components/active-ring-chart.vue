@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { DataValueItem } from '@lumal/datav'
 import type { PlaygroundControl } from '@/components/Playground.vue'
 import type { PropRow } from '@/components/PropsTable.vue'
-import type { DataValueItem } from '@lumal/datav'
 import { LumalActiveRingChart } from '@lumal/datav'
 import { computed, reactive } from 'vue'
 import ComponentDoc from '@/components/ComponentDoc.vue'
@@ -79,7 +79,7 @@ const propRows: PropRow[] = [
   { name: 'interval', type: 'number', default: 'undefined', description: '活动扇区自动切换间隔（毫秒），优先于 config.activeTimeGap。' },
   { name: 'autoplay', type: 'boolean', default: 'true', description: '是否自动轮播活动扇区。' },
   { name: 'v-model:activeKey', type: 'DataValueKey', description: '当前激活项的受控绑定。' },
-  { name: 'ariaLabel', type: 'string', default: "'活动环图'", description: '无障碍标签。' },
+  { name: 'ariaLabel', type: 'string', default: '\'活动环图\'', description: '无障碍标签。' },
 ]
 
 const configRows: PropRow[] = [
@@ -104,11 +104,11 @@ const configRows: PropRow[] = [
     intro="对齐 DataV 活动环几何：每个扇区保持固定线宽，当前项按 activeRadius 向外放大或向内收缩，中心数字同步显示占比。"
   >
     <Playground
+      v-model="playModel"
       title="在线调试"
       description="实时修改基础半径与激活半径；将 activeRadius 调到 radius 以下可验证向内收缩行为。"
       component-name="LumalActiveRingChart"
       :controls="playControls"
-      v-model="playModel"
       :min-height="280"
     >
       <LumalActiveRingChart

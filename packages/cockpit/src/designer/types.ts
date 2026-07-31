@@ -5,4 +5,3 @@ import type { DraftWidgetLocation } from './useCockpitDraft'
 export type DesignerPlacementSelection
   = | { kind: 'library', type: string, title: string }
     | { kind: 'placed', location: DraftWidgetLocation, widgetId: string, title: string }
-

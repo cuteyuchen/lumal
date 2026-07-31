@@ -33,8 +33,14 @@ const dataVChartMocks = vi.hoisted(() => ({
 vi.mock('echarts', () => ({
   init: chartMocks.init.mockImplementation(() => {
     const instance = {
-      dispose: vi.fn(), group: '', hideLoading: vi.fn(), off: vi.fn(), on: vi.fn(),
-      resize: vi.fn(), setOption: vi.fn(), showLoading: vi.fn(),
+      dispose: vi.fn(),
+      group: '',
+      hideLoading: vi.fn(),
+      off: vi.fn(),
+      on: vi.fn(),
+      resize: vi.fn(),
+      setOption: vi.fn(),
+      showLoading: vi.fn(),
     }
     chartMocks.instances.push(instance)
     return instance
@@ -49,6 +55,7 @@ vi.mock('@jiaminghi/charts', () => ({
     setOption = vi.fn((option: Record<string, unknown>) => {
       this.option = option
     })
+
     constructor(_element: HTMLElement) {
       dataVChartMocks.instances.push(this)
     }

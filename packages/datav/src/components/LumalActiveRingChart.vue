@@ -15,6 +15,22 @@ import { useReducedMotion } from '../composables/useReducedMotion'
 import LumalCharts from './LumalCharts.vue'
 import LumalDigitalFlop from './LumalDigitalFlop.vue'
 
+const props = withDefaults(defineProps<{
+  items?: readonly DataValueItem[]
+  config?: ActiveRingChartConfig
+  interval?: number
+  autoplay?: boolean
+  ariaLabel?: string
+}>(), {
+  ariaLabel: '活动环图',
+  autoplay: true,
+  config: () => ({}),
+  interval: undefined,
+  items: undefined,
+})
+
+const emit = defineEmits<{ select: [item: DataValueItem] }>()
+
 const DEFAULT_COLORS = [
   '#37a2da',
   '#32c5e9',
@@ -31,21 +47,6 @@ const DEFAULT_COLORS = [
   '#96bfff',
 ] as const
 
-const props = withDefaults(defineProps<{
-  items?: readonly DataValueItem[]
-  config?: ActiveRingChartConfig
-  interval?: number
-  autoplay?: boolean
-  ariaLabel?: string
-}>(), {
-  ariaLabel: '活动环图',
-  autoplay: true,
-  config: () => ({}),
-  interval: undefined,
-  items: undefined,
-})
-
-const emit = defineEmits<{ select: [item: DataValueItem] }>()
 const activeKey = defineModel<DataValueKey>('activeKey')
 const chartHostRef = useTemplateRef<HTMLElement>('chartHostRef')
 const size = useElementSize(chartHostRef)
@@ -203,7 +204,9 @@ onBeforeUnmount(clearAnimation)
     </div>
     <div class="active-ring-info">
       <LumalDigitalFlop class="dv-digital-flop" :config="digitalFlopConfig" />
-      <div class="active-ring-name" :style="nameStyle">{{ currentEntry?.item.label ?? '' }}</div>
+      <div class="active-ring-name" :style="nameStyle">
+        {{ currentEntry?.item.label ?? '' }}
+      </div>
     </div>
     <div class="lumal-active-ring-controls" role="listbox" :aria-label="`${ariaLabel}数据项`">
       <button
@@ -214,7 +217,9 @@ onBeforeUnmount(clearAnimation)
         :aria-label="`${entry.item.label} ${entry.item.value}`"
         :aria-selected="index === activeIndex"
         @click="activate(index, true)"
-      >{{ entry.item.label }}</button>
+      >
+        {{ entry.item.label }}
+      </button>
     </div>
   </div>
 </template>

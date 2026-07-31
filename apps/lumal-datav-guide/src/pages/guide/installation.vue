@@ -21,7 +21,9 @@ import '@lumal/datav/style.css'`
 <template>
   <article class="guide-doc">
     <header class="guide-doc__head">
-      <p class="guide-doc__eyebrow">指南</p>
+      <p class="guide-doc__eyebrow">
+        指南
+      </p>
       <h1>安装与注册</h1>
       <p class="guide-doc__lead">
         <code>@lumal/datav</code> 把 <code>vue</code> 与 <code>echarts</code> 作为 peer dependency，
@@ -60,7 +62,9 @@ import '@lumal/datav/style.css'`
       <p>
         无论全局注册还是按需导入，都需要引入一次 <code>@lumal/datav/style.css</code>。
         它包含组件默认几何与 <code>--lumal-datav-*</code> 主题变量，见
-        <RouterLink to="/theming">主题变量</RouterLink>。
+        <RouterLink to="/theming">
+          主题变量
+        </RouterLink>。
       </p>
     </section>
   </article>

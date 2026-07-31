@@ -114,8 +114,7 @@ const widths = computed<Array<number | string | undefined>>(() => {
   return Array.from({ length: columnCount.value }, (_, index) => specified[index] ?? average)
 })
 const aligns = computed(() => Array.from({ length: columnCount.value }, (_, index) =>
-  configMode.value ? props.config.align?.[index] ?? 'left' : props.columns[index]?.align ?? 'left',
-))
+  configMode.value ? props.config.align?.[index] ?? 'left' : props.columns[index]?.align ?? 'left'))
 const headerHeight = computed(() => header.value.length ? Math.max(0, props.config.headerHeight ?? 35) : 0)
 const rowsHeight = computed(() => Math.max(0, size.value.height - headerHeight.value))
 const averageHeight = computed(() => rowsHeight.value / rowCount.value)
@@ -267,7 +266,9 @@ defineExpose({ updateRows })
         role="columnheader"
         :align="aligns[index]"
         :style="{ ...columnStyle(index), height: `${headerHeight}px`, lineHeight: `${headerHeight}px` }"
-      >{{ headerItem }}</div>
+      >
+        {{ headerItem }}
+      </div>
     </div>
 
     <div class="rows lumal-scroll-board__viewport" :style="{ height: `${rowsHeight}px` }">
@@ -311,8 +312,12 @@ defineExpose({ updateRows })
             :value="cell.value"
             :row-index="entry.rowIndex"
             :column-index="columnIndex"
-          >{{ cellText(entry, columnIndex) }}</slot>
-          <template v-else>{{ cellText(entry, columnIndex) }}</template>
+          >
+            {{ cellText(entry, columnIndex) }}
+          </slot>
+          <template v-else>
+            {{ cellText(entry, columnIndex) }}
+          </template>
         </div>
       </div>
     </div>
