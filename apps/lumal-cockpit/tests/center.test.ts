@@ -69,6 +69,10 @@ class ResizeObserverStub {
   disconnect(): void {}
 }
 
+/***********************动画帧桩状态*********************/
+const animationFrameHandles = new Map<number, ReturnType<typeof setTimeout>>()
+let animationFrameTimestamp = 0
+
 function createContext(): CockpitCenterContext {
   return {
     cockpitId: 'test-cockpit',
@@ -82,11 +86,29 @@ function createContext(): CockpitCenterContext {
 describe('驾驶舱中央地图', () => {
   beforeEach(() => {
     vi.stubGlobal('ResizeObserver', ResizeObserverStub)
+    // rAF 必须异步回调并推进时间戳：同步执行会让依赖 rAF 递归的动画
+    //（如 LumalDigitalFlop）在同一调用栈里无限递归而爆栈
+    animationFrameHandles.clear()
+    animationFrameTimestamp = 0
+    let nextAnimationFrameHandle = 1
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
-      callback(0)
-      return 1
+      const handle = nextAnimationFrameHandle
+      nextAnimationFrameHandle += 1
+      const timer = setTimeout(() => {
+        animationFrameHandles.delete(handle)
+        animationFrameTimestamp += 16
+        callback(animationFrameTimestamp)
+      }, 0)
+      animationFrameHandles.set(handle, timer)
+      return handle
     })
-    vi.stubGlobal('cancelAnimationFrame', vi.fn())
+    vi.stubGlobal('cancelAnimationFrame', (handle: number) => {
+      const timer = animationFrameHandles.get(handle)
+      if (timer !== undefined) {
+        clearTimeout(timer)
+        animationFrameHandles.delete(handle)
+      }
+    })
     vi.stubGlobal('matchMedia', vi.fn(() => ({
       matches: false,
       media: '(prefers-reduced-motion: reduce)',
@@ -101,6 +123,8 @@ describe('驾驶舱中央地图', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals()
+    // 还原对 clientWidth/clientHeight 等原型属性的打桩，避免污染其它用例
+    vi.restoreAllMocks()
   })
 
   it('使用真实省级数据生成共享飞线路径', () => {
@@ -187,7 +211,13 @@ describe('驾驶舱中央地图', () => {
     const fadedRegion = demoScene.regions.find(item => item.status !== region.status)
     expect(fadedRegion).toBeTruthy()
 
+    // jsdom 中元素尺寸恒为 0，而组件只有在容器有实际尺寸时才渲染图表，
+    // 因此需要为 clientWidth/clientHeight 打桩
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(960)
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(540)
+
     const wrapper = mount(EchartsGeoCenter, {
+      attachTo: document.body,
       props: {
         selectedIds: [region.id],
         focusedId: '',
@@ -196,6 +226,7 @@ describe('驾驶舱中央地图', () => {
         reducedMotion: false,
       },
     })
+    await nextTick()
 
     const chart = wrapper.getComponent({ name: 'VChartStub' })
     const option = chart.props('option') as {

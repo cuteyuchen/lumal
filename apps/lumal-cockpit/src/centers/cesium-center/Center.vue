@@ -106,9 +106,8 @@ function movingPosition(
 function applyViewerTheme(): void {
   if (!viewer)
     return
-  const dark = props.theme === 'dark'
-  viewer.scene.backgroundColor = color(dark ? '#020817' : '#aeb8c2')
-  viewer.scene.globe.baseColor = color(dark ? '#031329' : '#dceef4')
+  viewer.scene.backgroundColor = color('#020817')
+  viewer.scene.globe.baseColor = color('#031329')
   viewer.scene.requestRender()
 }
 
@@ -122,18 +121,13 @@ function applyMotionPreference(): void {
 }
 
 function applyRegionStyles(): void {
-  const dark = props.theme === 'dark'
   const activeRegionId = selectedRegionId()
 
   for (const region of demoScene.regions) {
     const selected = activeRegionId === region.id
     const opacity = statusOpacity(region.status)
-    const fill = selected
-      ? (dark ? '#0a9ec2' : '#1793b3')
-      : (dark ? '#075071' : '#8bc8d8')
-    const outline = selected
-      ? (dark ? '#8cf2ff' : '#056f91')
-      : (dark ? '#2bc8f3' : '#1681a2')
+    const fill = selected ? '#0a9ec2' : '#075071'
+    const outline = selected ? '#8cf2ff' : '#2bc8f3'
 
     for (const entity of regionEntities.get(region.id) ?? []) {
       const hierarchy = entity.polygon?.hierarchy
@@ -166,7 +160,6 @@ function rebuildOverlays(): void {
   if (!viewer)
     return
 
-  const dark = props.theme === 'dark'
   const activeId = selectedId()
   const activeRegionId = selectedRegionId()
   const collection = viewer.entities
@@ -190,11 +183,11 @@ function rebuildOverlays(): void {
           text: region.name,
           font: `${selected ? 600 : 500} ${selected ? 12 : 10}px system-ui, sans-serif`,
           style: LabelStyle.FILL_AND_OUTLINE,
-          fillColor: color(dark ? '#e8fbff' : '#10394b', opacity),
-          outlineColor: color(dark ? '#020c1c' : '#f7fcff', opacity * 0.94),
+          fillColor: color('#e8fbff', opacity),
+          outlineColor: color('#020c1c', opacity * 0.94),
           outlineWidth: selected ? 4 : 3,
           showBackground: selected,
-          backgroundColor: color(dark ? '#031a30' : '#eef8fb', 0.82),
+          backgroundColor: color('#031a30', 0.82),
           backgroundPadding: new Cartesian2(6, 4),
           horizontalOrigin: HorizontalOrigin.CENTER,
           verticalOrigin: VerticalOrigin.BOTTOM,
@@ -215,8 +208,8 @@ function rebuildOverlays(): void {
         position: Cartesian3.fromDegrees(point.coordinate[0], point.coordinate[1], POINT_HEIGHT),
         point: {
           pixelSize: selected ? 14 : 9,
-          color: color(selected ? (dark ? '#00e5a0' : '#008e68') : (dark ? '#ffc857' : '#a96f00'), opacity),
-          outlineColor: color(dark ? '#e8fbff' : '#10394b', opacity),
+          color: color(selected ? '#00e5a0' : '#ffc857', opacity),
+          outlineColor: color('#e8fbff', opacity),
           outlineWidth: selected ? 3 : 1.5,
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
         },
@@ -225,8 +218,8 @@ function rebuildOverlays(): void {
           text: point.name,
           font: '600 12px system-ui, sans-serif',
           style: LabelStyle.FILL_AND_OUTLINE,
-          fillColor: color(dark ? '#e8fbff' : '#10394b'),
-          outlineColor: color(dark ? '#020c1c' : '#f7fcff', 0.94),
+          fillColor: color('#e8fbff'),
+          outlineColor: color('#020c1c', 0.94),
           outlineWidth: 4,
           horizontalOrigin: HorizontalOrigin.CENTER,
           verticalOrigin: VerticalOrigin.BOTTOM,
@@ -243,7 +236,7 @@ function rebuildOverlays(): void {
       const opacity = statusOpacity(line.status)
       const positions = routePositions(line)
       const routeColor = color(
-        selected ? (dark ? '#8cf2ff' : '#036f9c') : (dark ? '#20c7ff' : '#087faf'),
+        selected ? '#8cf2ff' : '#20c7ff',
         opacity * (selected ? 0.96 : 0.48),
       )
 
@@ -271,8 +264,8 @@ function rebuildOverlays(): void {
         point: {
           show: !props.reducedMotion && opacity > 0.2,
           pixelSize: selected ? 8 : 5,
-          color: color(dark ? '#b8f7ff' : '#025f82', opacity),
-          outlineColor: color(dark ? '#20c7ff' : '#dff8ff', opacity),
+          color: color('#b8f7ff', opacity),
+          outlineColor: color('#20c7ff', opacity),
           outlineWidth: 1,
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
         },
@@ -439,7 +432,6 @@ watch(
     props.selectedIds.join(','),
     props.focusedId,
     props.filterStatus,
-    props.theme,
     props.reducedMotion,
   ],
   refreshScene,

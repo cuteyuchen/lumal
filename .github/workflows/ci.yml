@@ -1,5 +1,8 @@
 name: CI
 
+# 每次提交只跑轻量检查（lint / test / typecheck / build）。
+# 完整发布门禁（E2E、打包验证、Windows 校验）移到 v* tag 触发的
+# release-gate.yml 与 release-npm.yml，避免日常提交反复付出全量开销。
 on:
   push:
     branches:
@@ -19,45 +22,10 @@ env:
   CI: true
 
 jobs:
-  release-check:
-    name: Ubuntu release check
+  check:
+    name: Lint / test / typecheck / build
     runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Run release checks
-        run: pnpm release:check
-
-      - name: Upload Playwright diagnostics
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-results-ubuntu
-          path: .playwright-results/
-          if-no-files-found: ignore
-          retention-days: 7
-
-  windows-check:
-    name: Windows checks
-    runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -76,6 +44,9 @@ jobs:
 
       - name: Lint
         run: pnpm lint
+
+      - name: Release boundaries
+        run: pnpm release:boundaries
 
       - name: Test
         run: pnpm test

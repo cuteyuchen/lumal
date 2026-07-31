@@ -34,7 +34,6 @@ const rootRef = useTemplateRef<HTMLElement>('rootRef')
 const chartRef = useTemplateRef<ComponentPublicInstance & { resize: () => void }>('chartRef')
 const renderReady = ref(false)
 const updateOptions: SetOptionOpts = { notMerge: false }
-const isDark = computed(() => props.theme === 'dark')
 const regionByName = new Map(demoScene.regions.map(region => [region.name, region]))
 let sizeObserver: ResizeObserver | undefined
 
@@ -60,13 +59,14 @@ function statusOpacity(status?: string): number {
 }
 
 const option = computed<EChartsOption>(() => {
-  const accent = isDark.value ? '#20c7ff' : '#087faf'
-  const bright = isDark.value ? '#78e8ff' : '#036f9c'
-  const baseArea = isDark.value ? '#071a36' : '#d8edf6'
-  const selectedArea = isDark.value ? '#0b5978' : '#98d9e9'
-  const border = isDark.value ? '#43d8ff' : '#178eb8'
-  const text = isDark.value ? '#e8fbff' : '#10394b'
-  const mutedText = isDark.value ? 'rgba(216, 246, 255, 0.76)' : 'rgba(16, 57, 75, 0.76)'
+  // 大屏固定暗色系配色
+  const accent = '#20c7ff'
+  const bright = '#78e8ff'
+  const baseArea = '#071a36'
+  const selectedArea = '#0b5978'
+  const border = '#43d8ff'
+  const text = '#e8fbff'
+  const mutedText = 'rgba(216, 246, 255, 0.76)'
 
   const routeData = demoScene.lines.map(line => ({
     id: line.id,
@@ -92,8 +92,8 @@ const option = computed<EChartsOption>(() => {
     tooltip: {
       trigger: 'item',
       confine: true,
-      backgroundColor: isDark.value ? 'rgba(3, 18, 38, 0.94)' : 'rgba(247, 252, 255, 0.98)',
-      borderColor: isDark.value ? 'rgba(67, 216, 255, 0.56)' : 'rgba(23, 142, 184, 0.38)',
+      backgroundColor: 'rgba(3, 18, 38, 0.94)',
+      borderColor: 'rgba(67, 216, 255, 0.56)',
       textStyle: { color: text },
       formatter(params: unknown) {
         const item = params as { data?: { id?: string, name?: string, value?: number | number[] }, name?: string }
@@ -113,8 +113,8 @@ const option = computed<EChartsOption>(() => {
         areaColor: baseArea,
         borderColor: border,
         borderWidth: 1,
-        shadowBlur: isDark.value ? 10 : 4,
-        shadowColor: isDark.value ? 'rgba(32, 199, 255, 0.68)' : 'rgba(8, 127, 175, 0.28)',
+        shadowBlur: 10,
+        shadowColor: 'rgba(32, 199, 255, 0.68)',
       },
       emphasis: {
         itemStyle: {
@@ -203,19 +203,19 @@ const option = computed<EChartsOption>(() => {
           scale: props.reducedMotion ? 1 : 2.8,
         },
         itemStyle: {
-          color: isDark.value ? '#ffc857' : '#b77900',
+          color: '#ffc857',
           shadowBlur: 10,
-          shadowColor: isDark.value ? 'rgba(255, 200, 87, 0.48)' : 'rgba(183, 121, 0, 0.28)',
+          shadowColor: 'rgba(255, 200, 87, 0.48)',
         },
         emphasis: {
-          itemStyle: { color: isDark.value ? '#00e5a0' : '#00966d' },
+          itemStyle: { color: '#00e5a0' },
         },
         data: demoScene.points.map(point => ({
           id: point.id,
           name: point.name,
           value: [...point.coordinate, point.value],
           itemStyle: {
-            color: isSelected(point.id) ? (isDark.value ? '#00e5a0' : '#00966d') : undefined,
+            color: isSelected(point.id) ? '#00e5a0' : undefined,
             opacity: statusOpacity(point.status),
           },
         })),

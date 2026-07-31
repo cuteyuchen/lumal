@@ -8,7 +8,6 @@ import WidgetState from '../../components/WidgetState.vue'
 import { useDemoRefresh } from '../../composables/useDemoRefresh'
 import { demoScene, getSceneEntity, statusDistribution } from '../../data/demo-scene'
 import { cockpitTopics } from '../../messages/topics'
-import { standaloneResolvedThemeMode } from '../../services/preferences'
 
 /***********************区域状态分布图（@lumal/datav LumalCharts）*********************/
 const context = useCockpitContext()
@@ -29,12 +28,12 @@ const activeLabel = computed(() => (
 ))
 
 const chartOption = computed<EChartsOption>(() => {
-  const dark = standaloneResolvedThemeMode.value === 'dark'
-  const text = dark ? '#dceef4' : '#173c4d'
+  // 大屏固定暗色系配色
+  const text = '#dceef4'
   const colors = {
-    stable: dark ? '#24d8ee' : '#087fa8',
-    active: dark ? '#2de2b8' : '#008c70',
-    watch: dark ? '#ffc45e' : '#b67800',
+    stable: '#24d8ee',
+    active: '#2de2b8',
+    watch: '#ffc45e',
   }
 
   return {
@@ -48,8 +47,8 @@ const chartOption = computed<EChartsOption>(() => {
       trigger: 'item',
       confine: true,
       formatter: '{b}<br/>{c} 个区域（{d}%）',
-      backgroundColor: dark ? 'rgba(7, 27, 42, 0.97)' : 'rgba(250, 253, 254, 0.98)',
-      borderColor: dark ? 'rgba(72, 187, 211, 0.34)' : 'rgba(8, 127, 168, 0.26)',
+      backgroundColor: 'rgba(7, 27, 42, 0.97)',
+      borderColor: 'rgba(72, 187, 211, 0.34)',
       textStyle: { color: text },
     },
     series: [
@@ -63,9 +62,9 @@ const chartOption = computed<EChartsOption>(() => {
         selectedOffset: 4,
         avoidLabelOverlap: true,
         itemStyle: {
-          borderColor: dark ? '#071b2a' : '#edf7fb',
+          borderColor: '#071b2a',
           borderWidth: 3,
-          shadowBlur: dark ? 5 : 1,
+          shadowBlur: 5,
         },
         label: { show: false },
         emphasis: {

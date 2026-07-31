@@ -2,9 +2,9 @@
 import type { CockpitCenterContext } from '@lumal/cockpit'
 import type { Component } from 'vue'
 import type { SceneFilterPayload, SceneFocusPayload, SceneSelectionPayload } from '../../messages/topics'
-import type { CenterEngine, CenterTheme } from '../types'
+import type { CenterEngine } from '../types'
 import { LumalDecoration, LumalDigitalFlop } from '@lumal/datav'
-import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
 import { demoScene, getSceneEntity } from '../../data/demo-scene'
 import { cockpitTopics } from '../../messages/topics'
 import EchartsGeoCenter from '../echarts-geo-center/Center.vue'
@@ -33,7 +33,6 @@ const engineSwitchRef = useTemplateRef<HTMLDivElement>('engineSwitchRef')
 const selectedIds = ref<string[]>([...demoScene.selectedIds])
 const focusedId = ref('')
 const filterStatus = ref<SceneFilterPayload['status']>()
-const theme = shallowRef<CenterTheme>('dark')
 const reducedMotion = ref(false)
 
 const activeRenderer = computed(() => renderers[activeEngine.value])
@@ -46,10 +45,6 @@ const statusLabels = {
   stable: '稳定',
   watch: '观察',
 } as const
-
-function syncTheme(): void {
-  theme.value = document.documentElement.dataset.lumalTheme === 'light' ? 'light' : 'dark'
-}
 
 function publishSelection(ids: string[]): void {
   selectedIds.value = ids
@@ -117,18 +112,10 @@ const unsubscribeFilter = context.messages.subscribe<SceneFilterPayload>(
   },
 )
 
-let themeObserver: MutationObserver | undefined
 let motionMedia: MediaQueryList | undefined
 let syncMotion: ((event: MediaQueryListEvent) => void) | undefined
 
 onMounted(() => {
-  syncTheme()
-  themeObserver = new MutationObserver(syncTheme)
-  themeObserver.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ['data-lumal-theme'],
-  })
-
   motionMedia = window.matchMedia('(prefers-reduced-motion: reduce)')
   reducedMotion.value = motionMedia.matches
   syncMotion = event => reducedMotion.value = event.matches
@@ -145,7 +132,6 @@ onBeforeUnmount(() => {
   unsubscribeRegionFocus()
   unsubscribePointFocus()
   unsubscribeFilter()
-  themeObserver?.disconnect()
   if (motionMedia && syncMotion)
     motionMedia.removeEventListener('change', syncMotion)
 })
@@ -159,7 +145,6 @@ onBeforeUnmount(() => {
         :selected-ids="selectedIds"
         :focused-id="focusedId"
         :filter-status="filterStatus"
-        :theme="theme"
         :reduced-motion="reducedMotion"
         @select="publishSelection([$event])"
       />

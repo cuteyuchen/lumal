@@ -1,10 +1,14 @@
 name: Build Validation
 
+# 与 ci.yml 分工：ci.yml 负责 lint/test/typecheck/build，
+# 这里只补它没覆盖的消费者脚手架校验；三个站点的构建移到 tag 触发的 release-gate.yml。
 on:
   push:
     branches:
       - master
   pull_request:
+    branches:
+      - master
 
 permissions:
   contents: read
@@ -35,12 +39,3 @@ jobs:
 
       - name: Validate create-lumal-admin consumer
         run: pnpm test:create-consumer
-
-      - name: Build documentation
-        run: pnpm docs:build
-
-      - name: Build Cockpit through package script
-        run: pnpm --filter lumal-cockpit build
-
-      - name: Build DataV guide through package script
-        run: pnpm --filter lumal-datav-guide build

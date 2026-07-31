@@ -21,15 +21,28 @@ const requiredBuildArtifacts = [
   'packages/create-lumal-admin/dist/cli.js',
 ]
 
+// Windows 下 Node 22 出于安全限制（CVE-2024-27980）禁止直接 spawn .cmd 脚本，
+// 必须走 shell；而启用 shell 后 Node 只是把参数用空格拼成命令行，不会逐个加引号，
+// 因此含空格的路径（如用户名带空格的临时目录）需要手动补引号。
+function quoteWindowsArg(arg) {
+  return /[\s"]/.test(arg) ? `"${arg.replaceAll('"', '\\"')}"` : arg
+}
+
 function runPnpm(args, cwd = rootDir) {
-  const result = spawnSync(pnpmCommand, args, {
-    cwd,
-    env: {
-      ...process.env,
-      CI: 'true',
+  const useShell = process.platform === 'win32'
+  const result = spawnSync(
+    pnpmCommand,
+    useShell ? args.map(quoteWindowsArg) : args,
+    {
+      cwd,
+      env: {
+        ...process.env,
+        CI: 'true',
+      },
+      shell: useShell,
+      stdio: 'inherit',
     },
-    stdio: 'inherit',
-  })
+  )
 
   if (result.error) {
     throw result.error

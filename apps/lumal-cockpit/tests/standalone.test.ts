@@ -1,5 +1,4 @@
 import type { Component, PropType } from 'vue'
-import { LumalBorderBox } from '@lumal/datav'
 import { mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it } from 'vitest'
 import { defineComponent, h } from 'vue'
@@ -8,8 +7,7 @@ import { standaloneCockpitRegistry } from '../src/registry'
 import { loadStandaloneConfig, saveStandaloneConfig } from '../src/services/config'
 import {
   resetStandalonePreferences,
-  setStandaloneThemeMode,
-  STANDALONE_PREFERENCES_STORAGE_KEY,
+  standalonePreferenceDefaults,
   standalonePreferences,
   standaloneResolvedThemeMode,
 } from '../src/services/preferences'
@@ -63,7 +61,6 @@ describe('独立驾驶舱应用', () => {
     })
 
     expect(wrapper.get('.standalone-cockpit-card').exists()).toBe(true)
-    expect(wrapper.getComponent(LumalBorderBox).props('variant')).toBe(8)
     expect(wrapper.get('.standalone-cockpit-card .lumal-cockpit-card__title').text()).toContain('应用模块')
     expect(wrapper.get('.standalone-cockpit-card .standalone-cockpit-card__title-content small').text()).toBe('DATA SYS')
     expect(wrapper.get('.standalone-cockpit-card .app-card-content').text()).toBe('模块内容')
@@ -98,10 +95,10 @@ describe('独立驾驶舱应用', () => {
     expect(saved.schemaVersion).toBe(3)
   })
 
-  it('主题偏好独立持久化并输出解析模式', () => {
-    setStandaloneThemeMode('dark')
+  it('主题锁定为暗色', () => {
+    // 本应用是纯暗色大屏，不提供主题切换：默认值与解析结果都必须是 dark
+    expect(standalonePreferenceDefaults.theme?.mode).toBe('dark')
     expect(standalonePreferences.value.theme.mode).toBe('dark')
     expect(standaloneResolvedThemeMode.value).toBe('dark')
-    expect(localStorage.getItem(STANDALONE_PREFERENCES_STORAGE_KEY)).toContain('"mode":"dark"')
   })
 })

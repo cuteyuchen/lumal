@@ -42,7 +42,7 @@ export default defineConfig({
       formats: ['es', 'cjs'],
     },
     rollupOptions: {
-      external: ['echarts', 'vue'],
+      external: ['@jiaminghi/charts', 'echarts', 'vue'],
       output: {
         exports: 'named',
       },

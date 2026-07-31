@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ResolvedThemeMode } from '@lumal/core/theme'
+import { permissionStoreKey } from '@lumal/core/permission'
 import { LumalIcon } from '@lumal/icons-vue'
 import {
   ElButton,
@@ -7,7 +8,7 @@ import {
   ElDropdownItem,
   ElDropdownMenu,
 } from 'element-plus'
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 
 /***********************属性定义*********************/
 const props = withDefaults(defineProps<{
@@ -24,6 +25,15 @@ const emit = defineEmits<{
   openSettings: []
   toggleTheme: [event: MouseEvent]
 }>()
+
+/***********************权限判断*********************/
+// ElDropdownItem 的根节点不是单一元素，v-authority 这类运行时指令无法挂载，
+// 因此移动端菜单项改为读取权限状态后用 v-if 控制渲染。
+// 未注入 store 时（如仅验证结构的单测）默认展示，与桌面端指令缺省行为保持一致。
+const permissionStore = inject(permissionStoreKey, undefined)
+const hasCockpitViewPermission = computed(
+  () => permissionStore?.hasPermission('cockpit:view') ?? true,
+)
 
 /***********************显示状态*********************/
 const themeToggleTitle = computed(() => props.resolvedThemeMode === 'dark' ? '切换浅色模式' : '切换深色模式')
@@ -151,7 +161,7 @@ function handleMobileMenuCommand(command: unknown): void {
       <template #dropdown>
         <ElDropdownMenu>
           <ElDropdownItem
-            v-authority="'cockpit:view'"
+            v-if="hasCockpitViewPermission"
             command="cockpit"
             data-action="open-cockpit-mobile"
           >

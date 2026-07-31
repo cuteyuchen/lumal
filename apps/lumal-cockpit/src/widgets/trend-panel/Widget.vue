@@ -8,7 +8,6 @@ import WidgetState from '../../components/WidgetState.vue'
 import { useDemoRefresh } from '../../composables/useDemoRefresh'
 import { getSceneEntity, trendSeries } from '../../data/demo-scene'
 import { cockpitTopics } from '../../messages/topics'
-import { standaloneResolvedThemeMode } from '../../services/preferences'
 
 /***********************运行趋势图（@lumal/datav LumalCharts）*********************/
 const context = useCockpitContext()
@@ -28,14 +27,14 @@ const latestIndex = computed(() => selectedEntity.value?.value ?? Math.round(
 ))
 
 const chartOption = computed<EChartsOption>(() => {
-  const dark = standaloneResolvedThemeMode.value === 'dark'
-  const text = dark ? '#dceef4' : '#173c4d'
-  const muted = dark ? 'rgba(162, 193, 204, 0.72)' : 'rgba(45, 88, 105, 0.72)'
-  const grid = dark ? 'rgba(86, 211, 236, 0.10)' : 'rgba(8, 127, 168, 0.12)'
+  // 大屏固定暗色系配色
+  const text = '#dceef4'
+  const muted = 'rgba(162, 193, 204, 0.72)'
+  const grid = 'rgba(86, 211, 236, 0.10)'
   const colors = {
-    stable: dark ? '#24d8ee' : '#087fa8',
-    active: dark ? '#2de2b8' : '#008c70',
-    watch: dark ? '#ffc45e' : '#b67800',
+    stable: '#24d8ee',
+    active: '#2de2b8',
+    watch: '#ffc45e',
   }
 
   return {
@@ -50,8 +49,8 @@ const chartOption = computed<EChartsOption>(() => {
     tooltip: {
       trigger: 'axis',
       confine: true,
-      backgroundColor: dark ? 'rgba(7, 27, 42, 0.97)' : 'rgba(250, 253, 254, 0.98)',
-      borderColor: dark ? 'rgba(72, 187, 211, 0.34)' : 'rgba(8, 127, 168, 0.26)',
+      backgroundColor: 'rgba(7, 27, 42, 0.97)',
+      borderColor: 'rgba(72, 187, 211, 0.34)',
       textStyle: { color: text },
     },
     xAxis: {

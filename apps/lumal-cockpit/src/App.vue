@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { CockpitConfig, CockpitDesignerSavePayload, CockpitViewportMode } from '@lumal/cockpit'
-import type { ThemeMode } from '@lumal/core/theme'
 import { LumalCockpitDesigner } from '@lumal/cockpit/designer'
 import { LumalCockpit, LumalCockpitRegion } from '@lumal/cockpit/runtime'
 import { LumalFullScreenContainer } from '@lumal/datav'
@@ -13,13 +12,11 @@ import CockpitCard from './components/CockpitCard.vue'
 import RegionCollapse from './components/RegionCollapse.vue'
 import { standaloneCockpitRegistry } from './registry'
 import { loadStandaloneConfig, saveStandaloneConfig } from './services/config'
-import {
-  setStandaloneThemeMode,
-  standalonePreferences,
-  standaloneResolvedThemeMode,
-} from './services/preferences'
 
 /***********************独立驾驶舱根组件*********************/
+
+// 本应用是纯暗色科技感大屏，不提供主题切换
+const THEME_MODE = 'dark' as const
 
 const config = shallowRef<CockpitConfig>(loadStandaloneConfig())
 const designerVisible = ref(false)
@@ -58,31 +55,6 @@ function cycleViewportMode(): void {
   const order: ViewportUiMode[] = ['scale', 'vwvh', 'container']
   const index = order.indexOf(viewportMode.value)
   viewportMode.value = order[(index + 1) % order.length] ?? 'scale'
-}
-
-const themeModeIcon = computed(() => {
-  const mode = standalonePreferences.value.theme.mode
-  if (mode === 'light')
-    return 'lumal:sun'
-  if (mode === 'dark')
-    return 'lumal:moon'
-  return 'lumal:monitor'
-})
-
-const themeModeLabel = computed(() => {
-  const mode = standalonePreferences.value.theme.mode
-  if (mode === 'light')
-    return '浅色'
-  if (mode === 'dark')
-    return '深色'
-  return '跟随系统'
-})
-
-function cycleThemeMode(): void {
-  const order: ThemeMode[] = ['system', 'light', 'dark']
-  const current = standalonePreferences.value.theme.mode
-  const next = order[(order.indexOf(current) + 1) % order.length] ?? 'system'
-  setStandaloneThemeMode(next)
 }
 
 function openDesigner(): void {
@@ -148,7 +120,7 @@ onBeforeUnmount(() => {
         :card-component="CockpitCard"
         :config="config"
         :registry="standaloneCockpitRegistry"
-        :theme-mode="standaloneResolvedThemeMode"
+        :theme-mode="THEME_MODE"
         :base-width="baseWidth"
         :base-height="baseHeight"
         :viewport-mode="cockpitViewportMode"
@@ -176,11 +148,6 @@ onBeforeUnmount(() => {
         <template #header-actions>
           <div class="standalone-app__actions">
             <span class="standalone-app__live"><i />实时在线</span>
-            <ElTooltip :content="`切换主题，当前：${themeModeLabel}`">
-              <ElButton circle data-action="cockpit-theme" :aria-label="`切换主题，当前：${themeModeLabel}`" @click="cycleThemeMode">
-                <LumalIcon :name="themeModeIcon" :size="18" />
-              </ElButton>
-            </ElTooltip>
             <ElTooltip :content="fullscreenActive ? '退出全屏' : '进入全屏'">
               <ElButton circle data-action="cockpit-fullscreen" :aria-label="fullscreenActive ? '退出全屏' : '进入全屏'" @click="toggleFullscreen">
                 <LumalIcon :name="fullscreenActive ? 'lumal:fullscreen-exit' : 'lumal:fullscreen'" :size="18" />
@@ -227,7 +194,7 @@ onBeforeUnmount(() => {
         :registry="standaloneCockpitRegistry"
         :saving="saving"
         :save-error="saveError"
-        :theme-mode="standaloneResolvedThemeMode"
+        :theme-mode="THEME_MODE"
         @save="handleSave"
         @cancel="closeDesigner"
       >
@@ -323,7 +290,7 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
-:global(:root[data-lumal-theme='dark']) .standalone-app__brand span {
+.standalone-app__brand span {
   color: color-mix(in srgb, var(--lumal-cockpit-accent), transparent 48%);
 }
 

@@ -1,7 +1,6 @@
 import type {
   LumalPreferences,
   LumalPreferencesDefaults,
-  ThemeMode,
   ThemeRuntimeEnvironment,
 } from '@lumal/core/theme'
 import {
@@ -108,12 +107,17 @@ const preferencesStore = createPreferencesStore({
 export const standalonePreferences = preferencesStore.state
 export const standaloneResolvedThemeMode = preferencesStore.resolvedThemeMode
 
-export function createStandalonePreferences(): LumalPreferences {
-  return createDefaultPreferences(standalonePreferenceDefaults)
+/**
+ * 本应用只做暗色大屏：历史存档里可能留有浅色/跟随系统的取值，
+ * 启动时强制回到深色，避免旧 localStorage 把界面拉回浅色。
+ */
+export function enforceDarkThemeMode(): void {
+  if (standalonePreferences.value.theme.mode !== 'dark')
+    preferencesStore.patch({ theme: { mode: 'dark' } })
 }
 
-export function setStandaloneThemeMode(mode: ThemeMode): void {
-  preferencesStore.patch({ theme: { mode } })
+export function createStandalonePreferences(): LumalPreferences {
+  return createDefaultPreferences(standalonePreferenceDefaults)
 }
 
 export function resetStandalonePreferences(): void {

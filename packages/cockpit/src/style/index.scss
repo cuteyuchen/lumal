@@ -919,7 +919,14 @@
 }
 
 .lumal-cockpit-canvas__center {
+  // 与上方 .lumal-cockpit-canvas__center 基础规则保持一致的绝对定位语义：
+  // 本规则位置更靠后且选择器优先级相同，若不重申定位，中央区会脱离
+  // __body 的绝对定位上下文而按内容高度收缩（曾塌陷为 2px）。
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   display: flex;
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
 

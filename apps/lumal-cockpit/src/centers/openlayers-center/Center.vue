@@ -62,18 +62,13 @@ function createRegionStyle(feature: FeatureLike, forceSelected = false): Style {
   const status = String(featureValue(feature, 'status') ?? '')
   const active = forceSelected || isSelected(id)
   const opacity = statusOpacity(status)
-  const dark = props.theme === 'dark'
 
   return new Style({
     fill: new Fill({
-      color: dark
-        ? `rgba(${active ? '11, 89, 120' : '7, 26, 54'}, ${opacity * (active ? 0.92 : 0.78)})`
-        : `rgba(${active ? '152, 217, 233' : '216, 237, 246'}, ${opacity * 0.92})`,
+      color: `rgba(${active ? '11, 89, 120' : '7, 26, 54'}, ${opacity * (active ? 0.92 : 0.78)})`,
     }),
     stroke: new Stroke({
-      color: dark
-        ? `rgba(67, 216, 255, ${opacity * (active ? 1 : 0.76)})`
-        : `rgba(23, 142, 184, ${opacity * (active ? 1 : 0.72)})`,
+      color: `rgba(67, 216, 255, ${opacity * (active ? 1 : 0.76)})`,
       width: active ? 2 : 1,
     }),
   })
@@ -84,18 +79,15 @@ function createRegionLabelStyle(feature: FeatureLike): Style {
   const status = String(featureValue(feature, 'status') ?? '')
   const active = isSelected(id)
   const opacity = statusOpacity(status)
-  const dark = props.theme === 'dark'
   return new Style({
     text: new Text({
       text: String(featureValue(feature, 'name') ?? ''),
       font: `${active ? 600 : 500} 10px system-ui, sans-serif`,
       fill: new Fill({
-        color: dark
-          ? `rgba(232, 251, 255, ${opacity * (active ? 1 : 0.76)})`
-          : `rgba(16, 57, 75, ${opacity * (active ? 1 : 0.78)})`,
+        color: `rgba(232, 251, 255, ${opacity * (active ? 1 : 0.76)})`,
       }),
       stroke: new Stroke({
-        color: dark ? 'rgba(2, 12, 28, 0.9)' : 'rgba(247, 252, 255, 0.88)',
+        color: 'rgba(2, 12, 28, 0.9)',
         width: 2,
       }),
     }),
@@ -108,18 +100,17 @@ function createPointStyle(feature: FeatureLike, forceSelected = false): Style {
   const status = String(featureValue(feature, 'status') ?? '')
   const active = forceSelected || isSelected(id)
   const opacity = statusOpacity(status)
-  const dark = props.theme === 'dark'
 
   return new Style({
     image: new CircleStyle({
       radius: active ? 7 : 5,
       fill: new Fill({
         color: active
-          ? (dark ? `rgba(0, 229, 160, ${opacity})` : `rgba(0, 150, 109, ${opacity})`)
-          : (dark ? `rgba(255, 200, 87, ${opacity})` : `rgba(183, 121, 0, ${opacity})`),
+          ? `rgba(0, 229, 160, ${opacity})`
+          : `rgba(255, 200, 87, ${opacity})`,
       }),
       stroke: new Stroke({
-        color: dark ? `rgba(232, 251, 255, ${opacity})` : `rgba(16, 57, 75, ${opacity})`,
+        color: `rgba(232, 251, 255, ${opacity})`,
         width: active ? 2 : 1,
       }),
     }),
@@ -128,8 +119,8 @@ function createPointStyle(feature: FeatureLike, forceSelected = false): Style {
           text: name,
           offsetY: -16,
           font: '600 11px system-ui, sans-serif',
-          fill: new Fill({ color: dark ? '#e8fbff' : '#10394b' }),
-          stroke: new Stroke({ color: dark ? 'rgba(2, 12, 28, 0.92)' : 'rgba(247, 252, 255, 0.92)', width: 3 }),
+          fill: new Fill({ color: '#e8fbff' }),
+          stroke: new Stroke({ color: 'rgba(2, 12, 28, 0.92)', width: 3 }),
         })
       : undefined,
   })
@@ -244,13 +235,12 @@ function rebuildRoutes(): void {
   routeFlowHandle?.remove()
   routeGlowHandle?.remove()
 
-  const dark = props.theme === 'dark'
   const data = routeGeoJson()
   routeGlowHandle = mapInstance.getLine().addLine(data, {
     layerName: ROUTE_GLOW_LAYER,
     dataProjection: 'EPSG:4326',
     featureProjection: 'EPSG:4326',
-    strokeColor: dark ? 'rgba(32, 199, 255, 0.12)' : 'rgba(8, 127, 175, 0.12)',
+    strokeColor: 'rgba(32, 199, 255, 0.12)',
     strokeWidth: 4,
     zIndex: 3,
   })
@@ -261,13 +251,13 @@ function rebuildRoutes(): void {
     animationMode: 'icon+dash',
     autoStart: !props.reducedMotion,
     showBaseLine: true,
-    strokeColor: dark ? '#20c7ff' : '#087faf',
+    strokeColor: '#20c7ff',
     strokeWidth: 1.1,
     lineDash: [8, 10],
     duration: 4800,
     zIndex: 4,
     flowSymbol: {
-      color: dark ? '#78e8ff' : '#036f9c',
+      color: '#78e8ff',
       scale: 0.54,
       count: 2,
       spacing: 0.2,
@@ -389,7 +379,7 @@ watch(
 )
 
 watch(
-  () => [props.theme, props.filterStatus, props.reducedMotion],
+  () => [props.filterStatus, props.reducedMotion],
   () => {
     rebuildRoutes()
     syncSelection()

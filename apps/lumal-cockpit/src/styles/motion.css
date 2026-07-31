@@ -5,8 +5,9 @@
   animation: cockpit-header-ambient 14s ease-in-out infinite alternate;
 }
 
+/* 中央区由 @lumal/cockpit 负责绝对定位铺满，这里只建立层叠上下文，
+   不可改写 position —— 改成 relative 会让 inset: 0 失效并导致中央区塌陷。 */
 .lumal-cockpit-canvas__center {
-  position: relative;
   isolation: isolate;
 }
 

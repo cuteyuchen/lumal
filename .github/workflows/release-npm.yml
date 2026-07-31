@@ -22,7 +22,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NPM_DIST_TAG: ${{ inputs.tag || 'beta' }}
+  # tag 推送时 inputs.tag 为空：按 tag 名判断，含 '-' 视为预发布走 beta，否则走 latest。
+  # 原先无条件回落 'beta'，导致 tag 推送永远发不出 latest。
+  NPM_DIST_TAG: ${{ inputs.tag || (contains(github.ref_name, '-') && 'beta' || 'latest') }}
   RELEASE_VERSION: ${{ inputs.version || '' }}
 
 jobs:
