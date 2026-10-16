@@ -1,5 +1,20 @@
 # @lumal/core
 
+## 0.0.3-beta (2026-10-16)
+
+### Minor Changes
+
+- 新增 `@lumal/core/minimal`，不引用默认 UI 注册表，按需接入组件与插件，字典默认关闭。
+- 请求缓存增加身份与租户隔离、显式作用域及 `clearCache()`；默认仅缓存 GET，非 GET 需要显式 key。
+- `LumalRouterView` 增加 `cacheKeys`，打通标签关闭和按标签刷新；缓存默认最多 20 项，并遵守 `meta.keepAlive=false`。
+
+### Patch Changes
+
+- 修复字典删除、清空和手动赋值后的旧请求回填、错误与 loading 竞态。
+- 路由进度和 loading 改为反映真实导航状态；修复 Esc 退出最大化及新窗口 history/base 地址。
+- 标签快照先恢复后持久化、恢复时限量，卸载不再写回已清理快照。
+- 全局搜索补齐弹窗焦点约束与恢复，内存 Storage 兜底收敛为共享工具。
+
 ## 0.0.2-beta (2026-08-01)
 
 ### Minor Changes

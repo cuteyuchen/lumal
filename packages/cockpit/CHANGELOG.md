@@ -1,5 +1,13 @@
 # @lumal/cockpit
 
+## 0.0.3-beta (2026-10-16)
+
+### Patch Changes
+
+- 注册表使用浅响应式 Map，动态注册和移除会更新已求值的 Host，组件定义不做深代理。
+- 消息总线隔离异步订阅的 Promise rejection，增加 `onError` 错误观察入口。
+- 同步 Core 与图标依赖版本，保持地图和图表引擎由应用按需接入。
+
 ## 0.0.2-beta (2026-08-01)
 
 ### Minor Changes

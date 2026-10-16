@@ -1,7 +1,7 @@
 {
   "name": "@lumal/core",
   "type": "module",
-  "version": "0.0.2-beta",
+  "version": "0.0.3-beta",
   "description": "Lumal lightweight Vue admin core components and services.",
   "license": "MIT",
   "keywords": [
@@ -34,6 +34,11 @@
       "types": "./dist/src/auth/index.d.ts",
       "import": "./dist/auth.js",
       "require": "./dist/auth.cjs"
+    },
+    "./minimal": {
+      "types": "./dist/src/minimal/index.d.ts",
+      "import": "./dist/minimal.js",
+      "require": "./dist/minimal.cjs"
     },
     "./composables": {
       "types": "./dist/src/composables/index.d.ts",
@@ -87,6 +92,7 @@
   "module": "./dist/index.js",
   "types": "./dist/src/index.d.ts",
   "files": [
+    "CHANGELOG.md",
     "README.md",
     "dist",
     "theme-chalk"
@@ -114,8 +120,8 @@
     }
   },
   "dependencies": {
-    "@lumal/icons": "0.0.2-beta",
-    "@lumal/icons-vue": "0.0.2-beta",
+    "@lumal/icons": "0.0.3-beta",
+    "@lumal/icons-vue": "0.0.3-beta",
     "sortablejs": "^1.15.7"
   },
   "devDependencies": {

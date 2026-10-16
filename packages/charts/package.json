@@ -1,7 +1,7 @@
 {
   "name": "@lumal/charts",
   "type": "module",
-  "version": "0.0.2-beta",
+  "version": "0.0.3-beta",
   "description": "Lumal optional ECharts-based chart components.",
   "license": "MIT",
   "keywords": [
@@ -29,6 +29,7 @@
   "module": "./dist/index.js",
   "types": "./dist/src/index.d.ts",
   "files": [
+    "CHANGELOG.md",
     "README.md",
     "dist"
   ],
@@ -38,12 +39,12 @@
     "test": "vitest run --config ../../vitest.config.ts tests"
   },
   "peerDependencies": {
-    "echarts": "^5.5.0",
+    "echarts": "^6.0.0",
     "vue": "^3.5.0",
-    "vue-echarts": "^7.0.0"
+    "vue-echarts": "^8.0.0"
   },
   "devDependencies": {
-    "echarts": "^5.5.0",
-    "vue-echarts": "^7.0.3"
+    "echarts": "^6.1.0",
+    "vue-echarts": "^8.3.2"
   }
 }

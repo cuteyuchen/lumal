@@ -1,7 +1,7 @@
 {
   "name": "create-lumal-admin",
   "type": "module",
-  "version": "0.0.2-beta",
+  "version": "0.0.3-beta",
   "description": "Create a minimal Lumal admin application.",
   "license": "MIT",
   "keywords": [
@@ -24,6 +24,7 @@
     "create-lumal-admin": "./dist/cli.js"
   },
   "files": [
+    "CHANGELOG.md",
     "README.md",
     "dist"
   ],

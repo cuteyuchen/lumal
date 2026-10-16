@@ -1,5 +1,18 @@
 # @lumal/datav
 
+## 0.0.3-beta (2026-10-16)
+
+### Minor Changes
+
+- ECharts 扩展协议升级到 ECharts 6；开发与指南使用 ECharts 6.1.0。
+- 通用图表按 config/option 模式异步加载当前引擎，模式切换或卸载会使旧加载失效。
+
+### Patch Changes
+
+- 复用 SVG 动画暂停逻辑，合并同一 tick 的 DOM 同步，KeepAlive 失活时暂停 ActiveRing 轮换。
+- FullScreenContainer 改用 useTemplateRef，删除未使用的私有自动播放 helper。
+- 增加真实 ECharts SVG 回归和初始静态闭包体积检查。
+
 ## 0.0.2-beta (2026-08-01)
 
 ### Minor Changes

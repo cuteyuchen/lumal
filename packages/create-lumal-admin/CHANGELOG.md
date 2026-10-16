@@ -1,5 +1,15 @@
 # create-lumal-admin
 
+## 0.0.3-beta (2026-10-16)
+
+### Patch Changes
+
+- 生成项目精确使用同版 `0.0.3-beta` 的 Core 与图标包，构建时从脚手架 package.json 注入依赖版本。
+- 启动代码改用 `@lumal/core/minimal`，显式安装 Element Plus 和权限、路由，不再注册整份默认组件表。
+- 模板同步按标签版本刷新的 `cacheKeys` 接线、关闭清理与用户会话隔离，登录前清理旧快照。
+- 直接生成完整依赖、tsconfig、Node 与 pnpm 版本要求，移除生成后补写步骤。
+- 独立 tarball 消费验收覆盖 local 与 HTTP 两种模式的生成、版本、安装和生产构建。
+
 ## 0.0.2-beta (2026-08-01)
 
 ### Minor Changes

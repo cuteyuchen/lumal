@@ -109,8 +109,19 @@ jobs:
       - name: Build documentation
         run: pnpm docs:build
 
+      - name: Build packages
+        run: pnpm build
+
       - name: Build Cockpit through package script
-        run: pnpm --filter lumal-cockpit build
+        run: pnpm --filter lumal-cockpit build:app
 
       - name: Build DataV guide through package script
-        run: pnpm --filter lumal-datav-guide build
+        run: pnpm --filter lumal-datav-guide build:app
+
+      - name: Build Admin and compatibility demo
+        run: |
+          pnpm --filter lumal-admin build
+          pnpm --filter lumal-vben-compat-demo build
+
+      - name: Check all consumer budgets
+        run: pnpm release:budgets --require-all

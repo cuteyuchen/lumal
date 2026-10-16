@@ -1,7 +1,7 @@
 {
   "name": "@lumal/icons-vue",
   "type": "module",
-  "version": "0.0.2-beta",
+  "version": "0.0.3-beta",
   "description": "Vue components and reactive adapters for @lumal/icons.",
   "license": "MIT",
   "keywords": [
@@ -29,6 +29,7 @@
   "module": "./dist/index.js",
   "types": "./dist/src/index.d.ts",
   "files": [
+    "CHANGELOG.md",
     "README.md",
     "dist"
   ],
@@ -42,6 +43,6 @@
     "vue": "^3.5.0"
   },
   "dependencies": {
-    "@lumal/icons": "0.0.2-beta"
+    "@lumal/icons": "0.0.3-beta"
   }
 }

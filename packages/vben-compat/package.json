@@ -1,7 +1,7 @@
 {
   "name": "@lumal/vben-compat",
   "type": "module",
-  "version": "0.0.2-beta",
+  "version": "0.0.3-beta",
   "description": "Lumal compatibility adapters for common Vben Admin APIs.",
   "license": "MIT",
   "keywords": [
@@ -26,6 +26,7 @@
   "module": "./dist/index.js",
   "types": "./dist/src/index.d.ts",
   "files": [
+    "CHANGELOG.md",
     "README.md",
     "dist"
   ],
@@ -38,6 +39,6 @@
     "vue": "^3.5.0"
   },
   "dependencies": {
-    "@lumal/core": "0.0.2-beta"
+    "@lumal/core": "0.0.3-beta"
   }
 }

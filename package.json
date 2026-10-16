@@ -35,8 +35,10 @@
     "compat:build": "pnpm build && pnpm --filter lumal-vben-compat-demo build",
     "pack:dry-run": "pnpm --filter @lumal/icons pack --dry-run && pnpm --filter @lumal/icons-vue pack --dry-run && pnpm --filter @lumal/core pack --dry-run && pnpm --filter @lumal/charts pack --dry-run && pnpm --filter @lumal/datav pack --dry-run && pnpm --filter @lumal/cockpit pack --dry-run && pnpm --filter @lumal/vben-compat pack --dry-run && pnpm --filter @lumal/vite pack --dry-run && pnpm --filter create-lumal-admin pack --dry-run",
     "release:boundaries": "node scripts/check-release-boundaries.mjs",
-    "release:artifacts": "node scripts/check-release-artifacts.mjs",
+    "release:artifacts": "node scripts/check-release-artifacts.mjs && node scripts/check-consumer-budgets.mjs",
+    "release:budgets": "node scripts/check-consumer-budgets.mjs",
     "release:names": "node scripts/check-npm-package-names.mjs",
+    "release:version": "node scripts/set-release-version.mjs",
     "release:check": "pnpm lint && pnpm release:boundaries && pnpm test && pnpm typecheck && pnpm build && pnpm test:create-consumer && pnpm admin:build && pnpm compat:build && pnpm release:artifacts && pnpm test:e2e && pnpm pack:dry-run"
   },
   "devDependencies": {

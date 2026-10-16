@@ -63,20 +63,20 @@ importers:
   apps/lumal-admin:
     dependencies:
       '@lumal/charts':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/charts
       '@lumal/core':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/core
       '@lumal/icons':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/icons
       '@lumal/icons-vue':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/icons-vue
       echarts:
-        specifier: ^5.5.0
-        version: 5.6.0
+        specifier: ^6.1.0
+        version: 6.1.0
       element-plus:
         specifier: ^2.11.0
         version: 2.14.2(vue@3.5.39(typescript@6.0.3))
@@ -84,8 +84,8 @@ importers:
         specifier: ^3.5.0
         version: 3.5.39(typescript@6.0.3)
       vue-echarts:
-        specifier: ^7.0.3
-        version: 7.0.3(@vue/runtime-core@3.5.39)(echarts@5.6.0)(vue@3.5.39(typescript@6.0.3))
+        specifier: ^8.3.2
+        version: 8.3.2(echarts@6.1.0)(vue@3.5.39(typescript@6.0.3))
       vue-router:
         specifier: ^4.5.0
         version: 4.6.4(vue@3.5.39(typescript@6.0.3))
@@ -106,19 +106,19 @@ importers:
   apps/lumal-cockpit:
     dependencies:
       '@lumal/charts':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/charts
       '@lumal/cockpit':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/cockpit
       '@lumal/core':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/core
       '@lumal/datav':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/datav
       '@lumal/icons-vue':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/icons-vue
       cesium:
         specifier: 1.143.0
@@ -127,8 +127,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       echarts:
-        specifier: ^5.6.0
-        version: 5.6.0
+        specifier: ^6.1.0
+        version: 6.1.0
       element-plus:
         specifier: ^2.14.2
         version: 2.14.2(vue@3.5.39(typescript@6.0.3))
@@ -142,8 +142,8 @@ importers:
         specifier: ^3.5.0
         version: 3.5.39(typescript@6.0.3)
       vue-echarts:
-        specifier: ^7.0.3
-        version: 7.0.3(@vue/runtime-core@3.5.39)(echarts@5.6.0)(vue@3.5.39(typescript@6.0.3))
+        specifier: ^8.3.2
+        version: 8.3.2(echarts@6.1.0)(vue@3.5.39(typescript@6.0.3))
     devDependencies:
       '@vitejs/plugin-vue':
         specifier: ^6.0.1
@@ -164,20 +164,20 @@ importers:
   apps/lumal-datav-guide:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/core
       '@lumal/datav':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/datav
       '@lumal/icons':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/icons
       '@lumal/icons-vue':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/icons-vue
       echarts:
-        specifier: ^5.6.0
-        version: 5.6.0
+        specifier: ^6.1.0
+        version: 6.1.0
       element-plus:
         specifier: ^2.11.0
         version: 2.14.2(vue@3.5.39(typescript@6.0.3))
@@ -210,7 +210,7 @@ importers:
   apps/lumal-mock-api:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/core
       h3:
         specifier: 1.15.11
@@ -232,16 +232,16 @@ importers:
   apps/vben-compat-demo:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/core
       '@lumal/icons':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/icons
       '@lumal/icons-vue':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/icons-vue
       '@lumal/vben-compat':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../../packages/vben-compat
       element-plus:
         specifier: ^2.11.0
@@ -270,19 +270,19 @@ importers:
         version: 3.5.39(typescript@6.0.3)
     devDependencies:
       echarts:
-        specifier: ^5.5.0
-        version: 5.6.0
+        specifier: ^6.1.0
+        version: 6.1.0
       vue-echarts:
-        specifier: ^7.0.3
-        version: 7.0.3(@vue/runtime-core@3.5.39)(echarts@5.6.0)(vue@3.5.39(typescript@6.0.3))
+        specifier: ^8.3.2
+        version: 8.3.2(echarts@6.1.0)(vue@3.5.39(typescript@6.0.3))
 
   packages/cockpit:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../core
       '@lumal/icons-vue':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../icons-vue
       element-plus:
         specifier: ^2.11.0
@@ -301,10 +301,10 @@ importers:
   packages/core:
     dependencies:
       '@lumal/icons':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../icons
       '@lumal/icons-vue':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../icons-vue
       element-plus:
         specifier: ^2.11.0
@@ -338,8 +338,8 @@ importers:
         version: 3.5.39(typescript@6.0.3)
     devDependencies:
       echarts:
-        specifier: ^5.5.0
-        version: 5.6.0
+        specifier: ^6.1.0
+        version: 6.1.0
 
   packages/icons: {}
 
@@ -349,7 +349,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.1(vue@3.5.39(typescript@6.0.3))
       '@lumal/icons':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../icons
       vue:
         specifier: ^3.5.0
@@ -358,7 +358,7 @@ importers:
   packages/vben-compat:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.2-beta
+        specifier: 0.0.3-beta
         version: link:../core
       vue:
         specifier: ^3.5.0
@@ -2988,8 +2988,8 @@ packages:
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
-  echarts@5.6.0:
-    resolution: {integrity: sha512-oTbVTsXfKuEhxftHqL5xprgLoc0k7uScAwtryCgWF6hPYFLRwOUHiFmHGCBKP5NPFNkDVopOieyUqYGH8Fa3kA==}
+  echarts@6.1.0:
+    resolution: {integrity: sha512-q0yaFPggC9FUdsWH4blavRWFmxdrIodbkoKNAjJudAI6CA9gNPxHtV2RcZNEepZVlk4yvBYkOkbk6HIVpIyHZA==}
 
   editorconfig@1.0.7:
     resolution: {integrity: sha512-e0GOtq/aTQhVdNyDU9e02+wz9oDDM+SIOQxWME2QRjzRX5yyLAuHDE+0aE8vHb9XRC8XD37eO2u57+F09JqFhw==}
@@ -5461,26 +5461,11 @@ packages:
   vue-component-type-helpers@3.3.7:
     resolution: {integrity: sha512-Skkhw9agYSgsWqv7bxSOGJZa9SaiJbZVGdXuFWnrzKaQYHnw9qbjD630rw6RyMqDbp54nfLCLw5SZA55if7JLg==}
 
-  vue-demi@0.13.11:
-    resolution: {integrity: sha512-IR8HoEEGM65YY3ZJYAjMlKygDQn25D5ajNFNoKh9RSDMQtlzCxtfQjdQgv9jjK+m3377SsJXY8ysq8kLCZL25A==}
-    engines: {node: '>=12'}
-    hasBin: true
+  vue-echarts@8.3.2:
+    resolution: {integrity: sha512-FbJD49OZZZv1I8aclHQ+gcQxU+Y9nNWQMuod1sewE7/YjGQUJAaeVcf6WrSfQDBRPke+WoVsUtdRFIqPOsRrnw==}
     peerDependencies:
-      '@vue/composition-api': ^1.0.0-rc.1
-      vue: ^3.0.0-0 || ^2.6.0
-    peerDependenciesMeta:
-      '@vue/composition-api':
-        optional: true
-
-  vue-echarts@7.0.3:
-    resolution: {integrity: sha512-/jSxNwOsw5+dYAUcwSfkLwKPuzTQ0Cepz1LxCOpj2QcHrrmUa/Ql0eQqMmc1rTPQVrh2JQ29n2dhq75ZcHvRDw==}
-    peerDependencies:
-      '@vue/runtime-core': ^3.0.0
-      echarts: ^5.5.1
-      vue: ^2.7.0 || ^3.1.1
-    peerDependenciesMeta:
-      '@vue/runtime-core':
-        optional: true
+      echarts: ^6.0.0
+      vue: ^3.3.0
 
   vue-eslint-parser@10.4.1:
     resolution: {integrity: sha512-Gk6gRDj0n/fkRa3C3l0bBheoBckUq/Rs0F/TvMWIS6nzzx67amAViMe9CkNgsP2tXyQONvGiHQESHwFtZ3aYDA==}
@@ -5637,8 +5622,8 @@ packages:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
 
-  zrender@5.6.1:
-    resolution: {integrity: sha512-OFXkDJKcrlx5su2XbzJvj/34Q3m6PvyCZkVPHGYpcCJ52ek4U/ymZyfuV1nKE23AyBJ51E/6Yr0mhZ7xGTO4ag==}
+  zrender@6.1.0:
+    resolution: {integrity: sha512-oEGMDB6pOP2S6OwRR4PdVv610zrjnA3Bh+JnSG12fYJlBKjtNAoEb5fSUoCOOINlH96I2fU38/A2UpRKs67xYQ==}
 
   zstddec@0.1.0:
     resolution: {integrity: sha512-w2NTI8+3l3eeltKAdK8QpiLo/flRAr2p8AGeakfMZOXBxOg9HIu4LVDxBi81sYgVhFhdJjv1OrB5ssI8uFPoLg==}
@@ -8922,10 +8907,10 @@ snapshots:
 
   eastasianwidth@0.2.0: {}
 
-  echarts@5.6.0:
+  echarts@6.1.0:
     dependencies:
       tslib: 2.3.0
-      zrender: 5.6.1
+      zrender: 6.1.0
 
   editorconfig@1.0.7:
     dependencies:
@@ -11685,19 +11670,10 @@ snapshots:
 
   vue-component-type-helpers@3.3.7: {}
 
-  vue-demi@0.13.11(vue@3.5.39(typescript@6.0.3)):
+  vue-echarts@8.3.2(echarts@6.1.0)(vue@3.5.39(typescript@6.0.3)):
     dependencies:
+      echarts: 6.1.0
       vue: 3.5.39(typescript@6.0.3)
-
-  vue-echarts@7.0.3(@vue/runtime-core@3.5.39)(echarts@5.6.0)(vue@3.5.39(typescript@6.0.3)):
-    dependencies:
-      echarts: 5.6.0
-      vue: 3.5.39(typescript@6.0.3)
-      vue-demi: 0.13.11(vue@3.5.39(typescript@6.0.3))
-    optionalDependencies:
-      '@vue/runtime-core': 3.5.39
-    transitivePeerDependencies:
-      - '@vue/composition-api'
 
   vue-eslint-parser@10.4.1(eslint@9.39.4(jiti@2.7.0)):
     dependencies:
@@ -11847,7 +11823,7 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.7.0
 
-  zrender@5.6.1:
+  zrender@6.1.0:
     dependencies:
       tslib: 2.3.0
 
