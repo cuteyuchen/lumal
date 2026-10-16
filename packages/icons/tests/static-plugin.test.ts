@@ -1,4 +1,4 @@
-import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { build } from 'vite'
 import { describe, expect, it } from 'vitest'
 import { createStaticLocalSvgIconsPlugin } from '../src/vite/static-local-svg-icons'
@@ -15,8 +15,9 @@ describe('static svg plugin build', () => {
           resolveId(id) {
             if (id === 'virtual:test-entry' || id === 'virtual:test-manifest')
               return `\0${id}`
+            // 测试按包或从仓库根运行时，都使用同一个绝对源码入口。
             if (id === '@lumal/icons')
-              return resolve('packages/icons/src/index.ts')
+              return fileURLToPath(new URL('../src/index.ts', import.meta.url))
           },
           load(id) {
             if (id === '\0virtual:test-entry')
