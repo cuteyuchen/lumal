@@ -12,7 +12,7 @@
 ## 安装
 
 ```bash
-pnpm add @lumal/icons @lumal/icons-vue vue @iconify/vue
+pnpm add @lumal/icons@0.0.3-beta @lumal/icons-vue@0.0.3-beta vue @iconify/vue
 ```
 
 ## 公开入口
@@ -47,6 +47,8 @@ import '@lumal/icons-vue/style.css'
 - `useIconRegistry`
 
 SVG 改色、合成、Data URI 等纯 TS 能力在 [@lumal/icons](./icons)，本包不重复实现。
+
+可直接传入三种 source 的 `IconDefinition`。SVG 通过 HTML 渲染，只接受可信静态资源，注册和渲染不自动净化；单色格式检查不是完整 sanitizer。弹窗通过 Teleport 挂载到 body，约束 Tab、支持 Escape，并在关闭/卸载时恢复原焦点。
 
 ## Peer
 

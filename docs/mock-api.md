@@ -24,3 +24,5 @@ Mock API 运行入口为 `apps/lumal-mock-api/.output/server/index.mjs`。推荐
 可配置项包括 `MOCK_JWT_SECRET`、`MOCK_ACCESS_TTL_SECONDS`、`MOCK_REFRESH_TTL_SECONDS`、`MOCK_SANDBOX_TTL_MS`、`MOCK_MAX_SANDBOXES`、`MOCK_RATE_LIMIT` 和 `MOCK_LOGIN_RATE_LIMIT`。
 
 该服务只用于演示和接口联调，不承诺数据持久化，禁止存入真实账号、文件或敏感信息。
+
+内置测试账号、演示密码、默认密钥和内存沙箱都不是生产认证方案。真实部署必须替换为业务后端及其密码存储、密钥管理、持久化和权限审计机制，不应直接扩展此 Mock 服务承载生产用户。

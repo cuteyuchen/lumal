@@ -13,8 +13,10 @@
 ## 安装
 
 ```bash
-pnpm add @lumal/core @lumal/icons @lumal/icons-vue vue vue-router pinia element-plus
+pnpm add @lumal/core@0.0.3-beta @lumal/icons@0.0.3-beta @lumal/icons-vue@0.0.3-beta vue vue-router element-plus @iconify/vue
 ```
+
+Pinia 按需安装。只使用 minimal / request 等纯服务入口时无需 UI peer，详见 [安装与包地址](/guide/essentials/installation)。
 
 本地 monorepo：
 
@@ -27,6 +29,7 @@ pnpm add @lumal/core @lumal/icons @lumal/icons-vue vue vue-router pinia element-
 | 入口 | 用途 |
 | --- | --- |
 | `@lumal/core` | `createLumalAdmin` 等根导出 |
+| `@lumal/core/minimal` | 无默认 UI 注册表的轻启动入口 |
 | `@lumal/core/components` | Schema 表单/表格、Page、CRUD 等 |
 | `@lumal/core/layout` | `LumalLayout`、侧栏、标签、Header 等 |
 | `@lumal/core/router` | 菜单路由运行时 |
@@ -41,7 +44,7 @@ pnpm add @lumal/core @lumal/icons @lumal/icons-vue vue vue-router pinia element-
 | `@lumal/core/style.css` | 运行时 CSS |
 | `@lumal/core/theme-chalk/index.scss` | 主题 SCSS 变量与样式 |
 
-## 最小启动
+## 默认 UI 启动
 
 ```ts
 import { createLumalAdmin } from '@lumal/core'
@@ -89,7 +92,16 @@ await framework.mount('#app')
 - `elementPlus`：支持 Plugin 或 `{ plugin, options }`
 - `components`：`true` / `false` / 组件名数组 / 组件映射
 - `mount()` 异步：等待 `setup` 与 `router.isReady()`
-- 安装顺序：本地图标 → 字典 → router → pinia → elementPlus → components
+- 安装顺序：本地图标 → 字典 → pinia → router → elementPlus → components
+
+### 轻启动
+
+```ts
+import { createLumalAdmin } from '@lumal/core/minimal'
+await createLumalAdmin({ rootComponent: App }).mount('#app')
+```
+
+轻入口默认不安装字典，只接受显式组件映射，不静态加载 Element Plus、Sortable 或图表引擎。根入口的 `preset: 'minimal'` 只关闭默认组件注册，不是隔离体积的入口。纯服务子入口也不需要 Element Plus；使用 UI 组件仍需对应 peer 与样式。
 
 ## 组件（`@lumal/core/components`）
 
@@ -164,12 +176,15 @@ import { createRequestClient } from '@lumal/core/request'
 
 const client = createRequestClient({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  getAccessToken: () => session.accessToken,
-  refresh: () => auth.refresh(),
+  getToken: () => session.accessToken,
+  getCacheScope: () => currentTenantId,
+  authRefresh: { refresh: () => auth.refresh() },
 })
 ```
 
 支持统一错误、接口适配、Token 刷新单飞与安全重放。分页标准形态：`{ items, total }`。
+
+缓存默认关闭，非 GET 缓存必须显式给出 key。退出或切换上下文时调用 `client.clearCache()`；Authorization 或 `getCacheScope()` 变化也会自动失效。完整缓存与标签视图生命周期契约见 [Core API](/reference/core-api)。
 
 ## 主题与偏好
 

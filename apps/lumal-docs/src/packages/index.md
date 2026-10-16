@@ -2,6 +2,8 @@
 
 Lumal 按职责拆包。应用只消费 **公开 `exports` 入口** 与样式路径，不要依赖 `packages/*/src` 或测试内部文件。
 
+本组文档对应 `0.0.3-beta`，安装时显式指定版本，所有 Lumal 包保持同版。版本变更与发布方式见 [更新日志](/reference/changelog)。
+
 ## 选型建议
 
 | 场景 | 推荐包 |
@@ -28,16 +30,18 @@ Lumal 按职责拆包。应用只消费 **公开 `exports` 入口** 与样式路
 | [@lumal/vben-compat](./vben-compat) | Vben 常用 API 兼容 | [在线文档](https://lumal-docs-cf.pages.dev/packages/vben-compat) | `packages/vben-compat` |
 | [create-lumal-admin](./create-lumal-admin) | 脚手架 CLI | [在线文档](https://lumal-docs-cf.pages.dev/packages/create-lumal-admin) | `packages/create-lumal-admin` |
 
-> npm 包地址与安装方式见 [安装与版本](/guide/installation)。
+> npm 包地址与安装方式见 [安装与版本](/guide/essentials/installation)。
 
 ## 安装顺序（典型 Admin）
 
 ```bash
-pnpm add vue vue-router pinia element-plus
-pnpm add @lumal/core @lumal/icons @lumal/icons-vue
+pnpm add vue vue-router element-plus @iconify/vue
+pnpm add @lumal/core@0.0.3-beta @lumal/icons@0.0.3-beta @lumal/icons-vue@0.0.3-beta
 # 按需
-pnpm add @lumal/charts echarts vue-echarts
-pnpm add -D @lumal/vite
+pnpm add @lumal/charts@0.0.3-beta echarts@^6 vue-echarts@^8
+pnpm add -D @lumal/vite@0.0.3-beta
 ```
 
-未发布到 npm 时使用 `workspace:*` 或 `file:`，见 [安装与版本](/guide/installation)。
+Pinia 按应用需要安装。纯服务接入优先使用 `@lumal/core/minimal` / `request`，无需 Element Plus；UI 入口需安装对应 peer 与样式。
+
+未发布到 npm 时使用 `workspace:*` 或 `file:`，见 [安装与版本](/guide/essentials/installation)。

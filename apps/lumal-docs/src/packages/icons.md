@@ -13,7 +13,7 @@
 ## 安装
 
 ```bash
-pnpm add @lumal/icons
+pnpm add @lumal/icons@0.0.3-beta
 ```
 
 Vue 项目请同时安装 [@lumal/icons-vue](./icons-vue)。
@@ -53,18 +53,20 @@ const blueSvg = recolorSvgString(svgText, '#1677ff')
 ## Vite 插件
 
 ```ts
-import { lumalIconsSvgPlugin } from '@lumal/icons/vite'
+import { createStaticLocalSvgIconsPlugin } from '@lumal/icons/vite'
 
 export default {
   plugins: [
-    lumalIconsSvgPlugin({
-      // 将静态 SVG 目录注册进构建
+    createStaticLocalSvgIconsPlugin({
+      localSvg: '/src/icons/manifest.ts', // 默认导出 IconDefinition[] 的可信静态模块
     }),
   ],
 }
 ```
 
 具体选项见包内类型与 [图标系统](/reference/icons)。
+
+SVG 仅接受可信静态资源，注册不会自动净化输入。`validateMonochromeSvg` 是有限格式检查，不是完整 sanitizer，不能据此信任用户上传或远程 SVG。
 
 ## 边界
 

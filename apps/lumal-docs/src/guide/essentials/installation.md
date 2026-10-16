@@ -16,16 +16,22 @@
 | `@lumal/vben-compat` | `packages/vben-compat` | [/packages/vben-compat](/packages/vben-compat) | 同上 |
 | `create-lumal-admin` | `packages/create-lumal-admin` | [/packages/create-lumal-admin](/packages/create-lumal-admin) | 同上 |
 
-## 正式安装（发布后）
+## npm 安装
+
+当前公共包版本为 `0.0.3-beta`。以下命令显式指定版本，所有 Lumal 包保持同版；不使用不带版本的安装命令获取本次 beta。
 
 ```bash
-pnpm add @lumal/core @lumal/icons @lumal/icons-vue element-plus vue vue-router pinia
-pnpm add @lumal/charts echarts vue-echarts   # 可选
-pnpm add @lumal/datav echarts               # 可选
-pnpm add @lumal/cockpit                     # 可选
-pnpm add -D @lumal/vite
-pnpm add @lumal/vben-compat                 # 迁移
+pnpm add @lumal/core@0.0.3-beta @lumal/icons@0.0.3-beta @lumal/icons-vue@0.0.3-beta @iconify/vue element-plus vue vue-router
+pnpm add @lumal/charts@0.0.3-beta echarts@^6 vue-echarts@^8   # 可选
+pnpm add @lumal/datav@0.0.3-beta echarts@^6                  # 可选
+pnpm add @lumal/cockpit@0.0.3-beta                           # 可选
+pnpm add -D @lumal/vite@0.0.3-beta
+pnpm add @lumal/vben-compat@0.0.3-beta                       # 迁移
 ```
+
+Pinia 不是默认依赖，应用需要时自行安装。图表不再兼容 ECharts 5 / vue-echarts 7；默认主题与布局迁移注意事项见 [更新日志](/reference/changelog)。
+
+只使用 `@lumal/core/minimal` 或 request 等纯服务子入口时，只需安装 Core 和 Vue，无需 Element Plus；消费 UI、图标或 Router 子入口时再安装对应 peer。脚手架本身是带 Element Plus 的后台基座。
 
 ## 本地 monorepo
 

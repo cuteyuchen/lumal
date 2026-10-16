@@ -1,17 +1,45 @@
 # Changeset 发布
 
+## 记录变更
+
 ```bash
 pnpm changeset
 pnpm changeset:status
-pnpm changeset:version
 ```
 
-配合：
+九个公共包属于同一个 fixed 组，始终同版；私有应用只同步内部依赖，不发包。
+
+## 准备 Beta
+
+本轮沿用 `0.0.x-beta` 版本序列，目标为 `0.0.3-beta`：
 
 ```bash
+pnpm release:version 0.0.3-beta
+pnpm install --lockfile-only --ignore-scripts
+pnpm install --frozen-lockfile --ignore-scripts
+```
+
+版本命令只修改 package.json，不会自动更新锁文件、日志、文档或发布。将待处理 Changeset 汇总进九包 CHANGELOG，确认完整后移除已消费记录；同步文档版本、安装命令和脚手架说明。源码中的脚手架版本占位符保留，构建时注入本版精确版本。
+
+手工汇总后用一份无包 bump 的空记录注明已进入本版日志（本轮为 `prepared-0-0-3-beta.md`）。它只避免未提交的版本工作区被 status 判为缺少记录，不会生成下一次发布计划。
+
+`pnpm changeset:version` 属于标准 Changesets 自动 bump 流程，minor 变更可能得到 `0.1.0`，不是本轮 beta 流程；不要在手工版本准备后对同一批记录重复执行。
+
+## 验证与发布
+
+```bash
+pnpm build
+pnpm test:create-consumer
+pnpm docs:build
+pnpm release:boundaries
+pnpm changeset:status
 pnpm release:names
 pnpm pack:dry-run
 pnpm release:check
 ```
 
-清单见 [发布检查清单](/reference/release-checklist)。
+构建、类型检查和包消费验收保持串行，避免同时清理 `dist`。本轮代码验收不运行包含 E2E 的完整 `release:check`，具体范围见 [轻量框架审计](/reference/architecture-audit-2026-10-16)。
+
+npm 发布是独立步骤：推送 `v0.0.3-beta` tag，或手动触发 `release-npm.yml` 并指定版本 `0.0.3-beta`、dist-tag `beta`。本地版本准备不会执行这些操作。
+
+清单见 [发布检查清单](/reference/release-checklist)，版本变化见 [更新日志](/reference/changelog)。

@@ -1,6 +1,6 @@
 # 架构说明
 
-Lumal 使用 pnpm workspace 组织包和示例应用。`packages/*` 按最终发包模型开发，示例应用通过 workspace 包名消费，不直接 alias 到包源码。
+Lumal 使用 pnpm workspace 组织包和示例应用。`packages/*` 按最终发包模型开发，示例应用通过 workspace 包名消费；本地 serve 使用 source alias 支持即时开发，production build 消费已构建的包产物，验证最终发布边界。
 
 ## 分层
 
@@ -8,7 +8,7 @@ Lumal 使用 pnpm workspace 组织包和示例应用。`packages/*` 按最终发
 - `packages/icons-vue`：Vue 图标组件和响应式适配层，只依赖 `@lumal/icons`、Vue 与 Iconify Vue peer。
 - `packages/core`：后台核心包，可以依赖 `@lumal/icons` 与 `@lumal/icons-vue`。
 - `packages/charts`：可选图表包，独立承载 ECharts 面板能力。
-- `packages/datav`：独立驾驶舱可视化组件包，基于 DataV 2.10.0（MIT）重构 38 个组件，把 `vue` 和 `echarts` 作为 peer dependency，并为 `config` 模式声明 `@jiaminghi/charts` 运行时依赖；不依赖 `@lumal/core`。
+- `packages/datav`：独立驾驶舱可视化组件包，提供 15 个导出组件，含边框/装饰变体共 38 种形态，以 DataV 2.10.0（MIT）为基准重构；`vue` 和 `echarts` 为 peer dependency，`config` 使用 `@jiaminghi/charts` 专用运行时；不依赖 `@lumal/core`。
 - `packages/cockpit`：可选驾驶舱编排包，提供布局运行时、组件注册、编排设计器和通用消息总线，可以依赖 `@lumal/core`；不内置地图引擎、业务模块或行业术语。
 - `packages/vben-compat`：迁移兼容包，可以依赖 `@lumal/core`。
 - `packages/vite`：无强制运行时依赖的 Vite resolver、alias 和 Devtools 助手。
@@ -64,6 +64,8 @@ create-lumal-admin  →  生成消费 @lumal/core / @lumal/icons / @lumal/icons-
 
 Lumal 不从零重写基础控件。当前核心组件基于 Element Plus 组合实现，Element Plus 保持 peer dependency，应用侧按需安装。
 
+根安装器保留便利型 UI 注册；`@lumal/core/minimal` 不引用默认组件表，纯服务子入口也不加载 UI。optional peer 不代表 UI 入口无需安装对应依赖。DataV `charts` 按 `config` / `option` 模式动态加载当前引擎，`active-ring-chart` 使用其 ECharts 模式；其余无引擎子入口保持独立。
+
 `Lumal*` 组件是后台框架组件，不是 `El*` 基础控件的替代品。表单、表格、分页、按钮、菜单、布局容器等基础交互优先使用 Element Plus，Lumal 只在其上提供 schema、CRUD、布局壳、权限、请求、主题和迁移兼容能力。后续如果某个控件能力不足，应优先通过 schema 扩展、插槽或 Element Plus 配置透传解决，而不是在 `@lumal/core` 中重写一套基础 UI。
 
 ## 样式
@@ -96,6 +98,8 @@ Lumal 不从零重写基础控件。当前核心组件基于 Element Plus 组合
 ## 构建与验收流
 
 Admin 页面路由使用动态导入，Element Plus、ECharts 和 Lumal 公共能力拆分为明确的 vendor chunk。`release:artifacts` 检查发布包产物、vendor 命名和单个 Admin JavaScript 块 500 KB 上限，避免通过调高告警阈值掩盖分包问题。
+
+`release:budgets` 额外检查真实 dist 消费者：minimal 相对 Vue 增量不超过 10 KB gzip、request 不超过 5 KB gzip、DataV charts 首屏不超过 55 KB gzip且无静态引擎，并统计各示例应用首屏静态 JS/CSS 闭包。`--require-all` 要求四个应用均已构建。tarball 独立消费同时覆盖无 Element Plus 的 minimal/request 项目。
 
 Playwright 通过生产构建预览验证登录、权限菜单、403/404、退出、标签与设置持久化、CRUD、会话失效和移动端横向溢出。浏览器流程消费与用户相同的 Admin 入口，不直接调用组件内部实现。
 

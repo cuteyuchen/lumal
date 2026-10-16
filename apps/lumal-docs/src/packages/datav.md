@@ -1,6 +1,6 @@
 # @lumal/datav
 
-面向驾驶舱的 Vue 3 DataV 组件包。以 DataV 2.10.0（MIT）为基准重构，支持 DataV `config` 与现代 props 双套 API。
+面向驾驶舱的 Vue 3 DataV 组件包。以 DataV 2.10.0（MIT）为基准重构，提供 15 个导出组件，含变体共 38 种形态，支持 DataV `config` 与现代 props 双套 API。
 
 | 项 | 值 |
 | --- | --- |
@@ -13,7 +13,7 @@
 ## 安装
 
 ```bash
-pnpm add @lumal/datav vue echarts
+pnpm add @lumal/datav@0.0.3-beta vue echarts@^6
 ```
 
 ## 公开入口
@@ -95,6 +95,8 @@ DataV 原生配置：
 ```
 
 `autoResize` 对两种模式生效；`theme`、事件、loading 和 ECharts 实例方法只在 `option` 模式生效。
+
+引擎按当前模式异步加载，不再同时静态加载两套引擎。`LumalActiveRingChart` 使用 ECharts 模式；其他纯 SVG、数字和列表子入口不加载图表引擎。实例在异步加载后可用，卸载或模式切换会使旧加载失效。
 
 ## 组件映射（DataV → Lumal）
 

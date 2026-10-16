@@ -4,10 +4,12 @@
 
 ## 命令
 
+本版为 `0.0.3-beta`，要求 Node.js `>=22.12.0`、pnpm `10.33.0`。以下 npm 命令显式指定版本：
+
 ```bash
-pnpm create lumal-admin my-admin
-pnpm create lumal-admin my-admin --api-mode local   # 默认
-pnpm create lumal-admin my-admin --api-mode http
+pnpm create lumal-admin@0.0.3-beta my-admin
+pnpm create lumal-admin@0.0.3-beta my-admin --api-mode local   # 默认
+pnpm create lumal-admin@0.0.3-beta my-admin-http --api-mode http
 ```
 
 | 模式 | 内容 |
@@ -18,13 +20,15 @@ pnpm create lumal-admin my-admin --api-mode http
 ## 生成内容
 
 - Vue 3 + TypeScript + Vite + Element Plus
-- `createLumalAdmin` + 主题 / 样式入口
-- `LumalLayout` + `LumalRouterView`（路由驱动标签、固定首页、会话持久化）
+- `@lumal/core/minimal` 的 `createLumalAdmin` + 显式 UI / 路由 / 权限接线和样式
+- `LumalLayout` + `LumalRouterView`（路由驱动标签、固定首页、会话持久化、按标签刷新和缓存剔除）
 - 登录、会话、权限菜单、守卫、403 / 404
 - 主题与布局偏好、设置抽屉
 - 明确 vendor 分包配置
 
 **不会**生成完整用户 / 角色 / 菜单 / 字典系统管理业务（参考 `apps/lumal-admin`）。
+
+Core 与图标依赖精确使用同版 `0.0.3-beta`，不依赖浮动标签。模板按用户隔离布局状态，登录前清理旧快照。HTTP 模式仍需项目实现实际接口、响应适配和认证接线。
 
 ## 本地调试脚手架本身
 

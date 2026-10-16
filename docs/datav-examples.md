@@ -1,16 +1,18 @@
 # DataV 组件示例
 
-`@lumal/datav` 是面向驾驶舱的 Vue 3 可视化组件包，以 DataV 2.10.0（MIT）为基准重构 38 个组件，提供 15 个可导入组件。每个组件同时支持 DataV `config` 协议和类型更明确的现代 props；同一字段同时出现时优先级为 **显式现代 props > DataV `config` > DataV 上游默认值**。
+`@lumal/datav` 是面向驾驶舱的 Vue 3 可视化组件包，提供 15 个导出组件，含边框/装饰变体共 38 种形态，以 DataV 2.10.0（MIT）为基准重构。每个组件同时支持 DataV `config` 协议和类型更明确的现代 props；同一字段同时出现时优先级为 **显式现代 props > DataV `config` > DataV 上游默认值**。
 
 本文覆盖全部 15 个组件的最小示例、主题变量、原生 ECharts 封装，以及在 Admin 中以外链形式嵌入独立示例页的接线方式。可运行的组件文档站见 `apps/lumal-datav-guide`（仿 DataV guide 结构，含实时预览与属性表）。
 
 ## 安装与注册
 
+以下命令显式安装 `0.0.3-beta`，ECharts 需要 6.x。
+
 ```bash
-pnpm add @lumal/datav vue echarts
+pnpm add @lumal/datav@0.0.3-beta vue echarts@^6
 ```
 
-`vue` 和 `echarts` 是 peer dependency，需要应用侧安装。只有 `LumalCharts` 用到 `echarts`，其余组件不加载图表运行时。
+`vue` 和 `echarts` 是 peer dependency，需要应用侧安装。`LumalCharts` 按 `config` / `option` 模式动态加载 DataV / ECharts 引擎；`LumalActiveRingChart` 也通过它使用 ECharts。其他纯 SVG、数字和列表子入口不加载图表运行时。
 
 全量注册：
 
@@ -239,11 +241,23 @@ SVG 波浪水位图，`shape` 取 `rect` / `round` / `roundRect`。多个值渲�
 />
 ```
 
-## 原生 ECharts
+## DataV 原生 Charts
 
 ### LumalCharts
 
-`option` 类型即 ECharts 原生 `EChartsOption`，不过滤或转换任何属性。
+`config` 直接使用 DataV 的 `@jiaminghi/charts` 协议：
+
+```vue
+<LumalCharts
+  :config="{
+    xAxis: { data: ['一', '二', '三'] },
+    yAxis: { data: 'value' },
+    series: [{ type: 'bar', data: [120, 200, 150] }],
+  }"
+/>
+```
+
+既有 ECharts 项目可以继续传 `option`；这是 Lumal 兼容扩展，不是 DataV 原生协议：
 
 ```vue
 <script setup lang="ts">
@@ -270,7 +284,7 @@ const option = shallowRef<LumalChartsOption>({
 </template>
 ```
 
-组件默认 `autoResize`；通过 ref 可取得 `getInstance()`，并直接调用 `setOption`、`resize`、`dispatchAction`、`convertToPixel`、`convertFromPixel`、`containPixel`、`appendData`、`getDataURL`、`getConnectedDataURL`、`showLoading`、`hideLoading`、`on`、`off`、`clear` 与 `dispose`。
+组件默认 `autoResize`；引擎按需异步加载后可通过 ref 取得当前运行时或 DataV 原生实例。ECharts 专有方法仅在 `option` 模式可用。
 
 ## 主题变量
 

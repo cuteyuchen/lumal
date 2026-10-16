@@ -14,7 +14,7 @@
 ## 安装
 
 ```bash
-pnpm add @lumal/cockpit @lumal/core @lumal/icons-vue vue element-plus
+pnpm add @lumal/cockpit@0.0.3-beta @lumal/core@0.0.3-beta @lumal/icons-vue@0.0.3-beta vue element-plus @iconify/vue
 ```
 
 可视化组件按需另装 `@lumal/datav`。

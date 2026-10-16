@@ -69,10 +69,12 @@ pnpm --filter lumal-datav-guide dev
 
 ## 创建业务项目
 
+当前公共包版本为 `0.0.3-beta`，以下命令显式指定版本：
+
 ```bash
-pnpm create lumal-admin my-admin
+pnpm create lumal-admin@0.0.3-beta my-admin
 # HTTP API 模式
-pnpm create lumal-admin my-admin --api-mode http
+pnpm create lumal-admin@0.0.3-beta my-admin-http --api-mode http
 
 cd my-admin
 pnpm install
@@ -84,18 +86,15 @@ pnpm dev
 ## 应用侧最小接入
 
 ```ts
-import { createLumalAdmin } from '@lumal/core'
-import '@lumal/core/theme-chalk/index.scss'
-import '@lumal/core/style.css'
-import '@lumal/icons-vue/style.css'
+import { createLumalAdmin } from '@lumal/core/minimal'
 import App from './App.vue'
 
-createLumalAdmin({
+await createLumalAdmin({
   rootComponent: App,
 }).mount('#app')
 ```
 
-完整选项见 [@lumal/core](/packages/core) 与 [Core API](/reference/core-api)。
+该入口不安装默认 UI 注册表；使用布局、表单等 UI 时，显式安装对应 peer、组件和样式。脚手架已包含带 Element Plus 的后台基座接线。完整选项见 [@lumal/core](/packages/core) 与 [Core API](/reference/core-api)，升级说明见 [更新日志](/reference/changelog)。
 
 ## 下一步
 

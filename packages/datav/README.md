@@ -1,11 +1,11 @@
 # @lumal/datav
 
-面向 Lumal 驾驶舱的 Vue 3 DataV 组件包。当前版本以 DataV 2.10.0（MIT）为基准，完整重构其 38 个组件的默认几何、动效和 `config` 协议，同时提供更明确的现代 props API。
+面向 Lumal 驾驶舱的 Vue 3 DataV 组件包。当前版本以 DataV 2.10.0（MIT）为基准，提供 15 个导出组件，含边框/装饰变体共 38 种形态，重构其默认几何、动效和 `config` 协议，同时提供更明确的现代 props API。
 
 ## 安装
 
 ```bash
-pnpm add @lumal/datav vue echarts
+pnpm add @lumal/datav@0.0.3-beta vue echarts@^6
 ```
 
 ```ts
@@ -46,6 +46,8 @@ import '@lumal/datav/style.css'
 ```
 
 `autoResize` 对两种运行时都有效；`theme`、事件、loading 与 ECharts 实例方法仅属于 `option` 扩展模式。组件 ref 提供 `getInstance()`、`getNativeInstance()`、`setConfig()`、`setOption()` 与 `resize()`。
+
+两套引擎按当前模式动态加载，实例在加载完成后创建；切换模式或卸载会使旧加载失效。`LumalActiveRingChart` 使用 ECharts 模式，不应视为无引擎组件。其他纯 SVG/数字/列表子入口不引入图表引擎；需要实例的方法应在实例创建后调用。
 
 ## 两套 API
 

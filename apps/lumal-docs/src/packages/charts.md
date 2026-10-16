@@ -12,7 +12,7 @@
 ## 安装
 
 ```bash
-pnpm add @lumal/charts echarts vue-echarts vue
+pnpm add @lumal/charts@0.0.3-beta echarts@^6 vue-echarts@^8 vue
 ```
 
 ## 公开入口
@@ -77,9 +77,16 @@ const options = shallowRef<EChartsOption>({
 
 ## Peer
 
+`LumalChart` 外层保留 class/style，其余 attrs 与事件传递给 VChart，`@click` 接收 ECharts 参数。动画优先级为显式 prop > `options.animation` > reduced-motion 默认值。只保留 VChart 一套 autoresize，关闭 `autoResize` 不额外监听 window。
+
+`chartWidth` / `tableWidth` 实际控制面板对应视图宽度，支持数字 px 或 CSS 字符串，并以父容器宽度为上限。
+
 - `vue`
-- `echarts`
-- `vue-echarts`
+- `echarts`：`^6.0.0`
+- `vue-echarts`：`^8.0.0`
+
+ECharts 6 的默认配色、图例位置和标签布局与 5.x 不同。本包不强制恢复旧主题；
+需要保留旧外观时，请在应用侧按 [ECharts 6 迁移指南](https://echarts.apache.org/handbook/en/basics/release-note/v6-upgrade-guide/) 配置。
 
 ## 与 DataV 区别
 

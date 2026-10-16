@@ -4,6 +4,8 @@ Lumal 是一套面向中小型后台项目的轻量 Vue Admin 基础设施。它
 
 `apps/lumal-admin` 是公开 API 的集成示例与验收入口；可复用能力必须沉淀到 `packages/*`，业务接口字段、状态码和页面逻辑不得进入框架包。
 
+当前公共包版本为 `0.0.3-beta`，Beta 版本使用 npm 的 `beta` 标签；安装时显式指定版本。升级说明见 [更新日志](docs/changelog.md)，实际发布状态以 npm registry 和仓库发布工作流为准。
+
 ## 快速开始
 
 环境要求：Node.js 22.12+、pnpm 10.33.0。
@@ -18,22 +20,21 @@ pnpm admin:dev
 创建新项目：
 
 ```bash
-pnpm create lumal-admin my-admin
+pnpm create lumal-admin@0.0.3-beta my-admin
 ```
 
 应用侧最小接入：
 
 ```ts
-import { createLumalAdmin } from '@lumal/core'
-import '@lumal/core/theme-chalk/index.scss'
-import '@lumal/core/style.css'
-import '@lumal/icons-vue/style.css'
+import { createLumalAdmin } from '@lumal/core/minimal'
 import App from './App.vue'
 
-createLumalAdmin({
+await createLumalAdmin({
   rootComponent: App,
 }).mount('#app')
 ```
+
+该示例不安装默认 UI 注册表。使用布局、表单等 UI 时，显式导入组件并安装对应 peer 和样式；脚手架会完成这些接线。
 
 ## 工作区
 
@@ -43,7 +44,7 @@ createLumalAdmin({
 | `packages/icons-vue` | Vue 图标组件、选择器和响应式注册表适配 |
 | `packages/core` | 安装器、布局、路由、权限、请求、主题、字典和核心组件 |
 | `packages/charts` | 可选 ECharts 面板与自适应能力 |
-| `packages/datav` | 面向驾驶舱的 Vue 3 DataV 可视化组件包（38 个组件重构） |
+| `packages/datav` | 面向驾驶舱的 Vue 3 DataV 可视化包（15 个导出组件，含变体共 38 种形态） |
 | `packages/cockpit` | 通用驾驶舱编排框架：布局运行时、组件注册、设计器与消息总线 |
 | `packages/vben-compat` | 常用旧项目写法到 Lumal 原生 API 的迁移层 |
 | `packages/vite` | 组件 resolver、工作区 alias 和可选 Devtools 配置助手 |
@@ -72,6 +73,8 @@ create-lumal-admin  →  生成消费公开包入口的应用
 ```
 
 `@lumal/datav` 是独立可视化包，不依赖 `@lumal/core`；它把 `vue` 和 `echarts` 作为 peer dependency，并为 DataV `config` 模式声明 `@jiaminghi/charts` 运行时依赖。驾驶舱和 Admin 可直接按需消费其组件。
+
+需要严格轻量启动时使用 `@lumal/core/minimal`，只显式注册需要的组件；根入口保留默认 UI 便利接线。`@lumal/core/request` 等纯服务子入口无需 Element Plus。DataV 通用图表按模式动态加载引擎，无引擎组件可使用独立子入口。
 
 ## 当前稳定能力
 
@@ -118,6 +121,8 @@ pnpm release:artifacts
 pnpm pack:dry-run
 pnpm release:check
 ```
+
+beta 版本准备使用 `pnpm release:version <version>`，仅同步包版本与内部依赖；锁文件、日志、文档和验收步骤见 [发布检查清单](docs/release-checklist.md)。
 
 构建任务会清理并重建 `dist`，组合执行时保持串行，避免消费方在产物重建过程中读取到不完整声明。
 

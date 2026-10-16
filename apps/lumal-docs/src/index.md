@@ -52,7 +52,7 @@ features:
     linkText: 组件文档
   - icon: 📺
     title: 驾驶舱与 DataV
-    details: 通用布局编排 + Designer + 消息总线；38 个 DataV 组件双 API 重构。
+    details: 通用布局编排 + Designer + 消息总线；15 个 DataV 导出组件，含变体共 38 种形态。
     link: /packages/cockpit
     linkText: 驾驶舱包
   - icon: ⚡
@@ -69,10 +69,12 @@ features:
 
 ## 快速安装
 
+当前公共包版本为 `0.0.3-beta`，安装时显式指定版本，不依赖 npm 的 `latest` 标签，见 [更新日志](/reference/changelog)。
+
 ::: code-group
 
-```bash [发布后]
-pnpm add @lumal/core @lumal/icons @lumal/icons-vue element-plus vue vue-router pinia
+```bash [npm]
+pnpm add @lumal/core@0.0.3-beta @lumal/icons@0.0.3-beta @lumal/icons-vue@0.0.3-beta @iconify/vue element-plus vue vue-router
 ```
 
 ```bash [本地 monorepo]
@@ -83,7 +85,7 @@ pnpm add @lumal/core@file:../lumal/packages/core
 ```
 
 ```bash [脚手架]
-pnpm create lumal-admin my-admin
+pnpm create lumal-admin@0.0.3-beta my-admin
 cd my-admin && pnpm install && pnpm dev
 ```
 

@@ -53,13 +53,29 @@ await framework.mount('#app')
 
 关键行为：
 
-- `preset` 支持 `admin-default` 和 `minimal`；两者都不内部创建 Pinia。
+- `preset` 支持 `admin-default` 和 `minimal`；两者都不内部创建 Pinia，`minimal` 默认不注册组件。
 - `elementPlus` 兼容旧 Plugin 写法和 `{ plugin, options }` 写法。
 - `components` 支持 `true`、`false`、组件名数组和组件映射。
 - `mount()` 为异步方法，会等待 `setup()` 和 `router.isReady()`。
 - 返回值暴露 `app`、`router`、`pinia`、`permissionStore`、`use()` 和 `mount()`。
 
-安装顺序固定为：本地图标注册 -> 字典上下文 -> `router` -> `pinia` -> `elementPlus` -> `components`；挂载阶段再执行 `setup` -> `router.isReady` -> Vue mount。
+安装顺序固定为：本地图标注册 -> 字典上下文 -> `pinia` -> `router` -> `elementPlus` -> `components`；挂载阶段再执行 `setup` -> `router.isReady` -> Vue mount。
+
+### 真正轻量的启动入口
+
+根入口保留开箱即用的默认组件表；只设置根入口的 `preset: 'minimal'` 或 `components: false` 不能消除这份静态依赖。需要隔离 UI 时使用 `@lumal/core/minimal`：
+
+```ts
+import { createLumalAdmin } from '@lumal/core/minimal'
+import App from './App.vue'
+
+await createLumalAdmin({
+  rootComponent: App,
+  // components: { MyComponent }，只接受显式组件映射，不引用默认组件表。
+}).mount('#app')
+```
+
+该入口默认不安装字典，不静态加载 Element Plus、Sortable 或图表引擎。字典、router、pinia、Element Plus 仍可显式传入；使用 UI 组件时需要安装对应 peer 并引入其样式。纯服务消费者可以只导入 `@lumal/core/request` 等子入口，无需安装 Element Plus。
 
 ## 组件
 
@@ -415,6 +431,9 @@ CRUD 会转发 `query-{field}`、`table-{field}`、`form-{field}`、`table-title
 - `getDictionaryLabel`
 - `normalizeDictionaryOptions`
 - `createDictionaryFetcherWithFallback`
+- `createDictionaryStore`
+
+`setDictionary`、`removeDictionary` 和 `clearDictionary` 都会使对应的在途加载失效。旧 Promise 仍向原调用方返回结果或错误，但不能回填、覆盖新请求或修改新请求的 loading/error。切换账号或租户时应清理当前字典 Store。
 
 推荐字段名是 `dictionary`，用于 Schema Form 的下拉 options 生成，以及 Schema Table / CRUD Table 的值回显：
 
@@ -482,6 +501,27 @@ layout 只负责后台壳层结构和交互，不请求业务数据。`LumalLayo
 - `getTabs()` / `resetTabs()`：读取和重置路由驱动标签。
 
 路由驱动模式仍会触发现有 `tab-change`、`tab-remove`、`tab-refresh` 和批量关闭事件，便于应用补充埋点或刷新视图；路由切换和标签集合由 Layout 维护。
+
+### 视图缓存与标签生命周期
+
+`LumalLayout` 的默认 slot 提供 `{ tabs }`，`tabs-change` 输出完整标签集合。用它生成 `LumalRouterView.cacheKeys`，标签关闭时对应实例会销毁；刷新时只替换该标签版本的 key：
+
+```vue
+<LumalLayout v-slot="{ tabs }" route-driven :preferences="preferences">
+  <LumalRouterView
+    cache
+    :cache-max="20"
+    :view-key="viewKey"
+    :cache-keys="tabs.map(tab => `${tab.path}:${versions[tab.path] ?? 0}`)"
+  />
+</LumalLayout>
+```
+
+`viewKey` 应使用相同的 `path:version` 规则。只增加当前标签的版本，不增加全局版本；移除已关闭标签的版本记录。`route.meta.keepAlive === false` 禁止缓存该路由。缓存默认最多 20 项，`cacheMax <= 0` 或非有限数值也回退为 20；未传 `cacheKeys` 时仅按容量淘汰。
+
+`progress` / `loading` 反映真实路由导航的等待、完成、取消和错误，不再固定显示 520ms。缓存失活不等于卸载，业务轮询需在 `onDeactivated` 暂停、`onActivated` 恢复。
+
+标签快照保存在浏览器 `sessionStorage`；每次标签变更写入，卸载不再写回。退出应清理对应 key，跨用户切换应重建壳层或使用用户作用域 key。新窗口默认采用 `router.resolve(path).href`，保留路由器的 history/base 语义。
 
 ## Router
 
@@ -604,6 +644,21 @@ const request = createRequestClient({
 ```
 
 HTTP 401 或 parser 产生的 `kind: 'session'` 会进入认证刷新。并发请求共享同一个刷新 Promise；GET 默认允许最多重放一次，POST/PUT/PATCH/DELETE 必须逐请求显式设置 `retryOnAuthRefresh: true`。`RequestError.kind` 可用于统一区分 `network`、`http`、`business`、`session`、`duplicate` 与 `cancelled`，业务字段和状态码仍由应用 adapter 决定。
+
+### 可选缓存与失效
+
+缓存默认关闭。`cache: { enabled: true }` 默认只缓存 GET；非 GET 必须显式提供能区分请求体的 `cache.key`，框架不自动序列化所有 body 类型。
+
+```ts
+const client = createRequestClient({
+  getToken: () => session.getToken() || undefined,
+  getCacheScope: () => currentTenantId,
+})
+await client.get('/profile', { cache: { enabled: true, scope: 'profile-view' } })
+client.clearCache() // 退出或切换上下文时调用，旧在途请求不能重新回填。
+```
+
+每次请求先注入 Token、执行 `onRequest`，再检查缓存；Authorization 或 `getCacheScope()` 变化会清空本客户端缓存。请求级 `scope` 可区分同一身份下的数据用途。Token 不写入缓存 key；不同客户端共享缓存存储时也保持隔离。`clearCache()` 仅删除本客户端写入的条目，不清除共享存储中的其他数据；会话最终过期也会触发清理。命中缓存仍遵守 AbortSignal。
 
 ## Theme
 
