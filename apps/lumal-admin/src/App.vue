@@ -9,7 +9,7 @@ import {
 } from '@lumal/core/layout'
 import { ElConfigProvider } from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
-import { computed, shallowRef, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeaderActions from './components/app/AppHeaderActions.vue'
 import AppSettingsDrawer from './components/app/AppSettingsDrawer.vue'
@@ -35,7 +35,7 @@ const title = adminAppName
 const preferences = adminPreferences
 const settingsVisible = adminSettingsVisible
 const resolvedThemeMode = adminResolvedThemeMode
-const routeRefreshKey = shallowRef(0)
+const routeRefreshKeys = reactive<Record<string, number>>({})
 const cockpitUrl = import.meta.env.VITE_COCKPIT_URL?.trim() || 'https://lumal-cockpit-demo.vercel.app/'
 
 /***********************路由状态*********************/
@@ -46,7 +46,10 @@ const isPublicLayout = computed(() => route.meta.layout === 'public')
 /***********************菜单状态*********************/
 const allMenus = computed(() => currentUser.value ? createAdminSidebarMenus(router) : [])
 const fixedTabs = computed<LumalLayoutTabItem[]>(() => createAdminTabs(undefined, router))
-const routeViewKey = computed(() => `${route.fullPath}:${routeRefreshKey.value}`)
+function resolveRouteViewKey(path: string): string {
+  return `${path}:${routeRefreshKeys[path] ?? 0}`
+}
+const routeViewKey = computed(() => resolveRouteViewKey(route.path))
 const routeViewCache = computed(() => preferences.value.tabbar.enable && preferences.value.tabbar.cache)
 const userName = computed(() => currentUser.value?.name ?? '未登录')
 const activePath = computed({
@@ -166,7 +169,15 @@ async function handleTabRefresh(path: string): Promise<void> {
     await router.push(path)
   }
 
-  routeRefreshKey.value += 1
+  routeRefreshKeys[path] = (routeRefreshKeys[path] ?? 0) + 1
+}
+
+function handleTabsChange(tabs: LumalLayoutTabItem[]): void {
+  const paths = new Set(tabs.map(tab => tab.path))
+  for (const path of Object.keys(routeRefreshKeys)) {
+    if (!paths.has(path))
+      delete routeRefreshKeys[path]
+  }
 }
 </script>
 
@@ -185,6 +196,7 @@ async function handleTabRefresh(path: string): Promise<void> {
 
     <LumalLayout
       v-else
+      :key="currentUser?.id"
       v-model:active-tab-path="activePath"
       :title="title"
       :menus="allMenus"
@@ -193,12 +205,13 @@ async function handleTabRefresh(path: string): Promise<void> {
       :fixed-tabs="fixedTabs"
       :route-tab-resolver="resolveAdminRouteTab"
       tab-fallback-path="/dashboard"
-      :tab-storage-key="adminTabSnapshotStorageKey"
+      :tab-storage-key="currentUser ? adminTabSnapshotStorageKey : ''"
       :active-menu-path="activePath"
       @menu-select="handleMenuSelect"
       @toggle-sidebar="handleToggleSidebar"
       @tab-change="handleTabChange"
       @tab-refresh="handleTabRefresh"
+      @tabs-change="handleTabsChange"
     >
       <template #logo>
         <LumalBrand compact />
@@ -216,22 +229,25 @@ async function handleTabRefresh(path: string): Promise<void> {
         />
       </template>
 
-      <LumalRouterView
-        :view-key="routeViewKey"
-        :progress="preferences.transition.progress"
-        :loading="preferences.transition.loading"
-        :cache="routeViewCache"
-        :cache-max="preferences.tabbar.maxCount"
-        :transition="preferences.transition.enable"
-        :transition-name="preferences.transition.name"
-      />
+      <template #default="{ tabs }">
+        <LumalRouterView
+          :view-key="routeViewKey"
+          :cache-keys="tabs.map((tab: LumalLayoutTabItem) => resolveRouteViewKey(tab.path))"
+          :progress="preferences.transition.progress"
+          :loading="preferences.transition.loading"
+          :cache="routeViewCache"
+          :cache-max="preferences.tabbar.maxCount"
+          :transition="preferences.transition.enable"
+          :transition-name="preferences.transition.name"
+        />
 
-      <AppSettingsDrawer
-        v-model:visible="settingsVisible"
-        :defaults="adminPreferenceDefaults"
-        :preferences="preferences"
-        @update:preferences="handlePreferencesChange"
-      />
+        <AppSettingsDrawer
+          v-model:visible="settingsVisible"
+          :defaults="adminPreferenceDefaults"
+          :preferences="preferences"
+          @update:preferences="handlePreferencesChange"
+        />
+      </template>
     </LumalLayout>
   </ElConfigProvider>
 </template>

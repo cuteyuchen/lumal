@@ -3,7 +3,7 @@ import type { IconDefinition, IconGradientOptions } from '@lumal/icons'
 import type { Component } from 'vue'
 import { Icon as IconifyIcon } from '@iconify/vue'
 import { applySvgGradient, recolorSvgString } from '@lumal/icons'
-import { computed, useId } from 'vue'
+import { computed, toRaw, useId } from 'vue'
 import { useIconRegistry } from '../composables/useIconRegistry'
 
 /***********************属性定义*********************/
@@ -21,18 +21,19 @@ const registry = useIconRegistry()
 
 /***********************图标解析*********************/
 const resolvedDefinition = computed(() => {
-  if (!props.name) {
-    return undefined
-  }
-
-  return registry.resolve(props.name)
+  const registered = props.name ? registry.resolve(props.name) : undefined
+  if (registered)
+    return registered
+  const icon = props.icon
+  return icon && typeof icon === 'object' && 'source' in icon && 'key' in icon
+    ? icon as IconDefinition<Component>
+    : undefined
 })
 
 const resolvedSvgText = computed(() => {
   const icon = props.icon
   const rawSvg = resolvedDefinition.value?.svgText
     ?? (typeof icon === 'string' && icon.trim().startsWith('<svg') ? icon : '')
-    ?? (typeof icon === 'object' && icon && 'svgText' in icon ? String(icon.svgText ?? '') : '')
 
   if (!rawSvg) {
     return ''
@@ -49,30 +50,21 @@ const resolvedSvgText = computed(() => {
 })
 
 const resolvedComponent = computed<Component | undefined>(() => {
-  const registeredComponent = resolvedDefinition.value?.component
-  if (typeof registeredComponent === 'function' || (typeof registeredComponent === 'object' && registeredComponent)) {
-    return registeredComponent as Component
-  }
-
-  if (typeof props.icon === 'object' && props.icon && 'component' in props.icon) {
-    const component = props.icon.component
+  if (resolvedDefinition.value) {
+    const component = resolvedDefinition.value.source === 'component' ? resolvedDefinition.value.component : undefined
     return typeof component === 'function' || (typeof component === 'object' && component)
-      ? component as Component
+      ? toRaw(component as Component)
       : undefined
   }
 
   return typeof props.icon === 'function' || typeof props.icon === 'object'
-    ? props.icon as Component
+    ? toRaw(props.icon as Component)
     : undefined
 })
 
 const resolvedIconify = computed(() => {
   if (resolvedDefinition.value?.source === 'iconify') {
     return resolvedDefinition.value.icon
-  }
-
-  if (typeof props.icon === 'object' && props.icon && 'source' in props.icon && props.icon.source === 'iconify') {
-    return props.icon.icon
   }
 
   return undefined

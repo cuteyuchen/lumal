@@ -48,10 +48,12 @@ export interface RequestCache {
 export interface RequestCacheOptions {
   /** 缓存存储，默认内存 Map 实现。 */
   cache?: RequestCache
-  /** 是否对该请求启用缓存，默认仅 GET 且显式开启。 */
+  /** 是否对该请求启用缓存，默认关闭；非 GET 必须同时指定 key。 */
   enabled?: boolean
-  /** 自定义缓存 key，默认 `method:url`。 */
+  /** 自定义缓存 key，默认 `method:url`；调用方负责区分非 GET 请求体。 */
   key?: string
+  /** 请求级租户/业务作用域，与客户端作用域和认证身份共同隔离缓存。 */
+  scope?: string
 }
 
 /***********************客户端选项*********************/
@@ -69,6 +71,8 @@ export interface RequestClientOptions<TData = unknown> {
   requestIdHeader?: string
   /** 默认缓存存储，供开启缓存的请求复用。 */
   cache?: RequestCache
+  /** 当前会话/租户的非敏感标识；变化时自动失效，不能使用明文 Token。 */
+  getCacheScope?: () => string | undefined
   onRequest?: (context: RequestBeforeContext) => Promise<void> | void
   onRequestError?: (context: RequestErrorContext) => Promise<void> | void
   onResponse?: <TResult = unknown>(context: RequestContext<TData>) => Promise<TResult> | TResult
@@ -102,6 +106,8 @@ export interface RequestUploadOptions extends Omit<RequestOptions, 'body' | 'met
 }
 
 export interface RequestClient {
+  /** 清除本客户端使用的缓存，并阻止在途请求重新填充。退出/切换账号时调用。 */
+  clearCache: () => void
   delete: <TResult = unknown>(url: string, options?: Omit<RequestOptions, 'method'>) => Promise<TResult>
   get: <TResult = unknown>(url: string, options?: Omit<RequestOptions, 'body' | 'method'>) => Promise<TResult>
   patch: <TResult = unknown>(url: string, options?: Omit<RequestOptions, 'method'>) => Promise<TResult>

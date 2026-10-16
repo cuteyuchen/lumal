@@ -2,6 +2,7 @@ import type { RequestClient } from '@lumal/core/request'
 import { createRequestClient, RequestError } from '@lumal/core/request'
 import { parseAdminResponse, parseAdminSession } from '../api/adapters'
 import { adminSession, handleAdminSessionExpired } from './session'
+import { registerSessionResetHandler } from './session-reset'
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api'
 
@@ -49,3 +50,5 @@ export function createAdminRequestClient(fetcher: typeof fetch = globalThis.fetc
 }
 
 export const adminRequest = createAdminRequestClient()
+
+registerSessionResetHandler(() => adminRequest.clearCache())

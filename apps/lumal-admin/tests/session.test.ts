@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { permissionStore } from '../src/router'
 import {
   adminSession,
+  adminTabSnapshotStorageKey,
   currentUser,
   isAuthenticated,
   login,
@@ -43,6 +44,7 @@ describe('admin session service', () => {
   it('登出会清理 token、当前用户、权限和角色', async () => {
     const alert = vi.spyOn(ElMessageBox, 'alert').mockResolvedValue('confirm' as never)
     await login('operator')
+    sessionStorage.setItem(adminTabSnapshotStorageKey, 'old-tabs')
 
     await logout()
 
@@ -51,6 +53,7 @@ describe('admin session service', () => {
     expect(currentUser.value).toBeNull()
     expect(permissionStore.permissions).toEqual([])
     expect(permissionStore.roles).toEqual([])
+    expect(sessionStorage.getItem(adminTabSnapshotStorageKey)).toBeNull()
     expect(alert).not.toHaveBeenCalled()
     alert.mockRestore()
   })

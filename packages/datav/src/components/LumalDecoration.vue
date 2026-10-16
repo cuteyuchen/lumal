@@ -4,15 +4,12 @@ import type { DecorationVariant } from '../types'
 import {
   computed,
   nextTick,
-  onBeforeUnmount,
-  onMounted,
-  shallowRef,
   useId,
   useTemplateRef,
   watch,
 } from 'vue'
-import { useAnimationPause } from '../composables/useAnimationPause'
 import { useElementSize } from '../composables/useElementSize'
+import { useSvgAnimationPause } from '../composables/useSvgAnimationPause'
 import { colorStyle } from '../utils'
 import {
   createDecoration1Points,
@@ -58,11 +55,6 @@ const decoration9Fills = createDecoration9Fills()
 
 const animationRef = useTemplateRef<HTMLElement>('animationRef')
 const size = useElementSize(animationRef)
-const visibilityPaused = useAnimationPause(animationRef)
-const hoverPaused = shallowRef(false)
-const focusPaused = shallowRef(false)
-const reducedMotion = shallowRef(false)
-let motionQuery: MediaQueryList | undefined
 
 const width = computed(() => size.value.width)
 const height = computed(() => size.value.height)
@@ -86,13 +78,9 @@ const radarHaloDuration = computed(() => {
   const seconds = props.haloDur ?? 2 * durationScale.value
   return `${Number(Math.max(0.001, seconds).toFixed(6))}s`
 })
-const animationPaused = computed(() => (
-  visibilityPaused.value
-  || hoverPaused.value
-  || focusPaused.value
-  || reducedMotion.value
-  || !animationEnabled.value
-))
+/***********************动画暂停与生命周期*********************/
+const animation = useSvgAnimationPause(animationRef, undefined, () => !animationEnabled.value)
+const animationPaused = animation.paused
 const rootStyle = computed<CSSProperties>(() => colorStyle(
   resolvedColors.value,
   props.background,
@@ -152,35 +140,6 @@ function xPosition(position: number): number {
   return props.reverse ? width.value - position : position
 }
 
-function syncMotionPreference(event: MediaQueryListEvent | MediaQueryList): void {
-  reducedMotion.value = event.matches
-}
-
-function getSvgElements(): SVGSVGElement[] {
-  return Array.from(animationRef.value?.querySelectorAll('svg') ?? [])
-}
-
-function syncSvgAnimations(): void {
-  for (const svg of getSvgElements()) {
-    if (animationPaused.value)
-      svg.pauseAnimations?.()
-    else
-      svg.unpauseAnimations?.()
-  }
-}
-
-function restartSvgAnimations(): void {
-  for (const svg of getSvgElements())
-    svg.setCurrentTime?.(0)
-  syncSvgAnimations()
-}
-
-function handleFocusOut(event: FocusEvent): void {
-  const nextTarget = event.relatedTarget as Node | null
-  focusPaused.value = Boolean(nextTarget && animationRef.value?.contains(nextTarget))
-}
-
-watch(animationPaused, () => void nextTick(syncSvgAnimations), { immediate: true })
 watch(
   () => [
     props.variant,
@@ -192,22 +151,9 @@ watch(
     props.haloDur,
     props.scanDur,
   ] as const,
-  () => void nextTick(restartSvgAnimations),
+  () => void nextTick(animation.restart),
   { flush: 'post' },
 )
-
-onMounted(() => {
-  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
-    motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    syncMotionPreference(motionQuery)
-    motionQuery.addEventListener?.('change', syncMotionPreference)
-  }
-  void nextTick(syncSvgAnimations)
-})
-
-onBeforeUnmount(() => {
-  motionQuery?.removeEventListener?.('change', syncMotionPreference)
-})
 </script>
 
 <template>
@@ -217,10 +163,10 @@ onBeforeUnmount(() => {
     :class="{ 'is-animation-paused': animationPaused, 'is-reverse': reverse }"
     :data-variant="variant"
     :style="rootStyle"
-    @mouseenter="hoverPaused = true"
-    @mouseleave="hoverPaused = false"
-    @focusin="focusPaused = true"
-    @focusout="handleFocusOut"
+    @mouseenter="animation.onMouseEnter"
+    @mouseleave="animation.onMouseLeave"
+    @focusin="animation.onFocusIn"
+    @focusout="animation.onFocusOut"
   >
     <svg
       v-if="variant === 1"

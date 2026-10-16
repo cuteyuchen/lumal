@@ -18,6 +18,7 @@ export default defineConfig({
         dictionary: resolve(packageRoot, 'src/dictionary/index.ts'),
         directives: resolve(packageRoot, 'src/directives/index.ts'),
         layout: resolve(packageRoot, 'src/layout/index.ts'),
+        minimal: resolve(packageRoot, 'src/minimal/index.ts'),
         permission: resolve(packageRoot, 'src/permission/index.ts'),
         request: resolve(packageRoot, 'src/request/index.ts'),
         router: resolve(packageRoot, 'src/router/index.ts'),

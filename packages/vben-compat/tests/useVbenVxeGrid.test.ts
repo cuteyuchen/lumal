@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { shallowRef } from 'vue'
+import { effectScope, shallowRef } from 'vue'
 import {
   adaptVbenGridColumns,
   adaptVbenGridProxyResult,
@@ -236,5 +236,54 @@ describe('useVbenVxeGrid', () => {
       { payload: { rows: [{ id: 1 }], total: '12' } },
       { proxyConfig: { props: { result: 'payload' } } },
     )).toEqual({ rows: [{ id: 1 }], total: 12 })
+  })
+
+  it('旧查询的结果、错误和 finally 不会覆盖最新查询', async () => {
+    const resolvers: Array<(value: unknown) => void> = []
+    const [, api] = useVbenVxeGrid({
+      gridOptions: { proxyConfig: { ajax: { query: () => new Promise(resolve => resolvers.push(resolve)) } } },
+    })
+    const old = api.reload()
+    const fresh = api.reload()
+    resolvers[0]!({ items: [{ id: 'old' }], total: 1 })
+    await old
+    expect(api.crudTableProps.value.loading).toBe(true)
+    expect(api.getRows()).toEqual([])
+    resolvers[1]!({ items: [{ id: 'new' }], total: 2 })
+    await fresh
+    expect(api.getRows()).toEqual([{ id: 'new' }])
+    expect(api.getTotal()).toBe(2)
+    expect(api.crudTableProps.value.loading).toBe(false)
+  })
+
+  it('最新查询先返回时，旧请求稍后失败不会覆盖结果或报告错误', async () => {
+    let rejectOld!: (error: Error) => void
+    const onError = vi.fn()
+    const query = vi.fn()
+      .mockImplementationOnce(() => new Promise((_, reject) => { rejectOld = reject }))
+      .mockResolvedValue({ items: [{ id: 'new' }], total: 1 })
+    const [, api] = useVbenVxeGrid({ gridOptions: { onError, proxyConfig: { ajax: { query } } } })
+    const old = api.reload()
+    await api.reload()
+    rejectOld(new Error('stale'))
+    await old
+    expect(api.getRows()).toEqual([{ id: 'new' }])
+    expect(api.getError()).toBeUndefined()
+    expect(api.crudTableProps.value.loading).toBe(false)
+    expect(onError).not.toHaveBeenCalled()
+  })
+
+  it('作用域销毁后在途请求不再写入状态', async () => {
+    let resolve!: (result: unknown) => void
+    const scope = effectScope()
+    const [, api] = scope.run(() => useVbenVxeGrid({
+      gridOptions: { proxyConfig: { ajax: { query: () => new Promise((done) => { resolve = done }) } } },
+    }))!
+    const pending = api.reload()
+    scope.stop()
+    resolve({ items: [{ id: 'stale' }], total: 1 })
+    await pending
+    expect(api.getRows()).toEqual([])
+    expect(api.getTotal()).toBe(0)
   })
 })

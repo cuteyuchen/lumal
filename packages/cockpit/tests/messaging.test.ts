@@ -59,4 +59,19 @@ describe('createCockpitMessageBus', () => {
     bus.publish({ topic: 't', sourceId: 's' })
     expect(handler).not.toHaveBeenCalled()
   })
+
+  it('异步处理失败会进入错误观察入口，不阻断其他订阅者', async () => {
+    const failure = new Error('async failure')
+    const onError = vi.fn()
+    const good = vi.fn()
+    const bus = createCockpitMessageBus({ onError })
+    bus.subscribe('refresh', async () => {
+      throw failure
+    })
+    bus.subscribe('refresh', good)
+    bus.publish({ topic: 'refresh', sourceId: 'app', payload: 'private' })
+    await vi.waitFor(() => expect(onError).toHaveBeenCalledWith(failure, 'refresh'))
+    expect(good).toHaveBeenCalledTimes(1)
+    expect(onError.mock.calls[0]).toHaveLength(2)
+  })
 })

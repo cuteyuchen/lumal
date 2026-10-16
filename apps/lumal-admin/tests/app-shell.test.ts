@@ -42,7 +42,7 @@ const LayoutStub = defineComponent({
       :data-tabs-visible="String(preferences?.tabbar.enable)"
     >
       <slot name="headerActions" />
-      <slot />
+      <slot :tabs="fixedTabs ?? []" />
     </section>
   `,
 })

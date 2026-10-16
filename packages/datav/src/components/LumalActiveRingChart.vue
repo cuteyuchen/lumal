@@ -10,6 +10,7 @@ import type {
   DigitalFlopStyle,
 } from '../types'
 import { computed, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from 'vue'
+import { useAnimationPause } from '../composables/useAnimationPause'
 import { useElementSize } from '../composables/useElementSize'
 import { useReducedMotion } from '../composables/useReducedMotion'
 import LumalCharts from './LumalCharts.vue'
@@ -51,6 +52,7 @@ const activeKey = defineModel<DataValueKey>('activeKey')
 const chartHostRef = useTemplateRef<HTMLElement>('chartHostRef')
 const size = useElementSize(chartHostRef)
 const reducedMotion = useReducedMotion()
+const animationPaused = useAnimationPause(chartHostRef)
 const activeIndex = shallowRef(0)
 let animationHandler: ReturnType<typeof setTimeout> | undefined
 
@@ -162,6 +164,7 @@ const autoplayEnabled = computed(() => props.autoplay
   && autoplayDelay.value > 0
   && entries.value.length > 1
   && hasRenderableSize.value
+  && !animationPaused.value
   && !reducedMotion.value)
 
 function clearAnimation(): void {

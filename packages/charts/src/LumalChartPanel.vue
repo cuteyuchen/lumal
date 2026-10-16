@@ -166,7 +166,14 @@ defineExpose({
   }
 
   &__body.is-table {
+    width: var(--lumal-chart-panel-table-width, 100%);
+    max-width: 100%;
     overflow: auto;
+  }
+
+  &__body.is-chart {
+    width: var(--lumal-chart-panel-chart-width, 100%);
+    max-width: 100%;
   }
 
   &__status {

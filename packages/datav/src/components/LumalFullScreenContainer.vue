@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
 import type { FullScreenContainerMode } from '../types'
-import { computed, ref } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 import { useFullScreenScale } from '../composables/useFullScreenScale'
 
 /***********************全屏容器*********************/
@@ -22,7 +22,7 @@ const props = withDefaults(defineProps<{
   zIndex: 999,
 })
 
-const containerRef = ref<HTMLElement | null>(null)
+const containerRef = useTemplateRef<HTMLElement>('containerRef')
 
 const designWidth = computed(() => props.width ?? (typeof screen === 'undefined' ? 1920 : screen.width))
 const designHeight = computed(() => props.height ?? (typeof screen === 'undefined' ? 1080 : screen.height))

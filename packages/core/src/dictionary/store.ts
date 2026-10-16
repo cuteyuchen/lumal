@@ -19,6 +19,10 @@ export function createDictionaryStore(options: DictionaryStoreOptions = {}): Dic
       return
     }
 
+    // 手动设置也使旧请求失效；Promise 身份同时充当每个 key 的请求代数。
+    pendingRequests.delete(dictionary)
+    loading[dictionary] = false
+    errors[dictionary] = null
     records[dictionary] = dictionaryOptions
   }
 
@@ -44,19 +48,31 @@ export function createDictionaryStore(options: DictionaryStoreOptions = {}): Dic
     loading[dictionary] = true
     errors[dictionary] = null
 
-    const request = options.fetcher(dictionary)
+    let response: Promise<unknown>
+    try {
+      response = options.fetcher(dictionary)
+    }
+    catch (error) {
+      response = Promise.reject(error)
+    }
+
+    const request = response
       .then((response) => {
         const normalized = normalizeDictionaryOptions(response, options, dictionary)
-        setDictionary(dictionary, normalized)
+        if (pendingRequests.get(dictionary) === request)
+          records[dictionary] = normalized
         return normalized
       })
       .catch((error: unknown) => {
-        errors[dictionary] = resolveErrorMessage(error)
+        if (pendingRequests.get(dictionary) === request)
+          errors[dictionary] = resolveErrorMessage(error)
         throw error
       })
       .finally(() => {
-        loading[dictionary] = false
-        pendingRequests.delete(dictionary)
+        if (pendingRequests.get(dictionary) === request) {
+          loading[dictionary] = false
+          pendingRequests.delete(dictionary)
+        }
       })
 
     pendingRequests.set(dictionary, request)
@@ -64,6 +80,7 @@ export function createDictionaryStore(options: DictionaryStoreOptions = {}): Dic
   }
 
   function removeDictionary(dictionary: string): void {
+    pendingRequests.delete(dictionary)
     delete records[dictionary]
     delete loading[dictionary]
     delete errors[dictionary]

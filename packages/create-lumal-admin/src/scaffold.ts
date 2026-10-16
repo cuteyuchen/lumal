@@ -44,12 +44,17 @@ function createPackageJson(projectName: string): string {
     type: 'module',
     version: '0.0.0',
     private: true,
+    packageManager: 'pnpm@10.33.0',
+    engines: {
+      node: '>=22.12.0',
+    },
     scripts: {
       dev: 'vite --host 127.0.0.1',
       build: 'vue-tsc --noEmit -p tsconfig.json && vite build',
       preview: 'vite preview --host 127.0.0.1',
     },
     dependencies: {
+      '@iconify/vue': '^5.0.0',
       '@lumal/core': '^0.0.0',
       '@lumal/icons': '^0.0.0',
       '@lumal/icons-vue': '^0.0.0',
@@ -58,7 +63,9 @@ function createPackageJson(projectName: string): string {
       'vue-router': '^4.5.0',
     },
     devDependencies: {
+      '@types/node': '^24.6.1',
       '@vitejs/plugin-vue': '^6.0.1',
+      'sass-embedded': '^1.95.1',
       'typescript': '^6.0.0',
       'vite': '^8.0.0',
       'vue-tsc': '^3.1.1',
@@ -92,7 +99,7 @@ function createTsConfig(): string {
     "jsx": "preserve",
     "useDefineForClassFields": true,
     "resolveJsonModule": true,
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "isolatedModules": true,
     "skipLibCheck": true
   },
@@ -160,7 +167,7 @@ export default defineConfig({
 
 function createMainTs(): string {
   return `import type { IconDefinition } from '@lumal/icons'
-import { createLumalAdmin } from '@lumal/core'
+import { createLumalAdmin } from '@lumal/core/minimal'
 import ElementPlus from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import App from './App.vue'
@@ -260,7 +267,7 @@ import {
   LumalLayout,
   LumalRouterView,
 } from '@lumal/core/layout'
-import { computed, shallowRef, watch } from 'vue'
+import { computed, reactive, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeaderActions from './components/app/AppHeaderActions.vue'
 import AppSettingsDrawer from './components/app/AppSettingsDrawer.vue'
@@ -276,7 +283,7 @@ import { adminTabSnapshotStorageKey, currentUser, logout } from './services/sess
 /***********************页面状态*********************/
 const title = 'Lumal Admin'
 const settingsVisible = shallowRef(false)
-const routeRefreshKey = shallowRef(0)
+const routeRefreshKeys = reactive<Record<string, number>>({})
 
 /***********************路由状态*********************/
 const route = useRoute()
@@ -284,7 +291,11 @@ const router = useRouter()
 const isPublicLayout = computed(() => route.meta.layout === 'public')
 const allMenus = computed(() => createAdminSidebarMenus())
 const fixedTabs = computed<LumalLayoutTabItem[]>(() => createAdminTabs())
-const routeViewKey = computed(() => \`\${route.fullPath}:\${routeRefreshKey.value}\`)
+// 标签和视图使用相同的 path/version 身份，刷新只替换当前标签的缓存。
+function resolveRouteViewKey(path: string): string {
+  return \`\${path}:\${routeRefreshKeys[path] ?? 0}\`
+}
+const routeViewKey = computed(() => resolveRouteViewKey(route.path))
 const routeViewCache = computed(() => adminPreferences.value.tabbar.enable && adminPreferences.value.tabbar.cache)
 const activePath = computed({
   get: () => route.path,
@@ -352,7 +363,15 @@ async function handleTabRefresh(path: string): Promise<void> {
     await router.push(path)
   }
 
-  routeRefreshKey.value += 1
+  routeRefreshKeys[path] = (routeRefreshKeys[path] ?? 0) + 1
+}
+
+function handleTabsChange(tabs: LumalLayoutTabItem[]): void {
+  const paths = new Set(tabs.map(tab => tab.path))
+  for (const path of Object.keys(routeRefreshKeys)) {
+    if (!paths.has(path))
+      delete routeRefreshKeys[path]
+  }
 }
 
 function handlePreferencesChange(preferences: LumalPreferences): void {
@@ -383,6 +402,7 @@ async function handleLogout(): Promise<void> {
 
   <LumalLayout
     v-else
+    :key="currentUser?.username"
     v-model:active-tab-path="activePath"
     :title="title"
     :menus="allMenus"
@@ -391,12 +411,13 @@ async function handleLogout(): Promise<void> {
     :fixed-tabs="fixedTabs"
     :route-tab-resolver="resolveAdminRouteTab"
     tab-fallback-path="/dashboard"
-    :tab-storage-key="adminTabSnapshotStorageKey"
+    :tab-storage-key="currentUser ? adminTabSnapshotStorageKey : ''"
     :active-menu-path="activePath"
     @menu-select="handleMenuSelect"
     @toggle-sidebar="handleToggleSidebar"
     @tab-change="handleTabChange"
     @tab-refresh="handleTabRefresh"
+    @tabs-change="handleTabsChange"
   >
     <template #headerActions>
       <AppHeaderActions
@@ -408,15 +429,18 @@ async function handleLogout(): Promise<void> {
       />
     </template>
 
-    <LumalRouterView
-      :view-key="routeViewKey"
-      :progress="true"
-      :loading="true"
-      :cache="routeViewCache"
-      :cache-max="adminPreferences.tabbar.maxCount"
-      :transition="adminPreferences.transition.enable"
-      :transition-name="adminPreferences.transition.name"
-    />
+    <template #default="{ tabs }">
+      <LumalRouterView
+        :view-key="routeViewKey"
+        :cache-keys="tabs.map((tab: LumalLayoutTabItem) => resolveRouteViewKey(tab.path))"
+        :progress="adminPreferences.transition.progress"
+        :loading="adminPreferences.transition.loading"
+        :cache="routeViewCache"
+        :cache-max="adminPreferences.tabbar.maxCount"
+        :transition="adminPreferences.transition.enable"
+        :transition-name="adminPreferences.transition.name"
+      />
+    </template>
   </LumalLayout>
 
   <AppSettingsDrawer
@@ -886,6 +910,8 @@ export async function login(payload: LoginPayload): Promise<AdminUser> {
   }
 
   const user = { name: '管理员', username: payload.username }
+  // 成功登录前清掉上一会话的用户状态和标签快照。
+  clearSessionState()
   session.setSession({ accessToken: 'lumal-demo-token' })
   currentUserState.value = user
   localStorage.setItem(userStorageKey, JSON.stringify(user))

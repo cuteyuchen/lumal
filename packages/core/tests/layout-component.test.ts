@@ -496,9 +496,7 @@ describe('lumal router view', () => {
     expect(wrapper.find('.router-view').text()).toBe('路由内容')
   })
 
-  it('会支持路由切换动画、缓存和加载反馈', async () => {
-    vi.useFakeTimers()
-
+  it('会支持路由切换动画和缓存，不再为 key 变化伪造加载反馈', async () => {
     const DemoView = defineComponent({
       name: 'DemoView',
       template: '<section class="demo-view">页面内容</section>',
@@ -541,16 +539,9 @@ describe('lumal router view', () => {
 
     await wrapper.setProps({ viewKey: 'project' })
 
-    expect(wrapper.find('.lumal-router-view__progress').exists()).toBe(true)
-    expect(wrapper.find('.lumal-router-view__loading').exists()).toBe(true)
-
-    vi.runAllTimers()
-    await wrapper.vm.$nextTick()
-
     expect(wrapper.find('.lumal-router-view__progress').exists()).toBe(false)
     expect(wrapper.find('.lumal-router-view__loading').exists()).toBe(false)
 
     wrapper.unmount()
-    vi.useRealTimers()
   })
 })

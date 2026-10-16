@@ -61,6 +61,7 @@ export type {
 export type {
   CockpitMessage,
   CockpitMessageBus,
+  CockpitMessageBusOptions,
   CockpitMessageHandler,
   CockpitMessageSubscribeOptions,
 } from './messaging/types'

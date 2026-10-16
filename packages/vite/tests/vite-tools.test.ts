@@ -1,5 +1,6 @@
 import { resolve } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
+import { defaultLumalComponents } from '../../core/src/app/default-components'
 import {
   createLumalAliases,
   createLumalComponentResolver,
@@ -7,6 +8,11 @@ import {
 } from '../src'
 
 describe('@lumal/vite', () => {
+  it('默认公开 UI 组件均有 resolver，避免导出和按需映射漂移', () => {
+    const resolver = createLumalComponentResolver()
+    for (const name of Object.keys(defaultLumalComponents))
+      expect(resolver.resolve(name)?.name, name).toBe(name)
+  })
   it('按组件所属包生成按需引入结果', () => {
     const resolver = createLumalComponentResolver({ importStyle: true })
 

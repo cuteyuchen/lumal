@@ -10,7 +10,7 @@ export interface CreateStaticLocalSvgIconsPluginOptions {
 interface VitePluginLike {
   name: string
   enforce?: 'pre' | 'post'
-  resolveId?: (source: string) => string | null | undefined
+  resolveId?: (source: string, importer?: string) => string | null | undefined
   load?: (id: string) => string | null | undefined
 }
 
@@ -37,8 +37,9 @@ export function createStaticLocalSvgIconsPlugin(
   return {
     name: 'lumal:static-local-svg-icons',
     enforce: 'pre',
-    resolveId(id) {
-      if (!source || id !== ICONS_ENTRY_ID) {
+    resolveId(id, importer) {
+      // 代理模块的 re-export 必须交回 Vite 解析真实入口，不能再次解析为自身。
+      if (!source || id !== ICONS_ENTRY_ID || importer === PROXY_ID) {
         return null
       }
 

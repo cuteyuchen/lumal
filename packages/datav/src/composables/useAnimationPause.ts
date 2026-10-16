@@ -1,12 +1,13 @@
 import type { Ref } from 'vue'
-import { computed, onBeforeUnmount, onMounted, shallowRef, watch } from 'vue'
+import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, shallowRef, watch } from 'vue'
 
 export function useAnimationPause(animationRef: Readonly<Ref<HTMLElement | null>>) {
   const intersecting = shallowRef(true)
   const pageVisible = shallowRef(true)
+  const active = shallowRef(true)
   let observer: IntersectionObserver | undefined
 
-  const animationPaused = computed(() => !intersecting.value || !pageVisible.value)
+  const animationPaused = computed(() => !active.value || !intersecting.value || !pageVisible.value)
 
   function syncVisibility(): void {
     pageVisible.value = typeof document === 'undefined' || !document.hidden
@@ -23,6 +24,12 @@ export function useAnimationPause(animationRef: Readonly<Ref<HTMLElement | null>
   }
 
   watch(animationRef, observe)
+  onActivated(() => {
+    active.value = true
+  })
+  onDeactivated(() => {
+    active.value = false
+  })
   onMounted(() => {
     syncVisibility()
     document.addEventListener('visibilitychange', syncVisibility)

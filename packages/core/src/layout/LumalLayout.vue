@@ -67,7 +67,7 @@ const props = withDefaults(defineProps<{
   tabStorageKey?: string
   /** 解析当前路由是否应保留为可恢复标签（路由驱动模式下用于持久化恢复过滤）。 */
   isValidTabPath?: (path: string) => boolean
-  /** 标签在新窗口打开时生成的地址，默认为路由 fullPath。 */
+  /** 标签在新窗口打开时生成的地址，默认使用包含 history/base 的路由 href。 */
   resolveTabUrl?: (path: string) => string
 }>(), {
   activeMenuPath: '',
@@ -97,6 +97,7 @@ const emit = defineEmits<{
   tabReorder: [from: string, to: string]
   tabMaximize: [maximized: boolean]
   tabNewWindow: [path: string]
+  tabsChange: [tabs: LumalLayoutTabItem[]]
 }>()
 
 const activeTabPathModel = defineModel<string>('activeTabPath')
@@ -246,6 +247,7 @@ const currentActiveTabPath = computed({
 })
 
 const currentTabs = computed(() => props.routeDriven ? routeTabs.value : props.tabs)
+watch(currentTabs, value => emit('tabsChange', [...value]), { immediate: true })
 const hasTabs = computed(() => currentTabs.value.length > 0)
 const collapsed = computed(() => props.preferences.sidebar.collapsed)
 const routeActiveMenuPath = computed(() => typeof injectedRoute?.meta.activeMenu === 'string'
@@ -357,8 +359,9 @@ watch(
 )
 
 /***********************快照持久化*********************/
+let snapshotInitialized = false
 function resolveSnapshotStorage(): { getItem: (key: string) => string | null, removeItem: (key: string) => void, setItem: (key: string, value: string) => void } | undefined {
-  if (!props.tabStorageKey || !props.preferences.tabbar.persist) {
+  if (!props.tabStorageKey) {
     return undefined
   }
   if (typeof sessionStorage === 'undefined') {
@@ -373,7 +376,7 @@ function resolveSnapshotStorage(): { getItem: (key: string) => string | null, re
 
 function maybeWriteSnapshot(): void {
   const storage = resolveSnapshotStorage()
-  if (!storage || !props.tabStorageKey || !props.routeDriven) {
+  if (!snapshotInitialized || !props.preferences.tabbar.persist || !storage || !props.tabStorageKey || !props.routeDriven) {
     return
   }
   const snapshot = serializeTabSnapshot({
@@ -411,7 +414,7 @@ function restoreFromSnapshot(): void {
   })
 
   // 合并固定组稳定性：固定标签路由声明部分应该是固定的；非固定用户固定标签持久化也保留。
-  routeTabs.value = restored.tabs
+  routeTabs.value = clampTabCount(restored.tabs, resolvedTabMaxCount.value, currentActiveTabPath.value)
   if (props.preferences.tabbar.visitHistory) {
     if (currentPath) {
       restored.history.unshift(currentPath)
@@ -477,13 +480,19 @@ watch(
   { immediate: true },
 )
 
+// 先恢复，再允许写入，避免 setup 的 immediate watcher 覆盖已有快照。
+if (props.preferences.tabbar.persist)
+  restoreFromSnapshot()
+snapshotInitialized = true
+maybeWriteSnapshot()
+
 watch(
   () => [props.routeDriven, props.tabStorageKey, props.preferences.tabbar.persist] as const,
   (value, prev) => {
     const driven = value[0]
     const persist = value[2]
-    const wasPersist = prev?.[1] && prev?.[2]
-    if (driven && persist && !wasPersist) {
+    const wasPersist = prev?.[2]
+    if (driven && persist && (value[1] !== prev?.[1] || !wasPersist || !prev?.[0])) {
       restoreFromSnapshot()
     }
     if (!persist && wasPersist) {
@@ -492,10 +501,6 @@ watch(
   },
   { immediate: false },
 )
-
-onBeforeUnmount(() => {
-  maybeWriteSnapshot()
-})
 
 /***********************事件处理*********************/
 function handleToggleCollapse(): void {
@@ -616,7 +621,7 @@ function handleTabNewWindow(path: string): void {
     : (() => {
         if (injectedRouter) {
           try {
-            return injectedRouter.resolve(path)?.fullPath ?? path
+            return injectedRouter.resolve(path)?.href ?? path
           }
           catch {
             return path
@@ -639,7 +644,7 @@ function handleEscRestoreMaximize(event: KeyboardEvent): void {
   if (event.key === 'Escape' && isContentMaximized.value) {
     event.preventDefault()
     tabsRef.value?.setMaximized(false)
-    emit('tabMaximize', false)
+    handleTabMaximize(false)
   }
 }
 
@@ -818,7 +823,7 @@ defineExpose({
         />
 
         <LumalContent>
-          <slot />
+          <slot :tabs="currentTabs" />
         </LumalContent>
       </ElContainer>
     </ElContainer>

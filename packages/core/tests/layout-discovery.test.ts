@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import { defineComponent } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
@@ -25,6 +25,42 @@ const menus = [
 ]
 
 describe('layout discovery components', () => {
+  it('真实 Teleport 搜索弹窗约束 Tab 和外部焦点，关闭及卸载恢复触发点', async () => {
+    const outside = document.createElement('button')
+    document.body.append(outside)
+    outside.focus()
+    const wrapper = mount(LumalGlobalSearch, { attachTo: document.body, props: { menus } })
+    try {
+      await wrapper.get('button').trigger('click')
+      await flushPromises()
+      const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]')!
+      const buttons = dialog.querySelectorAll<HTMLButtonElement>('button')
+      const first = buttons[0]!
+      const last = buttons[buttons.length - 1]!
+      const input = dialog.querySelector('input')!
+      expect(document.activeElement).toBe(input)
+      expect(wrapper.element.contains(dialog)).toBe(false)
+      last.focus()
+      last.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }))
+      expect(document.activeElement).toBe(first)
+      first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }))
+      expect(document.activeElement).toBe(last)
+      outside.focus()
+      expect(document.activeElement).toBe(input)
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+      await flushPromises()
+      expect(document.body.querySelector('[role="dialog"]')).toBeNull()
+      expect(document.activeElement).toBe(outside)
+      await wrapper.get('button').trigger('click')
+      await flushPromises()
+    }
+    finally {
+      wrapper.unmount()
+      expect(document.activeElement).toBe(outside)
+      outside.remove()
+    }
+  })
+
   it('面包屑会解析菜单层级、补充首页并透传选择', async () => {
     const wrapper = mount(LumalBreadcrumb, {
       props: {

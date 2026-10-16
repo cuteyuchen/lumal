@@ -1,6 +1,7 @@
 import type {
   CockpitMessage,
   CockpitMessageBus,
+  CockpitMessageBusOptions,
   CockpitMessageHandler,
   CockpitMessageSubscribeOptions,
 } from './types'
@@ -26,8 +27,23 @@ interface Subscription {
  * - clearInstance 移除声明了该 instanceId 的全部订阅。
  * - 包不解析、不记录、不序列化业务 payload。
  */
-export function createCockpitMessageBus(): CockpitMessageBus {
+export function createCockpitMessageBus(options: CockpitMessageBusOptions = {}): CockpitMessageBus {
   const topics = new Map<string, Set<Subscription>>()
+
+  function reportError(error: unknown, topic: string): void {
+    const fallback = (failure: unknown): void => {
+      console.error(`[cockpit] 消息订阅处理器异常（topic: ${topic}）`, failure)
+    }
+    try {
+      if (options.onError)
+        void Promise.resolve(options.onError(error, topic)).catch(fallback)
+      else
+        fallback(error)
+    }
+    catch (failure) {
+      fallback(failure)
+    }
+  }
 
   function publish<T = unknown>(message: CockpitMessage<T>): void {
     const subscriptions = topics.get(message.topic)
@@ -44,11 +60,12 @@ export function createCockpitMessageBus(): CockpitMessageBus {
         continue
 
       try {
-        subscription.handler(message as CockpitMessage)
+        const result = subscription.handler(message as CockpitMessage)
+        if (result)
+          void Promise.resolve(result).catch(error => reportError(error, message.topic))
       }
       catch (error) {
-        // 隔离异常，不记录业务 payload
-        console.error(`[cockpit] 消息订阅处理器异常（topic: ${message.topic}）`, error)
+        reportError(error, message.topic)
       }
     }
   }

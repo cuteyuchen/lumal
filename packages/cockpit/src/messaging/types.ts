@@ -12,7 +12,12 @@ export interface CockpitMessage<T = unknown> {
   payload?: T
 }
 
-export type CockpitMessageHandler<T = unknown> = (message: CockpitMessage<T>) => void
+export type CockpitMessageHandler<T = unknown> = (message: CockpitMessage<T>) => void | Promise<void>
+
+export interface CockpitMessageBusOptions {
+  /** 错误观察入口，不传递业务 payload。默认输出到 console.error。 */
+  onError?: (error: unknown, topic: string) => void | Promise<void>
+}
 
 export interface CockpitMessageSubscribeOptions {
   /** 仅接收发往该实例（或广播）的消息 */

@@ -8,8 +8,6 @@ import type {
   SetOptionOpts,
 } from 'echarts'
 import type { DataVChartsOption } from '../types'
-import ChartsModule from '@jiaminghi/charts'
-import * as echarts from 'echarts'
 import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useAttrs, useTemplateRef, watch, watchEffect } from 'vue'
 
 type EChartsEventHandler = (...args: unknown[]) => void
@@ -44,7 +42,7 @@ const props = withDefaults(defineProps<{
   theme: undefined,
 })
 
-const ChartsRuntime = ((ChartsModule as unknown as { default?: typeof Charts }).default ?? ChartsModule) as typeof Charts
+/***********************图表实例与模式*********************/
 const attrs = useAttrs()
 const rootRef = useTemplateRef<HTMLElement>('rootRef')
 const chartHostRef = useTemplateRef<HTMLElement>('chartHostRef')
@@ -59,6 +57,7 @@ let pendingOption = false
 let pendingConfig = false
 let mounted = false
 let windowResizeFallbackAttached = false
+let creationGeneration = 0
 
 interface ChartHostSize {
   height: number
@@ -120,6 +119,7 @@ function stopDataVAnimations(): void {
 }
 
 function disposeCharts(): void {
+  creationGeneration += 1
   stopDataVAnimations()
   dataVRef.value = undefined
   attachedEvents.clear()
@@ -159,34 +159,50 @@ function flushPendingRender(): void {
     applyEChartsOption(props.option)
 }
 
-function createChart(): void {
+/***********************按模式异步加载引擎*********************/
+async function createChart(): Promise<void> {
   const element = chartHostRef.value
   const size = chartHostSize()
-  if (!element || !size)
+  if (!mounted || !element || !size)
     return
 
   disposeCharts()
-  if (dataVMode.value) {
-    const chart = new ChartsRuntime(element)
-    dataVRef.value = chart
-    chart.setOption(props.config ?? {})
-    pendingConfig = false
-    return
-  }
+  const generation = creationGeneration
+  const nativeMode = dataVMode.value
+  try {
+    // 两套协议保留兼容，但只下载当前真正使用的引擎；切换和卸载使旧加载失效。
+    const runtime = nativeMode ? await import('@jiaminghi/charts') : await import('echarts')
+    if (!mounted || generation !== creationGeneration || !chartHostSize())
+      return
+    if (nativeMode) {
+      const module = runtime as unknown as { default: typeof Charts | { default: typeof Charts } }
+      const ChartsRuntime = ('default' in module.default ? module.default.default : module.default) as typeof Charts
+      const chart = new ChartsRuntime(element)
+      dataVRef.value = chart
+      chart.setOption(props.config ?? {})
+      pendingConfig = false
+      return
+    }
 
-  const initOptions: EChartsInitOpts = {
-    ...props.initOptions,
-    height: props.initOptions?.height ?? size.height,
-    width: props.initOptions?.width ?? size.width,
+    const currentSize = chartHostSize()!
+    const initOptions: EChartsInitOpts = {
+      ...props.initOptions,
+      height: props.initOptions?.height ?? currentSize.height,
+      width: props.initOptions?.width ?? currentSize.width,
+    }
+    const chart = (runtime as typeof import('echarts')).init(element, props.theme, initOptions)
+    echartsRef.value = chart
+    if (props.group)
+      chart.group = props.group
+    applyEChartsOption(props.option)
+    syncEvents()
+    if (props.loading)
+      chart.showLoading(props.loadingType, props.loadingOptions)
   }
-  const chart = echarts.init(element, props.theme, initOptions)
-  echartsRef.value = chart
-  if (props.group)
-    chart.group = props.group
-  applyEChartsOption(props.option)
-  syncEvents()
-  if (props.loading)
-    chart.showLoading(props.loadingType, props.loadingOptions)
+  catch (error) {
+    if (mounted && generation === creationGeneration)
+      console.error('[datav] 图表运行时加载失败', error)
+  }
 }
 
 function scheduleResize(options?: ResizeOpts): void {
@@ -198,7 +214,7 @@ function scheduleResize(options?: ResizeOpts): void {
       return
 
     if (!dataVRef.value && !echartsRef.value) {
-      createChart()
+      void createChart()
       return
     }
 
@@ -220,7 +236,7 @@ function handleAutoResize(): void {
   if (dataVRef.value || echartsRef.value)
     scheduleResize()
   else
-    createChart()
+    void createChart()
 }
 
 function startAutoResize(): void {
@@ -247,6 +263,7 @@ function stopAutoResize(): void {
   }
 }
 
+/***********************配置同步与生命周期*********************/
 watch(() => props.config, (config) => {
   if (config !== undefined)
     applyDataVConfig(config)
@@ -289,8 +306,10 @@ watch(() => props.autoResize, () => {
 onMounted(async () => {
   mounted = true
   await nextTick()
+  if (!mounted)
+    return
   startAutoResize()
-  createChart()
+  void createChart()
 })
 
 onBeforeUnmount(() => {
@@ -300,6 +319,7 @@ onBeforeUnmount(() => {
   disposeCharts()
 })
 
+/***********************公开实例接口*********************/
 defineExpose({
   appendData: (...args: Parameters<EChartsType['appendData']>) => echartsRef.value?.appendData(...args),
   clear: () => dataVRef.value ? dataVRef.value.setOption({}, true) : echartsRef.value?.clear(),

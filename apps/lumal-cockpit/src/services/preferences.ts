@@ -7,35 +7,11 @@ import {
   createDefaultPreferences,
   createPreferencesStore,
 } from '@lumal/core/theme'
+import { createMemoryStorage } from '@lumal/core/utils'
 
 /***********************独立应用主题偏好*********************/
 
 export const STANDALONE_PREFERENCES_STORAGE_KEY = 'lumal-cockpit:preferences'
-
-function createMemoryStorage(): Storage {
-  const values = new Map<string, string>()
-
-  return {
-    get length() {
-      return values.size
-    },
-    clear() {
-      values.clear()
-    },
-    getItem(key) {
-      return values.get(key) ?? null
-    },
-    key(index) {
-      return Array.from(values.keys())[index] ?? null
-    },
-    removeItem(key) {
-      values.delete(key)
-    },
-    setItem(key, value) {
-      values.set(key, value)
-    },
-  }
-}
 
 function resolvePreferencesStorage(): Storage {
   return typeof localStorage === 'undefined' ? createMemoryStorage() : localStorage

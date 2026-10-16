@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { nextTick } from 'vue'
+import { defineComponent, h, KeepAlive, nextTick, shallowRef } from 'vue'
 import { LumalActiveRingChart, LumalCapsuleChart, LumalConicalColumnChart, LumalDigitalFlop } from '../src'
 
 const chartMocks = vi.hoisted(() => ({
@@ -60,6 +60,7 @@ async function flushFrames(): Promise<void> {
   frames.clear()
   callbacks.forEach(callback => callback(performance.now()))
   await nextTick()
+  await vi.dynamicImportSettled()
 }
 
 beforeEach(() => {
@@ -99,6 +100,33 @@ afterEach(() => {
 })
 
 describe('dataV chart fidelity', () => {
+  it('active ring 在 KeepAlive 失活期间暂停轮换，重新激活后继续', async () => {
+    const visible = shallowRef(true)
+    const Host = defineComponent({
+      setup: () => () => h(KeepAlive, null, {
+        default: () => visible.value
+          ? h(LumalActiveRingChart, {
+              config: { data: [{ name: '甲', value: 1 }, { name: '乙', value: 2 }], animationFrame: 0 },
+              interval: 100,
+            })
+          : h('div'),
+      }),
+    })
+    const wrapper = mount(Host)
+    await flushFrames()
+    const ring = wrapper.getComponent(LumalActiveRingChart)
+    visible.value = false
+    await nextTick()
+    await vi.advanceTimersByTimeAsync(300)
+    expect(ring.attributes('data-active-index')).toBe('0')
+    visible.value = true
+    await nextTick()
+    await vi.advanceTimersByTimeAsync(101)
+    expect(ring.attributes('data-active-index')).toBe('1')
+    wrapper.unmount()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
   it('active ring 保留上游 pie option、半径动画、中心翻牌和销毁清理', async () => {
     const wrapper = mount(LumalActiveRingChart, {
       props: {

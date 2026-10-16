@@ -15,6 +15,8 @@ const requiredArtifacts = [
   'packages/icons-vue/dist/icons-vue.css',
   'packages/core/dist/index.js',
   'packages/core/dist/index.cjs',
+  'packages/core/dist/minimal.js',
+  'packages/core/dist/minimal.cjs',
   'packages/core/dist/core.css',
   'packages/charts/dist/index.js',
   'packages/charts/dist/index.cjs',

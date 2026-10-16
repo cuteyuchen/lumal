@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  createRequestCache,
   createRequestClient,
   createStandardResponseParser,
   parsePageResult,
@@ -298,6 +299,81 @@ describe('create request client', () => {
     expect(first).toEqual({ value: 1 })
     expect(second).toEqual({ value: 1 })
     expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('缓存按认证身份、租户作用域隔离，命中前仍执行请求钩子', async () => {
+    let token = 'user-a'
+    let tenant = 'tenant-a'
+    const onRequest = vi.fn()
+    const fetchMock = vi.fn(async () => createJsonResponse({ token, tenant }))
+    const cache = createRequestCache()
+    const client = createRequestClient({
+      cache,
+      fetch: fetchMock,
+      getCacheScope: () => tenant,
+      getToken: () => token,
+      onRequest,
+    })
+    const options = { cache: { enabled: true } }
+    await client.get('/profile', options)
+    await client.get('/profile', options)
+    token = 'user-b'
+    await expect(client.get('/profile', options)).resolves.toEqual({ token, tenant })
+    tenant = 'tenant-b'
+    await expect(client.get('/profile', options)).resolves.toEqual({ token, tenant })
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(onRequest).toHaveBeenCalledTimes(4)
+  })
+
+  it('非 GET 缓存必须显式给出区分请求体的 key', async () => {
+    const fetchMock = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) =>
+      createJsonResponse(JSON.parse(init?.body as string)))
+    const client = createRequestClient({ fetch: fetchMock })
+    await client.post('/query', { body: { id: 1 }, cache: { enabled: true } })
+    await expect(client.post('/query', { body: { id: 2 }, cache: { enabled: true } }))
+      .resolves
+      .toEqual({ id: 2 })
+    await client.post('/query', { body: { id: 3 }, cache: { enabled: true, key: 'query:3' } })
+    await client.post('/query', { body: { id: 3 }, cache: { enabled: true, key: 'query:3' } })
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
+  it('清空后旧在途响应不能重新填充缓存，共用存储的客户端也互不污染', async () => {
+    let resolve!: (response: Response) => void
+    const fetchMock = vi.fn()
+      .mockImplementationOnce(() => new Promise<Response>((done) => { resolve = done }))
+      .mockImplementation(async () => createJsonResponse({ value: 'new' }))
+    const cache = createRequestCache()
+    const client = createRequestClient({ cache, fetch: fetchMock })
+    const options = { cache: { enabled: true } }
+    const pending = client.get('/config', options)
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    client.clearCache()
+    resolve(createJsonResponse({ value: 'old' }))
+    await pending
+    await expect(client.get('/config', options)).resolves.toEqual({ value: 'new' })
+    const second = createRequestClient({
+      cache,
+      fetch: async () => createJsonResponse({ value: 'another-client' }),
+    })
+    await expect(second.get('/config', options)).resolves.toEqual({ value: 'another-client' })
+  })
+
+  it('异步请求钩子期间清空缓存，也不会让旧请求写入新一代缓存', async () => {
+    let resume!: () => void
+    const fetchMock = vi.fn(async () => createJsonResponse({ value: fetchMock.mock.calls.length }))
+    const onRequest = vi.fn()
+      .mockImplementationOnce(() => new Promise<void>((resolve) => { resume = resolve }))
+    const client = createRequestClient({ fetch: fetchMock, onRequest })
+    const options = { cache: { enabled: true } }
+    const pending = client.get('/config', options)
+    await vi.waitFor(() => expect(onRequest).toHaveBeenCalledTimes(1))
+    client.clearCache()
+    resume()
+    await pending
+    await expect(client.get('/config', options)).resolves.toEqual({ value: 2 })
+    await client.get('/config', options)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
   it('upload 会以 multipart/form-data 提交文件与附加字段', async () => {

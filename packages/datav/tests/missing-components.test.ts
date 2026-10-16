@@ -81,6 +81,7 @@ async function flushFrames(): Promise<void> {
   frames = []
   pending.forEach(({ callback }) => callback(performance.now()))
   await nextTick()
+  await vi.dynamicImportSettled()
 }
 
 beforeEach(() => {
@@ -114,6 +115,15 @@ afterEach(() => {
 })
 
 describe('remaining DataV components', () => {
+  it('异步引擎尚未加载时卸载，不创建实例或遗留尺寸监听', async () => {
+    const addListener = vi.spyOn(window, 'addEventListener')
+    const wrapper = mount(LumalCharts, { props: { config: {} } })
+    wrapper.unmount()
+    await vi.dynamicImportSettled()
+    expect(dataVChartMocks.instances).toHaveLength(0)
+    expect(chartMocks.init).not.toHaveBeenCalled()
+    expect(addListener.mock.calls.filter(([type]) => type === 'resize')).toHaveLength(0)
+  })
   it('flyline duration keeps DataV random integer tenths', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.5)
     const duration = randomDuration([20, 30])

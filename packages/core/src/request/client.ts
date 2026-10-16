@@ -152,6 +152,7 @@ function normalizeFetchError(error: unknown, signal?: AbortSignal): RequestError
 
 /***********************请求标识*********************/
 let requestIdSeed = 0
+let clientIdSeed = 0
 
 function resolveRequestId(options: RequestClientOptions): string | undefined {
   if (!options.requestId) {
@@ -171,23 +172,36 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
   const fetcher = clientOptions.fetch ?? globalThis.fetch
   const pendingKeys = new Set<string>()
   const defaultCache: RequestCache = clientOptions.cache ?? createRequestCache()
+  const cacheNamespace = globalThis.crypto?.randomUUID?.()
+    ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${++clientIdSeed}`
+  const cachedKeys = new Map<RequestCache, Set<string>>()
+  let cacheGeneration = 0
+  let cacheResetVersion = 0
+  let cacheIdentity: string | undefined
   let refreshPromise: Promise<void> | undefined
   let sessionExpiredNotified = false
 
+  function clearCache(): void {
+    cacheResetVersion += 1
+    invalidateCache()
+  }
+
+  function invalidateCache(): void {
+    cacheGeneration += 1
+    cachedKeys.forEach((keys, cache) => keys.forEach(key => cache.delete(key)))
+    cachedKeys.clear()
+  }
+
   async function request<TResult = unknown>(url: string, options: RequestOptions = {}): Promise<TResult> {
+    const resetVersion = cacheResetVersion
     const method = options.method ?? 'GET'
     const resolvedUrl = appendQuery(joinBaseURL(clientOptions.baseURL, url), options.query)
     const requestId = resolveRequestId(clientOptions)
 
-    // 缓存命中优先返回（仅在逐请求显式启用时生效）
     const cacheConfig = options.cache
     const cacheEnabled = cacheConfig?.enabled === true
+      && (method === 'GET' || Boolean(cacheConfig.key))
     const cache = cacheConfig?.cache ?? defaultCache
-    const cacheKey = cacheConfig?.key ?? `${method}:${resolvedUrl}`
-
-    if (cacheEnabled && cache.has(cacheKey)) {
-      return cache.get(cacheKey) as TResult
-    }
 
     let duplicateKey: string | undefined
     if (clientOptions.duplicateSubmit) {
@@ -230,6 +244,29 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
       }
 
       await clientOptions.onRequest?.({ init, requestId, url: resolvedUrl })
+
+      // 认证信息只留在内存用于识别变更，绝不写入可持久化的缓存 key。
+      const identity = JSON.stringify([
+        new Headers(init.headers).get('Authorization'),
+        clientOptions.getCacheScope?.(),
+      ])
+      if (identity !== cacheIdentity) {
+        invalidateCache()
+        cacheIdentity = identity
+      }
+      const generation = cacheGeneration
+      const cacheKey = JSON.stringify([
+        cacheNamespace,
+        generation,
+        cacheConfig?.scope,
+        cacheConfig?.key ?? `${method}:${resolvedUrl}`,
+      ])
+      if (options.signal?.aborted) {
+        throw normalizeFetchError(options.signal.reason, options.signal)
+      }
+      if (cacheEnabled && resetVersion === cacheResetVersion && cache.has(cacheKey)) {
+        return cache.get(cacheKey) as TValue
+      }
 
       let response: Response
 
@@ -292,8 +329,11 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
           : (data as TValue)
 
         sessionExpiredNotified = false
-        if (cacheEnabled) {
+        if (cacheEnabled && generation === cacheGeneration && resetVersion === cacheResetVersion) {
           cache.set(cacheKey, result)
+          const keys = cachedKeys.get(cache) ?? new Set<string>()
+          keys.add(cacheKey)
+          cachedKeys.set(cache, keys)
         }
 
         return result
@@ -359,6 +399,7 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
 
       if (!sessionExpiredNotified) {
         sessionExpiredNotified = true
+        clearCache()
         await clientOptions.onSessionExpired?.(context)
       }
 
@@ -407,6 +448,7 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
   }
 
   return {
+    clearCache,
     delete: (url, options) => request(url, { ...options, method: 'DELETE' }),
     get: (url, options) => request(url, { ...options, method: 'GET' }),
     patch: (url, options) => request(url, { ...options, method: 'PATCH' }),

@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, shallowRef, useTemplateRef, watch } from 'vue'
-import { RouterView } from 'vue-router'
+import type { Component as VueComponent } from 'vue'
+import type { RouteLocationNormalized } from 'vue-router'
+import { computed, defineComponent, inject, onBeforeUnmount, shallowRef, useTemplateRef, watch } from 'vue'
+import { routeLocationKey, routerKey, RouterView } from 'vue-router'
 
 /***********************属性定义*********************/
 const props = withDefaults(defineProps<{
@@ -11,9 +13,11 @@ const props = withDefaults(defineProps<{
   loading?: boolean
   cache?: boolean
   cacheMax?: number
+  /** 当前允许保留的视图 key。移除 key 会销毁对应实例；刷新时替换该标签的 key。 */
+  cacheKeys?: (number | string)[]
 }>(), {
   cache: false,
-  cacheMax: 0,
+  cacheMax: 20,
   loading: false,
   progress: false,
   transition: false,
@@ -25,58 +29,71 @@ const props = withDefaults(defineProps<{
 const routerViewRef = useTemplateRef<HTMLElement>('routerViewRef')
 
 /***********************视图状态*********************/
-const progressVisible = shallowRef(false)
-const loadingVisible = shallowRef(false)
-const loadedViewKeys = new Set<number | string>([props.viewKey])
-const resolvedCacheMax = computed(() => props.cacheMax > 0 ? props.cacheMax : undefined)
+const route = inject(routeLocationKey, undefined)
+const router = inject(routerKey, undefined)
+const navigating = shallowRef(false)
+const progressVisible = computed(() => props.progress && navigating.value)
+const loadingVisible = computed(() => props.loading && navigating.value)
+const resolvedCacheMax = computed(() => Number.isFinite(props.cacheMax) && props.cacheMax > 0 ? Math.max(1, Math.floor(props.cacheMax)) : 20)
 const resolvedTransitionName = computed(() => props.transition ? props.transitionName : undefined)
-let feedbackTimer: ReturnType<typeof setTimeout> | undefined
 
-/***********************切换反馈*********************/
-function clearFeedbackTimer(): void {
-  if (feedbackTimer) {
-    clearTimeout(feedbackTimer)
-    feedbackTimer = undefined
-  }
-}
-
-function isLoadedViewKey(viewKey: number | string): boolean {
-  return props.cache && loadedViewKeys.has(viewKey)
-}
-
-function finishRouteFeedback(viewKey: number | string): void {
-  progressVisible.value = false
-  loadingVisible.value = false
-  loadedViewKeys.add(viewKey)
-  feedbackTimer = undefined
-}
-
-function startRouteFeedback(viewKey: number | string): void {
-  clearFeedbackTimer()
-  progressVisible.value = props.progress && !isLoadedViewKey(viewKey)
-  loadingVisible.value = props.loading && !isLoadedViewKey(viewKey)
-
-  if (!progressVisible.value && !loadingVisible.value) {
-    loadedViewKeys.add(viewKey)
-    return
-  }
-
-  feedbackTimer = setTimeout(finishRouteFeedback, 520, viewKey)
-}
-
+/***********************视图缓存身份与剔除*********************/
+// 为每个标签版本提供独立名字，利用 KeepAlive 的公开 include 契约剔除实例，
+// 不依赖 Vue 私有缓存字段；元数据同步限量，避免关闭/刷新后持续增长。
+const entries = new Map<number | string, { name: string, component: VueComponent }>()
+const cachedView = shallowRef<VueComponent>()
+const cacheNames = shallowRef<string[]>([])
+let cacheNameSeed = 0
 watch(
-  () => props.viewKey,
-  (viewKey, oldViewKey) => {
-    if (oldViewKey === undefined) {
-      return
+  [() => props.viewKey, () => props.cacheKeys?.slice(), () => props.cache, resolvedCacheMax, () => route?.meta.keepAlive],
+  () => {
+    const allowed = props.cacheKeys ? new Set(props.cacheKeys) : undefined
+    for (const key of entries.keys()) {
+      if (!props.cache || (allowed && !allowed.has(key)) || (key === props.viewKey && route?.meta.keepAlive === false))
+        entries.delete(key)
     }
-
-    startRouteFeedback(viewKey)
+    let entry = entries.get(props.viewKey)
+    if (props.cache && route?.meta.keepAlive !== false && (!allowed || allowed.has(props.viewKey))) {
+      if (!entry) {
+        const name = `LumalCachedView${++cacheNameSeed}`
+        entry = {
+          name,
+          component: defineComponent({ name, setup: (_, { slots }) => () => slots.default?.() }),
+        }
+      }
+      entries.delete(props.viewKey)
+      entries.set(props.viewKey, entry)
+    }
+    else {
+      entry = undefined
+    }
+    while (entries.size > resolvedCacheMax.value)
+      entries.delete(entries.keys().next().value!)
+    cachedView.value = entry?.component
+    cacheNames.value = [...entries.values()].map(item => item.name)
   },
+  { immediate: true },
 )
 
+/***********************真实导航反馈*********************/
+let pendingRoute: RouteLocationNormalized | undefined
+const removeBeforeGuard = router?.beforeEach((to) => {
+  pendingRoute = to
+  navigating.value = true
+})
+const removeAfterGuard = router?.afterEach((to) => {
+  if (pendingRoute === to)
+    navigating.value = false
+})
+const removeErrorHandler = router?.onError((_error, to) => {
+  if (pendingRoute === to)
+    navigating.value = false
+})
 onBeforeUnmount(() => {
-  clearFeedbackTimer()
+  removeBeforeGuard?.()
+  removeAfterGuard?.()
+  removeErrorHandler?.()
+  entries.clear()
 })
 
 /***********************公开方法*********************/
@@ -93,22 +110,19 @@ defineExpose({
 
     <RouterView v-slot="{ Component }">
       <Transition
-        v-if="resolvedTransitionName"
         appear
         mode="out-in"
         :name="resolvedTransitionName"
+        :css="transition"
       >
-        <KeepAlive v-if="cache" :max="resolvedCacheMax">
-          <component :is="Component" :key="viewKey" />
+        <KeepAlive v-if="cache" :include="cacheNames" :max="resolvedCacheMax">
+          <component :is="cachedView" v-if="cachedView" :key="viewKey">
+            <component :is="Component" />
+          </component>
+          <component :is="Component" v-else :key="viewKey" />
         </KeepAlive>
         <component :is="Component" v-else :key="viewKey" />
       </Transition>
-
-      <KeepAlive v-else-if="cache" :max="resolvedCacheMax">
-        <component :is="Component" :key="viewKey" />
-      </KeepAlive>
-
-      <component :is="Component" v-else :key="viewKey" />
     </RouterView>
 
     <div v-if="loadingVisible" class="lumal-router-view__loading" aria-hidden="true">

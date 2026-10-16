@@ -3,16 +3,11 @@ import type { CSSProperties } from 'vue'
 import type { BorderBoxVariant } from '../types'
 import {
   computed,
-  nextTick,
-  onMounted,
-  shallowRef,
   useId,
   useTemplateRef,
-  watch,
 } from 'vue'
-import { useAnimationPause } from '../composables/useAnimationPause'
 import { useElementSize } from '../composables/useElementSize'
-import { useReducedMotion } from '../composables/useReducedMotion'
+import { useSvgAnimationPause } from '../composables/useSvgAnimationPause'
 import { createBorderBoxInstanceId } from './borderBoxGeometry'
 
 const props = withDefaults(defineProps<{
@@ -85,11 +80,14 @@ const width = computed(() => FIXED_VIEWBOX[props.variant]?.[0] ?? measuredWidth.
 const height = computed(() => FIXED_VIEWBOX[props.variant]?.[1] ?? measuredHeight.value)
 const svgViewBox = computed(() => (hasFixedViewBox.value ? `0 0 ${width.value} ${height.value}` : undefined))
 const svgPreserveAspectRatio = computed(() => (hasFixedViewBox.value ? 'none' : undefined))
-const hovered = shallowRef(false)
-const focused = shallowRef(false)
-const viewportPaused = useAnimationPause(rootRef)
-const reducedMotion = useReducedMotion()
-const animationPaused = computed(() => viewportPaused.value || reducedMotion.value || hovered.value || focused.value)
+/***********************动画暂停与生命周期*********************/
+const {
+  onFocusIn: handleFocusIn,
+  onFocusOut: handleFocusOut,
+  onMouseEnter: handleMouseEnter,
+  onMouseLeave: handleMouseLeave,
+  paused: animationPaused,
+} = useSvgAnimationPause(rootRef, svgRef)
 
 const colors = computed<readonly [string, string]>(() => {
   const defaults = DEFAULT_COLORS[props.variant]
@@ -155,40 +153,6 @@ function pulseOpacity(index: number): number {
 function pulseMinimumOpacity(index: number): number {
   return [0.7, 0.4, 0.2][index - 1] ?? 0.2
 }
-
-function handleMouseEnter(): void {
-  hovered.value = true
-}
-
-function handleMouseLeave(): void {
-  hovered.value = false
-}
-
-function handleFocusIn(): void {
-  focused.value = true
-}
-
-function handleFocusOut(event: FocusEvent): void {
-  if (!rootRef.value?.contains(event.relatedTarget as Node | null))
-    focused.value = false
-}
-
-function syncSvgAnimation(paused: boolean, svg: SVGSVGElement | null): void {
-  if (!svg)
-    return
-  if (paused)
-    svg.pauseAnimations?.()
-  else
-    svg.unpauseAnimations?.()
-}
-
-watch([animationPaused, svgRef], ([paused, svg]) => {
-  void nextTick(() => syncSvgAnimation(paused, svg))
-}, { flush: 'post' })
-
-onMounted(() => {
-  syncSvgAnimation(animationPaused.value, svgRef.value)
-})
 </script>
 
 <template>

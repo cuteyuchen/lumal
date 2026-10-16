@@ -22,7 +22,7 @@ interface PackageEntry {
 }
 
 const PACKAGE_ENTRIES: PackageEntry[] = [
-  ...['auth', 'components', 'composables', 'dictionary', 'directives', 'layout', 'permission', 'request', 'router', 'theme', 'utils']
+  ...['auth', 'components', 'composables', 'dictionary', 'directives', 'layout', 'minimal', 'permission', 'request', 'router', 'theme', 'utils']
     .map(name => ({
       dist: `packages/core/dist/${name}.js`,
       packageName: 'core' as const,

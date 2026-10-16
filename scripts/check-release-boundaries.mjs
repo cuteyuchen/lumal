@@ -94,13 +94,22 @@ function findTextMatches(dirPath, pattern, ignoredRelativeFiles = new Set(), all
 function checkPublishPackage(name, dirPath) {
   const packageJsonPath = join(dirPath, 'package.json')
   const readmePath = join(dirPath, 'README.md')
+  const changelogPath = join(dirPath, 'CHANGELOG.md')
   const packageJson = readJson(packageJsonPath)
 
   assert(existsSync(readmePath), `${name} 缺少 README.md`)
+  assert(existsSync(changelogPath), `${name} 缺少 CHANGELOG.md`)
   assert(packageJson.publishConfig?.access === 'public', `${name} 缺少 publishConfig.access=public`)
   assert(packageJson.license === 'MIT', `${name} license 应为 MIT`)
   assert(packageJson.files?.includes('README.md'), `${name} files 未包含 README.md`)
+  assert(packageJson.files?.includes('CHANGELOG.md'), `${name} files 未包含 CHANGELOG.md`)
   assert(packageJson.files?.includes('dist'), `${name} files 未包含 dist`)
+  if (existsSync(changelogPath)) {
+    assert(
+      readFileSync(changelogPath, 'utf8').includes(`## ${packageJson.version} (`),
+      `${name} CHANGELOG 未记录当前版本 ${packageJson.version}`,
+    )
+  }
 
   return packageJson
 }
@@ -123,9 +132,37 @@ const compatPackage = checkPublishPackage('@lumal/vben-compat', packageDirs.vben
 const vitePackage = checkPublishPackage('@lumal/vite', packageDirs.vite)
 const createPackage = checkPublishPackage('create-lumal-admin', packageDirs.createLumalAdmin)
 
+/***********************统一发布版本*********************/
+const publicPackages = [iconsPackage, iconsVuePackage, corePackage, chartsPackage, datavPackage, cockpitPackage, compatPackage, vitePackage, createPackage]
+const releaseVersion = corePackage.version
+const publicPackageNames = new Set(publicPackages.map(pkg => pkg.name))
+const appPackages = readdirSync(join(rootDir, 'apps'), { withFileTypes: true })
+  .filter(entry => entry.isDirectory() && existsSync(join(rootDir, 'apps', entry.name, 'package.json')))
+  .map(entry => readJson(join(rootDir, 'apps', entry.name, 'package.json')))
+for (const pkg of publicPackages)
+  assert(pkg.version === releaseVersion, `${pkg.name} 版本未与 ${releaseVersion} 对齐`)
+for (const pkg of [...publicPackages, ...appPackages]) {
+  for (const field of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']) {
+    for (const [name, range] of Object.entries(pkg[field] ?? {})) {
+      if (!publicPackageNames.has(name) || /^(?:workspace|catalog|link|file):/.test(range))
+        continue
+      assert(range.replace(/^[~^]/, '') === releaseVersion, `${pkg.name} 的 ${name} 依赖未与 ${releaseVersion} 对齐`)
+    }
+  }
+}
+assert(
+  readFileSync(join(rootDir, 'apps/lumal-docs/src/.vitepress/config/nav.ts'), 'utf8').includes(`text: '${releaseVersion}'`),
+  `文档导航未与发布版本 ${releaseVersion} 对齐`,
+)
+assert(
+  readFileSync(join(rootDir, 'docs/changelog.md'), 'utf8').includes(`## ${releaseVersion} (`),
+  `统一更新日志未记录发布版本 ${releaseVersion}`,
+)
+
 assert(corePackage.files?.includes('theme-chalk'), '@lumal/core files 未包含 theme-chalk')
 assert(iconsVuePackage.exports?.['./style.css'] === './dist/icons-vue.css', '@lumal/icons-vue 未导出 style.css')
 assert(corePackage.exports?.['./style.css'] === './dist/core.css', '@lumal/core 未导出 style.css')
+assert(corePackage.exports?.['./minimal']?.import && corePackage.exports?.['./minimal']?.require && corePackage.exports?.['./minimal']?.types, '@lumal/core 未完整导出 minimal 入口')
 assert(corePackage.exports?.['./theme-chalk/index.scss'], '@lumal/core 未导出 theme-chalk/index.scss')
 assert(createPackage.bin?.['create-lumal-admin'] === './dist/cli.js', 'create-lumal-admin 缺少 bin.create-lumal-admin')
 assert(datavPackage.exports?.['./style.css'] === './dist/datav.css', '@lumal/datav 未导出 style.css')
@@ -307,6 +344,16 @@ const oldNameMatches = findTextMatches(rootDir, oldNamePattern, new Set([
 
 for (const match of oldNameMatches) {
   errors.push(`公开源码或文档仍包含旧名称/旧别名：${match}`)
+}
+
+/***********************文档单源*********************/
+const referenceDir = join(rootDir, 'apps/lumal-docs/src/reference')
+for (const name of readdirSync(referenceDir).filter(name => name.endsWith('.md'))) {
+  assert(existsSync(join(rootDir, 'docs', name)), `reference 缺少对应长文源：${name}`)
+  assert(
+    readFileSync(join(referenceDir, name), 'utf8').trim() === `<!--@include: ../../../../docs/${name}-->`,
+    `reference 应只引用 docs 单源，不维护副本：${name}`,
+  )
 }
 
 /***********************检查结果*********************/

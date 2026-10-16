@@ -15,11 +15,14 @@ export interface CreateLumalComponentResolverOptions {
 }
 
 const COMPONENT_PACKAGES = new Map<string, string>([
+  ['LumalAccessControl', '@lumal/core/permission'],
+  ['LumalBreadcrumb', '@lumal/core/layout'],
   ['LumalChart', '@lumal/charts'],
   ['LumalChartPanel', '@lumal/charts'],
   ['LumalContent', '@lumal/core/layout'],
   ['LumalCrudTable', '@lumal/core/components'],
   ['LumalHeader', '@lumal/core/layout'],
+  ['LumalGlobalSearch', '@lumal/core/layout'],
   ['LumalIcon', '@lumal/icons-vue'],
   ['LumalIconPicker', '@lumal/icons-vue'],
   ['LumalIconPickerDialog', '@lumal/icons-vue'],
@@ -33,6 +36,7 @@ const COMPONENT_PACKAGES = new Map<string, string>([
   ['LumalSchemaTable', '@lumal/core/components'],
   ['LumalSidebar', '@lumal/core/layout'],
   ['LumalTabs', '@lumal/core/layout'],
+  ['LumalThemeSettingsPanel', '@lumal/core/theme'],
   ['LumalTopNav', '@lumal/core/layout'],
 ])
 

@@ -1,8 +1,38 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { mount } from '@vue/test-utils'
+import { compileString } from 'sass-embedded'
 import { describe, expect, it, vi } from 'vitest'
 import { LumalChartPanel } from '../src'
 
 describe('lumal chart panel', () => {
+  it('两种视图实际消费各自宽度变量，并受父容器宽度约束', async () => {
+    const source = readFileSync(resolve(process.cwd(), 'src/LumalChartPanel.vue'), 'utf8')
+    const scss = source.match(/<style scoped lang="scss">([\s\S]*?)<\/style>/)![1]!
+    const style = document.createElement('style')
+    style.textContent = compileString(scss).css
+    document.head.append(style)
+    const wrapper = mount(LumalChartPanel, {
+      attachTo: document.body,
+      props: { chartWidth: 560, tableWidth: '75%' },
+      slots: { chart: '<div>chart</div>', table: '<table />' },
+    })
+    try {
+      const body = wrapper.get('.lumal-chart-panel__body').element
+      expect((wrapper.element as HTMLElement).style.getPropertyValue('--lumal-chart-panel-chart-width')).toBe('560px')
+      expect(getComputedStyle(body).width).toBe('var(--lumal-chart-panel-chart-width, 100%)')
+      expect(getComputedStyle(body).maxWidth).toBe('100%')
+      await wrapper.setProps({ view: 'table' })
+      expect((wrapper.element as HTMLElement).style.getPropertyValue('--lumal-chart-panel-table-width')).toBe('75%')
+      expect(getComputedStyle(body).width).toBe('var(--lumal-chart-panel-table-width, 100%)')
+      expect(getComputedStyle(body).maxWidth).toBe('100%')
+    }
+    finally {
+      wrapper.unmount()
+      style.remove()
+    }
+  })
+
   it('loading 时展示加载状态，不渲染图表', () => {
     const wrapper = mount(LumalChartPanel, {
       global: {

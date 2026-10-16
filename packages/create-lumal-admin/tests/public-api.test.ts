@@ -4,6 +4,8 @@ import { join } from 'node:path'
 import { createLumalAdminProject } from '../src'
 
 interface GeneratedPackageJson {
+  packageManager: string
+  engines: { node: string }
   dependencies: Record<string, string>
   devDependencies: Record<string, string>
 }
@@ -33,6 +35,8 @@ describe('create-lumal-admin public API', () => {
       ) as GeneratedTsConfig
 
       expect(packageJson.dependencies['@iconify/vue']).toBe('^5.0.0')
+      expect(packageJson.packageManager).toBe('pnpm@10.33.0')
+      expect(packageJson.engines.node).toBe('>=22.12.0')
       expect(packageJson.devDependencies['@types/node']).toBe('^24.6.1')
       expect(packageJson.devDependencies['sass-embedded']).toBe('^1.95.1')
       expect(tsConfig.compilerOptions.types).toContain('node')

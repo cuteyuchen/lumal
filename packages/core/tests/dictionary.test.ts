@@ -105,6 +105,36 @@ describe('dictionary runtime', () => {
     })
   })
 
+  it.each(['clear', 'remove', 'set'] as const)('%s 会使在途字典失效，不覆盖手动值或新请求', async (action) => {
+    const resolvers: Array<(value: unknown) => void> = []
+    const store = createDictionaryStore({
+      fetcher: () => new Promise(resolve => resolvers.push(resolve)),
+    })
+    const old = store.loadDictionary('status')
+    await Promise.resolve()
+    if (action === 'clear')
+      store.clearDictionary()
+    else if (action === 'remove')
+      store.removeDictionary('status')
+    else
+      store.setDictionary('status', [{ label: '手动', value: 'manual' }])
+
+    const fresh = action === 'set' ? undefined : store.loadDictionary('status')
+    await Promise.resolve()
+    resolvers[0]!({ items: [{ label: '旧', value: 'old' }] })
+    await old
+    if (fresh) {
+      expect(store.loading.status).toBe(true)
+      expect(store.records.status).toBeUndefined()
+      resolvers[1]!({ items: [{ label: '新', value: 'new' }] })
+      await fresh
+      expect(store.records.status?.[0]?.value).toBe('new')
+    }
+    else {
+      expect(store.records.status?.[0]?.value).toBe('manual')
+    }
+  })
+
   it('会翻译单值、多值、空值和未知值', () => {
     const options = [
       { label: '启用', value: 'enabled' },

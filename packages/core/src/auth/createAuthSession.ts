@@ -1,30 +1,7 @@
 import type { AuthSession, AuthSessionData, AuthSessionOptions, TokenStorage } from './types'
+import { createMemoryStorage } from '../utils/storage'
 import { resolveLoginRedirect } from './redirect'
 import { createTokenStorage } from './storage'
-
-/***********************内存兜底存储*********************/
-/**
- * 当运行环境无 Web Storage（SSR、测试）且未注入 storage 时，使用内存实现兜底，
- * 保证 API 行为一致，不抛异常。
- */
-function createMemoryStorage(): Storage {
-  const map = new Map<string, string>()
-
-  return {
-    get length() {
-      return map.size
-    },
-    clear: () => map.clear(),
-    getItem: (key: string) => (map.has(key) ? map.get(key)! : null),
-    key: (index: number) => Array.from(map.keys())[index] ?? null,
-    removeItem: (key: string) => {
-      map.delete(key)
-    },
-    setItem: (key: string, value: string) => {
-      map.set(key, value)
-    },
-  }
-}
 
 function resolveStorage(storage?: Storage): Storage {
   if (storage) {

@@ -28,9 +28,11 @@ const SEARCH_ICON = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.o
 const dialogId = `lumal-global-search-${useId()}`
 const inputRef = useTemplateRef<HTMLInputElement>('inputRef')
 const triggerRef = useTemplateRef<HTMLButtonElement>('triggerRef')
+const dialogRef = useTemplateRef<HTMLElement>('dialogRef')
 const open = ref(false)
 const query = ref('')
 const activeIndex = ref(0)
+let previousFocus: HTMLElement | undefined
 
 function flattenMenus(menus: LumalLayoutMenuItem[], ancestors: string[] = []): SearchResult[] {
   return menus.flatMap((item) => {
@@ -62,6 +64,9 @@ const activeDescendant = computed(() => filteredResults.value[activeIndex.value]
   : undefined)
 
 function openSearch(): void {
+  if (open.value)
+    return
+  previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : undefined
   open.value = true
   query.value = ''
   activeIndex.value = 0
@@ -70,8 +75,36 @@ function openSearch(): void {
 
 function closeSearch(restoreFocus = true): void {
   open.value = false
+  document.removeEventListener('focusin', containFocus)
   if (restoreFocus) {
-    void nextTick(() => triggerRef.value?.focus())
+    void nextTick(() => {
+      if (!open.value)
+        (previousFocus?.isConnected ? previousFocus : triggerRef.value)?.focus()
+    })
+  }
+}
+
+/***********************弹窗焦点与键盘约束*********************/
+function containFocus(event: FocusEvent): void {
+  if (open.value && dialogRef.value && !dialogRef.value.contains(event.target as Node))
+    inputRef.value?.focus()
+}
+
+function handleDialogKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    event.stopPropagation()
+    closeSearch()
+  }
+  if (event.key !== 'Tab')
+    return
+  const elements = [...dialogRef.value?.querySelectorAll<HTMLElement>('button, input, [tabindex]') ?? []]
+    .filter(element => element.tabIndex >= 0 && !element.matches(':disabled') && !element.closest('[hidden], [inert]'))
+  const first = elements[0]
+  const last = elements.at(-1)
+  if (!first || (event.shiftKey ? document.activeElement === first : document.activeElement === last)) {
+    event.preventDefault()
+    ;(event.shiftKey ? last : first)?.focus()
   }
 }
 
@@ -117,11 +150,18 @@ function handleGlobalShortcut(event: KeyboardEvent): void {
   }
 
   event.preventDefault()
-  open.value ? closeSearch(false) : openSearch()
+  open.value ? closeSearch() : openSearch()
 }
 
 watch(filteredResults, () => {
   activeIndex.value = 0
+})
+
+watch(open, (value) => {
+  if (value)
+    document.addEventListener('focusin', containFocus)
+  else
+    document.removeEventListener('focusin', containFocus)
 })
 
 onMounted(() => {
@@ -130,6 +170,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleGlobalShortcut)
+  document.removeEventListener('focusin', containFocus)
+  if (open.value && previousFocus?.isConnected)
+    previousFocus.focus()
 })
 
 defineExpose({ close: closeSearch, open: openSearch })
@@ -153,10 +196,12 @@ defineExpose({ close: closeSearch, open: openSearch })
     <Teleport to="body">
       <div v-if="open" class="lumal-global-search__backdrop" @mousedown.self="closeSearch()">
         <section
+          ref="dialogRef"
           class="lumal-global-search__dialog"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="`${dialogId}-title`"
+          @keydown="handleDialogKeydown"
         >
           <header class="lumal-global-search__header">
             <h2 :id="`${dialogId}-title`">

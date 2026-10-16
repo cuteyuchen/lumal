@@ -1,9 +1,14 @@
 import type { AdminAccountKey, AdminLoginRequest, AdminUser } from '../api/auth'
 import { createAuthSession } from '@lumal/core/auth'
+import { getActiveDictionaryContext } from '@lumal/core/dictionary'
+import { createMemoryStorage } from '@lumal/core/utils'
 import { ElMessageBox } from 'element-plus'
 import { readonly, shallowRef } from 'vue'
 import { adminAccountOptions, loginAdmin, logoutAdmin } from '../api/auth'
 import { clearAdminAccess, syncAdminAccess } from './permission'
+import { resetSessionDependents } from './session-reset'
+
+export { registerSessionResetHandler } from './session-reset'
 
 const tokenStorageKey = 'lumal-admin:token'
 const userStorageKey = 'lumal-admin:user'
@@ -11,25 +16,6 @@ export const adminTabSnapshotStorageKey = 'lumal-admin:tabs'
 const loginPath = '/login'
 
 /***********************存储兜底*********************/
-function createMemoryStorage(): Storage {
-  const map = new Map<string, string>()
-
-  return {
-    get length() {
-      return map.size
-    },
-    clear: () => map.clear(),
-    getItem: (key: string) => (map.has(key) ? map.get(key)! : null),
-    key: (index: number) => Array.from(map.keys())[index] ?? null,
-    removeItem: (key: string) => {
-      map.delete(key)
-    },
-    setItem: (key: string, value: string) => {
-      map.set(key, value)
-    },
-  }
-}
-
 function resolveStorage(): Storage {
   if (typeof localStorage !== 'undefined') {
     return localStorage
@@ -38,11 +24,11 @@ function resolveStorage(): Storage {
   return createMemoryStorage()
 }
 
-const sessionStorage = resolveStorage()
+const authStorage = resolveStorage()
 
 /***********************用户快照*********************/
 function readStoredUser(): AdminUser | null {
-  const raw = sessionStorage.getItem(userStorageKey)
+  const raw = authStorage.getItem(userStorageKey)
 
   if (!raw) {
     return null
@@ -52,36 +38,36 @@ function readStoredUser(): AdminUser | null {
     return JSON.parse(raw) as AdminUser
   }
   catch {
-    sessionStorage.removeItem(userStorageKey)
+    authStorage.removeItem(userStorageKey)
     return null
   }
 }
 
 function writeStoredUser(user: AdminUser | null): void {
   if (!user) {
-    sessionStorage.removeItem(userStorageKey)
+    authStorage.removeItem(userStorageKey)
     return
   }
 
-  sessionStorage.setItem(userStorageKey, JSON.stringify(user))
+  authStorage.setItem(userStorageKey, JSON.stringify(user))
 }
 
 const currentUserState = shallowRef<AdminUser | null>(null)
-const sessionResetHandlers = new Set<() => void>()
 
 /***********************会话实例*********************/
 function clearCurrentSessionState(): void {
   currentUserState.value = null
   writeStoredUser(null)
   clearAdminAccess()
+  getActiveDictionaryContext()?.store.clearDictionary()
   clearAdminTabSnapshot()
-  sessionResetHandlers.forEach(handler => handler())
+  resetSessionDependents()
 }
 
 function clearAdminTabSnapshot(): void {
   try {
-    if (typeof sessionStorage !== 'undefined') {
-      sessionStorage.removeItem(adminTabSnapshotStorageKey)
+    if (typeof globalThis.sessionStorage !== 'undefined') {
+      globalThis.sessionStorage.removeItem(adminTabSnapshotStorageKey)
     }
   }
   catch {
@@ -92,7 +78,7 @@ function clearAdminTabSnapshot(): void {
 export const adminSession = createAuthSession({
   onSessionExpired: clearCurrentSessionState,
   redirect: { loginPath, redirectQueryKey: 'redirect' },
-  storage: sessionStorage,
+  storage: authStorage,
   tokenKey: tokenStorageKey,
 })
 
@@ -153,12 +139,6 @@ else {
 
 export const currentUser = readonly(currentUserState)
 
-export function registerSessionResetHandler(handler: () => void): () => void {
-  sessionResetHandlers.add(handler)
-
-  return () => sessionResetHandlers.delete(handler)
-}
-
 /***********************权限同步*********************/
 export function syncSessionAccess(user: AdminUser | null = currentUserState.value): void {
   if (!user) {
@@ -208,6 +188,7 @@ export function isAuthenticated(): boolean {
 export async function login(payload: AdminAccountKey | AdminLoginRequest): Promise<AdminUser> {
   const result = await loginAdmin(normalizeLoginPayload(payload))
 
+  clearCurrentSessionState()
   adminSession.setSession(result.session)
   currentUserState.value = result.user
   writeStoredUser(result.user)

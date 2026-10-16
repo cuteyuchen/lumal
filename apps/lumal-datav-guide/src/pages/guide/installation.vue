@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import CodeBlock from '@/components/CodeBlock.vue'
 
-const install = `pnpm add @lumal/datav vue echarts`
+/***********************安装与注册示例*********************/
+const install = `pnpm add @lumal/datav@0.0.3-beta vue echarts@^6`
 
 const global = `import { createApp } from 'vue'
 import LumalDatav from '@lumal/datav'
@@ -33,6 +34,7 @@ import '@lumal/datav/style.css'`
 
     <section class="guide-doc__section">
       <h2>安装</h2>
+      <p>当前仓库准备版本为 <code>0.0.3-beta</code>，以下命令在本版发布后使用，图表运行时需 ECharts 6。</p>
       <CodeBlock :code="install" language="bash" />
     </section>
 

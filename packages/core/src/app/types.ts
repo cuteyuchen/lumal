@@ -46,3 +46,9 @@ export interface LumalAdminInstance extends LumalAdminContext {
   mount: (container: Element | string) => Promise<ReturnType<App['mount']>>
   use: (plugin: Plugin, ...options: unknown[]) => LumalAdminInstance
 }
+
+/** 独立轻入口不引用默认 UI 注册表，只接受显式组件。 */
+export type CreateLumalMinimalOptions = Omit<CreateLumalAdminOptions, 'components' | 'preset'> & {
+  components?: Record<string, Component>
+  preset?: 'minimal'
+}

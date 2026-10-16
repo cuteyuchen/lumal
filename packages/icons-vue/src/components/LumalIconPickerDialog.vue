@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, shallowRef, useTemplateRef, watch } from 'vue'
 import LumalIconPicker from './LumalIconPicker.vue'
 
 /***********************属性与事件*********************/
@@ -20,19 +20,62 @@ const emit = defineEmits<{
 
 const visible = defineModel<boolean>('visible', { default: false })
 const iconValue = defineModel<string>()
-const draftValue = ref('')
-const dialogRef = ref<HTMLElement>()
+const draftValue = shallowRef('')
+const dialogRef = useTemplateRef<HTMLElement>('dialogRef')
+let previousFocus: HTMLElement | undefined
+
+/***********************弹窗焦点与键盘约束*********************/
+function containFocus(event: FocusEvent): void {
+  if (visible.value && dialogRef.value && !dialogRef.value.contains(event.target as Node))
+    dialogRef.value.focus()
+}
+
+function handleDialogKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    event.stopPropagation()
+    cancel()
+  }
+  if (event.key !== 'Tab')
+    return
+  const elements = [...dialogRef.value?.querySelectorAll<HTMLElement>('button, input, select, textarea, a[href], [tabindex]') ?? []]
+    .filter(element => element.tabIndex >= 0 && !element.matches(':disabled') && !element.closest('[hidden], [inert]'))
+  const first = elements[0]
+  const last = elements.at(-1)
+  if (!first || (event.shiftKey ? document.activeElement === first || document.activeElement === dialogRef.value : document.activeElement === last || document.activeElement === dialogRef.value)) {
+    event.preventDefault()
+    ;(event.shiftKey ? last : first)?.focus()
+  }
+}
 
 watch(visible, async (nextVisible) => {
+  if (typeof document === 'undefined')
+    return
   if (!nextVisible) {
+    document.removeEventListener('focusin', containFocus)
+    const target = previousFocus
+    await nextTick()
+    if (!visible.value && target?.isConnected)
+      target.focus()
     return
   }
 
+  previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : undefined
   draftValue.value = iconValue.value ?? ''
   await nextTick()
-  dialogRef.value?.focus()
+  if (visible.value) {
+    dialogRef.value?.focus()
+    document.addEventListener('focusin', containFocus)
+  }
 }, { immediate: true })
 
+onBeforeUnmount(() => {
+  document.removeEventListener('focusin', containFocus)
+  if (previousFocus?.isConnected)
+    previousFocus.focus()
+})
+
+/***********************选择确认*********************/
 function cancel(): void {
   visible.value = false
   emit('cancel')
@@ -50,37 +93,39 @@ function confirm(): void {
 </script>
 
 <template>
-  <div v-if="visible" class="lumal-icon-picker-dialog" role="presentation" @mousedown.self="cancel">
-    <section
-      ref="dialogRef"
-      class="lumal-icon-picker-dialog__body"
-      role="dialog"
-      aria-modal="true"
-      :aria-label="title"
-      tabindex="-1"
-      @keydown.esc="cancel"
-    >
-      <header class="lumal-icon-picker-dialog__header">
-        <h3>{{ title }}</h3>
-        <button type="button" aria-label="关闭图标选择器" @click="cancel">
-          ×
-        </button>
-      </header>
+  <Teleport to="body">
+    <div v-if="visible" class="lumal-icon-picker-dialog" role="presentation" @mousedown.self="cancel">
+      <section
+        ref="dialogRef"
+        class="lumal-icon-picker-dialog__body"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="title"
+        tabindex="-1"
+        @keydown="handleDialogKeydown"
+      >
+        <header class="lumal-icon-picker-dialog__header">
+          <h3>{{ title }}</h3>
+          <button type="button" aria-label="关闭图标选择器" @click="cancel">
+            ×
+          </button>
+        </header>
 
-      <div class="lumal-icon-picker-dialog__content">
-        <LumalIconPicker v-model="draftValue" />
-      </div>
+        <div class="lumal-icon-picker-dialog__content">
+          <LumalIconPicker v-model="draftValue" />
+        </div>
 
-      <footer class="lumal-icon-picker-dialog__footer">
-        <button type="button" @click="cancel">
-          {{ cancelText }}
-        </button>
-        <button type="button" class="is-primary" :disabled="!draftValue" @click="confirm">
-          {{ confirmText }}
-        </button>
-      </footer>
-    </section>
-  </div>
+        <footer class="lumal-icon-picker-dialog__footer">
+          <button type="button" @click="cancel">
+            {{ cancelText }}
+          </button>
+          <button type="button" class="is-primary" :disabled="!draftValue" @click="confirm">
+            {{ confirmText }}
+          </button>
+        </footer>
+      </section>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped lang="scss">

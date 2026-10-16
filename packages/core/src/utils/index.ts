@@ -23,6 +23,7 @@ export {
   serializeQuery,
 } from './query'
 export {
+  createMemoryStorage,
   createStorage,
 } from './storage'
 export type {

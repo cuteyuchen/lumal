@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { defineComponent } from 'vue'
+import { computed, defineComponent, isProxy } from 'vue'
 import { createCockpitRegistry } from '../src/registry/createCockpitRegistry'
 
 const Stub = defineComponent({ name: 'Stub', setup: () => () => null })
@@ -25,5 +25,20 @@ describe('createCockpitRegistry', () => {
     const listed = registry.listWidgets()
     expect(listed.map(item => item.type)).toEqual(['a', 'b'])
     expect(listed).not.toBe(registry.listWidgets())
+  })
+
+  it('已求值的视图与组件库会随动态注册、卸载更新，组件不被代理', () => {
+    const registry = createCockpitRegistry()
+    const resolved = computed(() => registry.resolveWidget('late'))
+    const list = computed(() => registry.listWidgets())
+    expect(resolved.value).toBeUndefined()
+    expect(list.value).toHaveLength(0)
+    registry.registerWidget({ type: 'late', label: '稍后注册', component: Stub })
+    expect(resolved.value?.component).toBe(Stub)
+    expect(isProxy(resolved.value?.component)).toBe(false)
+    expect(list.value).toHaveLength(1)
+    registry.unregisterWidget('late')
+    expect(resolved.value).toBeUndefined()
+    expect(list.value).toHaveLength(0)
   })
 })

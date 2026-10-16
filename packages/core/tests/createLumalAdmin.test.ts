@@ -2,6 +2,7 @@ import type { App, Plugin } from 'vue'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h } from 'vue'
 import { createLumalAdmin } from '../src'
+import { createLumalAdmin as createMinimalAdmin } from '../src/minimal'
 import { createPermissionStore, usePermissionStore } from '../src/permission'
 
 /***********************测试组件*********************/
@@ -25,6 +26,14 @@ function createInstallPlugin(name: string, order: string[]): Plugin {
 }
 
 describe('createLumalAdmin', () => {
+  it('轻入口只注册显式组件；便利入口的 minimal 预设也不再全局注册', () => {
+    const Widget = createRootComponent('ExplicitWidget')
+    const minimal = createMinimalAdmin({ rootComponent: createRootComponent(), components: { Widget } })
+    const preset = createLumalAdmin({ rootComponent: createRootComponent(), preset: 'minimal' })
+    expect(minimal.app.component('Widget')).toBe(Widget)
+    expect(minimal.app.component('LumalLayout')).toBeUndefined()
+    expect(preset.app.component('LumalLayout')).toBeUndefined()
+  })
   it('可以创建 Vue 应用并暴露 mount/use 上下文', () => {
     const framework = createLumalAdmin({
       rootComponent: createRootComponent(),

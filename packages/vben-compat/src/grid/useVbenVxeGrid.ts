@@ -8,7 +8,7 @@ import type {
   UseVbenVxeGridInput,
   UseVbenVxeGridReturn,
 } from '../types'
-import { computed, reactive, shallowRef, toRef, watch } from 'vue'
+import { computed, onScopeDispose, reactive, shallowRef, toRef, watch } from 'vue'
 import {
   adaptVbenGridColumns,
   adaptVbenGridProxyResult,
@@ -28,6 +28,10 @@ export function useVbenVxeGrid(options: UseVbenVxeGridInput = {}): UseVbenVxeGri
   const page = shallowRef(1)
   const pageSize = shallowRef(10)
   const queryModel = reactive<CrudTableQueryModel>({})
+  let requestGeneration = 0
+  onScopeDispose(() => {
+    requestGeneration += 1
+  }, true)
 
   const gridOptions = computed(() => resolveVbenGridOptions(optionsRef.value))
   const lumalColumns = computed(() => adaptVbenGridColumns(gridOptions.value.columns))
@@ -77,10 +81,12 @@ export function useVbenVxeGrid(options: UseVbenVxeGridInput = {}): UseVbenVxeGri
   }
 
   async function reload(): Promise<boolean> {
+    const generation = ++requestGeneration
     const query = gridOptions.value.proxyConfig?.ajax?.query
 
     if (!query) {
       clearError()
+      loading.value = false
       return true
     }
 
@@ -93,17 +99,22 @@ export function useVbenVxeGrid(options: UseVbenVxeGridInput = {}): UseVbenVxeGri
         page: page.value,
         pageSize: pageSize.value,
       })
+      if (generation !== requestGeneration)
+        return false
       const tableResult = adaptVbenGridProxyResult(result, gridOptions.value)
       setRows(tableResult.rows, tableResult.total)
       return true
     }
     catch (nextError) {
+      if (generation !== requestGeneration)
+        return false
       error.value = nextError
       gridOptions.value.onError?.(nextError)
       return false
     }
     finally {
-      loading.value = false
+      if (generation === requestGeneration)
+        loading.value = false
     }
   }
 

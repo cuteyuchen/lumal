@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { EChartsOption, SetOptionOpts } from 'echarts'
-import type { ComponentPublicInstance } from 'vue'
-import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplateRef } from 'vue'
+import type { ComponentPublicInstance, StyleValue } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useAttrs, useTemplateRef } from 'vue'
 import VChart from 'vue-echarts'
-import { useChartResize } from './useChartResize'
+
+defineOptions({ inheritAttrs: false })
 
 /***********************属性定义*********************/
 const props = withDefaults(defineProps<{
@@ -29,7 +30,7 @@ const renderChart = shallowRef(false)
 const prefersReducedMotion = shallowRef(false)
 const resolvedOptions = computed<EChartsOption>(() => ({
   ...props.options,
-  animation: props.animation ?? !prefersReducedMotion.value,
+  animation: props.animation ?? props.options.animation ?? !prefersReducedMotion.value,
 }))
 let motionQuery: MediaQueryList | undefined
 
@@ -56,8 +57,12 @@ onBeforeUnmount(() => {
   motionQuery?.removeEventListener?.('change', syncReducedMotion)
 })
 
-/***********************尺寸自适应*********************/
-useChartResize(chartRef)
+/***********************属性与图表事件透传*********************/
+const attrs = useAttrs()
+// attrs 本身不具备可追踪的响应性，在渲染期间读取，确保更新后的事件不会被 computed 缓存。
+function getChartAttrs(): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== 'class' && key !== 'style'))
+}
 
 /***********************公开方法*********************/
 defineExpose({
@@ -66,10 +71,11 @@ defineExpose({
 </script>
 
 <template>
-  <div class="lumal-chart" role="img" :aria-label="ariaLabel" :style="{ height, width }">
+  <div class="lumal-chart" :class="$attrs.class" role="img" :aria-label="ariaLabel" :style="[$attrs.style as StyleValue, { height, width }]">
     <VChart
       v-if="renderChart"
       ref="chartRef"
+      v-bind="getChartAttrs()"
       class="lumal-chart__canvas"
       :option="resolvedOptions"
       :update-options="updateOptions"

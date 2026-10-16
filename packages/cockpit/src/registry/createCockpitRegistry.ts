@@ -1,9 +1,11 @@
 import type { CockpitRegistry, CockpitWidgetDefinition } from './types'
+import { shallowReactive } from 'vue'
 
 /***********************模块注册表实现*********************/
 
 export function createCockpitRegistry(): CockpitRegistry {
-  const widgets = new Map<string, CockpitWidgetDefinition>()
+  // 仅跟踪注册项增删，保持组件定义和第三方实例为原始对象。
+  const widgets = shallowReactive(new Map<string, CockpitWidgetDefinition>())
 
   function registerWidget(definition: CockpitWidgetDefinition): void {
     if (!definition.type.trim())
