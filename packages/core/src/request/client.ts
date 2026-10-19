@@ -1,4 +1,5 @@
 import type {
+  RequestBeforeContext,
   RequestCache,
   RequestClient,
   RequestClientOptions,
@@ -130,10 +131,10 @@ function isReplayableBody(body: RequestOptions['body']): boolean {
   return typeof ReadableStream === 'undefined' || !(body instanceof ReadableStream)
 }
 
-function canReplayAfterAuthRefresh(method: RequestMethod, options: RequestOptions): boolean {
+function canReplayAfterAuthRefresh(method: string, options: RequestOptions, init: RequestInit): boolean {
   return !new Headers(options.headers).has('Authorization')
     && (method === 'GET' || options.retryOnAuthRefresh === true)
-    && isReplayableBody(options.body)
+    && isReplayableBody(init.body)
 }
 
 function normalizeFetchError(error: unknown, signal?: AbortSignal): RequestError {
@@ -199,33 +200,15 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
     const requestId = resolveRequestId(clientOptions)
 
     const cacheConfig = options.cache
-    const cacheEnabled = cacheConfig?.enabled === true
-      && (method === 'GET' || Boolean(cacheConfig.key))
     const cache = cacheConfig?.cache ?? defaultCache
-
-    let duplicateKey: string | undefined
-    if (clientOptions.duplicateSubmit) {
-      const duplicateHeaders = new Headers(options.headers)
-      const duplicateBody = resolveBody(method, options.body, duplicateHeaders)
-      duplicateKey = `${method}:${resolvedUrl}:${typeof duplicateBody === 'string' ? duplicateBody : ''}`
-
-      if (pendingKeys.has(duplicateKey)) {
-        throw new RequestError('Duplicate request', {
-          code: 'DUPLICATE_REQUEST',
-          kind: 'duplicate',
-        })
-      }
-
-      pendingKeys.add(duplicateKey)
-    }
+    // 重放期间保留已占用的目标；本次请求可以重入自己的锁，其他请求不能。
+    const ownedDuplicateKeys = new Set<string>()
 
     try {
       return await executeRequest<TResult>(0)
     }
     finally {
-      if (duplicateKey) {
-        pendingKeys.delete(duplicateKey)
-      }
+      ownedDuplicateKeys.forEach(key => pendingKeys.delete(key))
     }
 
     async function executeRequest<TValue>(attempt: number): Promise<TValue> {
@@ -236,14 +219,23 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
         headers.set(clientOptions.requestIdHeader ?? 'X-Request-Id', requestId)
       }
 
-      const init: RequestInit = {
-        body: resolveBody(method, options.body, headers),
-        headers,
-        method,
-        signal: options.signal,
+      const before: RequestBeforeContext = {
+        init: {
+          body: resolveBody(method, options.body, headers),
+          headers,
+          method,
+          signal: options.signal,
+        },
+        requestId,
+        url: resolvedUrl,
       }
 
-      await clientOptions.onRequest?.({ init, requestId, url: resolvedUrl })
+      // 每次重放从原始已解析 URL 开始，hook 完成后的上下文是唯一发送依据。
+      await clientOptions.onRequest?.(before)
+      const { init, url: finalUrl } = before
+      const finalMethod = (init.method ?? 'GET').toUpperCase()
+      const cacheEnabled = cacheConfig?.enabled === true
+        && (finalMethod === 'GET' || Boolean(cacheConfig.key))
 
       // 认证信息只留在内存用于识别变更，绝不写入可持久化的缓存 key。
       const identity = JSON.stringify([
@@ -259,23 +251,43 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
         cacheNamespace,
         generation,
         cacheConfig?.scope,
-        cacheConfig?.key ?? `${method}:${resolvedUrl}`,
+        finalMethod,
+        finalUrl,
+        cacheConfig?.key,
       ])
-      if (options.signal?.aborted) {
-        throw normalizeFetchError(options.signal.reason, options.signal)
+      if (init.signal?.aborted) {
+        throw normalizeFetchError(init.signal.reason, init.signal)
       }
       if (cacheEnabled && resetVersion === cacheResetVersion && cache.has(cacheKey)) {
         return cache.get(cacheKey) as TValue
       }
 
+      if (clientOptions.duplicateSubmit) {
+        const duplicateKey = JSON.stringify([
+          identity,
+          cacheConfig?.scope,
+          finalMethod,
+          finalUrl,
+          typeof init.body === 'string' ? init.body : '',
+        ])
+        if (pendingKeys.has(duplicateKey) && !ownedDuplicateKeys.has(duplicateKey)) {
+          throw new RequestError('Duplicate request', {
+            code: 'DUPLICATE_REQUEST',
+            kind: 'duplicate',
+          })
+        }
+        pendingKeys.add(duplicateKey)
+        ownedDuplicateKeys.add(duplicateKey)
+      }
+
       let response: Response
 
       try {
-        response = await fetcher(resolvedUrl, init)
+        response = await fetcher(finalUrl, init)
       }
       catch (error) {
-        const requestError = normalizeFetchError(error, options.signal)
-        await clientOptions.onRequestError?.({ error: requestError, init, requestId, url: resolvedUrl })
+        const requestError = normalizeFetchError(error, init.signal ?? undefined)
+        await clientOptions.onRequestError?.({ error: requestError, init, requestId, url: finalUrl })
         throw requestError
       }
 
@@ -290,7 +302,7 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
           response,
           status: response.status,
         })
-        await notifyResponseError(requestError, init, response)
+        await notifyResponseError(requestError, init, response, finalUrl)
         throw requestError
       }
 
@@ -300,7 +312,7 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
         init,
         requestId,
         response,
-        url: resolvedUrl,
+        url: finalUrl,
       }
 
       if (response.status === 401) {
@@ -319,7 +331,7 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
           response,
           status: response.status,
         })
-        await notifyResponseError(responseError, init, response)
+        await notifyResponseError(responseError, init, response, finalUrl)
         throw responseError
       }
 
@@ -339,6 +351,8 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
         return result
       }
       catch (error) {
+        if (init.signal?.aborted)
+          throw normalizeFetchError(error, init.signal)
         if (error instanceof RequestError && error.kind === 'session') {
           return handleSessionError(error, context, usedToken, attempt)
         }
@@ -352,7 +366,7 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
               response,
               status: response.status,
             })
-        await notifyResponseError(responseError, init, response)
+        await notifyResponseError(responseError, init, response, finalUrl)
         throw responseError
       }
     }
@@ -363,8 +377,15 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
       usedToken: string | undefined,
       attempt: number,
     ): Promise<TValue> {
+      // 会话切换可能发生在响应解析或刷新期间，旧请求不能再影响新身份。
+      const signal = context.init.signal
+      if (signal?.aborted)
+        throw normalizeFetchError(signal.reason, signal)
+      const managedAuthorization = usedToken ? `${clientOptions.tokenPrefix ?? 'Bearer'} ${usedToken}` : null
       const replayAllowed = attempt === 0
-        && canReplayAfterAuthRefresh(method, options)
+        && canReplayAfterAuthRefresh((context.init.method ?? 'GET').toUpperCase(), options, context.init)
+        // hook 注入外部身份时不使用客户端凭据重放，避免越权或覆盖外部认证。
+        && new Headers(context.init.headers).get('Authorization') === managedAuthorization
         && Boolean(clientOptions.authRefresh)
 
       if (replayAllowed) {
@@ -382,10 +403,14 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
           }
 
           await refreshPromise
+          if (signal?.aborted)
+            throw normalizeFetchError(signal.reason, signal)
           sessionExpiredNotified = false
           return executeRequest<TValue>(attempt + 1)
         }
         catch (refreshError) {
+          if (signal?.aborted)
+            throw normalizeFetchError(refreshError, signal)
           error = new RequestError(error.message, {
             code: error.code,
             data: error.data,
@@ -403,17 +428,17 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
         await clientOptions.onSessionExpired?.(context)
       }
 
-      await notifyResponseError(error, context.init, context.response)
+      await notifyResponseError(error, context.init, context.response, context.url)
       throw error
     }
 
-    async function notifyResponseError(error: RequestError, init: RequestInit, response: Response): Promise<void> {
+    async function notifyResponseError(error: RequestError, init: RequestInit, response: Response, url: string): Promise<void> {
       await clientOptions.onResponseError?.({
         error,
         init,
         requestId,
         response,
-        url: resolvedUrl,
+        url,
       })
     }
   }

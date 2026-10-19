@@ -19,6 +19,243 @@ function createJsonResponse(data: unknown, init?: ResponseInit): Response {
 }
 
 describe('create request client', () => {
+  it.each([
+    { baseURL: undefined, input: '/users', query: undefined, before: '/users', target: '/gateway/users' },
+    { baseURL: '/api', input: '/users?sort=name', query: { page: 2 }, before: '/api/users?sort=name&page=2', target: '/gateway/users?sort=name&page=2' },
+    { baseURL: 'https://api.example.com', input: 'https://other.example.com/users?q=one', query: { page: 2 }, before: 'https://other.example.com/users?q=one&page=2', target: 'https://gateway.example.com/users?q=one&page=2' },
+  ])('onRequest 改写后的 URL 和 init 真正传给 fetch（$input）', async ({ baseURL, input, query, before, target }) => {
+    const fetchMock = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => createJsonResponse({ ok: true }))
+    const onResponse = vi.fn(({ data }) => data)
+    const client = createRequestClient({
+      baseURL,
+      fetch: fetchMock,
+      getToken: () => 'managed-token',
+      onRequest: async (context) => {
+        expect(context.url).toBe(before)
+        expect(new Headers(context.init.headers).get('Authorization')).toBe('Bearer managed-token')
+        context.url = target
+        const headers = new Headers(context.init.headers)
+        headers.set('X-Gateway', 'enabled')
+        // 替换整个 init 与就地修改 headers 同样属于公开契约。
+        context.init = { ...context.init, headers, credentials: 'include' }
+      },
+      onResponse,
+      requestId: () => 'rewrite-123',
+    })
+
+    await client.get(input, { query })
+    const [sentUrl, init] = fetchMock.mock.calls[0]!
+    expect(sentUrl).toBe(target)
+    expect(init?.credentials).toBe('include')
+    expect(new Headers(init?.headers).get('X-Gateway')).toBe('enabled')
+    expect(new Headers(init?.headers).get('X-Request-Id')).toBe('rewrite-123')
+    expect(onResponse).toHaveBeenCalledWith(expect.objectContaining({ init, url: target, requestId: 'rewrite-123' }))
+  })
+
+  it.each([undefined, 'shared-custom-key'])('缓存按最终目标隔离，相同最终 URL 才命中（key=%s）', async (key) => {
+    let target = '/gateway/a?page=1'
+    const fetchMock = vi.fn(async (url: RequestInfo | URL) => createJsonResponse({ url }))
+    const onRequest = vi.fn((context) => {
+      context.url = target
+    })
+    const client = createRequestClient({ fetch: fetchMock, onRequest })
+    const options = { cache: { enabled: true, key } }
+
+    await expect(client.get('/original', options)).resolves.toEqual({ url: target })
+    await client.get('/another-original', options)
+    target = '/gateway/b?page=1'
+    await expect(client.get('/original', options)).resolves.toEqual({ url: target })
+    await client.get('/original', options)
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(['/gateway/a?page=1', '/gateway/b?page=1'])
+    expect(onRequest).toHaveBeenCalledTimes(4)
+  })
+
+  it('hook 改写的认证头、租户和请求级作用域仍隔离缓存', async () => {
+    let identity = 'user-a'
+    let tenant = 'tenant-a'
+    const cache = createRequestCache()
+    const set = vi.spyOn(cache, 'set')
+    const fetchMock = vi.fn(async (url: RequestInfo | URL) => createJsonResponse({ identity, tenant, url }))
+    const client = createRequestClient({
+      cache,
+      fetch: fetchMock,
+      getCacheScope: () => tenant,
+      onRequest(context) {
+        context.url = '/gateway/profile'
+        context.init.headers = { Authorization: `Bearer ${identity}` }
+      },
+    })
+    const options = { cache: { enabled: true, scope: 'summary' } }
+    await client.get('/profile', options)
+    await client.get('/profile', options)
+    identity = 'user-b'
+    await expect(client.get('/profile', options)).resolves.toMatchObject({ identity: 'user-b' })
+    tenant = 'tenant-b'
+    await expect(client.get('/profile', options)).resolves.toMatchObject({ tenant: 'tenant-b' })
+    await client.get('/profile', { cache: { enabled: true, scope: 'detail' } })
+    expect(fetchMock).toHaveBeenCalledTimes(4)
+    expect(set.mock.calls.every(([key]) => !key.includes('user-a') && !key.includes('user-b'))).toBe(true)
+  })
+
+  it('并发提交按 hook 最终 URL、请求体和身份判断，失败后释放全部占用', async () => {
+    const pending: Array<(response: Response) => void> = []
+    const fetchMock = vi.fn((_url: RequestInfo | URL) => new Promise<Response>(resolve => pending.push(resolve)))
+    const client = createRequestClient({
+      duplicateSubmit: true,
+      fetch: fetchMock,
+      onRequest(context) {
+        const headers = new Headers(context.init.headers)
+        context.url = headers.get('X-Target') ?? '/gateway/shared'
+        context.init.body = headers.get('X-Body') ?? context.init.body
+      },
+    })
+    const first = client.post('/one', { body: { id: 1 } })
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    await expect(client.post('/two', { body: { id: 1 } })).rejects.toMatchObject({ kind: 'duplicate' })
+    const otherTarget = client.post('/one', { body: { id: 1 }, headers: { 'X-Target': '/gateway/other' } })
+    const otherBody = client.post('/one', { body: { id: 1 }, headers: { 'X-Body': '{"id":2}' } })
+    const otherIdentity = client.post('/one', { body: { id: 1 }, headers: { Authorization: 'Bearer other-user' } })
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4))
+    const failed = expect(first).rejects.toMatchObject({ status: 500 })
+    pending[0]!(createJsonResponse({}, { status: 500 }))
+    pending[1]!(createJsonResponse({ ok: true }))
+    pending[2]!(createJsonResponse({ ok: true }))
+    pending[3]!(createJsonResponse({ ok: true }))
+    await Promise.all([failed, otherTarget, otherBody, otherIdentity])
+    const next = client.post('/one', { body: { id: 1 } })
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(5))
+    pending[4]!(createJsonResponse({ ok: true }))
+    await expect(next).resolves.toEqual({ ok: true })
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(['/gateway/shared', '/gateway/other', '/gateway/shared', '/gateway/shared', '/gateway/shared'])
+  })
+
+  it('hook 最终写请求不隐式缓存，命中 GET 缓存也遵守 hook 的取消信号', async () => {
+    const controller = new AbortController()
+    let method = 'POST'
+    const fetchMock = vi.fn(async () => createJsonResponse({ ok: true }))
+    const client = createRequestClient({
+      fetch: fetchMock,
+      onRequest(context) {
+        context.url = '/gateway/data'
+        context.init.method = method
+        context.init.signal = controller.signal
+      },
+    })
+    const options = { cache: { enabled: true } }
+    await client.get('/data', options)
+    await client.get('/data', options)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    method = 'GET'
+    await client.get('/data', options)
+    await client.get('/data', options)
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    controller.abort()
+    await expect(client.get('/data', options)).rejects.toMatchObject({ kind: 'cancelled' })
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
+  it.each(['network', 'http', 'parse', 'business', 'session'])('错误上下文报告 hook 最终 URL（%s）', async (kind) => {
+    const onRequestError = vi.fn()
+    const onResponseError = vi.fn()
+    const onSessionExpired = vi.fn()
+    const client = createRequestClient({
+      fetch: async () => {
+        if (kind === 'network')
+          throw new Error('offline')
+        if (kind === 'parse')
+          return new Response('{', { headers: { 'content-type': 'application/json' } })
+        return createJsonResponse({}, { status: kind === 'http' ? 500 : kind === 'session' ? 401 : 200 })
+      },
+      onRequest: (context) => { context.url = '/gateway/failure' },
+      onRequestError,
+      onResponse: () => { throw new Error('business error') },
+      onResponseError,
+      onSessionExpired,
+      requestId: () => 'failure-id',
+    })
+    await expect(client.get('/original')).rejects.toBeInstanceOf(RequestError)
+    expect(kind === 'network' ? onRequestError : onResponseError)
+      .toHaveBeenCalledWith(expect.objectContaining({ url: '/gateway/failure', requestId: 'failure-id' }))
+    if (kind === 'session')
+      expect(onSessionExpired).toHaveBeenCalledWith(expect.objectContaining({ url: '/gateway/failure' }))
+  })
+
+  it('刷新重放从原始已解析 URL 再执行 hook，复用 requestId 且缓存最终目标', async () => {
+    let token = 'expired'
+    const seenUrls: string[] = []
+    const fetchMock = vi.fn(async (url: RequestInfo | URL, init?: RequestInit) =>
+      new Headers(init?.headers).get('Authorization') === 'Bearer fresh'
+        ? createJsonResponse({ url })
+        : createJsonResponse({}, { status: 401 }))
+    const refresh = vi.fn(async () => {
+      token = 'fresh'
+    })
+    const client = createRequestClient({
+      authRefresh: { refresh },
+      duplicateSubmit: true,
+      fetch: fetchMock,
+      getToken: () => token,
+      onRequest(context) {
+        seenUrls.push(context.url)
+        context.url = `/gateway${context.url}`
+      },
+      requestId: () => 'replay-id',
+    })
+    const options = { cache: { enabled: true } }
+    await expect(client.get('/profile?page=1', options)).resolves.toEqual({ url: '/gateway/profile?page=1' })
+    await client.get('/profile?page=1', options)
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(['/gateway/profile?page=1', '/gateway/profile?page=1'])
+    expect(fetchMock.mock.calls.map(([, init]) => new Headers(init?.headers).get('X-Request-Id'))).toEqual(['replay-id', 'replay-id'])
+    expect(seenUrls).toEqual(['/profile?page=1', '/profile?page=1', '/profile?page=1'])
+    expect(refresh).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ url: '/gateway/profile?page=1' }))
+  })
+
+  it('hook 改为写请求或使用外部认证头时不能隐式重放或缓存', async () => {
+    const refresh = vi.fn(async () => {})
+    const fetchMock = vi.fn(async () => createJsonResponse({}, { status: 401 }))
+    const client = createRequestClient({
+      authRefresh: { refresh },
+      fetch: fetchMock,
+      getToken: () => 'managed',
+      onRequest(context) {
+        context.url = '/gateway/write'
+        context.init.method = 'POST'
+        context.init.headers = { Authorization: 'Bearer external' }
+      },
+    })
+    await expect(client.get('/read', { cache: { enabled: true } })).rejects.toMatchObject({ kind: 'session' })
+    expect(refresh).not.toHaveBeenCalled()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('认证刷新期间取消请求不会重放或触发会话失效回调', async () => {
+    const controller = new AbortController()
+    let rejectRefresh!: (error: Error) => void
+    const refresh = vi.fn(() => new Promise<void>((_resolve, reject) => {
+      rejectRefresh = reject
+    }))
+    const onSessionExpired = vi.fn()
+    const fetchMock = vi.fn(async () => createJsonResponse({}, { status: 401 }))
+    const client = createRequestClient({
+      authRefresh: { refresh },
+      fetch: fetchMock,
+      getToken: () => 'old-session',
+      onRequest(context) {
+        context.url = '/gateway/profile'
+        context.init.signal = controller.signal
+      },
+      onSessionExpired,
+    })
+    const pending = client.get('/profile').catch(error => error)
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce())
+    controller.abort()
+    rejectRefresh(new Error('session changed'))
+
+    expect(await pending).toMatchObject({ kind: 'cancelled' })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(onSessionExpired).not.toHaveBeenCalled()
+  })
+
   it('会序列化 GET query、注入 token，并通过 onResponse 解析响应', async () => {
     const fetchMock = vi.fn(async () => createJsonResponse({
       code: 0,

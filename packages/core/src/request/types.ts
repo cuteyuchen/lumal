@@ -12,12 +12,14 @@ export interface RequestContext<TData = unknown> {
   init: RequestInit
   response: Response
   url: string
-  /** 本次请求的唯一标识，用于日志追踪与缓存 key。 */
+  /** 本次逻辑请求的标识，用于日志追踪；认证重放时保持不变，不参与缓存 key。 */
   requestId?: string
 }
 
 /**
- * 请求发起前的上下文：可在此改写 url、init 或读取 requestId。
+ * baseURL/query、Token 和 requestId 处理后执行；可改写 url、修改或替换 init。
+ * hook 返回后的 url/init 直接用于 fetch、缓存、去重与错误报告，不再拼接 baseURL/query。
+ * 每次认证重放从原始已解析 URL 重新执行 hook；requestId 仅供读取且保持不变。
  */
 export interface RequestBeforeContext {
   url: string
@@ -50,7 +52,7 @@ export interface RequestCacheOptions {
   cache?: RequestCache
   /** 是否对该请求启用缓存，默认关闭；非 GET 必须同时指定 key。 */
   enabled?: boolean
-  /** 自定义缓存 key，默认 `method:url`；调用方负责区分非 GET 请求体。 */
+  /** 自定义缓存 key，仍按最终 method/url 隔离；调用方负责区分非 GET 请求体。 */
   key?: string
   /** 请求级租户/业务作用域，与客户端作用域和认证身份共同隔离缓存。 */
   scope?: string

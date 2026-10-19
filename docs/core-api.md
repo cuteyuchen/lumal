@@ -658,7 +658,27 @@ await client.get('/profile', { cache: { enabled: true, scope: 'profile-view' } }
 client.clearCache() // 退出或切换上下文时调用，旧在途请求不能重新回填。
 ```
 
-每次请求先注入 Token、执行 `onRequest`，再检查缓存；Authorization 或 `getCacheScope()` 变化会清空本客户端缓存。请求级 `scope` 可区分同一身份下的数据用途。Token 不写入缓存 key；不同客户端共享缓存存储时也保持隔离。`clearCache()` 仅删除本客户端写入的条目，不清除共享存储中的其他数据；会话最终过期也会触发清理。命中缓存仍遵守 AbortSignal。
+每次请求先解析 `baseURL` 和 `query`、注入 Token 与 requestId，再等待 `onRequest`，之后检查缓存与重复提交。hook 可以改写 `context.url`、修改或整体替换 `context.init`；返回后的 URL、method、headers、body 和 signal 是实际 fetch 的依据，不会再次拼接 baseURL/query。相对 URL 由 fetch 所在运行环境解析，绝对 URL 可以直接指定另一目标。
+
+```ts
+const client = createRequestClient({
+  baseURL: '/api',
+  onRequest(context) {
+    // 此时 URL 已包含 query；改写结果直接用于发送与缓存/去重判断。
+    context.url = `/gateway${context.url}`
+    const headers = new Headers(context.init.headers)
+    headers.set('X-Tenant', 'tenant-a')
+    context.init.headers = headers
+  },
+})
+await client.get('/users', { query: { page: 1 } }) // 实际请求 /gateway/api/users?page=1
+```
+
+缓存始终包含 hook 最终的 method/URL，即使显式使用同一 `cache.key`，不同目标也不会串缓存。默认仅最终 GET 可以缓存，非 GET 仍需自定义 key 区分请求体。重复提交按最终 method/URL、字符串请求体、认证身份与作用域判断；请求失败或重放完成后释放占用。
+
+Authorization 或 `getCacheScope()` 变化会清空本客户端缓存。请求级 `scope` 可区分同一身份下的数据用途。Token 不写入缓存 key；不同客户端共享缓存存储时也保持隔离。`clearCache()` 仅删除本客户端写入的条目，不清除共享存储中的其他数据；会话最终过期也会触发清理。命中缓存仍遵守 hook 最终的 AbortSignal。
+
+网络错误、响应错误和会话回调报告实际发送的 URL。认证重放从原始已解析 URL 再执行 hook，避免重复叠加路径，并复用原 requestId；hook 改成写请求后仍需 `retryOnAuthRefresh: true`，改成外部 Authorization 则不自动刷新/重放。requestId 仅用于追踪，不参与缓存身份。
 
 ## Theme
 
