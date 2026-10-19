@@ -17,7 +17,7 @@ const datavGuideUrl = (() => {
 })()
 
 /***********************静态菜单种子*********************/
-// 工作台 / 个人中心属于 Admin 壳层的静态路由，前端也会内置一份同名静态菜单；
+// 工作台 / 个人中心 / 关于属于 Admin 壳层的静态路由，前端也会内置一份同名静态菜单；
 // 后端保留它们仅用于生成权限树，保证权限视图与前端壳层一致。
 export const staticAdminMenuSeed = [
   {
@@ -40,6 +40,16 @@ export const staticAdminMenuSeed = [
       icon: 'app:user',
       order: 2,
       title: '个人中心',
+    },
+  },
+  {
+    component: 'about/index',
+    name: 'About',
+    path: '/about',
+    meta: {
+      icon: 'lumal:monitor',
+      order: 100,
+      title: '关于',
     },
   },
 ] satisfies LumalStaticMenuRecord[]

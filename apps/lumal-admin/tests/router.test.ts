@@ -5,6 +5,7 @@ import { createMemoryHistory } from 'vue-router'
 import {
   createAdminRouter,
   createAdminSidebarMenus,
+  createAdminTabs,
   ensureAdminRoutes,
   getAdminRouteNames,
   permissionStore,
@@ -18,13 +19,14 @@ describe('lumal admin router', () => {
     await logout()
   })
 
-  it('静态壳层路由仅包含工作台和个人中心且使用标准 meta 字段', () => {
+  it('静态壳层路由包含工作台、个人中心和关于且使用标准 meta 字段', () => {
     // 动态菜单（系统管理、功能示例、项目等）改由后端 GET /menu 下发，
     // 前端静态路由只保留不随权限变化的壳层页面。
     const dashboardRoute = staticAdminRouteRecords.find(route => route.path === '/dashboard')
     const profileRoute = staticAdminRouteRecords.find(route => route.path === '/profile')
+    const aboutRoute = staticAdminRouteRecords.find(route => route.path === '/about')
 
-    expect(staticAdminRouteRecords.map(route => route.path)).toEqual(['/dashboard', '/profile'])
+    expect(staticAdminRouteRecords.map(route => route.path)).toEqual(['/dashboard', '/profile', '/about'])
     expect(dashboardRoute).toMatchObject({
       component: 'dashboard/index',
       path: '/dashboard',
@@ -39,6 +41,14 @@ describe('lumal admin router', () => {
       meta: {
         hideInMenu: true,
         title: '个人中心',
+      },
+    })
+    expect(aboutRoute).toMatchObject({
+      component: 'about/index',
+      path: '/about',
+      meta: {
+        icon: 'lumal:monitor',
+        title: '关于',
       },
     })
     expect(JSON.stringify(staticAdminRouteRecords)).not.toContain('"permissions"')
@@ -171,6 +181,12 @@ describe('lumal admin router', () => {
         redirect: '/system/user',
         title: '系统管理',
       },
+      {
+        children: [],
+        icon: 'lumal:monitor',
+        path: '/about',
+        title: '关于',
+      },
     ])
   })
 
@@ -179,6 +195,7 @@ describe('lumal admin router', () => {
 
     expect(router.hasRoute('Dashboard')).toBe(true)
     expect(router.hasRoute('Profile')).toBe(true)
+    expect(router.hasRoute('About')).toBe(true)
     expect(router.hasRoute('AdminCockpit')).toBe(false)
     expect(router.hasRoute('System')).toBe(false)
   })
@@ -191,7 +208,7 @@ describe('lumal admin router', () => {
     const menus = createAdminSidebarMenus(router)
     const systemMenu = menus.find(menu => menu.path === '/system')
 
-    expect(menus.map(menu => menu.path)).toEqual(['/dashboard', '/examples', '/project', '/resources', '/system'])
+    expect(menus.map(menu => menu.path)).toEqual(['/dashboard', '/examples', '/project', '/resources', '/system', '/about'])
     expect(systemMenu?.children.map(menu => menu.path)).toEqual(['/system/dict', '/system/dict-item'])
   })
 
@@ -203,7 +220,7 @@ describe('lumal admin router', () => {
     const menus = createAdminSidebarMenus(router)
     const examplesMenu = menus.find(menu => menu.path === '/examples')
 
-    expect(menus.map(menu => menu.path)).toEqual(['/dashboard', '/examples', '/resources'])
+    expect(menus.map(menu => menu.path)).toEqual(['/dashboard', '/examples', '/resources', '/about'])
     expect(examplesMenu?.children.map(menu => menu.path)).not.toContain('/examples/dictionary')
     expect(examplesMenu?.children.map(menu => menu.path)).toEqual(expect.arrayContaining([
       '/examples/overview',
@@ -212,14 +229,14 @@ describe('lumal admin router', () => {
     ]))
   })
 
-  it('未登录访问后台页面会跳转到登录页并携带 redirect', async () => {
+  it.each(['/dashboard', '/about'])('未登录访问 %s 会跳转到登录页并携带 redirect', async (path) => {
     const router = createAdminRouter(createMemoryHistory())
 
-    await router.push('/dashboard')
+    await router.push(path)
     await router.isReady()
 
     expect(router.currentRoute.value.path).toBe('/login')
-    expect(router.currentRoute.value.query.redirect).toBe('/dashboard')
+    expect(router.currentRoute.value.query.redirect).toBe(path)
   })
 
   it('登录页未登录时也可以直接访问', async () => {
@@ -285,7 +302,7 @@ describe('lumal admin router', () => {
     await expect(ensureAdminRoutes(router)).rejects.toThrow('菜单服务不可用')
     expect(router.hasRoute('Dashboard')).toBe(true)
     expect(router.hasRoute('System')).toBe(false)
-    expect(createAdminSidebarMenus(router).map(menu => menu.path)).toEqual(['/dashboard'])
+    expect(createAdminSidebarMenus(router).map(menu => menu.path)).toEqual(['/dashboard', '/about'])
   })
 
   it('远程菜单与静态菜单冲突时不留下部分远程路由', async () => {
@@ -344,6 +361,28 @@ describe('lumal admin router', () => {
 
     expect(router.currentRoute.value.name).toBe('Profile')
     expect(createAdminSidebarMenus(router).some(menu => menu.path === '/profile')).toBe(false)
+  })
+
+  it.each(['admin', 'operator', 'guest'] as const)('%s 可从菜单访问关于页并生成可关闭标签', async (role) => {
+    await login(role)
+    const router = createAdminRouter(createMemoryHistory())
+
+    await router.push('/about')
+    await router.isReady()
+
+    expect(router.currentRoute.value.name).toBe('About')
+    expect(createAdminSidebarMenus(router)).toContainEqual({
+      children: [],
+      icon: 'lumal:monitor',
+      path: '/about',
+      title: '关于',
+    })
+    expect(createAdminTabs('/about', router)).toContainEqual({
+      closable: true,
+      icon: 'lumal:monitor',
+      path: '/about',
+      title: '关于',
+    })
   })
 
   it('未知地址会进入独立 404 页面', async () => {

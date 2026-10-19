@@ -3,6 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 /***********************组件映射*********************/
 // 全部页面组件改为动态 import，交由 Vite 拆分独立 chunk，避免首包吞下所有视图。
 const routeComponents: Record<string, () => Promise<unknown>> = {
+  'about/index': () => import('../views/about/AboutView.vue'),
   'dashboard/index': () => import('../views/dashboard/DashboardView.vue'),
   'examples/chart': () => import('../views/examples/ChartView.vue'),
   'examples/chart-panel': () => import('../views/examples/ChartPanelView.vue'),

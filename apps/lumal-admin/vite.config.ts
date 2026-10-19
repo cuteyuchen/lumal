@@ -3,6 +3,7 @@ import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 import { createLumalAliases } from '../../packages/vite/src/aliases'
+import { createAdminBuildInfo } from './build/app-info'
 
 const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
 const elementPlusDataComponents = new Set(['pagination', 'table', 'table-v2', 'tree', 'tree-v2'])
@@ -40,7 +41,10 @@ const elementPlusOverlayComponents = new Set([
 ])
 
 /***********************应用开发配置*********************/
-export default defineConfig(({ command }) => ({
+export default defineConfig(({ command, mode }) => ({
+  define: {
+    __LUMAL_ADMIN_BUILD_INFO__: JSON.stringify(createAdminBuildInfo(mode)),
+  },
   plugins: [vue()],
   server: {
     // 固定端口，便于 admin 与 mock-api、datav-guide 之间的稳定联调

@@ -113,7 +113,7 @@ describe('app shell', () => {
     expect(wrapper.find('.layout-stub').attributes('data-title')).toBe('Lumal Admin')
     expect(document.title).toBe('示例总览 - Lumal Admin')
     expect(wrapper.find('.layout-stub').attributes('data-layout')).toBe('mixed-nav')
-    expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('5')
+    expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('6')
     expect(wrapper.find('.layout-stub').attributes('data-header-menu-align')).toBe('center')
     expect(wrapper.find('.layout-stub').attributes('data-header-menu-max-width')).toBe('1120')
     expect(wrapper.find('.layout-stub').attributes('data-show-tab-icons')).toBe('true')
@@ -170,7 +170,7 @@ describe('app shell', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.find('.layout-stub').attributes('data-layout')).toBe('top-nav')
-    expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('5')
+    expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('6')
     expect(document.title).toBe('Lumal Admin')
   })
 
@@ -221,6 +221,6 @@ describe('app shell', () => {
     await router.push('/system/user')
     await flushPromises()
 
-    expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('5')
+    expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('6')
   })
 })

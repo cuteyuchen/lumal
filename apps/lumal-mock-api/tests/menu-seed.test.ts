@@ -7,6 +7,7 @@ describe('admin menu seed', () => {
   it('远程菜单种子使用标准 meta.authority 字段', () => {
     const examplesRoute = adminMenuSeed.find(route => route.path === '/examples')
     const profileRoute = staticAdminMenuSeed.find(route => route.path === '/profile')
+    const aboutRoute = staticAdminMenuSeed.find(route => route.path === '/about')
     const projectRoute = adminMenuSeed.find(route => route.path === '/project')
     const systemRoute = adminMenuSeed.find(route => route.path === '/system')
 
@@ -84,7 +85,14 @@ describe('admin menu seed', () => {
         title: '个人中心',
       },
     })
-    expect(adminMenuSeed.some(route => route.path === '/dashboard' || route.path === '/profile')).toBe(false)
+    expect(aboutRoute).toMatchObject({
+      component: 'about/index',
+      path: '/about',
+      meta: {
+        title: '关于',
+      },
+    })
+    expect(adminMenuSeed.some(route => ['/dashboard', '/profile', '/about'].includes(route.path))).toBe(false)
     expect(JSON.stringify(adminMenuSeed)).not.toContain('"permissions"')
     expect(JSON.stringify(adminMenuSeed)).not.toContain('"dictType"')
   })

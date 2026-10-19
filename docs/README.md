@@ -12,6 +12,8 @@ pnpm docs:preview
 
 当前版本：[0.0.3-beta 更新日志](./changelog.md)。仓库版本准备不代表已完成 npm 发布。
 
+AI 接入：[Lumal 总 Skill](../skills/lumal/SKILL.md) 覆盖全部公共包，[安装与调用指南](../apps/lumal-docs/src/guide/essentials/ai-skills.md) 说明如何让 AI 按需读取分包用法。
+
 专项评估：[2026-10-16 轻量框架审计](./architecture-audit-2026-10-16.md)。该报告记录升级验收、体积基线与优化建议，不替代开发路线图。
 
 外链占位（演示、npm、GitHub）见：

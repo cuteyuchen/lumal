@@ -28,6 +28,7 @@ function sidebarGuide(): DefaultTheme.SidebarItem[] {
       items: [
         { text: '基础概念', link: 'essentials/concept' },
         { text: '本地开发', link: 'essentials/development' },
+        { text: 'AI Skill', link: 'essentials/ai-skills' },
         { text: '路由和菜单', link: 'essentials/route' },
         { text: '偏好与配置', link: 'essentials/settings' },
         { text: '图标', link: 'essentials/icons' },

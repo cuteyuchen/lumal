@@ -48,3 +48,9 @@ createLumalAliases({
 - Vue 组件：`<script setup lang="ts">`，模板 ref 优先 `useTemplateRef`
 - 样式：SCSS + 语义变量，避免硬编码主题色
 - Admin 只通过 `@lumal/*` 公开入口消费
+
+## 确认 Demo 版本
+
+Admin demo 的「关于」菜单（`/#/about`）展示本次构建实际安装的框架版本、构建时间（UTC+8）、提交标识和依赖版本。
+
+框架版本来自 `@lumal/core`，不是 demo 自身固定的 `0.0.0`。构建时间随产物生成，不会在刷新页面时变化；升级后重新启动开发服务，或重新构建部署，再核对这些信息。

@@ -1,7 +1,7 @@
 import type { LumalStaticMenuRecord } from '@lumal/core/router'
 
 /***********************静态菜单配置*********************/
-// 仅保留 Admin 壳层的静态路由（工作台、个人中心）。这些页面不随权限变化，
+// 仅保留 Admin 壳层的静态路由（工作台、个人中心、关于）。这些页面不随权限变化，
 // 由前端内置注册。动态菜单（系统管理、功能示例、项目、外部资源等）改由后端
 // GET /menu 接口下发，前端不再写死其结构。
 export const staticAdminRouteRecords = [
@@ -25,6 +25,16 @@ export const staticAdminRouteRecords = [
       icon: 'app:user',
       order: 2,
       title: '个人中心',
+    },
+  },
+  {
+    component: 'about/index',
+    name: 'About',
+    path: '/about',
+    meta: {
+      icon: 'lumal:monitor',
+      order: 100,
+      title: '关于',
     },
   },
 ] satisfies LumalStaticMenuRecord[]

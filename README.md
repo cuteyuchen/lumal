@@ -76,6 +76,12 @@ create-lumal-admin  →  生成消费公开包入口的应用
 
 需要严格轻量启动时使用 `@lumal/core/minimal`，只显式注册需要的组件；根入口保留默认 UI 便利接线。`@lumal/core/request` 等纯服务子入口无需 Element Plus。DataV 通用图表按模式动态加载引擎，无引擎组件可使用独立子入口。
 
+## AI Skill
+
+[Lumal 总 Skill](skills/lumal/SKILL.md) 覆盖全部 9 个公共包，指导 AI 判断何时使用、如何接入及需要避免的误区。总入口负责包选型，详细示例按任务从 `references/` 读取，不要求每次加载整套文档。
+
+将 `skills/lumal` 整个目录安装到 AI 工具支持的 Skill 目录后，可用 `$lumal` 显式调用。安装位置、示例请求与维护说明见 [AI Skill 指南](apps/lumal-docs/src/guide/essentials/ai-skills.md)。
+
 ## 当前稳定能力
 
 - Element Plus 驱动的三种桌面布局、移动抽屉菜单和完整标签页工作流。

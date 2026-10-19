@@ -1,0 +1,5 @@
+# eslint-disable yaml/plain-scalar, yaml/quotes -- Skill 元数据约定所有字符串使用双引号。
+interface:
+  display_name: "Lumal 包使用"
+  short_description: "按需求选择 Lumal 包，接入后台、大屏与驾驶舱，并核对公开 API 和轻量边界"
+  default_prompt: "使用 $lumal 为当前需求选择合适的包，按公开 API 完成接入，并说明必要的样式、依赖和验证。"
