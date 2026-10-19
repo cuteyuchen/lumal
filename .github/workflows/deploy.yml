@@ -1,112 +1,118 @@
 name: Deploy
 
-# 只在推送 v* tag（或手动触发）时部署，日常提交不触发。
-#
-# ⚠️ 前置条件（缺一则日常提交仍会被自动部署）：
-#   1. Vercel 每个 Project → Settings → Git，关掉 automatic deploy；
-#      或在 Ignored Build Step 填：git describe --exact-match --tags HEAD || exit 0
-#   2. Cloudflare Pages → 关掉 Git 集成的自动构建
-#   3. 在仓库 Settings → Secrets 配好下方引用的 secrets
+# 仅在完整门禁及 npm 发布成功后复用；平台 Git 自动部署必须另行关闭。
 on:
-  push:
-    tags:
-      - 'v*'
-  workflow_dispatch:
+  workflow_call:
+    secrets:
+      VERCEL_TOKEN:
+        required: false
+      VERCEL_ORG_ID:
+        required: false
+      VERCEL_PROJECT_ID_ADMIN:
+        required: false
+      VERCEL_PROJECT_ID_COCKPIT:
+        required: false
+      VERCEL_PROJECT_ID_DATAV_GUIDE:
+        required: false
+      VERCEL_PROJECT_ID_VBEN_COMPAT:
+        required: false
+      CLOUDFLARE_API_TOKEN:
+        required: false
+      CLOUDFLARE_ACCOUNT_ID:
+        required: false
 
 permissions:
   contents: read
 
-concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: false
-
-env:
-  CI: true
-
 jobs:
-  vercel:
-    name: Deploy demos to Vercel
+  configuration:
+    name: Preflight all production configuration
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    environment: production
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check every platform before the first deployment
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID_ADMIN: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
+          VERCEL_PROJECT_ID_COCKPIT: ${{ secrets.VERCEL_PROJECT_ID_COCKPIT }}
+          VERCEL_PROJECT_ID_DATAV_GUIDE: ${{ secrets.VERCEL_PROJECT_ID_DATAV_GUIDE }}
+          VERCEL_PROJECT_ID_VBEN_COMPAT: ${{ secrets.VERCEL_PROJECT_ID_VBEN_COMPAT }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_PAGES_PROJECT: ${{ vars.CF_PAGES_PROJECT }}
+        run: node scripts/check-release-env.mjs production
+
+  vercel:
+    name: Deploy ${{ matrix.name }} to Vercel
+    needs: configuration
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
     strategy:
-      # 任一站点失败不影响其余站点，便于单独重试
       fail-fast: false
       matrix:
         include:
           - name: cockpit
-            build: cockpit:build
             output: apps/lumal-cockpit/dist
             projectIdSecret: VERCEL_PROJECT_ID_COCKPIT
           - name: admin
-            build: admin:build
             output: apps/lumal-admin/dist
             projectIdSecret: VERCEL_PROJECT_ID_ADMIN
           - name: datav-guide
-            build: datav-guide:build
             output: apps/lumal-datav-guide/dist
             projectIdSecret: VERCEL_PROJECT_ID_DATAV_GUIDE
           - name: vben-compat
-            build: compat:build
             output: apps/vben-compat-demo/dist
             projectIdSecret: VERCEL_PROJECT_ID_VBEN_COMPAT
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build ${{ matrix.name }}
-        run: pnpm ${{ matrix.build }}
-
-      - name: Deploy ${{ matrix.name }} to Vercel
+      - uses: actions/download-artifact@v4
+        with:
+          name: lumal-static-sites-${{ github.sha }}
+          path: apps
+      - name: Prepare Build Output API v3
+        run: node scripts/prepare-vercel-output.mjs "${{ matrix.output }}" "output/deploy/${{ matrix.name }}"
+      - name: Deploy prebuilt output
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets[matrix.projectIdSecret] }}
         run: |
-          # 产物已在上一步构建完成，这里用 --prebuilt 直接上传，避免 Vercel 侧重复构建。
-          npx --yes vercel@latest deploy "${{ matrix.output }}" \
-            --prebuilt --prod --yes --token "$VERCEL_TOKEN"
+          pnpm dlx vercel@64.5.0 pull --yes --environment production --cwd "output/deploy/${{ matrix.name }}"
+          pnpm dlx vercel@64.5.0 deploy --prebuilt --prod --yes --cwd "output/deploy/${{ matrix.name }}"
 
   cloudflare-pages:
     name: Deploy docs to Cloudflare Pages
+    needs: configuration
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    environment: production
+    timeout-minutes: 20
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build documentation
-        run: pnpm docs:build
-
-      - name: Deploy to Cloudflare Pages
+      - uses: actions/download-artifact@v4
+        with:
+          name: lumal-static-sites-${{ github.sha }}
+          path: apps
+      - name: Deploy validated documentation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_PAGES_PROJECT: ${{ vars.CF_PAGES_PROJECT }}
         run: |
-          # CF_PAGES_PROJECT 需与 Cloudflare Pages 中的项目名一致（当前站点：lumal-docs-cf）
-          npx --yes wrangler@latest pages deploy apps/lumal-docs/dist \
-            --project-name "${{ vars.CF_PAGES_PROJECT || 'lumal-docs-cf' }}" \
-            --branch main
+          test -f apps/lumal-docs/dist/index.html
+          pnpm dlx wrangler@4.151.1 pages deploy apps/lumal-docs/dist \
+            --project-name "$CF_PAGES_PROJECT" --branch main

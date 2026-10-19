@@ -1,26 +1,55 @@
 name: Release Gate
 
-# 完整发布门禁：只在推送 v* tag（或手动触发）时执行。
-# 承接原先每次提交都在跑的重活：E2E、打包验证、Windows 平台校验、各站点构建。
+# 唯一发布入口。手动运行默认为无副作用演练，真实发布必须选择版本 tag。
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only validate; never publish or deploy
+        type: boolean
+        required: true
+        default: true
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-gate-${{ github.ref }}
+  # 所有生产发布串行，防止不同 tag 并发修改 npm dist-tag 或生产站点。
+  group: lumal-release
   cancel-in-progress: false
 
 env:
   CI: true
 
 jobs:
+  version-check:
+    name: Version / lockfile / workflow safety
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm release:verify
+      - run: pnpm release:workflows
+      - name: Require a tag for side effects
+        if: github.event_name == 'push' || !inputs.dry_run
+        run: pnpm release:verify --require-tag
+      - name: Validate Actions syntax
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12 -color
+
   release-check:
     name: Ubuntu release check
+    needs: version-check
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -45,17 +74,47 @@ jobs:
       - name: Run release checks
         run: pnpm release:check
 
+      - name: Upload validated npm distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: lumal-npm-dist-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            packages/icons/dist
+            packages/icons-vue/dist
+            packages/core/dist
+            packages/charts/dist
+            packages/datav/dist
+            packages/cockpit/dist
+            packages/vben-compat/dist
+            packages/vite/dist
+            packages/create-lumal-admin/dist
+
       - name: Upload Playwright diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-results-ubuntu
-          path: .playwright-results/
+          path: |
+            .playwright-results/
+            playwright-report/
           if-no-files-found: ignore
           retention-days: 7
 
+      - name: Upload validated application distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: lumal-validated-apps-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            apps/lumal-admin/dist
+            apps/vben-compat-demo/dist
+
   windows-check:
     name: Windows checks
+    needs: version-check
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
@@ -88,6 +147,7 @@ jobs:
 
   site-build:
     name: Static site builds
+    needs: [version-check, release-check]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -109,8 +169,17 @@ jobs:
       - name: Build documentation
         run: pnpm docs:build
 
-      - name: Build packages
-        run: pnpm build
+      - name: Download validated packages
+        uses: actions/download-artifact@v4
+        with:
+          name: lumal-npm-dist-${{ github.sha }}
+          path: packages
+
+      - name: Download applications validated by release check
+        uses: actions/download-artifact@v4
+        with:
+          name: lumal-validated-apps-${{ github.sha }}
+          path: apps
 
       - name: Build Cockpit through package script
         run: pnpm --filter lumal-cockpit build:app
@@ -118,10 +187,41 @@ jobs:
       - name: Build DataV guide through package script
         run: pnpm --filter lumal-datav-guide build:app
 
-      - name: Build Admin and compatibility demo
-        run: |
-          pnpm --filter lumal-admin build
-          pnpm --filter lumal-vben-compat-demo build
-
       - name: Check all consumer budgets
         run: pnpm release:budgets --require-all
+
+      - name: Upload validated static sites
+        uses: actions/upload-artifact@v4
+        with:
+          name: lumal-static-sites-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            apps/lumal-docs/dist
+            apps/lumal-admin/dist
+            apps/lumal-cockpit/dist
+            apps/lumal-datav-guide/dist
+            apps/vben-compat-demo/dist
+
+  publish:
+    name: Gated npm publication
+    needs: [version-check, release-check, windows-check, site-build]
+    if: github.event_name == 'push' || !inputs.dry_run
+    uses: ./.github/workflows/release-npm.yml
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  deploy:
+    name: Gated production deployment
+    needs: [version-check, release-check, windows-check, site-build, publish]
+    if: github.event_name == 'push' || !inputs.dry_run
+    uses: ./.github/workflows/deploy.yml
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID_ADMIN: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
+      VERCEL_PROJECT_ID_COCKPIT: ${{ secrets.VERCEL_PROJECT_ID_COCKPIT }}
+      VERCEL_PROJECT_ID_DATAV_GUIDE: ${{ secrets.VERCEL_PROJECT_ID_DATAV_GUIDE }}
+      VERCEL_PROJECT_ID_VBEN_COMPAT: ${{ secrets.VERCEL_PROJECT_ID_VBEN_COMPAT }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

@@ -41,7 +41,7 @@ const elementPlusOverlayComponents = new Set([
 ])
 
 /***********************应用开发配置*********************/
-export default defineConfig(({ command, mode }) => ({
+export default defineConfig(({ command, isPreview, mode }) => ({
   define: {
     __LUMAL_ADMIN_BUILD_INFO__: JSON.stringify(createAdminBuildInfo(mode)),
   },
@@ -92,7 +92,7 @@ export default defineConfig(({ command, mode }) => ({
         find: '@',
         replacement: fileURLToPath(new URL('./src', import.meta.url)),
       },
-      ...(command === 'serve'
+      ...(command === 'serve' && !isPreview
         ? createLumalAliases({
             packages: ['charts', 'core', 'icons', 'icons-vue'],
             workspaceRoot,

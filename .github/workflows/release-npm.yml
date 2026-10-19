@@ -1,98 +1,45 @@
 name: Release npm packages
 
+# 仅供 release-gate.yml 的成功依赖调用，无 tag/手动旁路。
 on:
-  push:
-    tags:
-      - 'v*'
-  workflow_dispatch:
-    inputs:
-      version:
-        description: package version, for example 0.0.3-beta
-        required: true
-      tag:
-        description: npm dist-tag
-        required: true
-        default: beta
+  workflow_call:
+    secrets:
+      NPM_TOKEN:
+        required: false
 
 permissions:
   contents: read
 
-concurrency:
-  group: npm-release-${{ github.ref }}
-  cancel-in-progress: false
-
-env:
-  # tag 推送时 inputs.tag 为空：按 tag 名判断，含 '-' 视为预发布走 beta，否则走 latest。
-  # 原先无条件回落 'beta'，导致 tag 推送永远发不出 latest。
-  NPM_DIST_TAG: ${{ inputs.tag || (contains(github.ref_name, '-') && 'beta' || 'latest') }}
-  RELEASE_VERSION: ${{ inputs.version || '' }}
-
 jobs:
   publish:
-    name: Publish packages
+    name: Publish validated packages
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    environment: npm-release
+    timeout-minutes: 20
+    env:
+      NPM_DIST_TAG: ${{ contains(github.ref_name, '-') && 'beta' || 'latest' }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
           registry-url: https://registry.npmjs.org
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Verify release and package versions
-        shell: bash
-        run: |
-          node --input-type=module <<'NODE'
-          import { readFileSync, readdirSync } from 'node:fs'
-          const manualVersion = process.env.RELEASE_VERSION?.trim()
-          const tagVersion = process.env.GITHUB_REF_NAME?.replace(/^v/, '')
-          const expected = manualVersion || tagVersion
-          if (!expected || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(expected)) {
-            throw new Error(`无法解析合法发布版本：${expected || '空值'}`)
-          }
-          for (const dir of readdirSync('packages', { withFileTypes: true })) {
-            if (!dir.isDirectory()) continue
-            const path = `packages/${dir.name}/package.json`
-            try {
-              const pkg = JSON.parse(readFileSync(path, 'utf8'))
-              if (pkg.private) continue
-              if (pkg.version !== expected) throw new Error(`${pkg.name} 版本 ${pkg.version} 与发布版本 ${expected} 不一致`)
-            } catch (error) {
-              if (error.code !== 'ENOENT') throw error
-            }
-          }
-          NODE
-
-      # 完整门禁（lint/test/typecheck/E2E/pack 验证）由同一个 tag 上的
-      # release-gate.yml 承担，这里只做发布必需的构建与边界校验，避免重复跑一遍。
-      # 注：原先在此调用 pnpm release:check，但本 job 未安装 Chromium，
-      # 其中的 test:e2e 必然失败。
-      - name: Release boundaries
-        run: pnpm release:boundaries
-
-      - name: Build packages
-        run: pnpm build
-
-      # release:artifacts 会校验 apps/lumal-admin/dist 的分包与体积，
-      # 而 pnpm build 不构建 admin，需显式补一步。
-      - name: Build admin demo
-        run: pnpm admin:build
-
-      - name: Verify release artifacts
-        run: pnpm release:artifacts
-
+      - name: Check npm credential
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: node scripts/check-release-env.mjs npm
+      - run: pnpm install --frozen-lockfile
+      - name: Download distributions tested in this run
+        uses: actions/download-artifact@v4
+        with:
+          name: lumal-npm-dist-${{ github.sha }}
+          path: packages
+      - name: Reject existing or partially published versions
+        run: pnpm release:verify --require-tag --check-registry
       - name: Publish packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

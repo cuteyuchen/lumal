@@ -47,8 +47,9 @@ function resolveRequestPath(source?: string): string {
 }
 
 export const test = base.extend<BrowserDiagnosticsFixtures>({
-  browserDiagnostics: [async ({ page }, use) => {
+  browserDiagnostics: [async ({ page }, use, testInfo) => {
     const diagnostics: BrowserDiagnostic[] = []
+    const sourceRequests: string[] = []
     const expectedHttpErrors: ExpectedHttpError[] = []
 
     function recordConsole(message: ConsoleMessage): void {
@@ -76,6 +77,11 @@ export const test = base.extend<BrowserDiagnosticsFixtures>({
 
     page.on('console', recordConsole)
     page.on('pageerror', recordPageError)
+    page.on('request', (request) => {
+      const path = new URL(request.url()).pathname
+      if (testInfo.config.metadata.productionPreview && /^\/(?:@vite\/|@id\/|src\/|packages\/)/.test(path))
+        sourceRequests.push(path)
+    })
 
     await use({
       expectHttpError(path, status, count = 1) {
@@ -109,7 +115,7 @@ export const test = base.extend<BrowserDiagnosticsFixtures>({
       .map(item => `[missing console.error x${item.count}] HTTP ${item.status} ${item.path}`)
 
     expect(
-      [...unexpected.map(formatDiagnostic), ...missing],
+      [...unexpected.map(formatDiagnostic), ...missing, ...sourceRequests.map(path => `[production source request] ${path}`)],
       '页面不应产生未声明的 console warning/error 或未捕获异常',
     ).toEqual([])
   }, { auto: true }],

@@ -2,7 +2,7 @@ name: CI
 
 # 每次提交只跑轻量检查（lint / test / typecheck / build）。
 # 完整发布门禁（E2E、打包验证、Windows 校验）移到 v* tag 触发的
-# release-gate.yml 与 release-npm.yml，避免日常提交反复付出全量开销。
+# release-gate.yml 统一编排，发包/部署不能独立触发。
 on:
   push:
     branches:
@@ -47,6 +47,12 @@ jobs:
 
       - name: Release boundaries
         run: pnpm release:boundaries
+
+      - name: Release workflow safety
+        run: pnpm release:workflows
+
+      - name: Validate Actions syntax
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12 -color
 
       - name: Test
         run: pnpm test

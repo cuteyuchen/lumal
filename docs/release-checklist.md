@@ -4,12 +4,13 @@
 
 ## 版本准备
 
-当前目标为 `0.0.3-beta`，沿用 `0.0.x-beta` 序列。九个公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。
+九个公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。`0.0.3-beta` 的九包在 2026-10-19 已确认全部发布，不能再次作为新版本发布。以下 `NEXT_VERSION` 必须由维护者选择尚未发布的合法版本，不由修复任务自动提升版本。
 
 ```bash
-pnpm release:version 0.0.3-beta
+pnpm release:version NEXT_VERSION
 pnpm install --lockfile-only --ignore-scripts
-pnpm install --frozen-lockfile --ignore-scripts
+pnpm install --frozen-lockfile
+pnpm release:verify
 ```
 
 `release:version` 只修改 manifests，不更新锁文件、日志和文档，也不提交、推送、打 tag 或发布。版本准备还需：
@@ -19,9 +20,43 @@ pnpm install --frozen-lockfile --ignore-scripts
 - 保留脚手架源码的三个版本占位符；`pnpm build` 时按脚手架 package.json 注入精确版本，再用 `pnpm test:create-consumer` 验证 tarball 的 minimal/request、local、HTTP 三种消费路径。
 - 以空 Changeset 注明变更已手工汇总（本轮为 `prepared-0-0-3-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。
 
-发布另行通过 `release-npm.yml`：推送 `v0.0.3-beta` tag 或手动指定版本与 `beta` dist-tag，两种方式只选择一种，避免重复发布。仓库版本准备不代表 npm 已可安装本版。
+唯一发布入口是 `release-gate.yml`：`v*` tag 或手动运行。手动运行默认 `dry_run=true`，只执行校验；分支上不能以 `dry_run=false` 发包。真实运行必须选择版本相符且指向当前 HEAD 的 tag。含预发布后缀的 tag 使用 `beta`，稳定版使用 `latest`。
 
-提交并推送版本改动后，先确认该提交的 CI 和 Build Validation 成功，再推送发布 tag。发布与完整门禁当前由独立工作流运行；如需在发包前执行完整门禁，可先手动触发该提交的 `release-gate.yml`。发布结束后逐包核对 npm 版本与 `beta` dist-tag，不能只以 tag 推送成功判断发包完成。
+`release:verify` 读取九包 manifests、所有工作区内部依赖和 lockfile；Actions 上还校验 tag 版本和 Git commit。安装使用 frozen lockfile。发布作业在任何 `publish` 之前额外执行 `release:verify --require-tag --check-registry`，逐包只读查询，只有九包版本全部不存在才继续；任一已发布、部分发布、网络或 registry 异常均中断。
+
+## 实际发布依赖
+
+```text
+tag / workflow_dispatch (默认 dry_run=true)
+  version-check：九包 / lockfile / tag / YAML / 发布图
+    ├─ release-check (Ubuntu)：完整 release:check
+    │    lint → 单测 → 类型 → 九包构建 → tarball 消费者
+    │    → Admin / Compat → 产物与预算 → Mock Node 构建
+    │    → 完整生产 Chromium E2E → 九包 pack dry-run
+    │      └─ site-build：复用上面验证的包、Admin/Compat dist
+    │           → Docs / Cockpit / DataV Guide → 全部消费者预算
+    └─ windows-check：lint / test / typecheck / build
+
+  四个校验 job 全部成功
+    → publish (needs: 四个校验)：凭据预检 → registry 预检 → 九包串行发布
+      → deploy (needs: 四个校验 + publish)
+          configuration：全部平台配置预检
+            ├─ vercel：四站点矩阵
+            └─ cloudflare-pages：Docs
+```
+
+`release-npm.yml`、`deploy.yml` 保留为 `workflow_call` 复用单元，没有 tag、分支或独立手动触发器。发布/部署 job 使用默认成功条件，不使用 `always()` 或状态函数覆盖；上游失败、取消或跳过均阻断。只有失败诊断上传步骤使用 `if: failure()`。所有生产 run 共用串行 concurrency，不取消正在进行的版本发布。
+
+普通 CI 继续运行 lint/单测/类型/构建/边界，增加发布图与 actionlint；Build Validation 保留独立脚手架消费者校验。`deployment-artifacts.yml` 仅构建产物，不访问云部署。
+
+校验作业没有发布 Secrets。只有门禁成功后的作业才能访问所需凭据；npm 使用 `npm-release` Environment，部署使用 `production` Environment。维护者应在 Settings → Environments 配置审批人和 tag 限制，同时关闭 Vercel/Cloudflare 的独立 Git 自动生产部署，避免仓库外的平台旁路。
+
+## 中断与恢复
+
+- 九包尚未开始发布：修复失败原因，在人工确认后重跑完整发布门禁。
+- 九包已全部发布：禁止重跑整个发布链覆盖同版本；只读核实每包 `npm view <name>@<version> version dist.integrity --json` 与 dist-tag。部署失败不意味着 npm 回滚。
+- 仅部分包已发布：不要盲目 Retry publish、撤包或补发所有包。记录成功包、版本、integrity 和原 run；维护者核对内容与内部依赖后，优先选择新的统一九包版本重新经过门禁。若必须补发剩余同版本包，需要单独人工恢复方案和审批，当前自动化故意拒绝这种操作。
+- 平台上传不是原子事务；一个站点部署成功、另一个失败时，必须核对各平台 Deployment 状态，不能用工作流的一条绿色步骤代表全部线上成功。
 
 ## 命名检查
 
@@ -78,11 +113,16 @@ pnpm docs:build
 pnpm admin:build
 pnpm compat:build
 pnpm release:artifacts
+pnpm cockpit:build
+pnpm datav-guide:build
+pnpm release:budgets --require-all
 pnpm test:e2e
+pnpm test:e2e:release
 pnpm pack:dry-run
+pnpm release:workflows
 ```
 
-只做代码验收时，单独执行上述非浏览器命令，跳过 `pnpm test:e2e`；不得据此声明完整 `release:check` 或实机验收通过。
+只做代码验收时可以单独执行非浏览器命令，但必须注明“E2E 未验证”；不得据此声明完整 `release:check` 通过。
 
 ## 发包 dry-run
 
@@ -119,11 +159,50 @@ pnpm --filter create-lumal-admin pack --dry-run
 
 ## 浏览器与产物检查
 
+- 开发态 `pnpm test:e2e` 启动 Nitro dev + Vite dev，不能证明发布产物行为。
+- 生产态一条命令 `pnpm test:e2e:release`：串行构建九包和 `apps/lumal-admin/dist`、执行 Mock API `build:test`，然后启动下列服务并运行同一完整测试集。已有产物时使用 `pnpm test:e2e:release:built`；这也是 `release:check` 中不可跳过的步骤，不是 smoke。
+- Mock 服务为 `apps/lumal-mock-api/.output/server/index.mjs`，直接使用 Node，`NITRO_HOST=127.0.0.1`、`NITRO_PORT=5323`，等待 `/api/status`。Admin 使用 `vite preview --host 127.0.0.1 --port 4176 --strictPort`，等待首页。preview 继承 `server.proxy`，`/api` 指向上述 Mock，登录测试真实验证连通性。
+- 构建和 preview 都没有 `packages/*/src` alias；严格浏览器 fixture 拒绝生产态的 Vite client / src / packages 网络请求。不复用端口上已有服务，由 Playwright 启停并清理本轮子进程。
+- Chromium 首次安装：`pnpm exec playwright install chromium`；Ubuntu Actions 使用 `--with-deps chromium`。本机可显式设置 `PLAYWRIGHT_CHROMIUM_CHANNEL=chrome` 使用已安装 Chrome，报告必须记录与 CI 配套 Chromium 的差异。开发态端口可用 `LUMAL_E2E_ADMIN_PORT` / `LUMAL_E2E_API_PORT` 隔离，生产端口固定且占用时失败。
+- 生产报告位于 `playwright-report/release`，JSON 为 `.playwright-results/release-report.json`；失败截图和 trace 位于 `.playwright-results/release`。CI 失败上传诊断，不改成 job 成功。
 - Chromium E2E 覆盖登录与动态菜单、403/404/退出、标签和设置持久化、用户查询/新增、会话凭据失效。
 - 移动端流程验证 375px 下不存在页面级横向溢出。
 - `release:artifacts` 检查必要构建产物、`vendor-echarts`、`vendor-element-plus`、`vendor-lumal` 分包和 500 KB 单块上限。
 - `release:budgets` 检查 Vue 基线、轻入口、request、DataV charts 和应用首屏静态闭包；构建四个示例后使用 `pnpm release:budgets --require-all` 防止漏验。
 - 每轮实际结果以对应审计/验收记录为准，不把历史 E2E 或块大小当作当前工作区的验收证明。本轮无浏览器验收的范围见 `architecture-audit-2026-10-16.md`。
+
+## 无发布验收
+
+本地运行 `pnpm test:scripts`、`pnpm release:workflows` 和固定版本 `actionlint 1.7.12`。脚本通过 YAML parser 检查实际 needs、唯一入口、Secret 隔离，并以移除依赖、恢复旧触发器、添加状态函数、跳过校验、替换 smoke 的破坏性回归验证拒绝行为。静态检查不能模拟 GitHub 服务端调度、Environment 审批或平台权限。
+
+维护者审核并推送代码后，在 Actions → Release Gate 选择开发分支，保持 `dry_run=true`。确认四个校验成功且 `publish`、`deploy` 均为 skipped；此操作不会发包/部署。不要为这一步推送普通 `v*` 测试 tag，它会请求真实发布。
+
+需要验证失败、取消、跳过的服务端传播时：在没有生产 Secrets/平台 Git 连接的独立测试仓库复制工作流，把两个复用工作流的副作用 job 替换为仅输出 `UNEXPECTED_SIDE_EFFECT` 的哨兵，并保持原 needs/if。使用版本相符的安全测试 tag，分别让某校验 `exit 1`、手动 Cancel、在临时副本将校验 job 设 `if: false`，确认哨兵全部 skipped；最后恢复成功校验，确认哨兵可达。该演练不执行任何 npm/云 CLI。真实发布前仍需核实正式仓库审批与配置。
+
+## 部署配置
+
+在 GitHub Settings → Secrets and variables → Actions 配置下表；秘密值只由维护者输入，不进入源码、日志或报告。建议为两个 Environment 限制批准人及允许的 tag。
+
+| 名称 | 类型 / 使用位置 | 用途与人工验证 |
+| --- | --- | --- |
+| `NPM_TOKEN` | Secret / npm-release | 允许发布九包的细粒度令牌；维护者核对 scope、包写权限、有效期与组织 2FA 策略 |
+| `VERCEL_TOKEN` | Secret / production | Vercel CLI 身份；核对 team 和四项目访问权限 |
+| `VERCEL_ORG_ID` | Secret / production | 四项目所属 team/org；与平台 project 设置一致 |
+| `VERCEL_PROJECT_ID_ADMIN` | Secret / production | Admin 项目 ID |
+| `VERCEL_PROJECT_ID_COCKPIT` | Secret / production | Cockpit 项目 ID |
+| `VERCEL_PROJECT_ID_DATAV_GUIDE` | Secret / production | DataV Guide 项目 ID |
+| `VERCEL_PROJECT_ID_VBEN_COMPAT` | Secret / production | Compat Demo 项目 ID |
+| `CLOUDFLARE_API_TOKEN` | Secret / production | 目标 account 的 Pages 编辑权限，限制最小资源范围 |
+| `CLOUDFLARE_ACCOUNT_ID` | Secret / production | Pages 所属 account ID |
+| `CF_PAGES_PROJECT` | Variable / production | 已存在且可 Direct Upload 的 Pages 项目名；生产分支须与工作流 `main` 相符 |
+
+`check-release-env.mjs` 在首次 npm/平台动作前列出缺失名称，绝不输出值。非空检查不等于令牌有效或拥有权限；不在本地执行生产凭据探测。
+
+Vercel 四个静态目录来自同 run 的校验 artifact，`prepare-vercel-output.mjs` 封装为各自 `.vercel/output/config.json`（version 3）和 `static/`，再以 `vercel pull` 链接项目、`deploy --prebuilt --prod` 上传，不在凭据作业重新构建。CLI 固定为 `64.5.0`，认证用环境变量。Cloudflare 使用 `wrangler@4.151.1 pages deploy apps/lumal-docs/dist --project-name "$CF_PAGES_PROJECT" --branch main`，不是上传源码。
+
+历史 `v0.0.3-beta` 的 Vercel 空 token、Cloudflare 缺 token 属于配置失败；不能据此推断构建失败。新的本地测试只证明输出结构和缺凭据失败关闭，未证明平台上传成功。真正上线后由维护者检查 Actions 的每个部署 job、平台 READY/成功状态、对应 commit、生产域名及 API 联通，分别记录“构建成功”“已部署”“线上验收通过”。
+
+官方契约：[GitHub needs](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idneeds)、[复用工作流](https://docs.github.com/en/actions/how-tos/sharing-automations/reusing-workflows)、[Vite preview](https://vite.dev/guide/cli#vite-preview)、[preview.proxy](https://vite.dev/config/preview-options#preview-proxy)、[Nitro Node runtime](https://nitro.build/deploy/runtimes/node)、[Vercel Build Output API](https://vercel.com/docs/build-output-api/v3)、[Cloudflare Direct Upload](https://developers.cloudflare.com/pages/get-started/direct-upload/)。
 
 ## 文档检查
 

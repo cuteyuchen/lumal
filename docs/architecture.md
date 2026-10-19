@@ -101,7 +101,7 @@ Admin 页面路由使用动态导入，Element Plus、ECharts 和 Lumal 公共�
 
 `release:budgets` 额外检查真实 dist 消费者：minimal 相对 Vue 增量不超过 10 KB gzip、request 不超过 5 KB gzip、DataV charts 首屏不超过 55 KB gzip且无静态引擎，并统计各示例应用首屏静态 JS/CSS 闭包。`--require-all` 要求四个应用均已构建。tarball 独立消费同时覆盖无 Element Plus 的 minimal/request 项目。
 
-Playwright 通过生产构建预览验证登录、权限菜单、403/404、退出、标签与设置持久化、CRUD、会话失效和移动端横向溢出。浏览器流程消费与用户相同的 Admin 入口，不直接调用组件内部实现。
+开发态 `pnpm test:e2e` 使用 Nitro dev 与 Vite dev。发布态 `pnpm test:e2e:release` 则构建 Admin dist 和独立 Mock Node 产物，以 Vite preview + Node 执行同一完整测试集，覆盖登录、权限菜单、403/404、退出、标签与设置持久化、CRUD、会话失效和移动端横向溢出；构建与 preview 禁用工作区源码 alias。`release:check` 必须通过生产态 E2E 才能进入发包/部署，实际 job 图和无发布验收方法见 `release-checklist.md`。浏览器流程不直接调用组件内部实现。
 
 ## 文档职责
 
