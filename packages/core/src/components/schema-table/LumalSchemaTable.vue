@@ -624,6 +624,7 @@ defineExpose({
             <ElPopover
               :visible="isMobileActionOpen(row, $index)"
               :teleported="true"
+              role="menu"
               trigger="click"
               placement="bottom-end"
               popper-class="lumal-schema-table__mobile-actions-popper"

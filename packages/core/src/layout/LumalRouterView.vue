@@ -146,10 +146,14 @@ defineExpose({
 }
 
 .lumal-router-view :deep(> *) {
+  flex: 1 1 auto;
+}
+
+.lumal-router-view :deep(> .lumal-router-view__page > *) {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
-  flex: 1 1 auto;
+  /* 普通页面保持自然高度；填充型页面沿用自身的 flex/height 契约。 */
 }
 
 .lumal-router-view__progress {

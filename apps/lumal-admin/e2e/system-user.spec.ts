@@ -43,7 +43,7 @@ test('用户管理支持机构筛选、批量启停和批量追加角色', async
   await expect(page.getByRole('button', { name: '批量操作（0）' })).toBeDisabled()
 })
 
-test('用户管理在移动端紧凑显示机构筛选并在五档视口下无页面级横向溢出', async ({ page }) => {
+test('用户管理在移动端紧凑显示机构筛选并在五档视口下无页面级横向溢出', async ({ page }, testInfo) => {
   await openUserManagement(page)
 
   await page.setViewportSize({ height: 812, width: 375 })
@@ -63,8 +63,18 @@ test('用户管理在移动端紧凑显示机构筛选并在五档视口下无�
       actionHeight: actionTrigger?.getBoundingClientRect().height ?? 0,
       rowHeight: firstBodyRow?.getBoundingClientRect().height ?? 0,
       toolbarButtonHeight: toolbarButton?.getBoundingClientRect().height ?? 0,
+      cells: [...firstBodyRow?.querySelectorAll('.cell') ?? []].map(cell => ({
+        height: cell.getBoundingClientRect().height,
+        lineHeight: getComputedStyle(cell).lineHeight,
+        children: [...cell.children].map(child => ({
+          class: child.className,
+          height: child.getBoundingClientRect().height,
+          lineHeight: getComputedStyle(child).lineHeight,
+        })),
+      })),
     }
   })
+  await testInfo.attach('mobile-table-metrics', { body: JSON.stringify(metrics, null, 2), contentType: 'application/json' })
   expect(metrics.actionHeight).toBeGreaterThan(0)
   expect(metrics.actionHeight).toBeLessThanOrEqual(32)
   expect(metrics.toolbarButtonHeight).toBeGreaterThan(0)
@@ -83,7 +93,7 @@ test('用户管理在移动端紧凑显示机构筛选并在五档视口下无�
   await viewAction.click()
   const viewDialog = page.getByRole('dialog', { name: '查看' })
   await expect(viewDialog).toBeVisible()
-  await viewDialog.getByRole('button', { name: '取消', exact: true }).click()
+  await viewDialog.getByRole('button', { name: '关闭', exact: true }).click()
   await expect(viewDialog).toBeHidden()
 
   await page.getByRole('button', { name: '展开机构导航', exact: true }).click()

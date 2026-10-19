@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures'
-import { expectNoPageOverflow, loginAsAdmin, openTopMenu } from './helpers'
+import { expectNoPageOverflow, loginAsAdmin, openPreferences, openTopMenu } from './helpers'
 
 test('设置、标签页和移动布局可以完整操作并持久化', async ({ page }) => {
   await loginAsAdmin(page)
@@ -60,7 +60,7 @@ test('三种布局在 375、768、1024、1440px 下保持导航可用且无页�
     await page.setViewportSize({ width, height: 900 })
 
     for (const layout of layouts) {
-      await page.getByRole('button', { name: '偏好设置' }).click()
+      await openPreferences(page)
       await page.getByRole('tab', { name: '布局', exact: true }).click()
       await page.getByRole('button', { name: layout.label, exact: true }).click()
       await expect(page.locator('.lumal-layout')).toHaveAttribute('data-layout', layout.value)
@@ -205,6 +205,13 @@ test('宽屏普通页面保持自然高度且卡片内容从顶部排列', async
   expect(overviewRouterBox).not.toBeNull()
   expect(overviewBox!.height).toBeLessThan(overviewRouterBox!.height - 80)
   await expectNoPageOverflow(page)
+
+  await page.goto('/#/system/user')
+  const fillPage = page.locator('.lumal-admin-user-page')
+  await expect(fillPage.getByRole('heading', { name: '机构导航' })).toBeVisible()
+  const fillBox = await fillPage.boundingBox()
+  const fillRouterBox = await routerView.boundingBox()
+  expect(fillBox!.height).toBeGreaterThan(fillRouterBox!.height * 0.8)
 })
 
 test('主题设置页和抽屉共享自适应图标卡片布局', async ({ page }) => {

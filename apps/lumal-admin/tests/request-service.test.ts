@@ -1,5 +1,6 @@
 import { ElMessageBox } from 'element-plus'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createAdminResponseTransport } from '../src/api/adapters'
 import { createAdminRequestClient } from '../src/services/request'
 import { adminSession, currentUser, login, logout } from '../src/services/session'
 
@@ -21,6 +22,35 @@ describe('admin request service', () => {
     expect(adminSession.getToken()).not.toBe('expired-access')
     expect(adminSession.getToken()).toBeTruthy()
     expect(currentUser.value?.username).toBe('admin')
+  })
+
+  it('退出会取消所有客户端的旧会话请求，新登录不复用取消信号', async () => {
+    await login('admin')
+    let finish!: () => void
+    const receivedSignals: Array<AbortSignal | null | undefined> = []
+    const fetcher = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      receivedSignals.push(init?.signal)
+      if (receivedSignals.length === 1) {
+        await new Promise<void>((resolve) => {
+          finish = resolve
+        })
+      }
+      return new Response(JSON.stringify(createAdminResponseTransport({ ok: true })), {
+        headers: { 'content-type': 'application/json' },
+      })
+    })
+    const request = createAdminRequestClient(fetcher)
+    const pending = request.get('/slow').catch(error => error)
+    await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1))
+    await logout()
+    const abortedBeforeNextLogin = receivedSignals[0]?.aborted
+    await login('operator')
+    finish()
+
+    expect(await pending).toMatchObject({ kind: 'cancelled' })
+    expect(abortedBeforeNextLogin).toBe(true)
+    await expect(request.get('/fresh')).resolves.toEqual({ ok: true })
+    expect(receivedSignals[1]?.aborted).toBe(false)
   })
 
   it('刷新失败时清理会话并提示重新登录后跳转登录页', async () => {

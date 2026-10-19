@@ -198,14 +198,14 @@ export async function login(payload: AdminAccountKey | AdminLoginRequest): Promi
 }
 
 export async function logout(): Promise<void> {
+  const accessToken = adminSession.getToken()
+  // 先取消旧请求、清理用户和缓存；服务端撤销使用独立的公开 transport。
+  await adminSession.logout()
   try {
-    if (adminSession.isAuthenticated())
-      await logoutAdmin()
+    if (accessToken)
+      await logoutAdmin(accessToken)
   }
   catch {
     // 服务端会话可能已过期；本地会话仍必须清理。
-  }
-  finally {
-    await adminSession.logout()
   }
 }

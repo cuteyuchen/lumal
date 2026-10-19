@@ -14,7 +14,7 @@ import type {
 } from '../../api/system'
 import { LumalCrudTable } from '@lumal/core/components'
 import { ElAlert, ElButton, ElDialog, ElLoading, ElMessage, ElMessageBox, ElTree } from 'element-plus'
-import { nextTick, onMounted, shallowRef, useTemplateRef } from 'vue'
+import { nextTick, shallowRef, useTemplateRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
 import {
   createSystemRole,
@@ -261,11 +261,7 @@ async function saveRolePermissions(): Promise<void> {
   }
 }
 
-onMounted(() => {
-  void fetchSystemPermissionTree().then((tree) => {
-    permissionTree.value = tree
-  })
-})
+// 权限树在 openAuthorize 中加载，不在未打开授权弹窗时发起无消费者的预取。
 </script>
 
 <template>

@@ -38,11 +38,18 @@ test('operator 和 guest 按各自权限加载动态菜单', async ({ browserDia
   browserDiagnostics.expectHttpError('/api/system/menus', 403, 2)
   browserDiagnostics.expectHttpError('/api/system/dictionaries/types', 403)
 
+  const operatorDenials = Promise.all([
+    '/api/system/users?page=1&pageSize=5',
+    '/api/system/roles?page=1&pageSize=1',
+    '/api/system/menus',
+  ].map(path => page.waitForResponse(response => new URL(response.url()).pathname + new URL(response.url()).search === path && response.status() === 403)))
   await loginAs(page, 'operator')
   await openTopMenu(page, '系统管理')
   await expect(page.getByRole('menuitem', { name: '字典分类', exact: true })).toBeVisible()
   await expect(page.getByRole('menuitem', { name: '字典项', exact: true })).toBeVisible()
   await expect(page.getByRole('menuitem', { name: '用户管理', exact: true })).toHaveCount(0)
+  // 先确认本用例声明的权限拒绝，再退出；未完成请求由会话生命周期取消。
+  await operatorDenials
 
   await page.getByRole('button', { name: '退出登录' }).click()
   await loginAs(page, 'guest')

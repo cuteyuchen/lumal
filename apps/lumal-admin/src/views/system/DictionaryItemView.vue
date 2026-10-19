@@ -2,6 +2,7 @@
 import type { SchemaFormItem, SchemaFormModel, SchemaTableColumn, SchemaTableRow } from '@lumal/core/components'
 import type { SaveSystemDictionaryItemInput, SystemDictionaryItemRecord, SystemDictionaryTypeRecord } from '../../api/system'
 import { LumalPage, LumalSchemaForm, LumalSchemaTable } from '@lumal/core/components'
+import { RequestError } from '@lumal/core/request'
 import { ElAlert, ElButton, ElDialog, ElMessage, ElOption, ElSelect } from 'element-plus'
 import { computed, onMounted, shallowRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
@@ -19,6 +20,7 @@ const types = shallowRef<SystemDictionaryTypeRecord[]>([])
 const items = shallowRef<SystemDictionaryItemRecord[]>([])
 const typeCode = shallowRef('')
 const loading = shallowRef(false)
+const loadError = shallowRef('')
 const refreshing = shallowRef(false)
 const {
   error: operationError,
@@ -66,18 +68,24 @@ const schemas: SchemaFormItem[] = [
   { component: 'select', defaultValue: 'enabled', dictionary: 'status', field: 'status', label: '状态', required: true, span: 12 },
 ]
 
+/***********************数据加载*********************/
 async function loadItems(): Promise<void> {
   items.value = typeCode.value ? await fetchDictionaryItems(typeCode.value) : []
 }
 
 async function loadData(): Promise<void> {
   loading.value = true
+  loadError.value = ''
   try {
     types.value = await fetchDictionaryTypes()
     if (!types.value.some(item => item.code === typeCode.value)) {
       typeCode.value = types.value[0]?.code ?? ''
     }
     await loadItems()
+  }
+  catch (error) {
+    if (!(error instanceof RequestError && error.kind === 'cancelled'))
+      loadError.value = error instanceof Error ? error.message : '字典项加载失败'
   }
   finally {
     loading.value = false
@@ -123,7 +131,9 @@ async function refreshCache(): Promise<void> {
   }
 }
 
-onMounted(() => void loadData())
+onMounted(() => {
+  void loadData()
+})
 </script>
 
 <template>
@@ -146,7 +156,7 @@ onMounted(() => void loadData())
         <small>{{ currentType?.description || '选择分类后维护对应字典项' }}</small>
       </div>
 
-      <LumalSchemaTable :columns="columns" :rows="rows" row-key="id" action-width="180">
+      <LumalSchemaTable :columns="columns" :rows="rows" :error="loadError" row-key="id" action-width="180" @retry="loadData">
         <template #table-color="{ value }">
           <span class="lumal-dictionary-items__color"><i :style="{ backgroundColor: String(value || '#94a3b8') }" />{{ value || '-' }}</span>
         </template>

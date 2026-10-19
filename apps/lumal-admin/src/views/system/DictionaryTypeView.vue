@@ -2,6 +2,7 @@
 import type { SchemaFormItem, SchemaFormModel, SchemaTableColumn, SchemaTableRow } from '@lumal/core/components'
 import type { SaveSystemDictionaryTypeInput, SystemDictionaryTypeRecord } from '../../api/system'
 import { LumalPage, LumalSchemaForm, LumalSchemaTable } from '@lumal/core/components'
+import { RequestError } from '@lumal/core/request'
 import { ElAlert, ElButton, ElDialog } from 'element-plus'
 import { computed, onMounted, shallowRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
@@ -16,6 +17,7 @@ import { refreshAdminDictionaryCache } from '../../services/dictionary'
 
 const records = shallowRef<SystemDictionaryTypeRecord[]>([])
 const loading = shallowRef(false)
+const loadError = shallowRef('')
 const {
   error: operationError,
   mode: formMode,
@@ -62,10 +64,16 @@ const schemas: SchemaFormItem[] = [
   { component: 'textarea', field: 'description', label: '说明', placeholder: '说明该字典的使用范围', span: 24 },
 ]
 
+/***********************数据加载*********************/
 async function loadData(): Promise<void> {
   loading.value = true
+  loadError.value = ''
   try {
     records.value = await fetchDictionaryTypes()
+  }
+  catch (error) {
+    if (!(error instanceof RequestError && error.kind === 'cancelled'))
+      loadError.value = error instanceof Error ? error.message : '字典分类加载失败'
   }
   finally {
     loading.value = false
@@ -98,7 +106,9 @@ async function remove(row: SchemaTableRow): Promise<void> {
   await removeRecord(toRecord(row))
 }
 
-onMounted(() => void loadData())
+onMounted(() => {
+  void loadData()
+})
 </script>
 
 <template>
@@ -109,7 +119,7 @@ onMounted(() => void loadData())
           新增分类
         </ElButton>
       </template>
-      <LumalSchemaTable :columns="columns" :rows="rows" row-key="id" action-width="180">
+      <LumalSchemaTable :columns="columns" :rows="rows" :error="loadError" row-key="id" action-width="180" @retry="loadData">
         <template #actions="{ row }">
           <ElButton v-authority="adminPermissionCodes.systemDictUpdate" data-action="edit-dictionary-type" @click="openEdit(row)">
             编辑

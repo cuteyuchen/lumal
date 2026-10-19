@@ -8,6 +8,7 @@ import type {
 } from '@lumal/core/components'
 import type { SaveSystemMenuInput, SystemMenuRecord } from '../../api/system'
 import { LumalPage, LumalSchemaForm, LumalSchemaTable } from '@lumal/core/components'
+import { RequestError } from '@lumal/core/request'
 import { ElAlert, ElButton, ElDialog } from 'element-plus'
 import { computed, onMounted, shallowRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
@@ -22,6 +23,7 @@ import { useSchemaEntityCrud } from '../../composables/useSchemaEntityCrud'
 /***********************页面状态*********************/
 const menus = shallowRef<SystemMenuRecord[]>([])
 const loading = shallowRef(false)
+const loadError = shallowRef('')
 const {
   error: operationError,
   mode: formMode,
@@ -258,9 +260,14 @@ const tableProps = {
 /***********************数据加载*********************/
 async function loadMenus(): Promise<void> {
   loading.value = true
+  loadError.value = ''
 
   try {
     menus.value = await fetchSystemMenus()
+  }
+  catch (error) {
+    if (!(error instanceof RequestError && error.kind === 'cancelled'))
+      loadError.value = error instanceof Error ? error.message : '菜单加载失败'
   }
   finally {
     loading.value = false
@@ -350,9 +357,11 @@ onMounted(() => {
       <LumalSchemaTable
         :columns="columns"
         :rows="tableRows"
+        :error="loadError"
         :table-props="tableProps"
         row-key="id"
         action-width="300"
+        @retry="loadMenus"
       >
         <template #actions="{ row }">
           <ElButton

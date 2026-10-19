@@ -1,6 +1,6 @@
 import type { AuthSessionData } from '@lumal/core/auth'
 import type { AdminAccountPreset, AdminLoginRequest, AdminUser } from './types'
-import { adminPublicRequest, adminRequest } from '../services/request'
+import { adminPublicRequest } from '../services/request'
 import { parseAdminSession } from './adapters'
 
 export interface AdminLoginResult { session: AuthSessionData, user: AdminUser }
@@ -22,6 +22,7 @@ export async function refreshAdminSession(refreshToken: string): Promise<AuthSes
   return parseAdminSession(await adminPublicRequest.post('/auth/refresh', { body: { refreshToken } }))
 }
 
-export async function logoutAdmin(): Promise<void> {
-  await adminRequest.post('/auth/logout')
+export async function logoutAdmin(accessToken: string): Promise<void> {
+  // 本地已退出后再撤销服务端凭据，避免在途页面请求使用已失效的 token。
+  await adminPublicRequest.post('/auth/logout', { headers: { Authorization: `Bearer ${accessToken}` } })
 }

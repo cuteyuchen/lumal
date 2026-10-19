@@ -2,6 +2,11 @@ import { expect, test } from './fixtures'
 import { loginAsAdmin, openTopMenu } from './helpers'
 
 test('全局搜索、徽标、面包屑和 activeMenu 在真实导航中协同工作', async ({ page }) => {
+  await page.context().route('https://element-plus.org/**', route => route.fulfill({
+    body: '<!doctype html><html><body>Element Plus</body></html>',
+    contentType: 'text/html',
+    status: 200,
+  }))
   await loginAsAdmin(page)
 
   await openTopMenu(page, '功能示例')
@@ -34,7 +39,7 @@ test('全局搜索、徽标、面包屑和 activeMenu 在真实导航中协同�
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))
   })
   await expect(page.getByRole('dialog', { name: '全局搜索' })).toBeVisible()
-  await page.getByRole('combobox').press('Escape')
+  await page.getByRole('dialog', { name: '全局搜索' }).getByRole('combobox', { name: '搜索菜单' }).press('Escape')
   await expect(page.getByRole('dialog', { name: '全局搜索' })).toHaveCount(0)
 
   await page.keyboard.press('Control+k')
@@ -44,7 +49,7 @@ test('全局搜索、徽标、面包屑和 activeMenu 在真实导航中协同�
   const popupPromise = page.waitForEvent('popup')
   await externalInput.press('Enter')
   const popup = await popupPromise
-  expect(popup.url()).toContain('element-plus.org')
+  await expect(popup).toHaveURL(/https:\/\/element-plus\.org\//)
   await popup.close()
 })
 
@@ -85,7 +90,7 @@ test('mixed-nav 顶级目录只切换侧栏，外链与内嵌子项各自导航'
   const popupPromise = page.waitForEvent('popup')
   await sidebar.getByRole('menuitem', { name: 'Element Plus', exact: true }).click()
   const popup = await popupPromise
-  expect(popup.url()).toContain('element-plus.org')
+  await expect(popup).toHaveURL(/https:\/\/element-plus\.org\//)
   await popup.close()
   await expect(page).toHaveURL(/#\/system\/menu$/)
   await expect(sidebar.locator('.el-menu-item.is-active')).toHaveCount(0)

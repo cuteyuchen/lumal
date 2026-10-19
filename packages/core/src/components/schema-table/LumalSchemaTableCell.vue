@@ -38,15 +38,18 @@ function createTagStyle(tag: SchemaTableDictionaryTag): Record<string, string> |
   gap: 4px;
   align-items: center;
   max-width: 100%;
+  vertical-align: middle;
 }
 
 .lumal-schema-table__dictionary-tag {
+  /* 标签有自己的文本行高，不能继承移动表格为操作按钮预留的 32px 行高。 */
   display: inline-flex;
   min-height: 24px;
   gap: 6px;
   padding: 2px 8px;
   align-items: center;
   max-width: 100%;
+  line-height: 1.5;
   border: 1px solid;
   border-radius: 999px;
   border-color: color-mix(

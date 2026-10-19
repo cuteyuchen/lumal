@@ -46,3 +46,13 @@ export async function openTopMenu(page: Page, name: string): Promise<void> {
 
   await item.click()
 }
+
+export async function openPreferences(page: Page): Promise<void> {
+  const desktopButton = page.getByRole('button', { name: '偏好设置', exact: true })
+  if (await desktopButton.isVisible()) {
+    await desktopButton.click()
+    return
+  }
+  await page.getByRole('button', { name: '账户与更多操作' }).click()
+  await page.getByRole('menuitem', { name: '偏好设置', exact: true }).click()
+}
