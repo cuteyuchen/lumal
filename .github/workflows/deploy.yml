@@ -16,9 +16,7 @@ on:
         required: false
       VERCEL_PROJECT_ID_VBEN_COMPAT:
         required: false
-      CLOUDFLARE_API_TOKEN:
-        required: false
-      CLOUDFLARE_ACCOUNT_ID:
+      VERCEL_PROJECT_ID_DOCS:
         required: false
 
 permissions:
@@ -35,7 +33,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Check every platform before the first deployment
+      - name: Check all Vercel projects before the first deployment
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -43,9 +41,7 @@ jobs:
           VERCEL_PROJECT_ID_COCKPIT: ${{ secrets.VERCEL_PROJECT_ID_COCKPIT }}
           VERCEL_PROJECT_ID_DATAV_GUIDE: ${{ secrets.VERCEL_PROJECT_ID_DATAV_GUIDE }}
           VERCEL_PROJECT_ID_VBEN_COMPAT: ${{ secrets.VERCEL_PROJECT_ID_VBEN_COMPAT }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CF_PAGES_PROJECT: ${{ vars.CF_PAGES_PROJECT }}
+          VERCEL_PROJECT_ID_DOCS: ${{ secrets.VERCEL_PROJECT_ID_DOCS }}
         run: node scripts/check-release-env.mjs production
 
   vercel:
@@ -70,6 +66,10 @@ jobs:
           - name: vben-compat
             output: apps/vben-compat-demo/dist
             projectIdSecret: VERCEL_PROJECT_ID_VBEN_COMPAT
+          - name: docs
+            output: apps/lumal-docs/dist
+            projectIdSecret: VERCEL_PROJECT_ID_DOCS
+            prepareArgs: --clean-urls
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -81,7 +81,7 @@ jobs:
           name: lumal-static-sites-${{ github.sha }}
           path: apps
       - name: Prepare Build Output API v3
-        run: node scripts/prepare-vercel-output.mjs "${{ matrix.output }}" "output/deploy/${{ matrix.name }}"
+        run: node scripts/prepare-vercel-output.mjs "${{ matrix.output }}" "output/deploy/${{ matrix.name }}" ${{ matrix.prepareArgs }}
       - name: Deploy prebuilt output
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -90,29 +90,3 @@ jobs:
         run: |
           pnpm dlx vercel@64.5.0 pull --yes --environment production --cwd "output/deploy/${{ matrix.name }}"
           pnpm dlx vercel@64.5.0 deploy --prebuilt --prod --yes --cwd "output/deploy/${{ matrix.name }}"
-
-  cloudflare-pages:
-    name: Deploy docs to Cloudflare Pages
-    needs: configuration
-    runs-on: ubuntu-latest
-    environment: production
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - uses: actions/download-artifact@v4
-        with:
-          name: lumal-static-sites-${{ github.sha }}
-          path: apps
-      - name: Deploy validated documentation
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CF_PAGES_PROJECT: ${{ vars.CF_PAGES_PROJECT }}
-        run: |
-          test -f apps/lumal-docs/dist/index.html
-          pnpm dlx wrangler@4.151.1 pages deploy apps/lumal-docs/dist \
-            --project-name "$CF_PAGES_PROJECT" --branch main

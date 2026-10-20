@@ -2,6 +2,8 @@
 
 执行日期：2026-10-19，Asia/Shanghai。本报告中的 PASS 仅指实际运行范围，不代表 GitHub Actions 或生产平台已验证。
 
+2026-10-20 后续更新：按维护者要求，发布链已改为 Docs 与四个示例统一使用 Vercel，不再要求 Cloudflare 凭据；当前配置以[发布检查清单](release-checklist.md#部署配置)为准。下文保留 2026-10-19 的历史执行证据，不代表最新部署结构。后续验证见文末。
+
 ## 执行范围
 
 - 实际仓库：`F:/my-project/luma`；初始分支 `master`、HEAD `dd343faf9e2c122dd23a34309c391e400b200a78`，与只读远端核对结果一致，没有回退。
@@ -219,3 +221,28 @@ pnpm --filter @lumal/core exec vitest run --config ../../vitest.config.ts tests/
 7. 正式发布由维护者选择未发布的新统一版本，更新 lockfile/日志并审核，完整门禁成功后才授权真实 tag。`0.0.3-beta` 不可重发。真实发布后逐包核对版本/integrity/dist-tag，并分别核对每个平台 Deployment READY/成功、commit、域名和 API。
 
 配置名称非空、构建成功、GitHub run 成功、平台部署成功、线上业务验收通过是不同证据。本轮只完成本机代码/构建/浏览器/静态门禁验证，不声明生产上线。
+
+## F. 2026-10-20 后续：统一 Vercel 部署
+
+按维护者要求，文档不再单独使用 Cloudflare 发布。`deploy.yml` 的五站点 Vercel 矩阵包含 Docs，新增 `VERCEL_PROJECT_ID_DOCS`，调用方和预检同步移除 Cloudflare 三项配置要求。发布门禁、npm 成功依赖、默认 dry-run、production Environment 及同 run 产物复用均保留。
+
+文档开启了 `cleanUrls`，因此只为 Docs 增加 `--clean-urls` 产物模式：Build Output API `overrides` 映射无扩展名路径，目录首页保持文件系统行为，未知路径回退到文档 `404.html` 并保留 HTTP 404。其他四个示例的打包行为不变。测试先复现旧配置阻断和缺少文档路由契约，再修改实现；没有关闭断言或增加发布旁路。
+
+插件只读确认 Vercel 已有 `lumal-docs` 项目。但其 2026-10-19、`dd343faf…` 的最近生产部署为 ERROR，平台日志是 `STATIC_BUILD_NO_OUT_DIR`（文档构建完成后找不到指定的 dist），不是 token 错误。这个历史 Git 部署失败不等于新工作流已执行或已修复线上状态。
+
+| 本次实际命令 / 范围 | 状态 | 证据（`output/repair/`） |
+| --- | --- | --- |
+| 新增回归后的 `pnpm test:scripts` | FAIL（预期红灯） | CF 前置要求 / 旧矩阵两个失败；随后文档模式两个失败；`vercel-only-red.log`、`vercel-docs-routing-red.log` |
+| 修复后 `pnpm test:scripts` | PASS | 4 文件、33 项；`vercel-only-tests.log` |
+| `pnpm exec eslint scripts/check-release-env.mjs scripts/prepare-vercel-output.mjs scripts/release-safety.test.mjs` | PASS | `vercel-only-scoped-lint.log` |
+| `pnpm lint` | FAIL | 工作期间新增的用户侧 `apps/lumal-admin/src/router/index.ts:84-85` 有两处 `style/no-mixed-operators`；本轮未修改或提交该文件；`vercel-only-lint.log` |
+| `pnpm release:workflows` | PASS | 唯一入口、门禁 needs、dry-run、Secret 隔离、完整生产 E2E 保留；`vercel-only-workflows.log` |
+| `output/repair/actionlint/bin/actionlint.exe -color` | PASS | 全部 workflow 无诊断；`vercel-only-actionlint.log` |
+| `pnpm docs:build` | PASS | VitePress 构建完成；`vercel-only-docs-build.log` |
+| `node scripts/prepare-vercel-output.mjs apps/lumal-docs/dist output/repair/vercel-docs-clean-urls-20261020 --clean-urls` | PASS | 只生成本地产物，未上传；`vercel-only-prebuilt.log` |
+| Node 逐文件比较原始 dist 和 prebuilt/static，并断言配置 | PASS | 219 文件逐字节一致、63 条映射、首页和 404 配置；`vercel-only-prebuilt-verify.log` |
+| 新 Actions run / 真实部署 / 线上 URL 与 HTTP 行为 | 未运行 / 未验证 | 未推送、未触发远端、未使用生产凭据；本地结构测试不能证明 Vercel 服务端路由 |
+
+本次仅改发布配置、部署脚本和文档，没有重跑全量应用单测、类型检查、九包构建、浏览器 E2E 或完整 `release:check`，也不复用上文历史 PASS 充当本次结果。文档中的全量发布门禁仍必须在最终快照执行成功；当前全量 lint 不绿，不能声称可发布。
+
+人工后续：在 `production` 配置指向已有 `lumal-docs` 的 `VERCEL_PROJECT_ID_DOCS`，核对 Vercel token/team 和五项目权限。插件 OAuth 不会自动成为 Actions Secret。新文档部署 READY 后再用未登录访问核对 Deployment Protection、深层页面、静态资源与 404，随后迁移域名和既有 CF 在线链接并停用旧 Git 自动部署。本次不删除 CF 项目、不提前更换有效链接，也不修改任何线上项目设置。

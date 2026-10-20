@@ -4,7 +4,6 @@ import { pathToFileURL } from 'node:url'
 const required = {
   npm: ['NPM_TOKEN'],
   vercel: ['VERCEL_TOKEN', 'VERCEL_ORG_ID', 'VERCEL_PROJECT_ID'],
-  cloudflare: ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID', 'CF_PAGES_PROJECT'],
 }
 required.production = [
   'VERCEL_TOKEN',
@@ -13,7 +12,7 @@ required.production = [
   'VERCEL_PROJECT_ID_COCKPIT',
   'VERCEL_PROJECT_ID_DATAV_GUIDE',
   'VERCEL_PROJECT_ID_VBEN_COMPAT',
-  ...required.cloudflare,
+  'VERCEL_PROJECT_ID_DOCS',
 ]
 
 /** 只输出缺失的配置名称，不输出值或整个环境。 */

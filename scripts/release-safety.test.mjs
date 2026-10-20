@@ -17,6 +17,33 @@ describe('release dependency graph', () => {
     expect(() => verifyReleaseWorkflows(readWorkflows(), scripts)).not.toThrow()
   })
 
+  it('文档与四个示例共用受门禁约束的 Vercel 部署矩阵', () => {
+    const workflows = readWorkflows()
+    const deploy = workflows['deploy.yml']
+    const caller = workflows['release-gate.yml'].jobs.deploy
+    const matrix = deploy.jobs.vercel.strategy.matrix.include
+    expect(Object.keys(deploy.jobs)).toEqual(['configuration', 'vercel'])
+    expect(deploy.jobs.vercel.needs).toBe('configuration')
+    expect(matrix).toHaveLength(5)
+    expect(matrix).toContainEqual({
+      name: 'docs',
+      output: 'apps/lumal-docs/dist',
+      projectIdSecret: 'VERCEL_PROJECT_ID_DOCS',
+      prepareArgs: '--clean-urls',
+    })
+    const prepare = deploy.jobs.vercel.steps.find(step => step.run?.includes('node scripts/prepare-vercel-output.mjs'))
+    expect(prepare.run).toContain(`\${{ matrix.prepareArgs }}`)
+    const preflight = deploy.jobs.configuration.steps.find(step => step.run === 'node scripts/check-release-env.mjs production')
+    for (const site of matrix) {
+      expect(deploy.on.workflow_call.secrets).toHaveProperty(site.projectIdSecret)
+      expect(caller.secrets[site.projectIdSecret]).toBe(`\${{ secrets.${site.projectIdSecret} }}`)
+      expect(preflight.env[site.projectIdSecret]).toBe(`\${{ secrets.${site.projectIdSecret} }}`)
+    }
+    expect(Object.keys(caller.secrets).sort()).toEqual(Object.keys(deploy.on.workflow_call.secrets).sort())
+    expect(JSON.stringify(deploy)).not.toMatch(/cloudflare|wrangler|CF_PAGES_PROJECT/i)
+    expect(JSON.stringify(caller)).not.toMatch(/cloudflare|CF_PAGES_PROJECT/i)
+  })
+
   it.each(['release-npm.yml', 'deploy.yml'])('拒绝恢复 %s 的独立手动入口', (name) => {
     const workflows = readWorkflows()
     workflows[name].on.workflow_dispatch = {}
@@ -100,7 +127,7 @@ describe('release version and registry preflight', () => {
 })
 
 describe('deployment preparation', () => {
-  it.each(['npm', 'vercel', 'cloudflare'])('缺少 %s 配置时只列名称，不泄露值', (target) => {
+  it.each(['npm', 'vercel', 'production'])('缺少 %s 配置时只列名称，不泄露值', (target) => {
     expect(() => verifyReleaseEnv(target, { VERCEL_TOKEN: 'sensitive-value' })).toThrow('缺少')
     try {
       verifyReleaseEnv(target, { VERCEL_TOKEN: 'sensitive-value' })
@@ -108,6 +135,20 @@ describe('deployment preparation', () => {
     catch (error) {
       expect(error.message).not.toContain('sensitive-value')
     }
+  })
+
+  it('生产预检只需 Vercel 五站点配置，缺少文档项目 ID 仍阻断部署', () => {
+    const env = {
+      VERCEL_TOKEN: 'test-token',
+      VERCEL_ORG_ID: 'test-team',
+      VERCEL_PROJECT_ID_ADMIN: 'test-admin',
+      VERCEL_PROJECT_ID_COCKPIT: 'test-cockpit',
+      VERCEL_PROJECT_ID_DATAV_GUIDE: 'test-datav-guide',
+      VERCEL_PROJECT_ID_VBEN_COMPAT: 'test-vben-compat',
+      VERCEL_PROJECT_ID_DOCS: 'test-docs',
+    }
+    expect(() => verifyReleaseEnv('production', env)).not.toThrow()
+    expect(() => verifyReleaseEnv('production', { ...env, VERCEL_PROJECT_ID_DOCS: ' ' })).toThrow('VERCEL_PROJECT_ID_DOCS')
   })
 
   it('已验证静态目录转成合法 prebuilt，缺产物和旧输出均拒绝', () => {
@@ -123,6 +164,37 @@ describe('deployment preparation', () => {
       expect(JSON.parse(readFileSync(join(output, 'config.json'), 'utf8'))).toEqual({ version: 3 })
       expect(readFileSync(join(output, 'static/assets/main.js'), 'utf8')).toBe('console.log("built")')
       expect(() => prepareVercelOutput(source, project)).toThrow('拒绝混入旧文件')
+    }
+    finally {
+      rmSync(fixture, { recursive: true, force: true })
+    }
+  })
+
+  it('文档 prebuilt 保留无扩展名深层路由、目录首页和真实 404', () => {
+    const fixture = mkdtempSync(join(tmpdir(), 'lumal-release-'))
+    try {
+      const source = join(fixture, 'dist')
+      const project = join(fixture, 'project')
+      mkdirSync(join(source, 'guide'), { recursive: true })
+      mkdirSync(join(source, 'packages'), { recursive: true })
+      writeFileSync(join(source, 'index.html'), '<h1>Lumal</h1>')
+      expect(() => prepareVercelOutput(source, project, { cleanUrls: true })).toThrow('缺少 404.html')
+      writeFileSync(join(source, '404.html'), '<h1>Not Found</h1>')
+      writeFileSync(join(source, 'guide/start.html'), '<h1>Start</h1>')
+      writeFileSync(join(source, 'packages/index.html'), '<h1>Packages</h1>')
+      const output = prepareVercelOutput(source, project, { cleanUrls: true })
+      expect(JSON.parse(readFileSync(join(output, 'config.json'), 'utf8'))).toEqual({
+        version: 3,
+        overrides: {
+          'guide/start.html': { path: 'guide/start' },
+        },
+        routes: [
+          { handle: 'filesystem' },
+          { src: '/(.*)', dest: '/404.html', status: 404 },
+        ],
+      })
+      expect(readFileSync(join(output, 'static/packages/index.html'), 'utf8')).toBe('<h1>Packages</h1>')
+      expect(readFileSync(join(output, 'static/404.html'), 'utf8')).toBe('<h1>Not Found</h1>')
     }
     finally {
       rmSync(fixture, { recursive: true, force: true })

@@ -40,16 +40,15 @@ tag / workflow_dispatch (默认 dry_run=true)
   四个校验 job 全部成功
     → publish (needs: 四个校验)：凭据预检 → registry 预检 → 九包串行发布
       → deploy (needs: 四个校验 + publish)
-          configuration：全部平台配置预检
-            ├─ vercel：四站点矩阵
-            └─ cloudflare-pages：Docs
+          configuration：全部 Vercel 项目配置预检
+            └─ vercel：五站点矩阵（Docs / Admin / Cockpit / DataV Guide / Compat）
 ```
 
 `release-npm.yml`、`deploy.yml` 保留为 `workflow_call` 复用单元，没有 tag、分支或独立手动触发器。发布/部署 job 使用默认成功条件，不使用 `always()` 或状态函数覆盖；上游失败、取消或跳过均阻断。只有失败诊断上传步骤使用 `if: failure()`。所有生产 run 共用串行 concurrency，不取消正在进行的版本发布。
 
 普通 CI 继续运行 lint/单测/类型/构建/边界，增加发布图与 actionlint；Build Validation 保留独立脚手架消费者校验。`deployment-artifacts.yml` 仅构建产物，不访问云部署。
 
-校验作业没有发布 Secrets。只有门禁成功后的作业才能访问所需凭据；npm 使用 `npm-release` Environment，部署使用 `production` Environment。维护者应在 Settings → Environments 配置审批人和 tag 限制，同时关闭 Vercel/Cloudflare 的独立 Git 自动生产部署，避免仓库外的平台旁路。
+校验作业没有发布 Secrets。只有门禁成功后的作业才能访问所需凭据；npm 使用 `npm-release` Environment，部署使用 `production` Environment。维护者应在 Settings → Environments 配置审批人和 tag 限制，同时关闭 Vercel 的独立 Git 自动生产部署；旧 Cloudflare 站点迁移后也需停用自动部署，避免仓库外的平台旁路。
 
 ## 中断与恢复
 
@@ -181,28 +180,30 @@ pnpm --filter create-lumal-admin pack --dry-run
 
 ## 部署配置
 
-在 GitHub Settings → Secrets and variables → Actions 配置下表；秘密值只由维护者输入，不进入源码、日志或报告。建议为两个 Environment 限制批准人及允许的 tag。
+在 GitHub 仓库 Settings → Environments → `npm-release` / `production` 配置下表中的 Environment Secrets；也可使用 Settings → Secrets and variables → Actions 的仓库级 Secrets。秘密值只由维护者输入，不进入源码、日志或报告。建议为两个 Environment 限制批准人及允许的 tag。Codex 插件登录不会自动给 GitHub Actions 提供凭据。
 
 | 名称 | 类型 / 使用位置 | 用途与人工验证 |
 | --- | --- | --- |
 | `NPM_TOKEN` | Secret / npm-release | 允许发布九包的细粒度令牌；维护者核对 scope、包写权限、有效期与组织 2FA 策略 |
-| `VERCEL_TOKEN` | Secret / production | Vercel CLI 身份；核对 team 和四项目访问权限 |
-| `VERCEL_ORG_ID` | Secret / production | 四项目所属 team/org；与平台 project 设置一致 |
+| `VERCEL_TOKEN` | Secret / production | Vercel CLI 身份；核对 team 和五项目访问权限 |
+| `VERCEL_ORG_ID` | Secret / production | 五项目所属 team/org；与平台 project 设置一致 |
 | `VERCEL_PROJECT_ID_ADMIN` | Secret / production | Admin 项目 ID |
 | `VERCEL_PROJECT_ID_COCKPIT` | Secret / production | Cockpit 项目 ID |
 | `VERCEL_PROJECT_ID_DATAV_GUIDE` | Secret / production | DataV Guide 项目 ID |
 | `VERCEL_PROJECT_ID_VBEN_COMPAT` | Secret / production | Compat Demo 项目 ID |
-| `CLOUDFLARE_API_TOKEN` | Secret / production | 目标 account 的 Pages 编辑权限，限制最小资源范围 |
-| `CLOUDFLARE_ACCOUNT_ID` | Secret / production | Pages 所属 account ID |
-| `CF_PAGES_PROJECT` | Variable / production | 已存在且可 Direct Upload 的 Pages 项目名；生产分支须与工作流 `main` 相符 |
+| `VERCEL_PROJECT_ID_DOCS` | Secret / production | 文档项目 ID，复用已有 `lumal-docs` 项目 |
 
 `check-release-env.mjs` 在首次 npm/平台动作前列出缺失名称，绝不输出值。非空检查不等于令牌有效或拥有权限；不在本地执行生产凭据探测。
 
-Vercel 四个静态目录来自同 run 的校验 artifact，`prepare-vercel-output.mjs` 封装为各自 `.vercel/output/config.json`（version 3）和 `static/`，再以 `vercel pull` 链接项目、`deploy --prebuilt --prod` 上传，不在凭据作业重新构建。CLI 固定为 `64.5.0`，认证用环境变量。Cloudflare 使用 `wrangler@4.151.1 pages deploy apps/lumal-docs/dist --project-name "$CF_PAGES_PROJECT" --branch main`，不是上传源码。
+Vercel 五个静态目录来自同 run 的校验 artifact，文档使用 `apps/lumal-docs/dist`。`prepare-vercel-output.mjs` 封装为各自 `.vercel/output/config.json`（version 3）和 `static/`，再以 `vercel pull` 链接项目、`deploy --prebuilt --prod` 上传，不在凭据作业重新构建，也不依赖平台从仓库根目录自动寻找 `dist`。CLI 固定为 `64.5.0`，认证用环境变量。
 
-历史 `v0.0.3-beta` 的 Vercel 空 token、Cloudflare 缺 token 属于配置失败；不能据此推断构建失败。新的本地测试只证明输出结构和缺凭据失败关闭，未证明平台上传成功。真正上线后由维护者检查 Actions 的每个部署 job、平台 READY/成功状态、对应 commit、生产域名及 API 联通，分别记录“构建成功”“已部署”“线上验收通过”。
+文档矩阵额外传 `--clean-urls`，为非首页 HTML 生成 Build Output API `overrides`，使 `/guide/essentials/installation` 等链接定位到实际 `.html` 文件；目录首页仍由文件系统处理。未知路径返回文档 `404.html` 并保留 HTTP 404，不改为 SPA 首页兜底；其余四站点不启用该模式。可在本机只打包、不上传：`node scripts/prepare-vercel-output.mjs apps/lumal-docs/dist output/deploy/docs --clean-urls`。
 
-官方契约：[GitHub needs](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idneeds)、[复用工作流](https://docs.github.com/en/actions/how-tos/sharing-automations/reusing-workflows)、[Vite preview](https://vite.dev/guide/cli#vite-preview)、[preview.proxy](https://vite.dev/config/preview-options#preview-proxy)、[Nitro Node runtime](https://nitro.build/deploy/runtimes/node)、[Vercel Build Output API](https://vercel.com/docs/build-output-api/v3)、[Cloudflare Direct Upload](https://developers.cloudflare.com/pages/get-started/direct-upload/)。
+2026-10-20 起仓库发布链不再调用 Cloudflare，也不再要求 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID` 或 `CF_PAGES_PROJECT`。旧 `lumal-docs-cf` 项目不由代码自动删除：先确认 Vercel 文档部署 READY、深层页面/静态资源可访问，并核对 Deployment Protection（公开文档不能只验证登录态）。之后再切换自定义域名和 `LUMAL_DOCS_URL`、文档中的在线链接及 Admin 关于页链接，停用旧站点的自动生产部署；本轮不提前把可用的旧链接改到尚未验收的 Vercel 地址。
+
+历史 `v0.0.3-beta` 的 Vercel 空 token、Cloudflare 缺 token 属于配置失败；不能据此推断构建失败，也不是当前配置清单。本地测试只证明输出结构和缺凭据失败关闭，未证明平台上传成功。真正上线后由维护者检查 Actions 的每个部署 job、平台 READY 状态、对应 commit、生产域名及 API 联通，分别记录“构建成功”“已部署”“线上验收通过”。
+
+官方契约：[GitHub needs](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idneeds)、[复用工作流](https://docs.github.com/en/actions/how-tos/sharing-automations/reusing-workflows)、[Vite preview](https://vite.dev/guide/cli#vite-preview)、[preview.proxy](https://vite.dev/config/preview-options#preview-proxy)、[Nitro Node runtime](https://nitro.build/deploy/runtimes/node)、[Vercel Build Output API](https://vercel.com/docs/build-output-api/v3)、[静态 HTML 路径映射](https://vercel.com/docs/build-output-api/features)。
 
 ## 文档检查
 
