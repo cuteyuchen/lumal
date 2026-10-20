@@ -4,7 +4,7 @@ Lumal 是一套面向中小型后台项目的轻量 Vue Admin 基础设施。它
 
 `apps/lumal-admin` 是公开 API 的集成示例与验收入口；可复用能力必须沉淀到 `packages/*`，业务接口字段、状态码和页面逻辑不得进入框架包。
 
-当前工作区公共包版本为 `0.0.4-beta`，尚未成功发布；下列安装命令在本版发布后使用。2026-10-20 正式门禁已通过，再次更新 Token 后重跑因仅有 staging 权限被 npm 拒绝（`E403 / E_STAGE_REQUIRED`），恢复步骤见 [发布执行记录](docs/npm-release-0.0.4-beta.md)。Beta 使用 npm 的 `beta` 标签；安装时显式指定版本。升级说明见 [更新日志](docs/changelog.md)，实际发布状态以 npm registry 和仓库发布工作流为准。
+九个公共包已于 2026-10-20 发布 `0.0.4-beta`，正式门禁、生产 E2E 和发布后逐包核验均通过，详见 [发布执行记录](docs/npm-release-0.0.4-beta.md)。Beta 使用 npm 的 `beta` 标签，`latest` 未改动；安装时显式指定版本。升级说明见 [更新日志](docs/changelog.md)，实际发布状态以 npm registry 和仓库发布工作流为准。
 
 ## 快速开始
 

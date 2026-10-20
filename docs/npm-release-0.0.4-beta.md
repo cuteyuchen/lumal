@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-**BLOCKED：全部发布前门禁通过；维护者再次更新 `NPM_TOKEN` 后，第 3 次发布不再报 `EOTP`，但被 npm 以 `E403 / E_STAGE_REQUIRED` 拒绝，明确提示 Token 仅允许 staging，九包均未发布 `0.0.4-beta`。** 当前工作流直接发布，需与该流程匹配的 `Read and write (publish and stage)` 权限；stage-only Token 不能用于直接发布。未绕过门禁本地发布，未修改账户或组织安全设置。
+**PASS：更新 `NPM_TOKEN` 后，第 4 次运行成功发布九包 `0.0.4-beta`，公开 registry、`beta` 标签、tarball 完整性及公开入口均已逐包核验通过。** 九包 `latest` 仍为 `0.0.1-beta`；原 tag 未移动，生产部署按授权范围跳过。前三次失败的历史证据保留在下文，不作为当前错误。
 
 - 目标版本：九个公开包统一为 `0.0.4-beta`，npm dist-tag 为 `beta`，不改 `latest`。
 - 目标提交：`fd640c33469cc92d7f83e7e3ebea6d47040a7c94`。
@@ -150,7 +150,7 @@ Run `npm stage publish` to publish this version, then approve it. (E_STAGE_REQUI
 
 该错误与 npm 官方对 stage-only Token 的限制一致：它可以上传待审批版本，但不能直接发布新版本。本轮没有擅自切换成 staging 流程、代替维护者审批、提高 Token 权限或再盲目重跑；`0.0.4-beta` 也没有因此成为已发布版本。
 
-## 发布后只读核查
+## 前三次失败后的只读核查（历史）
 
 三次失败后均逐包查询 npm registry；第 3 次快照再次确认全部目标版本不存在，`beta` 和 `latest` 均未改变，没有部分发布，也没有可记录的本版 integrity 或发布时间：
 
@@ -166,7 +166,47 @@ Run `npm stage publish` to publish this version, then approve it. (E_STAGE_REQUI
 | `@lumal/vite` | 未发布 | `0.0.3-beta` | `0.0.1-beta` |
 | `create-lumal-admin` | 未发布 | `0.0.3-beta` | `0.0.1-beta` |
 
-## 人工恢复步骤
+## 更新直接发布权限后重跑（attempt 4）
+
+维护者再次更新 Token 后，只读确认仓库 Secret `NPM_TOKEN` 的 `updated_at=2026-10-20T05:49:36Z`（北京时间 13:49:36），没有读取值。`pnpm release:verify --check-registry` 通过，九包当时均未发布；原 npm artifact `12239047486` 未过期，tag 仍指向 `fd640c3`，`DEPLOY_PRODUCTION` 仍未设置。
+
+仅执行 `gh run rerun 39364257259 --repo cuteyuchen/lumal --failed`，未修改工作流、构建产物或发布命令。正式运行第 4 次结论为 **success**，发布 job `118477536213` 于 2026-10-20 05:51:42 UTC（北京时间 13:51:42）成功结束：
+
+| 远端作业 | attempt 4 结果 |
+| --- | --- |
+| Version / lockfile / workflow safety | PASS，沿用同一 tag 已成功的门禁 |
+| Ubuntu release check | PASS，沿用已完成的 805 项单测、28 项生产 Chromium E2E 及产物 |
+| Windows checks / Static site builds | PASS，沿用既有校验与消费者预算结果 |
+| Gated npm publication / Publish validated packages | PASS，九个 `pnpm publish --tag beta` 命令全部成功 |
+| Gated production deployment | SKIPPED，没有生产部署 |
+
+npm 日志逐包输出 `+ <package>@0.0.4-beta`，同时提示新版本仍需处理数分钟。最初严格只读查询未发现首包目标版本并非零退出，日志完整保留；随后快照依次为 1/9、3/9、5/9、8/9，最终于北京时间 13:56:02 达到 9/9。这是发布后的 registry 可用性核验过程，不是重复发包，也没有调整项目测试超时。
+
+### 最终 registry 核验
+
+以下均为 2026-10-20 的实际公开元数据；`0.0.4-beta` 及 `beta` 九包全部正确，`latest` 均保持 `0.0.1-beta`：
+
+| 包 | 版本 / `beta` | 发布时间（北京时间） | tarball 字节数 | SHA-512 / SHA-1 |
+| --- | --- | --- | --- | --- |
+| `@lumal/icons` | `0.0.4-beta` | 13:55:27.608 | 19033 | PASS |
+| `@lumal/icons-vue` | `0.0.4-beta` | 13:53:58.728 | 16777 | PASS |
+| `@lumal/core` | `0.0.4-beta` | 13:52:59.982 | 175637 | PASS |
+| `@lumal/charts` | `0.0.4-beta` | 13:52:21.036 | 11882 | PASS |
+| `@lumal/datav` | `0.0.4-beta` | 13:54:06.880 | 92132 | PASS |
+| `@lumal/cockpit` | `0.0.4-beta` | 13:53:11.286 | 96586 | PASS |
+| `@lumal/vben-compat` | `0.0.4-beta` | 13:54:13.327 | 10654 | PASS |
+| `@lumal/vite` | `0.0.4-beta` | 13:54:15.360 | 5469 | PASS |
+| `create-lumal-admin` | `0.0.4-beta` | 13:54:47.209 | 19372 | PASS |
+
+实际下载九个 tarball，用 Node `node:crypto` 分别计算 SHA-512 和 SHA-1，与 registry 的完整 `dist.integrity` / `dist.shasum` 比对，全部一致；完整 integrity 值在 `npm-0.0.4-registry-final.jsonl`。另将 registry 的九个 shasum 与发布 job 输出逐个比对，也全部一致，证据为 `npm-0.0.4-publisher-checksums.jsonl`。
+
+九包 registry 元数据均未提供 `gitHead`，因此不伪造该字段的核验结果。源提交关联由 Actions 的 `headSha=fd640c3`、同一运行的校验产物下载，以及发布日志和实际 tarball 校验和一致共同佐证。
+
+逐包比对已发布 manifest 的 `main` / `module` / `types` / `style` / `exports` / `sideEffects` 与工作区公开配置，全部一致；消费者依赖没有遗留 `workspace:`。实际内部依赖均为精确的 `0.0.4-beta`：Core → Icons / Icons Vue，Icons Vue → Icons，Cockpit → Core / Icons Vue，Vben Compat → Core。未改变 minimal/request、ESM/CJS、样式或其他按需入口。
+
+## 凭据修复步骤与安全约束
+
+以下保留此次凭据修复的操作依据，不代表要求再次创建 Token 或重发本版。第 4 次发布及最终 registry 核验均已成功；本版不可重复发布，未来需新版本与对应门禁。当前没有待修复的 npm 发布阻塞，生产部署未在本轮执行。
 
 1. 在 npm 登录维护者账号，核对其对上述九包的发布权限及各包 Settings → Publishing access。若安全策略允许使用自动发布 Token，新建最小范围、短有效期的 granular access token，在 Packages and scopes 中选择九包的 `Read and write (publish and stage)`，包含非 scope 包 `create-lumal-admin`，并在创建时启用 `Bypass two-factor authentication`。该选项默认关闭；不能只授予组织管理权限，也不能使用仅 stage 权限代替直接发布权限。
 2. 若包选择 `Require two-factor authentication and disallow tokens`，或组织要求完整强制 2FA，则不要降低安全策略来让当前脚本通过。应另行配置 npm Trusted Publishing 并调整受门禁保护的发布作业，或使用维护者批准的交互式发布流程；本轮未自动变更这些设置。不要把 OTP 写入 GitHub Secret、工作流或聊天，也不要关闭账户 2FA。
@@ -180,16 +220,20 @@ Run `npm stage publish` to publish this version, then approve it. (E_STAGE_REQUI
 
 ## 本次本机验证
 
-重跑及文档更新后实际执行，以下通过仅证明对应检查，不代表 npm 或生产部署成功：
+重跑及文档更新后实际执行。npm 成功由上文远端发布和 registry 核验共同证明，以下本机检查不代表生产部署成功：
 
 | 命令 | 结果 | 日志 |
 | --- | --- | --- |
-| `pnpm release:verify --check-registry` | PASS，两次重跑前九包版本、内部依赖和 lockfile 一致，registry 无本版 | `npm-0.0.4-retry-preflight.log` / `npm-0.0.4-retry3-preflight.log` |
-| `pnpm lint` | PASS | `npm-0.0.4-retry-docs-lint.log` |
-| `pnpm docs:build` | PASS，VitePress 成功构建 | `npm-0.0.4-retry-docs-build.log` |
-| `pnpm test:scripts` | PASS，6 个文件、41 项测试 | `npm-0.0.4-retry-scripts-tests.log` |
-| `pnpm release:boundaries` | PASS | `npm-0.0.4-retry-boundaries.log` |
-| `pnpm release:workflows` | PASS，唯一入口、needs、Secrets 隔离与生产 E2E 约束保留 | `npm-0.0.4-retry-workflows.log` |
+| `pnpm release:verify --check-registry` | PASS，第 4 次重跑前九包版本、内部依赖和 lockfile 一致，registry 无本版；不是发布后的结论 | `npm-0.0.4-retry4-preflight.log` |
+| `node --input-type=module -e ...`（首次严格 registry 查询） | FAIL，当时首包目标版本尚不可见，保留断言失败及本机 Node 退出诊断 | `npm-0.0.4-registry-after-retry4.jsonl` |
+| `node --input-type=module -e ...`（只读轮询与 tarball 校验） | PASS，最终 9/9 版本、dist-tag、SHA-512、SHA-1 均一致 | `npm-0.0.4-registry-final.jsonl` |
+| `node --input-type=module -e ...`（发布日志校验和比对） | PASS，9/9 实际发布 shasum 与 registry 一致 | `npm-0.0.4-publisher-checksums.jsonl` |
+| `node --input-type=module -e ...`（公开 manifest 比对） | PASS，9/9 入口配置及依赖检查 | `npm-0.0.4-public-manifests.jsonl` |
+| `pnpm lint` | PASS | `npm-0.0.4-final-docs-lint.log` |
+| `pnpm docs:build` | PASS，VitePress 成功构建 | `npm-0.0.4-final-docs-build.log` |
+| `pnpm test:scripts` | PASS，6 个文件、41 项测试 | `npm-0.0.4-final-scripts-tests.log` |
+| `pnpm release:boundaries` | PASS | `npm-0.0.4-final-boundaries.log` |
+| `pnpm release:workflows` | PASS，唯一入口、needs、Secrets 隔离和生产 E2E 约束保留 | `npm-0.0.4-final-workflows.log` |
 | `git diff --check` | PASS，仅提示仓库 CRLF 转换策略，无空白错误 | 终端退出码 0 |
 
 本次只改文档，未重新执行整套本机单测或浏览器测试；远端完整校验结果及其执行阶段见上文，没有将沿用结果写成本次重跑测试。
@@ -215,5 +259,12 @@ Run `npm stage publish` to publish this version, then approve it. (E_STAGE_REQUI
 - `npm-0.0.4-release-retry3-watch.log` / `npm-0.0.4-release-retry3.json`：attempt 3 的失败结论、门禁成功与部署跳过状态。
 - `npm-0.0.4-publish-retry3.log`：job `118444278254` 的 `E403 / E_STAGE_REQUIRED` 原始日志。
 - `npm-0.0.4-registry-after-retry3.jsonl`：attempt 3 后九包目标版本仍全部不存在，dist-tag 未改变。
+- `npm-0.0.4-retry4-preflight.log`：第 4 次发布前九包均未发布、版本与 lockfile 一致。
+- `npm-0.0.4-release-retry4-watch.log` / `npm-0.0.4-release-retry4.json`：attempt 4 的成功结论、既有门禁成功及生产部署跳过。
+- `npm-0.0.4-publish-retry4.log`：job `118477536213` 九包全部发布成功。
+- `npm-0.0.4-registry-after-retry4.jsonl` / `npm-0.0.4-registry-propagation.jsonl` / `npm-0.0.4-icons-propagation.jsonl`：初次目标版本尚不可见及随后处理过程。
+- `npm-0.0.4-registry-final.jsonl`：最终九包版本、dist-tag、完整 integrity、发布时间、实际 tarball 大小及 hash 校验。
+- `npm-0.0.4-publisher-checksums.jsonl`：九包实际发布 shasum 与公开 registry 一致。
+- `npm-0.0.4-public-manifests.jsonl`：九包公开入口及内部依赖核验结果。
 
 此前 [版本准备记录](./release-preparation-0.0.4-beta.md) 的“未发布 / E2E 未验证”是上一阶段状态。本记录补充后续真实远端验收，不将演练成功等同于 npm 或线上部署成功。
