@@ -55,7 +55,8 @@ function walkFiles(dirPath, files = []) {
     const stat = statSync(filePath)
 
     if (stat.isDirectory()) {
-      if (!['dist', 'node_modules', '.git'].includes(entry)) {
+      // 根目录 output 是 ignored 的诊断/部署快照，不能当作公开源码重复扫描。
+      if (!['dist', 'node_modules', '.git'].includes(entry) && filePath !== join(rootDir, 'output')) {
         walkFiles(filePath, files)
       }
     }
