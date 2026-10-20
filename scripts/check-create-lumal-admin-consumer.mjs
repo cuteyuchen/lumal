@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
+import { measureAdminBuild } from './measure-admin-build.mjs'
+import { createScaffoldTestApi, verifyScaffoldBrowsers } from './scaffold-verification.mjs'
 
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
@@ -12,6 +14,7 @@ const packageDirectories = {
   '@lumal/icons': 'packages/icons',
   '@lumal/icons-vue': 'packages/icons-vue',
   '@lumal/core': 'packages/core',
+  '@lumal/vben-compat': 'packages/vben-compat',
   'create-lumal-admin': 'packages/create-lumal-admin',
 }
 const requiredBuildArtifacts = [
@@ -19,6 +22,8 @@ const requiredBuildArtifacts = [
   'packages/icons-vue/dist/index.js',
   'packages/core/dist/index.js',
   'packages/core/dist/minimal.js',
+  'packages/vben-compat/dist/v5.js',
+  'packages/vben-compat/dist/v5-router.js',
   'packages/create-lumal-admin/dist/cli.js',
 ]
 
@@ -29,7 +34,8 @@ function quoteWindowsArg(arg) {
   return /[\s"]/.test(arg) ? `"${arg.replaceAll('"', '\\"')}"` : arg
 }
 
-function runPnpm(args, cwd = rootDir) {
+function runPnpm(args, cwd = rootDir, capture = false, extraEnv = {}) {
+  const started = performance.now()
   const useShell = process.platform === 'win32'
   const result = spawnSync(
     pnpmCommand,
@@ -39,9 +45,11 @@ function runPnpm(args, cwd = rootDir) {
       env: {
         ...process.env,
         CI: 'true',
+        ...extraEnv,
       },
       shell: useShell,
-      stdio: 'inherit',
+      stdio: capture ? 'pipe' : 'inherit',
+      encoding: 'utf8',
     },
   )
 
@@ -50,8 +58,11 @@ function runPnpm(args, cwd = rootDir) {
   }
 
   if (result.status !== 0) {
+    if (capture)
+      console.error(result.stdout, result.stderr)
     throw new Error(`pnpm ${args.join(' ')} 执行失败，退出码 ${result.status}`)
   }
+  return { seconds: Number(((performance.now() - started) / 1000).toFixed(3)), stdout: result.stdout }
 }
 
 function toFileSpecifier(fromDir, filePath) {
@@ -98,7 +109,11 @@ async function checkMinimalConsumer(tempRoot, tarballs) {
   const packages = {
     private: true,
     type: 'module',
-    dependencies: { 'vue': '^3.5.0', '@lumal/core': toFileSpecifier(projectDir, tarballs['@lumal/core']) },
+    dependencies: {
+      'vue': '^3.5.0',
+      '@lumal/core': toFileSpecifier(projectDir, tarballs['@lumal/core']),
+      '@lumal/vben-compat': toFileSpecifier(projectDir, tarballs['@lumal/vben-compat']),
+    },
     devDependencies: { vite: '^8.0.0', typescript: '^6.0.0' },
     pnpm: {
       overrides: Object.fromEntries(['@lumal/core', '@lumal/icons', '@lumal/icons-vue']
@@ -112,9 +127,10 @@ async function checkMinimalConsumer(tempRoot, tarballs) {
   await writeFile(join(projectDir, 'main.ts'), `
 import { createLumalAdmin } from '@lumal/core/minimal'
 import { createRequestClient } from '@lumal/core/request'
+import { adaptVbenMenus } from '@lumal/vben-compat/v5/router'
 const client = createRequestClient()
 const admin = createLumalAdmin({ rootComponent: { render: () => null } })
-globalThis.console.log(client, admin)
+globalThis.console.log(client, admin, adaptVbenMenus([{ path: '/example' }]))
 void admin.mount('#app')
 `)
   await writeFile(join(projectDir, 'tsconfig.json'), JSON.stringify({
@@ -129,12 +145,12 @@ void admin.mount('#app')
     },
     include: ['main.ts'],
   }))
-  runPnpm(['install', '--frozen-lockfile=false'], projectDir)
+  runPnpm(['install', '--frozen-lockfile=false', '--prefer-offline'], projectDir)
   if (existsSync(join(projectDir, 'node_modules/element-plus')))
     throw new Error('轻入口验收意外安装了 Element Plus')
   runPnpm(['exec', 'tsc', '-p', 'tsconfig.json'], projectDir)
   runPnpm(['exec', 'vite', 'build'], projectDir)
-  console.log('minimal/request tarball 无 UI peer 独立安装、类型检查与构建通过。')
+  console.log('minimal/request 与 V5 router tarball 无 UI peer 独立安装、类型检查与构建通过。')
 }
 
 async function main() {
@@ -143,6 +159,13 @@ async function main() {
   const tempRoot = await mkdtemp(join(tmpdir(), 'lumal-consumer-'))
   const tarballDir = join(tempRoot, 'tarballs')
   const runnerDir = join(tempRoot, 'runner')
+  const api = await createScaffoldTestApi()
+  const results = []
+  const optionalFeatures = []
+  const projects = []
+  const browserEvidence = []
+  const reportDirectory = join(rootDir, 'output/release')
+  const screenshotDirectory = join(rootDir, 'output/playwright/scaffold')
 
   try {
     await mkdir(tarballDir, { recursive: true })
@@ -159,69 +182,127 @@ async function main() {
       'add',
       toFileSpecifier(runnerDir, tarballs['create-lumal-admin']),
     ], runnerDir)
-    // 两种模式都从实际发布 tarball 生成，避免只验证源码中的版本占位符。
-    for (const apiMode of ['local', 'http']) {
-      const projectDir = join(tempRoot, `generated-admin-${apiMode}`)
-      runPnpm(['exec', 'create-lumal-admin', projectDir, '--api-mode', apiMode], runnerDir)
+    const cliPath = join(runnerDir, 'node_modules/create-lumal-admin/dist/cli.js')
+    const createPackage = await readJson(join(rootDir, packageDirectories['create-lumal-admin'], 'package.json'))
+    const cliCases = [
+      [['--help'], 0, '--preset'],
+      [['--version'], 0, createPackage.version],
+      [['--unknown'], 1, '创建失败'],
+      [['--preset'], 1, '创建失败'],
+      [[join(tempRoot, 'invalid-name'), '--name', 'Invalid Name'], 1, '非法 npm'],
+      [[join(tempRoot, 'invalid-special-name'), '--name', 'foo~bar'], 1, '非法 npm'],
+      [[runnerDir], 1, '不是空目录'],
+      [[join(tempRoot, 'ci-default')], 0, 'standard / local / hash'],
+    ]
+    for (const [args, status, message] of cliCases) {
+      const result = spawnSync(process.execPath, [cliPath, ...args], { encoding: 'utf8', env: { ...process.env, CI: 'true' }, timeout: 10_000 })
+      if (result.status !== status || !`${result.stdout}${result.stderr}`.includes(message))
+        throw new Error(`tarball CLI 参数验证失败：${args.join(' ')} ${result.stdout}${result.stderr}`)
+    }
+    await mkdir(reportDirectory, { recursive: true })
+    await mkdir(screenshotDirectory, { recursive: true })
+    for (const preset of ['minimal', 'standard', 'vben-compatible']) {
+      for (const apiMode of ['local', 'http']) {
+        for (const routerMode of ['hash', 'history']) {
+          const projectDir = join(tempRoot, `generated-${preset}-${apiMode}-${routerMode}`)
+          runPnpm(['exec', 'create-lumal-admin', projectDir, '--preset', preset, '--api-mode', apiMode, '--router-mode', routerMode, '--no-interactive'], runnerDir)
 
-      const createPackage = await readJson(join(
-        rootDir,
-        packageDirectories['create-lumal-admin'],
-        'package.json',
-      ))
-      const generatedPackagePath = join(projectDir, 'package.json')
-      const generatedPackage = await readJson(generatedPackagePath)
-      const generatedTsConfig = await readJson(join(projectDir, 'tsconfig.json'))
-      const expectedLumalVersion = createPackage.version
+          const generatedPackagePath = join(projectDir, 'package.json')
+          const generatedPackage = await readJson(generatedPackagePath)
+          const generatedTsConfig = await readJson(join(projectDir, 'tsconfig.json'))
+          const expectedLumalVersion = createPackage.version
 
-      for (const packageName of ['@lumal/core', '@lumal/icons', '@lumal/icons-vue']) {
-        if (generatedPackage.dependencies?.[packageName] !== expectedLumalVersion) {
-          throw new Error(
-            `${packageName} 生成版本异常：期望 ${expectedLumalVersion}，实际 ${generatedPackage.dependencies?.[packageName]}`,
+          const runtimeNames = ['@lumal/core', '@lumal/icons', '@lumal/icons-vue', ...(preset === 'vben-compatible' ? ['@lumal/vben-compat'] : [])]
+          for (const packageName of runtimeNames) {
+            if (generatedPackage.dependencies?.[packageName] !== expectedLumalVersion) {
+              throw new Error(
+                `${packageName} 生成版本异常：期望 ${expectedLumalVersion}，实际 ${generatedPackage.dependencies?.[packageName]}`,
+              )
+            }
+          }
+
+          if (generatedPackage.dependencies?.['@iconify/vue'] !== '^5.0.0') {
+            throw new Error('生成项目缺少 @iconify/vue 运行时依赖')
+          }
+
+          if (generatedPackage.devDependencies?.['@types/node'] !== '^24.6.1') {
+            throw new Error('生成项目缺少 @types/node 开发依赖')
+          }
+
+          if (generatedPackage.devDependencies?.['sass-embedded'] !== '^1.95.1') {
+            throw new Error('生成项目缺少 sass-embedded 开发依赖')
+          }
+
+          if (!generatedTsConfig.compilerOptions?.types?.includes('node')) {
+            throw new Error('生成项目 tsconfig 未启用 node 类型')
+          }
+
+          generatedPackage.pnpm = {
+            ...generatedPackage.pnpm,
+            overrides: {
+              ...generatedPackage.pnpm?.overrides,
+            },
+          }
+
+          for (const packageName of runtimeNames) {
+            const tarballSpecifier = toFileSpecifier(projectDir, tarballs[packageName])
+            generatedPackage.dependencies[packageName] = tarballSpecifier
+            generatedPackage.pnpm.overrides[packageName] = tarballSpecifier
+          }
+
+          await writeFile(
+            generatedPackagePath,
+            `${JSON.stringify(generatedPackage, null, 2)}\n`,
           )
+
+          const install = runPnpm(['install', '--frozen-lockfile=false', '--prefer-offline'], projectDir)
+          runPnpm(['typecheck'], projectDir)
+          runPnpm(['test'], projectDir)
+          runPnpm(['lint'], projectDir)
+          const build = runPnpm(['exec', 'vite', 'build'], projectDir, false, {
+            VITE_API_BASE_URL: `${api.url}/${preset}`,
+            // 只为本轮生产浏览器演示显式启用，生成项目的默认环境仍禁用。
+            VITE_ENABLE_LOCAL_DEMO: 'true',
+          })
+          const metrics = await measureAdminBuild(projectDir)
+          const project = { projectDir, preset, apiMode, routerMode }
+          projects.push(project)
+          results.push({ preset, apiMode, routerMode, installSeconds: install.seconds, buildSeconds: build.seconds, ...metrics })
+          browserEvidence.push(...await verifyScaffoldBrowsers([project], api, screenshotDirectory))
+          console.log(`create-lumal-admin ${preset}/${apiMode}/${routerMode} tarball 独立安装、类型、测试、lint 与生产构建通过。`)
+          await writeFile(join(reportDirectory, 'scaffold-report.json'), `${JSON.stringify({ environment: { node: process.version, platform: process.platform }, cliCases: cliCases.length, tempRoot, projects, results, browserEvidence, optionalFeatures }, null, 2)}\n`)
         }
       }
-
-      if (generatedPackage.dependencies?.['@iconify/vue'] !== '^5.0.0') {
-        throw new Error('生成项目缺少 @iconify/vue 运行时依赖')
-      }
-
-      if (generatedPackage.devDependencies?.['@types/node'] !== '^24.6.1') {
-        throw new Error('生成项目缺少 @types/node 开发依赖')
-      }
-
-      if (generatedPackage.devDependencies?.['sass-embedded'] !== '^1.95.1') {
-        throw new Error('生成项目缺少 sass-embedded 开发依赖')
-      }
-
-      if (!generatedTsConfig.compilerOptions?.types?.includes('node')) {
-        throw new Error('生成项目 tsconfig 未启用 node 类型')
-      }
-
-      generatedPackage.pnpm = {
-        ...generatedPackage.pnpm,
-        overrides: {
-          ...generatedPackage.pnpm?.overrides,
-        },
-      }
-
-      for (const packageName of ['@lumal/core', '@lumal/icons', '@lumal/icons-vue']) {
-        const tarballSpecifier = toFileSpecifier(projectDir, tarballs[packageName])
-        generatedPackage.dependencies[packageName] = tarballSpecifier
-        generatedPackage.pnpm.overrides[packageName] = tarballSpecifier
-      }
-
-      await writeFile(
-        generatedPackagePath,
-        `${JSON.stringify(generatedPackage, null, 2)}\n`,
-      )
-
-      runPnpm(['install', '--frozen-lockfile=false'], projectDir)
-      runPnpm(['build'], projectDir)
-      console.log(`create-lumal-admin ${apiMode} 模式独立消费、安装与构建检查通过。`)
     }
+    const featureVariants = [
+      { preset: 'standard', features: 'none' },
+      { preset: 'standard', features: 'system' },
+      { preset: 'standard', features: 'examples' },
+      { preset: 'vben-compatible', features: 'none' },
+    ]
+    for (const { preset, features } of featureVariants) {
+      const projectDir = join(tempRoot, `features-${preset}-${features}`)
+      runPnpm(['exec', 'create-lumal-admin', projectDir, '--preset', preset, '--features', features, '--no-interactive'], runnerDir)
+      const path = join(projectDir, 'package.json')
+      const manifest = await readJson(path)
+      manifest.pnpm = { overrides: {} }
+      const runtimeNames = ['@lumal/core', '@lumal/icons', '@lumal/icons-vue', ...(preset === 'vben-compatible' ? ['@lumal/vben-compat'] : [])]
+      for (const name of runtimeNames) {
+        manifest.dependencies[name] = toFileSpecifier(projectDir, tarballs[name])
+        manifest.pnpm.overrides[name] = manifest.dependencies[name]
+      }
+      await writeFile(path, `${JSON.stringify(manifest, null, 2)}\n`)
+      runPnpm(['install', '--frozen-lockfile=false', '--prefer-offline'], projectDir)
+      runPnpm(['typecheck'], projectDir)
+      runPnpm(['test'], projectDir)
+      runPnpm(['lint'], projectDir)
+      const build = runPnpm(['exec', 'vite', 'build'], projectDir, false, { VITE_ENABLE_LOCAL_DEMO: 'true' })
+      optionalFeatures.push({ preset, features, buildSeconds: build.seconds, ...await measureAdminBuild(projectDir) })
+    }
+    await writeFile(join(reportDirectory, 'scaffold-report.json'), `${JSON.stringify({ environment: { node: process.version, platform: process.platform }, cliCases: cliCases.length, tempRoot, projects, results, browserEvidence, optionalFeatures }, null, 2)}\n`)
   }
   finally {
+    await api.close()
     if (process.env.KEEP_LUMAL_CONSUMER_TEMP === '1') {
       console.log(`保留临时目录：${tempRoot}`)
     }

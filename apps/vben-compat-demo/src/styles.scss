@@ -13,6 +13,25 @@ body {
   margin: 0;
 }
 
+.compat-workspace {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.compat-workspace h1 {
+  font-size: 22px;
+}
+
+.compat-workspace h2 {
+  font-size: 18px;
+}
+
+.compat-workspace__section {
+  padding: 16px 0;
+  border-bottom: 1px solid #d7e3df;
+}
+
 .compat-demo {
   min-height: 100vh;
   box-sizing: border-box;

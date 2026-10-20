@@ -1,5 +1,16 @@
 # @lumal/core
 
+## 0.0.5-beta (2026-10-20)
+
+### Minor Changes
+
+- Schema Form 新增保留值的动态 `visible` 和 `submitDisabled`，供高频迁移表单使用。
+
+### Patch Changes
+
+- 关闭原生 HTML 必填拦截，由 Schema 校验统一呈现错误；修复跨会话认证刷新任务复用。
+- 同步内部图标依赖至 0.0.5-beta，维持 minimal/request 无 UI 消费边界。
+
 ## 0.0.4-beta (2026-10-20)
 
 ### Patch Changes

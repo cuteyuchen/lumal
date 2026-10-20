@@ -1,0 +1,178 @@
+:root {
+  color: var(--el-text-color-primary);
+  background: var(--el-bg-color-page);
+  font-family:
+    Inter,
+    "Segoe UI",
+    "Microsoft YaHei",
+    Arial,
+    sans-serif;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
+.lumal-admin-home {
+  display: grid;
+  gap: var(--lumal-page-gutter, 20px);
+  box-sizing: border-box;
+  padding: var(--lumal-page-gutter, 20px);
+}
+
+.lumal-admin-home__metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.lumal-admin-home__metric {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--lumal-radius-base, 8px);
+  background: var(--el-bg-color);
+}
+
+.lumal-admin-home__metric strong {
+  color: var(--el-color-primary);
+  font-size: 28px;
+}
+
+.lumal-admin-home__metric small {
+  color: var(--el-text-color-secondary);
+}
+
+.lumal-admin-page {
+  box-sizing: border-box;
+  padding: var(--lumal-page-gutter, 20px);
+}
+
+.lumal-admin-page__list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.lumal-admin-page__item {
+  color: var(--el-text-color-regular);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.lumal-admin-header-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.lumal-admin-header-actions .el-button {
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+}
+
+.lumal-admin-header-actions__user {
+  max-width: 120px;
+  overflow: hidden;
+  color: var(--el-text-color-regular);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lumal-admin-login {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 24px;
+  background: var(--el-bg-color-page);
+}
+
+.lumal-admin-login__panel {
+  box-sizing: border-box;
+  width: min(400px, 100%);
+  padding: 32px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--lumal-radius-large, 12px);
+  background: var(--el-bg-color);
+  box-shadow: var(--lumal-shadow-dialog);
+}
+
+.lumal-admin-login__brand {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: var(--lumal-radius-base, 8px);
+  color: var(--el-color-white);
+  background: var(--el-color-primary);
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.lumal-admin-login h1 {
+  margin: 20px 0 6px;
+}
+
+.lumal-admin-login p,
+.lumal-admin-login small {
+  color: var(--el-text-color-secondary);
+}
+
+.lumal-admin-login .el-form {
+  margin: 24px 0 16px;
+}
+
+.lumal-admin-login .el-button {
+  width: 100%;
+  min-height: 44px;
+}
+
+.lumal-admin-login__error {
+  color: var(--el-color-danger) !important;
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .lumal-admin-home__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .lumal-admin-home,
+  .lumal-admin-page {
+    padding: 12px;
+  }
+
+  .lumal-admin-home__metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lumal-admin-header-actions__user {
+    display: none;
+  }
+
+  .lumal-admin-login {
+    padding: 16px;
+  }
+
+  .lumal-admin-login__panel {
+    padding: 24px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}

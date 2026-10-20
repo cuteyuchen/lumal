@@ -14,17 +14,28 @@
 ## 安装
 
 ```bash
-pnpm add @lumal/vben-compat@0.0.4-beta @lumal/core@0.0.4-beta vue element-plus @iconify/vue
+下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
+
+pnpm add @lumal/vben-compat@0.0.5-beta @lumal/core@0.0.5-beta vue element-plus @iconify/vue
 ```
 
 ## 用法
 
 ```ts
-import { useVbenForm, useVbenVxeGrid } from '@lumal/vben-compat'
+import { useVbenForm, useVbenVxeGrid } from '@lumal/vben-compat/v5'
+import '@lumal/vben-compat/style.css'
+
+const [Form, formApi] = useVbenForm({
+  schema: [{ fieldName: 'name', component: 'Input', label: '姓名', rules: 'required' }],
+})
 ```
 
-- `useVbenForm`：常用控件映射到 Lumal Schema 表单能力
-- `useVbenVxeGrid`：proxy、toolbar、actions、错误状态与可等待刷新流程的兼容封装
+- `/v5` 固定 Vben `v5.7.0`，返回 `[Form, api]` / `[Grid, api]`，不是注册函数。
+- Form 支持 `schema`、常见 Element Plus 控件、校验、值 API、动态字段和字段插槽。
+- Grid 支持顶层 `formOptions`、分页查询、排序、刷新、列设置、多选、插槽及失败恢复。
+- 根入口及 `/legacy` 继续保留 `[register, api]` 和旧 Lumal `schemas` 协议。
+- 启动阶段适配菜单使用 `/v5/router` 纯数据入口，避免提前加载 Form/Grid。
+- 路由与权限通过显式 adapter 接入 Core，Vben 全局认证与偏好 Store 需要应用迁移。
 
 完整映射表、不支持项与迁移步骤见 [从 Vben 迁移](/reference/migration-from-vben)。
 
@@ -33,3 +44,4 @@ import { useVbenForm, useVbenVxeGrid } from '@lumal/vben-compat'
 - 可依赖 `@lumal/core`
 - `@lumal/core` **不能**反向依赖本包
 - 新项目优先直接使用 Lumal 原生 API
+- 不安装 VXE/Vben/Zod 运行时；高级编辑、虚拟表格、自定义 renderer 和完整 Tailwind 布局不在轻量子集内

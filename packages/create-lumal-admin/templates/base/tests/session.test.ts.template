@@ -1,0 +1,34 @@
+import { describe, expect, it } from 'vitest'
+import { createApplicationSession } from '../src/services/session-runtime'
+
+describe('应用会话', () => {
+  it('统一清理认证、权限、菜单与标签', () => {
+    const values = new Map<string, string>()
+    const storage = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => { values.set(key, value) },
+      removeItem: (key: string) => { values.delete(key) },
+      clear: () => values.clear(),
+      key: (index: number) => [...values.keys()][index] ?? null,
+      get length() { return values.size },
+    }
+    const app = createApplicationSession(() => ({
+      login: async () => ({ accessToken: 'test-only' }),
+      getUser: async () => ({ id: '1', username: 'test', name: 'Test' }),
+      getAccess: async () => ({ roles: ['admin'], permissions: ['read'] }),
+      getMenus: async () => [],
+      logout: async () => {},
+      clearCache: () => {},
+      list: async () => ({ items: [], total: 0 }),
+      save: async () => {},
+      remove: async () => {},
+    }), storage, storage)
+    app.session.setSession({ accessToken: 'test-only' })
+    app.permissionStore.setPermissions(['read'])
+    storage.setItem(app.tabStorageKey, 'old-tabs')
+    app.reset()
+    expect(app.isAuthenticated()).toBe(false)
+    expect(app.permissionStore.permissions).toEqual([])
+    expect(storage.getItem(app.tabStorageKey)).toBeNull()
+  })
+})

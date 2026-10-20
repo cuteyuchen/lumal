@@ -1,9 +1,11 @@
 import type { IconDefinition } from '@lumal/icons'
 import { createLumalAdmin } from '@lumal/core'
+import { createPermissionStore } from '@lumal/core/permission'
 import App from './App.vue'
 import '@lumal/core/theme-chalk/index.scss'
 import '@lumal/core/style.css'
 import '@lumal/icons-vue/style.css'
+import '@lumal/vben-compat/style.css'
 import './styles.scss'
 
 /***********************本地图标定义*********************/
@@ -19,6 +21,7 @@ const localIcons: IconDefinition[] = [
 /***********************应用启动*********************/
 createLumalAdmin({
   rootComponent: App,
+  permissionStore: createPermissionStore({ roles: ['admin'], permissions: ['user:write'] }),
   icons: {
     localSvg: localIcons,
   },

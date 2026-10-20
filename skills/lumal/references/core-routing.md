@@ -95,4 +95,5 @@ const menus = createMenuRouteRuntime({
 - 新窗口地址沿用 `router.resolve(path).href`，避免破坏 hash/history/base。
 - `progress/loading` 反映真实导航，不额外添加固定时长假进度。
 
-完整接线可核对 `packages/create-lumal-admin/src/scaffold.ts` 或 `apps/lumal-admin/src/App.vue`；以消费项目的用户/权限适配为准，不照搬 Demo 业务。
+完整接线可核对 `packages/create-lumal-admin/templates/base/src/{App.vue,router/index.ts}` 或
+`apps/lumal-admin/src/App.vue`；以消费项目的用户/权限适配为准，不照搬 Demo 业务。

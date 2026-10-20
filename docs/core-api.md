@@ -199,6 +199,11 @@ const schemas: SchemaFormItem<ProjectForm>[] = [
 
 表单级能力包括 `loading`、`compact`、`gutter`、`showReset`、`submitOnEnter`、`scrollToFirstError`、`actionLayout` 和 `actionPosition`。公开控制器提供 `setFieldValue`、`clearValidate`、`scrollToField` 与 `getFieldComponent`。
 
+字段 `visible` 支持布尔值或模型函数，只控制显示并保留模型与校验；
+`hidden` 则不渲染字段。`submitDisabled` 仅禁用提交，不禁用字段。
+表单通过 `novalidate` 将提交校验统一交给 Element Plus，保留输入必填语义，
+避免浏览器原生弹窗拦截 schema 校验与错误反馈。
+
 ### Schema Table
 
 ```vue

@@ -1,0 +1,165 @@
+// @vitest-environment node
+import type { AddressInfo } from 'node:net'
+import { createServer } from 'node:http'
+import { setTimeout as delay } from 'node:timers/promises'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { createHttpBackend } from '../src/services/data-source'
+import { createApplicationSession } from '../src/services/session-runtime'
+
+const tokens = new Map<string, string>()
+const refreshTokens = new Map<string, string>()
+const expired = new Set<string>()
+const calls = new Map<string, number>()
+let failRefresh = false
+let failLogout = false
+let baseURL = ''
+const server = createServer(async (request, response) => {
+  const path = new URL(request.url!, 'http://localhost').pathname
+  calls.set(path, (calls.get(path) ?? 0) + 1)
+  let body = ''
+  for await (const part of request)
+    body += String(part)
+  const input = body ? JSON.parse(body) as Record<string, string> : {}
+  const token = request.headers.authorization?.replace('Bearer ', '') ?? ''
+  function send(data: unknown, status = 200) {
+    response.writeHead(status, { 'content-type': 'application/json' })
+    response.end(JSON.stringify(data))
+  }
+  function issue(username: string) {
+    const accessToken = crypto.randomUUID()
+    const refreshToken = crypto.randomUUID()
+    tokens.set(accessToken, username)
+    refreshTokens.set(refreshToken, username)
+    return { accessToken, refreshToken }
+  }
+  if (path === '/auth/login') {
+    if (input.password !== 'valid')
+      return send({ message: '登录失败' }, 401)
+    return send(issue(input.username!))
+  }
+  if (path === '/auth/refresh') {
+    await delay(40)
+    const username = refreshTokens.get(input.refreshToken!)
+    return !failRefresh && username ? send(issue(username)) : send({ message: '刷新失败' }, 401)
+  }
+  const username = tokens.get(token)
+  if (!username || expired.has(token))
+    return send({ message: '已过期' }, 401)
+  if (path === '/session/me')
+    return send({ id: username, name: username, username })
+  if (path === '/session/access')
+    return send({ roles: [username], permissions: [`${username}:read`] })
+  if (path === '/menus')
+    return send([{ path: '/deep', name: 'Deep', component: 'dashboard/index', meta: { title: username } }])
+  if (path === '/auth/logout') {
+    tokens.delete(token)
+    return send({}, failLogout ? 503 : 200)
+  }
+  if (path.startsWith('/system/'))
+    return send({ items: [{ id: '1', owner: username }], total: 1 })
+  send({}, 404)
+})
+beforeAll(async () => {
+  await new Promise<void>(done => server.listen(0, '127.0.0.1', done))
+  baseURL = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
+})
+beforeEach(() => {
+  calls.clear()
+  tokens.clear()
+  refreshTokens.clear()
+  expired.clear()
+  failRefresh = false
+  failLogout = false
+})
+afterAll(async () => {
+  server.closeAllConnections()
+  await new Promise<void>((done, reject) => server.close(error => error ? reject(error) : done()))
+})
+function memoryStorage(): Storage {
+  const values = new Map<string, string>()
+  return {
+    getItem: key => values.get(key) ?? null,
+    setItem: (key, value) => { values.set(key, value) },
+    removeItem: (key) => { values.delete(key) },
+    clear: () => values.clear(),
+    key: index => [...values.keys()][index] ?? null,
+    get length() { return values.size },
+  }
+}
+function application(url = baseURL) {
+  const storage = memoryStorage()
+  return createApplicationSession(context => createHttpBackend(context, url), storage, storage)
+}
+describe('真实 HTTP 应用服务', () => {
+  it('配置缺失明确失败，不产生演示会话', async () => {
+    const app = application('')
+    await expect(app.login({ username: 'alice', password: 'valid' })).rejects.toThrow('VITE_API_BASE_URL')
+    expect(app.isAuthenticated()).toBe(false)
+    expect(calls.size).toBe(0)
+  })
+  it('登录失败、成功、用户权限菜单与真实 CRUD 请求', async () => {
+    const app = application()
+    await expect(app.login({ username: 'alice', password: 'wrong' })).rejects.toThrow()
+    expect(app.currentUser.value).toBeNull()
+    await app.login({ username: 'alice', password: 'valid' })
+    expect(app.ready.value).toBe(true)
+    expect(app.currentUser.value?.username).toBe('alice')
+    expect(app.permissionStore.permissions).toEqual(['alice:read'])
+    expect(app.permissionStore.roles).toEqual(['alice'])
+    expect(app.menus.value[0]?.path).toBe('/deep')
+    expect(await app.service.list('users', { page: 1, pageSize: 10, query: {} })).toEqual({ items: [{ id: '1', owner: 'alice' }], total: 1 })
+    await Promise.all([app.initialize(), app.initialize()])
+    expect(calls.get('/session/me')).toBe(1)
+  })
+  it('401 并发请求只刷新一次，重放使用新凭据', async () => {
+    const app = application()
+    await app.login({ username: 'alice', password: 'valid' })
+    expired.add(app.session.getToken()!)
+    const signal = new AbortController().signal
+    const [user, access, menus] = await Promise.all([app.service.getUser(signal), app.service.getAccess(signal), app.service.getMenus(signal)])
+    expect(user.username).toBe('alice')
+    expect(access.permissions).toEqual(['alice:read'])
+    expect(menus[0]?.path).toBe('/deep')
+    expect(calls.get('/auth/refresh')).toBe(1)
+    expect(calls.get('/session/me')).toBe(3)
+  })
+  it('刷新失败清理凭据、权限、菜单、标签和动态状态回调', async () => {
+    const app = application()
+    await app.login({ username: 'alice', password: 'valid' })
+    let resets = 0
+    app.onReset(() => {
+      resets += 1
+    })
+    expired.add(app.session.getToken()!)
+    failRefresh = true
+    await expect(app.service.getUser(new AbortController().signal)).rejects.toThrow()
+    expect(app.isAuthenticated()).toBe(false)
+    expect(app.currentUser.value).toBeNull()
+    expect(app.menus.value).toEqual([])
+    expect(app.permissionStore.permissions).toEqual([])
+    expect(resets).toBe(1)
+  })
+  it('退出接口失败不保留本地身份', async () => {
+    const app = application()
+    await app.login({ username: 'alice', password: 'valid' })
+    failLogout = true
+    await expect(app.logout()).rejects.toThrow()
+    expect(app.isAuthenticated()).toBe(false)
+    expect(app.permissionStore.roles).toEqual([])
+    expect(calls.get('/auth/logout')).toBe(1)
+  })
+  it('刷新在途时切换账号，旧响应不能污染新用户', async () => {
+    const app = application()
+    await app.login({ username: 'alice', password: 'valid' })
+    expired.add(app.session.getToken()!)
+    const old = app.service.getUser(new AbortController().signal).catch(error => error)
+    while (!calls.get('/auth/refresh'))
+      await delay(1)
+    await app.login({ username: 'bob', password: 'valid' })
+    await old
+    await delay(50)
+    expect(app.currentUser.value?.username).toBe('bob')
+    expect(app.permissionStore.permissions).toEqual(['bob:read'])
+    expect(app.ready.value).toBe(true)
+  })
+})

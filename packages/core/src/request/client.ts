@@ -184,6 +184,8 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
 
   function clearCache(): void {
     cacheResetVersion += 1
+    // 新会话不能等待旧会话的刷新；旧 Promise 完成时也不能清除新刷新任务。
+    refreshPromise = undefined
     invalidateCache()
   }
 
@@ -397,9 +399,11 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
 
         try {
           if (!refreshPromise) {
-            refreshPromise = clientOptions.authRefresh!.refresh(context).finally(() => {
-              refreshPromise = undefined
+            const pending = clientOptions.authRefresh!.refresh(context).finally(() => {
+              if (refreshPromise === pending)
+                refreshPromise = undefined
             })
+            refreshPromise = pending
           }
 
           await refreshPromise

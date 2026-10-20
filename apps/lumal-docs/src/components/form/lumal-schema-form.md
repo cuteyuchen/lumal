@@ -50,6 +50,7 @@ const schemas: SchemaFormItem[] = [
 | `dictionary` | 字典 options |
 | `rules` | 校验 |
 | `hidden` / `disabled` / `readonly` | 布尔或函数 |
+| `visible` | 布尔或函数；隐藏显示但保留字段、模型与校验 |
 | `authority` / `readonlyAuthority` | 权限 |
 | `formatter` | view 模式展示 |
 | `componentProps` | 透传 Element Plus |
@@ -64,5 +65,8 @@ const schemas: SchemaFormItem[] = [
 
 - `create` / `edit`：可编辑
 - `view`：文本语义展示，而非禁用输入框堆叠
+
+`submitDisabled` 只禁用提交按钮与提交动作，不禁用可编辑字段。
+提交校验统一使用 Element Plus，不被浏览器原生 required 弹窗拦截。
 
 更多：[Core API · Schema Form](/reference/core-api)

@@ -1,5 +1,11 @@
 # @lumal/icons-vue
 
+## 0.0.5-beta (2026-10-20)
+
+### Patch Changes
+
+- 同步内部图标依赖和 fixed-group 版本至 0.0.5-beta，保持现有公开 API。
+
 ## 0.0.4-beta (2026-10-20)
 
 ### Minor Changes

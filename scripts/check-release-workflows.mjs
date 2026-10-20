@@ -59,7 +59,12 @@ export function verifyReleaseWorkflows(workflows, scripts) {
     for (const job of Object.values(workflow.jobs)) {
       if (job.uses?.match(/\/(?:release-npm|deploy)\.yml$/))
         assert.equal(file, 'release-gate.yml', '禁止新增绕过门禁的复用调用')
-      for (const step of job.steps ?? []) {
+      const steps = job.steps ?? []
+      const chromiumIndex = steps.findIndex(step => step.run === 'pnpm exec playwright install --with-deps chromium'
+        && !step.if && !step['continue-on-error'])
+      for (const [index, step] of steps.entries()) {
+        if (step.run === 'pnpm test:create-consumer' || step.run === 'pnpm release:check')
+          assert.ok(chromiumIndex >= 0 && chromiumIndex < index, `${file} 必须在消费者生产浏览器校验前安装 Chromium`)
         if (/\b(?:pnpm|npm)\b[^\n]+\bpublish\b/.test(step.run ?? ''))
           assert.equal(file, 'release-npm.yml', '发现独立 npm 发布路径')
         if (/\b(?:vercel[^\n]+\bdeploy|wrangler[^\n]+\bpages deploy)\b/.test(step.run ?? ''))

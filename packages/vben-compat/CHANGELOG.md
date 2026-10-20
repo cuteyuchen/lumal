@@ -1,5 +1,15 @@
 # @lumal/vben-compat
 
+## 0.0.5-beta (2026-10-20)
+
+### Minor Changes
+
+- 新增 `/v5`，固定 Vben 5.7.0 高频 Form/Grid、路由与权限契约，返回可渲染组件和 API。
+- 新增 `/v5/router` 无 UI 菜单适配入口，保留页面级懒加载；不引入 VXE/Vben 运行时。
+- 根入口保留旧 register/API 语义，新增 `/legacy` 显式别名。
+- 补齐校验、动态字段、分页排序、多选、失败恢复、生命周期及旧入口回归测试。
+- 同步 Core 与图标依赖至 0.0.5-beta；未支持能力有明确类型、错误和迁移说明。
+
 ## 0.0.4-beta (2026-10-20)
 
 ### Patch Changes

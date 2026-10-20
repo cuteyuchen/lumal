@@ -1,5 +1,11 @@
 # @lumal/datav
 
+## 0.0.5-beta (2026-10-20)
+
+### Patch Changes
+
+- 与 fixed-group 公共包同步为 0.0.5-beta；独立组件及按需引擎边界保持不变。
+
 ## 0.0.4-beta (2026-10-20)
 
 ### Patch Changes

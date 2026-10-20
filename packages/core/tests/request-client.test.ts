@@ -613,6 +613,37 @@ describe('create request client', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
+  it('会话重置后不等待旧刷新，旧 finally 不能清除新任务', async () => {
+    let token = 'old'
+    const oldController = new AbortController()
+    const refreshes: Array<() => void> = []
+    const refresh = vi.fn(() => new Promise<void>((resolve) => {
+      refreshes.push(resolve)
+    }))
+    const client = createRequestClient({
+      getToken: () => token,
+      authRefresh: { refresh },
+      fetch: async (_url, init) => new Headers(init?.headers).get('Authorization') === 'Bearer valid'
+        ? createJsonResponse({ ok: true })
+        : new Response('', { status: 401 }),
+    })
+    const old = client.get('/old', { signal: oldController.signal }).catch(error => error)
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledTimes(1))
+    oldController.abort()
+    client.clearCache()
+    token = 'new'
+    const first = client.get('/first')
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledTimes(2))
+    refreshes[0]!()
+    await old
+    const second = client.get('/second')
+    await new Promise(resolve => setTimeout(resolve, 10))
+    expect(refresh).toHaveBeenCalledTimes(2)
+    token = 'valid'
+    refreshes[1]!()
+    await expect(Promise.all([first, second])).resolves.toEqual([{ ok: true }, { ok: true }])
+  })
+
   it('upload 会以 multipart/form-data 提交文件与附加字段', async () => {
     const fetchMock = vi.fn(async () => createJsonResponse({ ok: true }))
     const client = createRequestClient({

@@ -1,8 +1,8 @@
 {
   "name": "create-lumal-admin",
   "type": "module",
-  "version": "0.0.4-beta",
-  "description": "Create a minimal Lumal admin application.",
+  "version": "0.0.5-beta",
+  "description": "Create a modular Lumal admin application with minimal, standard and Vben 5 presets.",
   "license": "MIT",
   "keywords": [
     "lumal",
@@ -26,7 +26,8 @@
   "files": [
     "CHANGELOG.md",
     "README.md",
-    "dist"
+    "dist",
+    "templates"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && node ../../scripts/clean-package-dist.mjs dist && node ../../scripts/sync-create-lumal-admin-version.mjs",

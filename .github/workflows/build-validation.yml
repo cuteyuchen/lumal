@@ -40,5 +40,8 @@ jobs:
       - name: Build packages
         run: pnpm build
 
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Validate create-lumal-admin consumer
         run: pnpm test:create-consumer

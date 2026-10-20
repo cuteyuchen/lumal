@@ -17,6 +17,20 @@ describe('release dependency graph', () => {
     expect(() => verifyReleaseWorkflows(readWorkflows(), scripts)).not.toThrow()
   })
 
+  it('消费者生产浏览器校验之前必须准备 Chromium', () => {
+    const current = readWorkflows()
+    expect(current['build-validation.yml'].jobs.validate.steps.some(step =>
+      step.run === 'pnpm exec playwright install --with-deps chromium')).toBe(true)
+    for (const [file, job] of [['build-validation.yml', 'validate'], ['release-gate.yml', 'release-check']]) {
+      const workflows = readWorkflows()
+      workflows[file].jobs[job].steps = workflows[file].jobs[job].steps
+        .filter(step => step.run !== 'pnpm exec playwright install --with-deps chromium')
+      expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('Chromium')
+      workflows[file].jobs[job].steps.push({ run: 'pnpm exec playwright install --with-deps chromium' })
+      expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('Chromium')
+    }
+  })
+
   it('npm 发布不自动授权生产部署，部署需显式启用', () => {
     const workflows = readWorkflows()
     const { publish, deploy } = workflows['release-gate.yml'].jobs

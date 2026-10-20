@@ -18,15 +18,18 @@
 
 ## npm 安装
 
-当前工作区公共包版本为 `0.0.4-beta`，尚未执行 npm 发布。以下命令在本版发布后使用，显式指定版本并保持所有 Lumal 包同版；不使用不带版本的安装命令获取本次 beta。
+当前工作区及下列命令对应 `0.0.5-beta`。2026-10-20 核对 registry 的 beta
+仍为 `0.0.4-beta`，latest 为 `0.0.1-beta`；本轮仅验证本地 tarball，没有执行发布。
+下列命令以 registry 存在对应版本为前提；当前可从源码构建，或按
+[升级验收](/reference/upgrade-verification) 运行独立 tarball 消费测试。
 
 ```bash
-pnpm add @lumal/core@0.0.4-beta @lumal/icons@0.0.4-beta @lumal/icons-vue@0.0.4-beta @iconify/vue element-plus vue vue-router
-pnpm add @lumal/charts@0.0.4-beta echarts@^6 vue-echarts@^8   # 可选
-pnpm add @lumal/datav@0.0.4-beta echarts@^6                  # 可选
-pnpm add @lumal/cockpit@0.0.4-beta                           # 可选
-pnpm add -D @lumal/vite@0.0.4-beta
-pnpm add @lumal/vben-compat@0.0.4-beta                       # 迁移
+pnpm add @lumal/core@0.0.5-beta @lumal/icons@0.0.5-beta @lumal/icons-vue@0.0.5-beta @iconify/vue element-plus vue vue-router
+pnpm add @lumal/charts@0.0.5-beta echarts@^6 vue-echarts@^8   # 可选
+pnpm add @lumal/datav@0.0.5-beta echarts@^6                  # 可选
+pnpm add @lumal/cockpit@0.0.5-beta                           # 可选
+pnpm add -D @lumal/vite@0.0.5-beta
+pnpm add @lumal/vben-compat@0.0.5-beta                       # 迁移
 ```
 
 Pinia 不是默认依赖，应用需要时自行安装。图表不再兼容 ECharts 5 / vue-echarts 7；默认主题与布局迁移注意事项见 [更新日志](/reference/changelog)。

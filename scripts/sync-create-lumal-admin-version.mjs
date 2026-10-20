@@ -1,27 +1,10 @@
-import { readFileSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
-import process from 'node:process'
+import { access, chmod, readFile } from 'node:fs/promises'
 
-const packageDir = process.cwd()
-const packageJsonPath = join(packageDir, 'package.json')
-const scaffoldPath = join(packageDir, 'dist/scaffold.js')
-const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'))
-const version = packageJson.version
-
-if (typeof version !== 'string' || !version.trim()) {
-  throw new TypeError('create-lumal-admin package.json 缺少有效 version')
-}
-
-const source = readFileSync(scaffoldPath, 'utf8')
-let replacementCount = 0
-const output = source.replace(/(['"])\^0\.0\.0\1/g, () => {
-  replacementCount += 1
-  return JSON.stringify(version)
-})
-
-if (replacementCount !== 3) {
-  throw new Error(`脚手架依赖版本占位符数量异常：期望 3，实际 ${replacementCount}`)
-}
-
-writeFileSync(scaffoldPath, output)
-console.log(`create-lumal-admin 模板依赖已同步为 ${version}`)
+// 版本在生成时直接读取随 tarball 发布的 package.json，不再替换编译产物中的字符串。
+const manifest = JSON.parse(await readFile('package.json', 'utf8'))
+const template = JSON.parse(await readFile('templates/base/package.json', 'utf8'))
+if (!manifest.version || !template.dependencies['@lumal/core'])
+  throw new Error('脚手架版本或公共模板资源缺失')
+await access('templates/modes/http/src/services/data-source.ts')
+await chmod('dist/cli.js', 0o755)
+console.log(`create-lumal-admin ${manifest.version} 模板资源校验通过`)

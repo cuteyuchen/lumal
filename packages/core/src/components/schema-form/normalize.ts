@@ -100,6 +100,7 @@ export function normalizeSchemaFormItems<T extends SchemaFormRecord = Record<str
         required: resolveState(item.required, context),
         readonly,
         renderable,
+        visible: item.visible === undefined || resolveState(item.visible, context),
         rules: resolveValue(item.rules, context, []),
       }
     })

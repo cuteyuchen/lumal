@@ -5,8 +5,8 @@
 ## 当前基线
 
 - 日期：2026-10-20。
-- 工作区版本：`0.0.4-beta`（九个可发布包统一版本；私有示例应用仍为 `0.0.0`）。本轮整合现有开发分支并准备新版本，未打标签或执行 npm 发布，详见 [更新日志](./changelog.md)。
-- 当前分支：`master`。
+- 工作区版本：`0.0.5-beta`（九个可发布包统一版本；私有示例应用仍为 `0.0.0`）。npm beta 仍为 `0.0.4-beta`；本轮只验证本地 tarball，未打标签或执行发布，详见 [更新日志](./changelog.md)。
+- 当前分支：`codex/lumal-admin-upgrade`，起点 `4112ecc`。
 - 前一阶段提交记录（历史基线，不代表本轮工作区已提交）：
   - `671f739 perf: 落地 admin/core/cockpit 整体性能与正确性优化`
   - `4d7a0e8 feat(components): 增强飞线图组件与文档，优化可访问性与交互体验`
@@ -61,6 +61,7 @@
 | 9 图标、图表、兼容与 Vite | 已完成 | `96d4d3a`、`4ce169e`、`a6a36da`、`95ca1dd`、`4f7aba6` |
 | 10 脚手架、性能与发布 | 已完成 | `575b3c2`、`92bec49`、`a2af23f`、`1d66b01`、`9996f05` |
 | 11 组织化用户管理 | 已完成 | 待提交 |
+| 12 三模板、HTTP 与 Vben 5 高频迁移 | 已完成 | 本轮升级提交 |
 
 完成审计补充：Core 已补齐 `LumalLayout` 路由驱动标签 API，Admin 不再自行编排访问标签；CRUD 删除确认进入 `actions` 配置且保留旧 prop 兼容；公司异常响应、菜单、分页和会话字段的构造与解析均集中在 Admin adapter 文件。
 
@@ -412,6 +413,26 @@ Vben 兼容层同步 number、switch、date/datetime/daterange、radio、checkbo
 验收要求：覆盖机构归属与子树筛选、停用机构规则、机构占用删除、批量操作原子回滚、权限隔离、响应式布局和浏览器真实流程；最终执行 `pnpm install --frozen-lockfile`、`pnpm release:check`、`git diff --check` 与 `pnpm changeset:status`。
 
 验收结果：Mock API 13 项、Core 273 项、Admin 95 项测试通过；完整 `pnpm release:check` 通过，其中 Playwright 27 项通过，并覆盖组织筛选、创建归属机构用户、批量启停、批量追加角色及 375/768/1024/1440px 无页面级横向溢出。当前工作区与模拟干净检出均通过 `pnpm install --frozen-lockfile`，`pnpm changeset:status`、发布边界、类型检查、构建、发布产物、六个公共包 dry-run 和 `git diff --check` 均通过。
+
+### 阶段 12：三模板、HTTP 与 Vben 5 高频迁移
+
+状态：已完成。
+
+按 Phase A-F 连续实施，源码证据与起点矩阵见 [升级审计](./upgrade-audit.md)。
+
+- Phase A：核对远端、干净工作区和 npm，固定 Vben v5.7.0 与 SHA；基线 805 项测试通过。
+- Phase B：文件模板分层、三预设、交互/CI、安全目录、实际 tarball 与可选业务层。
+- Phase C：共享应用服务、HTTP adapter、单飞刷新与会话隔离，基础系统管理和深层链接初始化。
+- Phase D：显式 `/v5` 的 Form/Grid/路由/权限高频子集，保留 legacy，真实场景迁移及失败恢复。
+- Phase E：复用 Core 已有上传下载和列设置；路由轻入口避免启动时加载迁移 UI，未增加 VXE/图表依赖。
+- Phase F：九包同步 0.0.5-beta；完整质量门禁、性能与最终提交见 [升级验收](./upgrade-verification.md)。
+
+最终完整工作区单测 881 项、16 个独立生成组合的 82 项测试、
+十二组合生产 Chromium 流程及 28 项 Admin 生产 E2E 均通过。
+`pnpm release:check`、完整 `pnpm test:e2e:release`、文档构建、
+frozen lockfile、registry 预检与 Changesets 状态均实际通过，九包准备为
+未发布的 `0.0.5-beta`。逐项结果、性能样本及未验证范围以验收报告为准。
+本轮同时产生的域名/文档入口用户修改保留，不纳入此任务的代码提交。
 
 ## 验收门禁
 

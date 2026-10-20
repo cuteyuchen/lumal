@@ -96,6 +96,30 @@ const PACKAGE_ENTRIES: PackageEntry[] = [
     specifier: '@lumal/cockpit/style.css',
   },
   {
+    dist: 'packages/vben-compat/dist/v5-router.js',
+    packageName: 'vben-compat',
+    source: 'packages/vben-compat/src/v5/router.ts',
+    specifier: '@lumal/vben-compat/v5/router',
+  },
+  {
+    dist: 'packages/vben-compat/dist/v5.js',
+    packageName: 'vben-compat',
+    source: 'packages/vben-compat/src/v5/index.ts',
+    specifier: '@lumal/vben-compat/v5',
+  },
+  {
+    dist: 'packages/vben-compat/dist/legacy.js',
+    packageName: 'vben-compat',
+    source: 'packages/vben-compat/src/legacy.ts',
+    specifier: '@lumal/vben-compat/legacy',
+  },
+  {
+    dist: 'packages/vben-compat/dist/vben-compat.css',
+    packageName: 'vben-compat',
+    source: 'packages/vben-compat/src/source-style.css',
+    specifier: '@lumal/vben-compat/style.css',
+  },
+  {
     dist: 'packages/vben-compat/dist/index.js',
     packageName: 'vben-compat',
     source: 'packages/vben-compat/src/index.ts',

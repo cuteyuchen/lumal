@@ -42,6 +42,8 @@ describe('lumal schema form', () => {
     })
 
     expect(wrapper.findComponent({ name: 'ElForm' }).exists()).toBe(true)
+    // 必填属性仍提供无障碍语义，提交校验统一交给 Element Plus。
+    expect(wrapper.find('form').attributes('novalidate')).toBeDefined()
     expect(wrapper.findComponent({ name: 'ElForm' }).props('labelWidth')).toBe('auto')
     expect(wrapper.findComponent({ name: 'ElInput' }).exists()).toBe(true)
     expect(wrapper.findComponent({ name: 'ElSelect' }).exists()).toBe(true)

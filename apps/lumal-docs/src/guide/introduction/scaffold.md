@@ -4,18 +4,25 @@
 
 ## 命令
 
-工作区准备版本为 `0.0.4-beta`，要求 Node.js `>=22.12.0`、pnpm `10.33.0`。以下 npm 命令在本版发布后使用，显式指定版本：
+当前工作区为 `0.0.5-beta`，要求 Node.js `>=22.12.0`、pnpm `10.33.0`。
+registry 的 beta 仍为 `0.0.4-beta`；本轮仅做本地 tarball 验证。
+以下新版命令以 registry 存在对应版本为前提，见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm create lumal-admin@0.0.4-beta my-admin
-pnpm create lumal-admin@0.0.4-beta my-admin --api-mode local   # 默认
-pnpm create lumal-admin@0.0.4-beta my-admin-http --api-mode http
+pnpm create lumal-admin@0.0.5-beta my-admin
+pnpm create lumal-admin@0.0.5-beta my-admin --api-mode local   # 默认
+pnpm create lumal-admin@0.0.5-beta my-admin-http --api-mode http
 ```
 
-| 模式 | 内容 |
+| 预设 | 内容 |
 | --- | --- |
-| `local` | 浏览器内请求示例 |
-| `http` | 额外生成 `VITE_API_BASE_URL`、请求客户端、登录刷新示例、`API-CONTRACT.md` |
+| `minimal` | 轻入口、布局、认证、权限、动态菜单、请求、主题、403/404 |
+| `standard` | 默认预设；增加用户、角色授权、菜单、机构、字典、配置与 Schema/CRUD 示例 |
+| `vben-compatible` | standard 加 Vben 5.7.0 Form、Grid、Dialog CRUD 与权限迁移页面 |
+
+三种预设均支持 Local/HTTP 数据源、Hash/History 路由。可用
+`--features system,examples` 选择业务层，或 `--features none` 禁用；
+minimal 不接受业务模块。
 
 ## 生成内容
 
@@ -26,9 +33,13 @@ pnpm create lumal-admin@0.0.4-beta my-admin-http --api-mode http
 - 主题与布局偏好、设置抽屉
 - 明确 vendor 分包配置
 
-**不会**生成完整用户 / 角色 / 菜单 / 字典系统管理业务（参考 `apps/lumal-admin`）。
+Core 与图标依赖精确使用同版 `0.0.5-beta`，不依赖浮动标签。模板按用户隔离布局状态，
+登录前清理旧快照。HTTP 模式已接通登录、刷新、用户、权限、菜单、退出和 CRUD，
+必须配置符合 `API-CONTRACT.md` 的真实后端；未配置不会回退演示认证。
+Local 的演示账号仅用于开发，生产默认禁用。
 
-Core 与图标依赖精确使用同版 `0.0.4-beta`，不依赖浮动标签。模板按用户隔离布局状态，登录前清理旧快照。HTTP 模式仍需项目实现实际接口、响应适配和认证接线。
+兼容预设只增加 `@lumal/vben-compat`，页面显式导入 `/v5`；
+不默认安装 VXE、图表、驾驶舱、富文本或国际化。
 
 ## 本地调试脚手架本身
 

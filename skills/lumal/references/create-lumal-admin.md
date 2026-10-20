@@ -9,17 +9,19 @@
 环境基线：Node.js 22.12+、pnpm 10.33.0。以下是本 Skill 对应版本的示例，不代表最新发布：
 
 ```bash
-pnpm create lumal-admin@0.0.4-beta my-admin
-pnpm create lumal-admin@0.0.4-beta my-admin-http --api-mode http
+pnpm create lumal-admin@0.0.5-beta my-admin
+pnpm create lumal-admin@0.0.5-beta my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
+pnpm create lumal-admin@0.0.5-beta my-admin-v5 --preset vben-compatible
 ```
 
 npm 等价命令：
 
 ```bash
-npm create lumal-admin@0.0.4-beta my-admin -- --api-mode http
+npm create lumal-admin@0.0.5-beta my-admin -- --api-mode http
 ```
 
-未指定 `--api-mode` 时为 `local`；只接受 `local/http`。生成完成后进入新目录安装依赖并启动：
+TTY 提问目录、名称、预设、数据源、路由和可选模块；非 TTY/CI 自动禁用交互。
+默认 `standard/local/hash`。生成完成后进入新目录安装依赖并启动：
 
 ```bash
 cd my-admin
@@ -35,21 +37,28 @@ pnpm dev
 
 - Vue + TypeScript + Vite + Element Plus。
 - `@lumal/core/minimal` 启动、公开包导入和必要 SCSS/CSS。
-- Router、权限、登录会话、403/404、布局、标签缓存、主题偏好和请求示例。
-- `http` 模式增加环境变量、标准请求/刷新示例和 `API-CONTRACT.md`，不是完整后端服务。
-- 不包含完整用户/角色/菜单/字典管理业务，也不默认引入 Charts、DataV、Cockpit 或 Vben 兼容层。
+- 三预设均有动态路由、权限、认证、403/404、布局、标签缓存、主题偏好和应用服务。
+- minimal 不含管理模块与 Schema 示例；standard 默认包含 system/examples，可用 `--features` 选择单个或 `none`。
+- system 提供用户、角色授权、菜单、机构、字典类型/项和配置 CRUD，业务代码不进入 Core。
+- vben-compatible 在 standard 上增加 `/v5` 和真实 Form/Grid/Dialog CRUD/权限迁移页面，读 [迁移参考](vben-compat.md)。
+- HTTP 真实请求登录/刷新/用户/权限/菜单/退出，无配置明确失败，不回退 Local。
+- Local 账号是开发演示，生产默认禁用；HTTP 无演示凭据。API 契约、环境配置、Lint 和测试均随项目生成。
+- 不默认安装 Charts、DataV、Cockpit、VXE、Zod、富文本或 i18n。
 
 模板生成后业务接口、权限模型和存储策略属于应用；不要把 Demo 的 Mock 凭据、菜单或公司状态码写进公共包。
 
 ## 编程 API 与维护
 
-根入口导出 `createLumalAdminProject`，传入 `targetDir/name/apiMode`；具体选项以安装版本声明为准。CLI 是 `create-lumal-admin`，不要使用历史拼写 `create-luma-admin`。
+根入口导出 `createLumalAdminProject`，传入 `targetDir/name/preset/apiMode/routerMode/features`；
+后三类选项有默认值，具体以声明为准。CLI 是 `create-lumal-admin`。
 
 修改模板时核对：
 
 - 模板使用公开入口，不能导入仓库源码或 `workspace:` 依赖。
-- 三个 Lumal 运行时依赖由构建注入与脚手架相同的精确版本；不要只手改模板里的旧版本占位值。
-- `local/http` 两条生成路径都应通过独立安装和构建。仓库提供 `pnpm test:create-consumer` 从实际 tarball 验证。
+- 生成时读取随 tarball 发布的 package.json，基础三包和可选兼容包精确同版。
+- 真实资源在 `templates/base/modes/features/vben-compatible` 组合，不向巨型字符串回退。
+- `pnpm test:create-consumer` 验证真实 CLI、12 种独立组合、真实 HTTP 与生产 Chromium。
 - 改动标签、退出、Token 刷新等接线时，同时核对已有消费者和模板测试。
 
-仓库核对位置：`packages/create-lumal-admin/src/{index,cli,scaffold}.ts`、`scripts/sync-create-lumal-admin-version.mjs`、`scripts/check-create-lumal-admin-consumer.mjs`。
+仓库核对位置：`packages/create-lumal-admin/src/{cli,create,presets,templates}.ts`、
+`packages/create-lumal-admin/templates` 和 `scripts/check-create-lumal-admin-consumer.mjs`。

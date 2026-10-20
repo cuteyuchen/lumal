@@ -1,5 +1,11 @@
 # @lumal/cockpit
 
+## 0.0.5-beta (2026-10-20)
+
+### Patch Changes
+
+- 同步 Core、图标依赖与 fixed-group 版本至 0.0.5-beta，不增加驾驶舱强制依赖。
+
 ## 0.0.4-beta (2026-10-20)
 
 ### Patch Changes

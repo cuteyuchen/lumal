@@ -12,8 +12,10 @@
 
 ## 安装
 
+下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
+
 ```bash
-pnpm add @lumal/datav@0.0.4-beta vue echarts@^6
+pnpm add @lumal/datav@0.0.5-beta vue echarts@^6
 ```
 
 ## 公开入口

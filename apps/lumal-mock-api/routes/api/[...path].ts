@@ -254,6 +254,9 @@ export default defineEventHandler(async (event) => {
     if (method === 'GET' && path === '/session/me') {
       return ok(auth.user)
     }
+    if (method === 'GET' && path === '/session/access') {
+      return ok({ permissions: auth.user.permissions, roles: auth.user.roles })
+    }
 
     return await withSandbox(auth.sid, async (sandbox) => {
       if (method === 'GET' && path === '/menu') {

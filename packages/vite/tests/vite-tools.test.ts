@@ -74,6 +74,18 @@ describe('@lumal/vite', () => {
       .toBe(resolve('E:/workspace/lumal', 'packages/icons/src/morph/index.ts'))
     expect(sourceAliases.findIndex(alias => alias.find === '@lumal/icons/morph'))
       .toBeLessThan(sourceAliases.findIndex(alias => alias.find === '@lumal/icons'))
+    for (const entry of ['v5', 'v5/router', 'legacy']) {
+      expect(sourceAliases.findIndex(alias => alias.find === `@lumal/vben-compat/${entry}`))
+        .toBeLessThan(sourceAliases.findIndex(alias => alias.find === '@lumal/vben-compat'))
+    }
+    expect(sourceAliases.find(alias => alias.find === '@lumal/vben-compat/v5')?.replacement)
+      .toBe(resolve('E:/workspace/lumal', 'packages/vben-compat/src/v5/index.ts'))
+    expect(sourceAliases.findIndex(alias => alias.find === '@lumal/vben-compat/v5/router'))
+      .toBeLessThan(sourceAliases.findIndex(alias => alias.find === '@lumal/vben-compat/v5'))
+    expect(sourceAliases.find(alias => alias.find === '@lumal/vben-compat/v5/router')?.replacement)
+      .toBe(resolve('E:/workspace/lumal', 'packages/vben-compat/src/v5/router.ts'))
+    expect(sourceAliases.find(alias => alias.find === '@lumal/vben-compat/style.css')?.replacement)
+      .toBe(resolve('E:/workspace/lumal', 'packages/vben-compat/src/source-style.css'))
     expect(sourceAliases.every(alias => !alias.replacement.replaceAll('\\', '/').includes('/dist/')))
       .toBe(true)
     expect(distAliases.find(alias => alias.find === '@lumal/icons/vite')?.replacement)

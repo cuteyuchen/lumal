@@ -8,6 +8,9 @@ Lumal 按职责拆包，兼容层不能反向污染核心包。
 - `@lumal/icons-vue` 依赖 `@lumal/icons` 与 `morphicons@2.0.0`，不能依赖 `@lumal/core`。只启用形变时才加载引擎和官方 Vue 绑定。
 - `@lumal/core` 可以依赖 `@lumal/icons` 与 `@lumal/icons-vue`。
 - `@lumal/vben-compat` 可以依赖 `@lumal/core`。
+- `/v5`、`/legacy` 与根入口均独立导出；根入口保留旧 Lumal 契约。兼容 UI 可以依赖
+  `@lumal/icons-vue`，但不引入 VXE、Vben、Zod 或 VeeValidate 强制运行时。
+- 启动阶段的菜单适配使用 `/v5/router` 纯数据入口，无需 UI peer，不静态加载 Form/Grid。
 - `@lumal/core` 不能依赖 `@lumal/vben-compat`。
 - `@lumal/charts` 独立可选包，不依赖 `@lumal/core`；`@lumal/core` 也不能依赖 `@lumal/charts`。
 - `@lumal/datav` 独立驾驶舱可视化组件包，不依赖 `@lumal/core`、`@lumal/charts` 或 `@lumal/cockpit`；上述包也不能反向依赖 `@lumal/datav`。DataV `config` 兼容模式允许依赖 `@jiaminghi/charts`。
@@ -31,6 +34,8 @@ Lumal 按职责拆包，兼容层不能反向污染核心包。
 - `@lumal/icons-vue` 必须把 `vue` 与 `@iconify/vue` 作为 peer dependency，纯 SVG 算法不得在该包内复制实现。
 - `@lumal/vite` 不强制安装自动导入、Devtools 或 viewport 转换插件。
 - 业务接口、业务路由、业务 store 不进入包源码。
+- `create-lumal-admin/templates` 是可发布资源，按 base / mode / feature / preset 组合；
+  system 管理页和后端协议 adapter 属于生成应用，不进入 Core，也不依赖 apps 私有源码。
 - `apps/*` 只作为消费方验证，通过 workspace 包依赖使用 `@lumal/*`，不直接 alias 到 `packages/*/src`。
 - `packages/*` 的公开入口必须能通过 `exports`、`types`、`main`、`module` 指向 `dist` 产物。
 - 样式统一使用 SCSS，包级样式入口必须能通过 package `exports` 被消费方引入。

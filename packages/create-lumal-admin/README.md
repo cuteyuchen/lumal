@@ -4,14 +4,32 @@
 
 ## 使用
 
-环境要求：Node.js `>=22.12.0`、pnpm `10.33.0`。工作区准备版本为 `0.0.4-beta`；以下命令在本版发布后使用，显式指定版本，避免解析到旧的 `latest`。
+环境要求：Node.js `>=22.12.0`、pnpm `10.33.0`。当前工作区为 `0.0.5-beta`；
+registry 的 beta 仍为 `0.0.4-beta`，本轮仅验证本地 tarball。下列新版命令以
+registry 存在对应版本为前提，不依赖旧的 latest。
 
 ```bash
-pnpm create lumal-admin@0.0.4-beta my-admin
-pnpm create lumal-admin@0.0.4-beta my-admin-http --api-mode http
+pnpm create lumal-admin@0.0.5-beta my-admin
+pnpm create lumal-admin@0.0.5-beta my-admin-http --api-mode http
 ```
 
-`--api-mode local` 是默认模式，保留浏览器内请求示例；`--api-mode http` 会额外生成接口环境变量、标准请求客户端、登录刷新示例和 `API-CONTRACT.md`，但不会生成完整业务后端。
+在 TTY 中依次选择目录、npm 名称、预设、数据源、路由和业务模块。默认
+`standard / local / hash`。CI、非 TTY 或 `--no-interactive` 均使用确定性默认值，不等待输入。
+
+```bash
+pnpm create lumal-admin@0.0.5-beta my-admin --preset standard --api-mode http --router-mode history --no-interactive
+pnpm create lumal-admin@0.0.5-beta my-admin-v5 --preset vben-compatible
+pnpm create lumal-admin@0.0.5-beta my-minimal --preset minimal
+```
+
+| 参数 | 取值 |
+| --- | --- |
+| `--preset` | `minimal`、`standard`、`vben-compatible` |
+| `--api-mode` | `local`、`http` |
+| `--router-mode` | `hash`、`history` |
+| `--features` | `system,examples`、单个模块或 `none`；minimal 不接受业务模块 |
+| `--name` | 合法 npm 包名，可与目录不同 |
+| `--help` / `--version` | 帮助 / tarball 自身版本 |
 
 生成后执行：
 
@@ -19,6 +37,11 @@ pnpm create lumal-admin@0.0.4-beta my-admin-http --api-mode http
 cd my-admin
 pnpm install
 pnpm dev
+pnpm test
+pnpm lint
+pnpm typecheck
+pnpm build
+pnpm preview
 ```
 
 ## 生成内容
@@ -26,18 +49,51 @@ pnpm dev
 - Vue 3 + TypeScript + Vite。
 - Element Plus 作为 UI 基础。
 - `@lumal/core/theme-chalk/index.scss`、`@lumal/core/style.css` 和 SCSS 样式入口。
-- `@lumal/core/minimal` 的 `createLumalAdmin` 启动代码，显式安装 Element Plus、Router 和权限，不注册默认全量组件表。
+- `@lumal/core/minimal` 启动、Router 与权限；Element Plus 组件局部导入，不注册全量 UI 插件。
 - `LumalLayout` 后台布局壳和 `LumalRouterView` 路由出口，采用路由驱动标签模式：固定首页页签、`routeTabResolver` 动态追加、会话级持久化、按标签版本刷新、`cacheKeys` 联动关闭与缓存剔除。
 - 登录页、会话状态、权限菜单和路由守卫。
-- 工作台、受保护业务占位页、403 与独立 404 页面。
+- 工作台、403 与独立 404 页面。
 - 主题切换、布局与标签偏好持久化、全局设置抽屉。
-- `createRequestClient` 请求封装示例。
+- 统一应用服务、真实 HTTP 认证与显式后端 adapter。
 - Element Plus、Vue 和 Lumal 公共能力的明确 vendor 分包配置。
 
 脚手架生成的项目只通过 `@lumal/core`、`@lumal/icons`、`@lumal/icons-vue` 等公开包入口消费能力，不依赖 monorepo 内部源码路径。
 
-三个 Lumal 依赖由构建步骤注入与脚手架相同的精确版本 `0.0.4-beta`，不使用浮动版本。模板按用户重建布局壳，登录前清理旧会话与标签快照。轻入口不代表移除模板所需的 Element Plus。
+| 能力 | minimal | standard | vben-compatible |
+| --- | --- | --- | --- |
+| 启动、布局、认证、权限、主题、请求、403/404 | 有 | 有 | 有 |
+| 动态菜单、标签与页面缓存、系统偏好 | 有 | 有 | 有 |
+| 用户、角色授权、菜单、机构、字典类型/项、配置 | 无 | system 可选层，默认有 | 同 standard |
+| 原生 Schema Form / CRUD 示例 | 无 | examples 可选层，默认有 | 同 standard |
+| Vben 5.7.0 Form / Grid / 权限迁移页面 | 无 | 无 | 有 |
+| 图表、DataV、Cockpit、VXE、富文本、i18n | 不默认安装 | 不默认安装 | 不默认安装 |
 
-维护者可在仓库根目录执行 `pnpm build` 后运行 `pnpm test:create-consumer`，从实际 tarball 验证无 UI 的 minimal/request 消费及 `local`、`http` 两种生成模式的独立安装和构建。
+三个基础 Lumal 包及可选兼容包均精确同步为脚手架自身版本。兼容预设只增加
+`@lumal/vben-compat`，不安装 Vben/VXE/Zod 运行时。根及 `/legacy` 的旧契约不变；
+Vben 5 页面显式导入 `/v5`，边界见生成项目 `MIGRATION.md`。
 
-脚手架不会生成用户、角色、菜单、字典、配置等完整系统管理业务；这些应由具体项目按自身接口和权限模型实现。
+## 数据源与安全
+
+Local 是开发演示，账号 `admin/guest`，密码 `lumal123`，Token 每次随机生成。
+生产默认禁止本地演示认证；只允许演示站点显式设置 `VITE_ENABLE_LOCAL_DEMO=true`。
+HTTP 模式不包含演示账号或固定 Token，未配置 `VITE_API_BASE_URL` 立即失败，不回退 Local。
+
+HTTP 的登录、刷新、当前用户、角色权限、菜单、退出和 CRUD 均真实请求后端。
+接口及 `lumal-mock` 接入说明位于生成项目 `API-CONTRACT.md`。权限状态、动态路由、
+请求缓存、标签和页面缓存随会话清理；旧请求不能覆盖新登录身份。
+公司包装和字段转换只写入应用 `http-adapter.ts`，不进入 Core。
+
+不覆盖非空目录，不提供隐式 force；拒绝文件和符号链接目标。写入失败仅清理本次拥有
+的文件与仍为空的目录，不递归删除目标。项目测试、类型、环境示例和部署说明一并生成；
+History 部署需要服务器回退 `index.html`，不应把 API 请求回退到 HTML。
+
+## 维护与验收
+
+`src/cli.ts` 负责参数和交互，`create.ts` 负责安全写入，`templates.ts` 组合
+`templates/base`、`modes`、`features` 和 `vben-compatible` 真实资源。
+资源随 npm tarball 发布，不依赖工作区源码。
+
+仓库运行 `pnpm build` 后执行 `pnpm test:create-consumer`：真实 tarball CLI、
+无 UI 的 minimal/request 消费者、3 预设 × 2 数据源 × 2 路由独立安装/类型/测试/
+Lint/生产构建及 Chromium 交互；另测可选模块体积。结果位于
+`output/release/scaffold-report.json`，截图位于 `output/playwright/scaffold`。

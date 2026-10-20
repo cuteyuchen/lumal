@@ -165,6 +165,8 @@ function sidebarReference(): DefaultTheme.SidebarItem[] {
         { text: 'Mock API', link: 'mock-api' },
         { text: '驾驶舱开发规范', link: 'cockpit-development-spec' },
         { text: '从 Vben 迁移', link: 'migration-from-vben' },
+        { text: '升级能力审计', link: 'upgrade-audit' },
+        { text: '升级验收与性能', link: 'upgrade-verification' },
         { text: '包边界', link: 'package-boundaries' },
         { text: '更新日志', link: 'changelog' },
         { text: '发布检查清单', link: 'release-checklist' },

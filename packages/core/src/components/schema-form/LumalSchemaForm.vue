@@ -55,6 +55,7 @@ const props = withDefaults(defineProps<{
   scrollToFirstError?: boolean
   showReset?: boolean
   submitLoading?: boolean
+  submitDisabled?: boolean
   submitOnEnter?: boolean
   submitText?: string
   showActions?: boolean
@@ -73,6 +74,7 @@ const props = withDefaults(defineProps<{
   scrollToFirstError: true,
   showReset: false,
   submitLoading: false,
+  submitDisabled: false,
   submitOnEnter: false,
   submitText: '提交',
   showActions: false,
@@ -357,7 +359,7 @@ function updateFieldValue(field: string, value: unknown): void {
 }
 
 async function handleSubmit(): Promise<void> {
-  if (activeMode.value === 'view' || props.submitLoading) {
+  if (activeMode.value === 'view' || props.submitLoading || props.submitDisabled) {
     return
   }
 
@@ -462,6 +464,7 @@ defineExpose({
   <ElForm
     ref="formRef"
     v-loading="props.loading"
+    novalidate
     class="lumal-schema-form"
     :class="{ 'is-compact': props.compact }"
     :disabled="props.disabled"
@@ -474,6 +477,7 @@ defineExpose({
     <ElRow class="lumal-schema-form__row" :gutter="props.gutter" :data-columns="props.columns">
       <ElCol
         v-for="schema in renderableSchemas"
+        v-show="schema.visible"
         :key="schema.field"
         :span="resolveFieldSpan(schema)"
         :class="{ 'is-full-span': resolveFieldSpan(schema) === 24 }"
@@ -684,7 +688,7 @@ defineExpose({
       <ElButton v-if="showReset" native-type="button" :disabled="submitLoading" @click="handleReset">
         {{ resetText }}
       </ElButton>
-      <ElButton type="primary" native-type="submit" :loading="submitLoading" :disabled="submitLoading">
+      <ElButton type="primary" native-type="submit" :loading="submitLoading" :disabled="submitLoading || submitDisabled">
         {{ submitText }}
       </ElButton>
     </div>

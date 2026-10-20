@@ -11,8 +11,10 @@ Vite 配置助手：组件 resolver、工作区源码 / 产物 alias、可选 De
 
 ## 安装
 
+下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
+
 ```bash
-pnpm add -D @lumal/vite@0.0.4-beta
+pnpm add -D @lumal/vite@0.0.5-beta
 ```
 
 ## 公开入口

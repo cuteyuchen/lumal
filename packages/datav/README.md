@@ -4,8 +4,11 @@
 
 ## 安装
 
+下列命令对应工作区 0.0.5-beta；npm beta 仍为 0.0.4-beta。本轮仅验证本地 tarball，
+registry 存在对应版本后才可使用精确版本安装，当前也可从源码构建后 file 接入。
+
 ```bash
-pnpm add @lumal/datav@0.0.4-beta vue echarts@^6
+pnpm add @lumal/datav@0.0.5-beta vue echarts@^6
 ```
 
 ```ts

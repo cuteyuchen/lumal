@@ -1,5 +1,11 @@
 # @lumal/icons
 
+## 0.0.5-beta (2026-10-20)
+
+### Patch Changes
+
+- 与 fixed-group 公共包同步为 0.0.5-beta；静态内核和可选形变 API 无变化。
+
 ## 0.0.4-beta (2026-10-20)
 
 ### Minor Changes

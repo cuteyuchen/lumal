@@ -1,190 +1,159 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+// @vitest-environment node
+import * as fs from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { parseCliArgs } from '../src/cli'
 import { createLumalAdminProject } from '../src/scaffold'
 
-/***********************测试目录*********************/
-async function createTempDir(): Promise<string> {
-  return mkdtemp(join(tmpdir(), 'lumal-create-'))
+vi.mock('node:fs/promises', async (original) => {
+  const actual = await original<typeof fs>()
+  return { ...actual, open: vi.fn(actual.open) }
+})
+const temporary: string[] = []
+async function directory(): Promise<string> {
+  const path = await fs.mkdtemp(join(tmpdir(), 'lumal-generator-'))
+  temporary.push(path)
+  return path
 }
+afterEach(async () => {
+  vi.mocked(fs.open).mockRestore()
+  await Promise.all(temporary.splice(0).map(path => fs.rm(path, { recursive: true, force: true })))
+})
 
-describe('createLumalAdminProject', () => {
-  it('会生成使用公开包入口的最小 Lumal Admin 应用', async () => {
-    const tempDir = await createTempDir()
-    const targetDir = join(tempDir, 'demo-admin')
-
-    try {
-      const result = await createLumalAdminProject({
-        name: 'demo-admin',
-        targetDir,
-      })
-
-      const packageJson = await readFile(join(targetDir, 'package.json'), 'utf8')
-      const mainTs = await readFile(join(targetDir, 'src/main.ts'), 'utf8')
-      const appVue = await readFile(join(targetDir, 'src/App.vue'), 'utf8')
-      const routerTs = await readFile(join(targetDir, 'src/router/index.ts'), 'utf8')
-      const loginView = await readFile(join(targetDir, 'src/views/auth/LoginView.vue'), 'utf8')
-      const dashboardView = await readFile(join(targetDir, 'src/views/dashboard/DashboardView.vue'), 'utf8')
-      const projectView = await readFile(join(targetDir, 'src/views/project/ProjectView.vue'), 'utf8')
-      const forbiddenView = await readFile(join(targetDir, 'src/views/error/ForbiddenView.vue'), 'utf8')
-      const notFoundView = await readFile(join(targetDir, 'src/views/error/NotFoundView.vue'), 'utf8')
-      const preferencesService = await readFile(join(targetDir, 'src/services/preferences.ts'), 'utf8')
-      const sessionService = await readFile(join(targetDir, 'src/services/session.ts'), 'utf8')
-      const requestExample = await readFile(join(targetDir, 'src/composables/useMockRequestExample.ts'), 'utf8')
-      const requestPanel = await readFile(join(targetDir, 'src/components/request/RequestExamplePanel.vue'), 'utf8')
-      const stylesScss = await readFile(join(targetDir, 'src/styles.scss'), 'utf8')
-      const viteConfig = await readFile(join(targetDir, 'vite.config.ts'), 'utf8')
-
-      expect(result.createdFiles).toEqual([
-        'index.html',
-        'package.json',
-        'src/App.vue',
-        'src/components/app/AppHeaderActions.vue',
-        'src/components/app/AppSettingsDrawer.vue',
-        'src/components/request/RequestExamplePanel.vue',
-        'src/composables/useMockRequestExample.ts',
-        'src/main.ts',
-        'src/router/index.ts',
-        'src/services/access.ts',
-        'src/services/preferences.ts',
-        'src/services/session.ts',
-        'src/styles.scss',
-        'src/views/auth/LoginView.vue',
-        'src/views/dashboard/DashboardView.vue',
-        'src/views/error/ForbiddenView.vue',
-        'src/views/error/NotFoundView.vue',
-        'src/views/project/ProjectView.vue',
-        'tsconfig.json',
-        'vite.config.ts',
-      ])
-      expect(packageJson).toContain('"name": "demo-admin"')
-      expect(packageJson).toContain('"@lumal/core"')
-      expect(packageJson).toContain('"element-plus"')
-      expect(packageJson).toContain('"vue-router"')
-      expect(mainTs).toContain('import { createLumalAdmin } from \'@lumal/core/minimal\'')
-      expect(mainTs).toContain('import { router } from \'./router\'')
-      expect(mainTs).toContain('permissionStore,')
-      expect(mainTs).toContain('locale: zhCn')
-      expect(mainTs).toContain('import \'@lumal/core/theme-chalk/index.scss\'')
-      expect(mainTs).toContain('import \'@lumal/core/style.css\'')
-      expect(mainTs).toContain('router,')
-      expect(appVue).toContain('<script setup lang="ts">')
-      expect(appVue).toContain('/***********************页面状态*********************/')
-      expect(appVue).toContain('LumalLayout')
-      expect(appVue).toContain('LumalRouterView')
-      expect(appVue).toContain('createAdminSidebarMenus')
-      expect(appVue).toContain('AppSettingsDrawer')
-      expect(appVue).toContain(':menus="allMenus"')
-      expect(appVue).toContain(':preferences="adminPreferences"')
-      expect(appVue).not.toContain('splitMenusByLayout')
-      expect(appVue).not.toContain('top-menus')
-      expect(appVue).toContain(':view-key="routeViewKey"')
-      expect(appVue).toContain(':transition-name="adminPreferences.transition.name"')
-      expect(appVue).toContain(':cache="routeViewCache"')
-      expect(appVue).toContain(':key="currentUser?.username"')
-      expect(appVue).toContain(':cache-keys="tabs.map((tab: LumalLayoutTabItem) => resolveRouteViewKey(tab.path))"')
-      expect(appVue).toContain('routeRefreshKeys[path] = (routeRefreshKeys[path] ?? 0) + 1')
-      expect(appVue).toContain('delete routeRefreshKeys[path]')
-      expect(appVue).toContain('@tabs-change="handleTabsChange"')
-      expect(appVue).not.toContain('routeRefreshKey.value')
-      expect(appVue).toContain('route-driven')
-      expect(appVue).toContain(':route-tab-resolver="resolveAdminRouteTab"')
-      expect(appVue).toContain(':tab-storage-key="currentUser ? adminTabSnapshotStorageKey : \'\'"')
-      expect(appVue).toContain('@tab-refresh="handleTabRefresh"')
-      expect(appVue).toContain('app.dynamicTitle')
-      expect(routerTs).not.toContain('createPermissionStore')
-      expect(routerTs).toContain('setupPermissionGuard')
-      expect(routerTs).toContain('createMenuRouteRuntime')
-      expect(routerTs).not.toContain('createRouteRecords')
-      expect(routerTs).not.toContain('normalizeMenuRecords')
-      expect(routerTs).toContain('meta: {')
-      expect(routerTs).toContain('authority: [\'dashboard:view\']')
-      expect(routerTs).toContain('createAdminRouter')
-      expect(routerTs).toContain('path: \'/login\'')
-      expect(routerTs).toContain('component: NotFoundView')
-      expect(routerTs).toContain('requireLoginByDefault: true')
-      expect(routerTs).not.toContain('permissions: [\'project:list\']')
-      expect(loginView).toContain('admin / lumal123')
-      expect(dashboardView).toContain('工作台指标')
-      expect(dashboardView).toContain('RequestExamplePanel')
-      expect(projectView).toContain('project:list')
-      expect(forbiddenView).toContain('返回工作台')
-      expect(notFoundView).toContain('页面不存在')
-      expect(preferencesService).toContain('createPreferencesStore')
-      expect(preferencesService).toContain('styleType: \'chrome\'')
-      expect(preferencesService).toContain('persist: true')
-      expect(preferencesService).toContain('visitHistory: true')
-      expect(preferencesService).toContain('draggable: true')
-      expect(preferencesService).toContain('wheelable: true')
-      expect(preferencesService).toContain('middleClickToClose: true')
-      expect(preferencesService).toContain('showMore: true')
-      expect(preferencesService).toContain('showRefresh: true')
-      expect(preferencesService).toContain('maxCount: 0')
-      expect(preferencesService).toContain('dynamicTitle: true')
-      expect(preferencesService).toContain('fontSize: 14')
-      expect(preferencesService).toContain('globalSearch: true')
-      expect(sessionService).toContain('createAuthSession')
-      expect(sessionService).toContain('lumal-admin:tabs')
-      expect(sessionService).toContain('sessionStorage.removeItem')
-      expect(sessionService).toContain('clearSessionState()\n  session.setSession')
-      expect(requestExample).toContain('createRequestClient')
-      expect(requestExample).toContain('getToken')
-      expect(requestExample).toContain('onResponse')
-      expect(requestPanel).toContain('<style scoped lang="scss">')
-      expect(stylesScss).toContain('.lumal-admin-home')
-      expect(stylesScss).toContain('.lumal-admin-page')
-      expect(stylesScss).toContain('.lumal-admin-login')
-      expect(viteConfig).toContain('codeSplitting')
-      expect(viteConfig).toContain('vendor-element-plus')
+describe('模板资源组合', () => {
+  for (const preset of ['minimal', 'standard', 'vben-compatible'] as const) {
+    for (const apiMode of ['local', 'http'] as const) {
+      for (const routerMode of ['hash', 'history'] as const) {
+        it(`${preset}/${apiMode}/${routerMode} 生成独立工程`, async () => {
+          const targetDir = join(await directory(), 'demo')
+          const result = await createLumalAdminProject({ name: 'demo-admin', targetDir, preset, apiMode, routerMode })
+          expect(result.createdFiles).toEqual(expect.arrayContaining([
+            'README.md',
+            '.gitignore',
+            '.env.example',
+            '.env.development',
+            '.env.production.example',
+            'API-CONTRACT.md',
+            'package.json',
+            'tsconfig.json',
+            'vite.config.ts',
+            'vitest.config.ts',
+            'src/router/index.ts',
+            'src/services/session-runtime.ts',
+            'tests/session.test.ts',
+          ]))
+          const manifest = JSON.parse(await fs.readFile(join(targetDir, 'package.json'), 'utf8'))
+          expect(manifest.name).toBe('demo-admin')
+          expect(Object.keys(manifest.dependencies)).toEqual(Object.keys(manifest.dependencies).sort((left, right) => left.localeCompare(right)))
+          expect(manifest.dependencies['@lumal/vben-compat'] !== undefined).toBe(preset === 'vben-compatible')
+          for (const heavy of ['@lumal/charts', '@lumal/datav', '@lumal/cockpit', 'vxe-table', 'echarts'])
+            expect(manifest.dependencies[heavy]).toBeUndefined()
+          expect(result.createdFiles.includes('src/views/system/SystemEntityView.vue')).toBe(preset !== 'minimal')
+          expect(result.createdFiles.includes('src/views/migration/VbenUsersView.vue')).toBe(preset === 'vben-compatible')
+          const config = await fs.readFile(join(targetDir, 'src/app.config.ts'), 'utf8')
+          expect(config).toContain(`routerMode: '${routerMode}'`)
+          const source = await fs.readFile(join(targetDir, 'src/services/data-source.ts'), 'utf8')
+          if (apiMode === 'http') {
+            expect(source).toContain('createRequestClient')
+            expect(source).toContain('/auth/login')
+            expect(source).toContain('/session/access')
+            expect(source).not.toContain('lumal123')
+            expect(source).not.toContain('demo-token')
+          }
+          else {
+            expect(source).toContain('crypto.randomUUID()')
+            expect(source).toContain('VITE_ENABLE_LOCAL_DEMO')
+          }
+          for (const file of result.createdFiles) {
+            const text = await fs.readFile(join(targetDir, file), 'utf8')
+            expect(text).not.toMatch(/workspace:|packages\/core\/src|apps\/lumal-admin\/src/)
+          }
+          const main = await fs.readFile(join(targetDir, 'src/main.ts'), 'utf8')
+          expect(main).toContain('@lumal/core/minimal')
+          expect(main).toContain('element-plus/theme-chalk/dark/css-vars.css')
+          const app = await fs.readFile(join(targetDir, 'src/App.vue'), 'utf8')
+          for (const contract of ['route-driven', ':cache-keys=', '@tab-refresh=', '@tabs-change=', ':preferences=', 'routeRefreshKeys', 'onErrorCaptured'])
+            expect(app).toContain(contract)
+        })
+      }
     }
-    finally {
-      await rm(tempDir, { force: true, recursive: true })
-    }
+  }
+  it('按需禁用业务模块，保留公共认证与布局', async () => {
+    const targetDir = join(await directory(), 'no-features')
+    const result = await createLumalAdminProject({ name: 'no-features', targetDir, preset: 'standard', features: [] })
+    expect(result.createdFiles).not.toContain('src/modules/system.ts')
+    expect(result.createdFiles).not.toContain('src/modules/examples.ts')
+    expect(result.createdFiles).toContain('src/services/session-runtime.ts')
   })
-
-  it('目标目录非空时会拒绝覆盖已有文件', async () => {
-    const tempDir = await createTempDir()
-
-    try {
-      await createLumalAdminProject({
-        name: 'demo-admin',
-        targetDir: tempDir,
-      })
-
-      await expect(createLumalAdminProject({
-        name: 'demo-admin',
-        targetDir: tempDir,
-      })).rejects.toThrow('目标目录不是空目录')
-    }
-    finally {
-      await rm(tempDir, { force: true, recursive: true })
-    }
+  it('固定标签与路由使用相同的多角色匹配模式', async () => {
+    const targetDir = join(await directory(), 'role-tabs')
+    await createLumalAdminProject({ name: 'role-tabs', targetDir, preset: 'minimal' })
+    const router = await fs.readFile(join(targetDir, 'src/router/index.ts'), 'utf8')
+    expect(router).toContain('permissionStore.hasRole(route.meta.roles, \'some\')')
   })
+  it('迁移业务页不依赖可选 system 层声明资源权限', async () => {
+    const targetDir = join(await directory(), 'migration-only')
+    const result = await createLumalAdminProject({ name: 'migration-only', targetDir, preset: 'vben-compatible', features: [] })
+    expect(result.createdFiles).not.toContain('src/modules/system.ts')
+    const module = await fs.readFile(join(targetDir, 'src/modules/vben.ts'), 'utf8')
+    expect(module).toContain('permissionPrefix: \'system:user\'')
+    expect(module).toContain('resource: \'users\'')
+  })
+})
 
-  it('http 模式会生成接口环境变量和接入示例', async () => {
-    const tempDir = await createTempDir()
-    const targetDir = join(tempDir, 'http-admin')
+describe('安全创建与恢复', () => {
+  it.each(['Foo', '.hidden', '_bad', '-bad', '~bad', 'foo~bar', '@team/foo~bar', 'node_modules', 'node:fs', 'bad name', 'a/b', '', 'a'.repeat(215)])('拒绝非法 npm 名称 %s', async (name) => {
+    const root = await directory()
+    await expect(createLumalAdminProject({ name, targetDir: join(root, 'new') })).rejects.toThrow('非法 npm')
+    expect(await fs.readdir(root)).toEqual([])
+  })
+  it('支持合法 scoped npm 名称', async () => {
+    await expect(createLumalAdminProject({ name: '@team/admin', targetDir: join(await directory(), 'scoped') })).resolves.toMatchObject({ name: '@team/admin' })
+  })
+  it('非空目录和普通文件都拒绝覆盖', async () => {
+    const targetDir = await directory()
+    await fs.writeFile(join(targetDir, 'mine.txt'), 'user content')
+    await expect(createLumalAdminProject({ name: 'test', targetDir })).rejects.toThrow('不是空目录')
+    await expect(createLumalAdminProject({ name: 'test', targetDir: join(targetDir, 'mine.txt') })).rejects.toThrow('普通目录')
+    expect(await fs.readFile(join(targetDir, 'mine.txt'), 'utf8')).toBe('user content')
+  })
+  it('拒绝目录符号链接与祖先 junction', async () => {
+    const root = await directory()
+    const real = join(root, 'real')
+    const link = join(root, 'link')
+    await fs.mkdir(real)
+    await fs.symlink(real, link, 'junction')
+    await expect(createLumalAdminProject({ name: 'test', targetDir: link })).rejects.toThrow('符号链接')
+    await expect(createLumalAdminProject({ name: 'test', targetDir: join(link, 'child') })).rejects.toThrow('符号链接')
+    expect(await fs.readdir(real)).toEqual([])
+  })
+  it('写入失败只回滚拥有文件，保留已有空目录和并发用户文件', async () => {
+    const root = await directory()
+    const realOpen = (await vi.importActual<typeof fs>('node:fs/promises')).open
+    let calls = 0
+    vi.mocked(fs.open).mockImplementation(async (...args) => {
+      calls += 1
+      if (calls === 4) {
+        await fs.writeFile(join(root, 'user.txt'), 'concurrent-user')
+        throw new Error('disk full')
+      }
+      return realOpen(...args)
+    })
+    await expect(createLumalAdminProject({ name: 'test', targetDir: root })).rejects.toThrow('disk full')
+    expect(await fs.readdir(root)).toEqual(['user.txt'])
+    expect(await fs.readFile(join(root, 'user.txt'), 'utf8')).toBe('concurrent-user')
+  })
+})
 
-    try {
-      const result = await createLumalAdminProject({ apiMode: 'http', name: 'http-admin', targetDir })
-      const requestService = await readFile(join(targetDir, 'src/services/request.ts'), 'utf8')
-      const authApi = await readFile(join(targetDir, 'src/services/auth-api.ts'), 'utf8')
-      const contract = await readFile(join(targetDir, 'API-CONTRACT.md'), 'utf8')
-
-      expect(result.createdFiles).toEqual(expect.arrayContaining([
-        '.env.development',
-        '.env.production.example',
-        'API-CONTRACT.md',
-        'src/services/auth-api.ts',
-        'src/services/request.ts',
-      ]))
-      expect(requestService).toContain('VITE_API_BASE_URL')
-      expect(requestService).toContain('createAuthenticatedRequest')
-      expect(authApi).toContain('/auth/refresh')
-      expect(contract).toContain('业务协议写入 `@lumal/core`')
-    }
-    finally {
-      await rm(tempDir, { force: true, recursive: true })
-    }
+describe('cLI 参数', () => {
+  it('保留无交互选项及可组合特性', () => {
+    expect(parseCliArgs(['my-admin', '--preset', 'standard', '--api-mode', 'http', '--router-mode', 'history', '--features', 'system', '--no-interactive']))
+      .toMatchObject({ target: 'my-admin', preset: 'standard', apiMode: 'http', routerMode: 'history', features: ['system'], interactive: false })
+    expect(parseCliArgs(['--help']).help).toBe(true)
+    expect(parseCliArgs(['--version']).version).toBe(true)
+  })
+  it.each([['--preset'], ['--preset', 'bad'], ['--unknown'], ['a', 'b'], ['--api-mode', 'bad'], ['--features', 'charts'], ['--router-mode', 'bad']])('错误参数不进入交互 %s', (...args) => {
+    expect(() => parseCliArgs(args)).toThrow()
   })
 })

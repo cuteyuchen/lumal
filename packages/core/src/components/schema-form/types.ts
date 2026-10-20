@@ -80,6 +80,8 @@ export interface SchemaFormItemBase<T extends SchemaFormRecord = Record<string, 
   dictType?: string
   defaultValue?: unknown
   hidden?: SchemaFormStateResolver<T>
+  /** CSS 显隐保留字段实例和值；hidden 则不渲染字段。 */
+  visible?: SchemaFormStateResolver<T>
   disabled?: SchemaFormStateResolver<T>
   readonly?: SchemaFormStateResolver<T>
   editDisabled?: boolean
@@ -141,5 +143,6 @@ export type NormalizedSchemaFormItem<T extends SchemaFormRecord = Record<string,
   required: boolean
   readonly: boolean
   renderable: boolean
+  visible: boolean
   rules: SchemaFormRule[]
 }

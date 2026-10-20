@@ -1,5 +1,17 @@
 # create-lumal-admin
 
+## 0.0.5-beta (2026-10-20)
+
+### Minor Changes
+
+- 拆分真实模板资源与 CLI/创建器，支持 minimal、standard、vben-compatible，
+  交互及非 TTY、Local/HTTP、Hash/History、可选业务层和安全失败回滚。
+- 生成真实 HTTP 登录、刷新、用户权限菜单、退出及 CRUD 服务，防止旧会话响应回填。
+- standard 增加基础管理模块、Schema/CRUD、标签缓存和偏好；兼容模板增加 V5 迁移页面。
+- 显式加载 Element Plus 深色变量，以真实背景色断言保护主题切换，不只检查状态 class。
+- 通过真实 tarball 的十二种独立消费者组合验证安装、类型、测试、Lint、生产构建与 Chromium。
+- 生成项目依赖精确同步为 0.0.5-beta，不引用 Monorepo 私有源码。
+
 ## 0.0.4-beta (2026-10-20)
 
 ### Patch Changes
