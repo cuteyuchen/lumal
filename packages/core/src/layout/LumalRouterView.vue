@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { Component as VueComponent } from 'vue'
+import type { VNode, Component as VueComponent } from 'vue'
 import type { RouteLocationNormalized } from 'vue-router'
-import { computed, defineComponent, inject, onBeforeUnmount, shallowRef, useTemplateRef, watch } from 'vue'
+import { computed, defineComponent, h, inject, onBeforeUnmount, shallowRef, useTemplateRef, watch } from 'vue'
 import { routeLocationKey, routerKey, RouterView } from 'vue-router'
 
 /***********************属性定义*********************/
@@ -37,6 +37,29 @@ const loadingVisible = computed(() => props.loading && navigating.value)
 const resolvedCacheMax = computed(() => Number.isFinite(props.cacheMax) && props.cacheMax > 0 ? Math.max(1, Math.floor(props.cacheMax)) : 20)
 const resolvedTransitionName = computed(() => props.transition ? props.transitionName : undefined)
 
+/***********************页面过渡容器*********************/
+function createPageView(name: string): VueComponent {
+  return defineComponent({
+    name,
+    // 由真实元素承接过渡，避免多根页面的 Fragment 阻断 out-in 切换。
+    setup: (_, { slots }) => () => h('div', { class: 'lumal-router-view__page' }, slots.default?.()),
+  })
+}
+
+// 按原页面类型复用包装，保留未传 viewKey 时的过渡和同组件路由间的实例复用。
+const uncachedViews = new WeakMap<VueComponent, VueComponent>()
+function resolveUncachedView(view?: VNode): VueComponent | undefined {
+  if (!view)
+    return undefined
+  const component = view.type as VueComponent
+  let pageView = uncachedViews.get(component)
+  if (!pageView) {
+    pageView = createPageView('LumalUncachedView')
+    uncachedViews.set(component, pageView)
+  }
+  return pageView
+}
+
 /***********************视图缓存身份与剔除*********************/
 // 为每个标签版本提供独立名字，利用 KeepAlive 的公开 include 契约剔除实例，
 // 不依赖 Vue 私有缓存字段；元数据同步限量，避免关闭/刷新后持续增长。
@@ -58,7 +81,7 @@ watch(
         const name = `LumalCachedView${++cacheNameSeed}`
         entry = {
           name,
-          component: defineComponent({ name, setup: (_, { slots }) => () => slots.default?.() }),
+          component: createPageView(name),
         }
       }
       entries.delete(props.viewKey)
@@ -109,19 +132,21 @@ defineExpose({
     </div>
 
     <RouterView v-slot="{ Component }">
+      <!-- 关闭动画时不启用 out-in，避免同步离场回调导致重入更新。 -->
       <Transition
         appear
-        mode="out-in"
+        :mode="transition ? 'out-in' : undefined"
         :name="resolvedTransitionName"
         :css="transition"
       >
         <KeepAlive v-if="cache" :include="cacheNames" :max="resolvedCacheMax">
-          <component :is="cachedView" v-if="cachedView" :key="viewKey">
+          <component :is="cachedView ?? resolveUncachedView(Component)" :key="viewKey">
             <component :is="Component" />
           </component>
-          <component :is="Component" v-else :key="viewKey" />
         </KeepAlive>
-        <component :is="Component" v-else :key="viewKey" />
+        <component :is="resolveUncachedView(Component)" v-else :key="viewKey">
+          <component :is="Component" />
+        </component>
       </Transition>
     </RouterView>
 
@@ -154,6 +179,13 @@ defineExpose({
   width: 100%;
   min-width: 0;
   /* 普通页面保持自然高度；填充型页面沿用自身的 flex/height 契约。 */
+}
+
+.lumal-router-view :deep(> .lumal-router-view__page) {
+  /* 保留页面的纵向 Flex 伸展，滚动仍交由 LumalContent 承担。 */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .lumal-router-view__progress {

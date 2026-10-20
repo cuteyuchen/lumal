@@ -879,6 +879,8 @@ defineExpose({
   position: absolute;
   inset: 0;
   z-index: var(--lumal-z-scrim);
+  /* 脱离 Flex 布局后需覆盖普通布局的零宽度，避免内容被裁剪。 */
+  width: 100%;
   background: var(--el-bg-color-page);
 }
 

@@ -519,6 +519,8 @@ layout 只负责后台壳层结构和交互，不请求业务数据。`LumalLayo
 
 `viewKey` 应使用相同的 `path:version` 规则。只增加当前标签的版本，不增加全局版本；移除已关闭标签的版本记录。`route.meta.keepAlive === false` 禁止缓存该路由。缓存默认最多 20 项，`cacheMax <= 0` 或非有限数值也回退为 20；未传 `cacheKeys` 时仅按容量淘汰。
 
+`LumalRouterView` 由内部页面容器承接路由过渡动画，业务路由组件可以包含多个根节点，无需为 `Transition` 额外添加根元素。关闭缓存或设置 `meta.keepAlive=false` 时同样适用。
+
 `progress` / `loading` 反映真实路由导航的等待、完成、取消和错误，不再固定显示 520ms。缓存失活不等于卸载，业务轮询需在 `onDeactivated` 暂停、`onActivated` 恢复。
 
 标签快照保存在浏览器 `sessionStorage`；每次标签变更写入，卸载不再写回。退出应清理对应 key，跨用户切换应重建壳层或使用用户作用域 key。新窗口默认采用 `router.resolve(path).href`，保留路由器的 history/base 语义。

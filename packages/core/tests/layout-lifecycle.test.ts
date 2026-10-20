@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent } from 'vue'
@@ -18,21 +20,50 @@ afterEach(() => {
 })
 
 describe('layout lifecycle', () => {
-  it('按 Esc 同时恢复壳层和标签栏的最大化状态', async () => {
+  it('最大化内容区覆盖普通 Flex 布局的零宽度', () => {
+    // jsdom 不计算实际布局，直接保护曾导致页面空白的宽度覆盖规则。
+    const source = readFileSync(join(process.cwd(), 'src/layout/LumalLayout.vue'), 'utf8')
+    const maximizedStyles = source.match(/\.lumal-layout\.is-content-maximized \.lumal-layout__main\s*\{([^}]+)\}/)?.[1]
+    expect(maximizedStyles).toMatch(/width:\s*100%;/)
+  })
+
+  it.each(['按钮', 'Escape'])('点击最大化后通过 %s 还原时保留内容并同步布局状态', async (restoreAction) => {
     const wrapper = mount(LumalLayout, {
+      attachTo: document.body,
       global: { stubs: elementPlusStubs },
       props: {
-        preferences: createDefaultPreferences(),
+        activeTabPath: '/dashboard',
+        menus: [{ path: '/dashboard', title: '工作台' }],
+        preferences: createDefaultPreferences({ app: { layout: 'sidebar-nav' } }),
         tabs: [{ path: '/dashboard', title: '工作台' }],
+      },
+      slots: {
+        default: '<section class="dashboard-content">工作台内容</section>',
       },
     })
     try {
-      wrapper.getComponent(LumalTabs).vm.$emit('maximize', true)
+      const content = wrapper.get('.dashboard-content').element
+      const maximizeButton = wrapper.get('[data-action="maximize-content"]')
+      await maximizeButton.trigger('click')
       await flushPromises()
       expect(wrapper.classes()).toContain('is-content-maximized')
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+      expect(maximizeButton.attributes('aria-label')).toBe('退出内容最大化')
+      expect(wrapper.get('.lumal-header').isVisible()).toBe(false)
+      expect(wrapper.find('.lumal-layout__desktop-sidebar').exists()).toBe(false)
+      expect(wrapper.get('.dashboard-content').element).toBe(content)
+
+      if (restoreAction === 'Escape') {
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+      }
+      else {
+        await maximizeButton.trigger('click')
+      }
       await flushPromises()
       expect(wrapper.classes()).not.toContain('is-content-maximized')
+      expect(maximizeButton.attributes('aria-label')).toBe('内容最大化')
+      expect(wrapper.get('.lumal-header').isVisible()).toBe(true)
+      expect(wrapper.find('.lumal-layout__desktop-sidebar').exists()).toBe(true)
+      expect(wrapper.get('.dashboard-content').element).toBe(content)
       expect(wrapper.emitted('tabMaximize')).toEqual([[true], [false]])
     }
     finally {
