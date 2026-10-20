@@ -534,11 +534,11 @@ defineExpose({
                   {{ column.label }}
                 </ElCheckbox>
                 <span v-if="columnSettings?.reorderable !== false" class="lumal-schema-table__column-order-actions">
-                  <button type="button" :disabled="index === 0" :aria-label="`上移${column.label}`" @click="moveColumn(String(column.field), -1)">
-                    ↑
+                  <button type="button" :disabled="index === 0" :aria-label="`上移${column.label}`" :title="`上移${column.label}`" @click="moveColumn(String(column.field), -1)">
+                    <LumalIcon name="lumal:arrow-up" />
                   </button>
-                  <button type="button" :disabled="index === configurableColumns.length - 1" :aria-label="`下移${column.label}`" @click="moveColumn(String(column.field), 1)">
-                    ↓
+                  <button type="button" :disabled="index === configurableColumns.length - 1" :aria-label="`下移${column.label}`" :title="`下移${column.label}`" @click="moveColumn(String(column.field), 1)">
+                    <LumalIcon name="lumal:arrow-down" />
                   </button>
                 </span>
               </div>

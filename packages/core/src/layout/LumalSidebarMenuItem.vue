@@ -49,7 +49,7 @@ function handleSelect(path: string): void {
         <span class="lumal-sidebar-menu-item__title">{{ item.title }}</span>
         <LumalMenuBadge :badge="item.badge" :label="item.title" :tone="item.badgeTone" :type="item.badgeType" />
       </span>
-      <span v-if="item.externalLink" class="lumal-sidebar-menu-item__external" aria-hidden="true">↗</span>
+      <LumalIcon v-if="item.externalLink" class="lumal-sidebar-menu-item__external" name="lumal:external-link" :size="12" />
     </template>
 
     <LumalSidebarMenuItem
@@ -82,7 +82,7 @@ function handleSelect(path: string): void {
       <span class="lumal-sidebar-menu-item__title">{{ item.title }}</span>
       <LumalMenuBadge :badge="item.badge" :label="item.title" :tone="item.badgeTone" :type="item.badgeType" />
     </span>
-    <span class="lumal-sidebar-menu-item__external" aria-hidden="true">↗</span>
+    <LumalIcon class="lumal-sidebar-menu-item__external" name="lumal:external-link" :size="12" />
   </li>
 
   <ElMenuItem
@@ -103,7 +103,7 @@ function handleSelect(path: string): void {
       <span class="lumal-sidebar-menu-item__title">{{ item.title }}</span>
       <LumalMenuBadge :badge="item.badge" :label="item.title" :tone="item.badgeTone" :type="item.badgeType" />
     </span>
-    <span v-if="item.externalLink" class="lumal-sidebar-menu-item__external" aria-hidden="true">↗</span>
+    <LumalIcon v-if="item.externalLink" class="lumal-sidebar-menu-item__external" name="lumal:external-link" :size="12" />
   </ElMenuItem>
 </template>
 

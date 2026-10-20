@@ -734,7 +734,7 @@ defineExpose({
                 :title="toolbar?.fullscreenText ?? (isFullscreen ? '退出全屏' : '全屏')"
                 @click="toggleFullscreen"
               >
-                <LumalIcon :name="isFullscreen ? 'lumal:fullscreen-exit' : 'lumal:fullscreen'" />
+                <LumalIcon :name="isFullscreen ? 'lumal:fullscreen-exit' : 'lumal:fullscreen'" morph />
               </ElButton>
             </div>
           </template>

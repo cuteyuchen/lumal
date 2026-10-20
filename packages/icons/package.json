@@ -20,6 +20,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./morph": {
+      "types": "./dist/src/morph/index.d.ts",
+      "import": "./dist/morph.js",
+      "require": "./dist/morph.cjs"
+    },
     "./vite": {
       "types": "./dist/src/vite/index.d.ts",
       "import": "./dist/vite.js",
@@ -38,5 +43,16 @@
     "build": "vite build --config vite.config.ts && tsc -p tsconfig.json --emitDeclarationOnly && node ../../scripts/clean-package-dist.mjs dist",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --config ../../vitest.config.ts tests"
+  },
+  "peerDependencies": {
+    "morphicons": "2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "morphicons": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "morphicons": "2.0.0"
   }
 }

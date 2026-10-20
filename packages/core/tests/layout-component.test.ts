@@ -129,6 +129,7 @@ describe('lumal layout', () => {
     await wrapper.find('[data-action="toggle-sidebar"]').trigger('click')
 
     expect(wrapper.emitted('toggleSidebar')?.[0]).toEqual([])
+    expect(wrapper.get('[data-action="toggle-sidebar"] .lumal-icon').find('svg').exists()).toBe(true)
   })
 
   it('移动端抽屉使用独立状态且不会修改桌面折叠偏好', async () => {
@@ -376,6 +377,7 @@ describe('lumal sidebar', () => {
     const externalItem = wrapper.find('.lumal-sidebar-menu-item--external')
     expect(externalItem.exists()).toBe(true)
     expect(externalItem.text()).toContain('文档')
+    expect(externalItem.get('.lumal-sidebar-menu-item__external').classes()).toContain('lumal-icon')
 
     await externalItem.trigger('click')
     expect(wrapper.emitted('select')?.[0]).toEqual(['/docs'])

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { IconDefinition } from '@lumal/icons'
-import { computed, ref, watch } from 'vue'
+import type { LumalIconPickerGroupSelectSlotProps } from '../types'
+import { computed, shallowRef, watch } from 'vue'
 import { useIconRegistry } from '../composables/useIconRegistry'
 import LumalIcon from './LumalIcon.vue'
 
+/***********************属性与事件*********************/
 const props = withDefaults(defineProps<{
   group?: string
   pageSize?: number
@@ -22,10 +24,15 @@ const emit = defineEmits<{
   select: [icon: IconDefinition]
 }>()
 
+defineSlots<{
+  'group-select'?: (props: LumalIconPickerGroupSelectSlotProps) => unknown
+}>()
+
+/***********************筛选与分页*********************/
 const model = defineModel<string>()
-const keyword = ref('')
-const activeGroup = ref(props.group)
-const page = ref(1)
+const keyword = shallowRef('')
+const activeGroup = shallowRef(props.group)
+const page = shallowRef(1)
 const effectivePageSize = computed(() => Math.max(1, props.pageSize))
 const registry = useIconRegistry()
 
@@ -58,6 +65,10 @@ const pagedIcons = computed(() => {
   return filteredIcons.value.slice(start, start + effectivePageSize.value)
 })
 
+function setGroup(group: string): void {
+  activeGroup.value = group
+}
+
 watch([keyword, activeGroup, effectivePageSize], () => {
   page.value = 1
 })
@@ -70,6 +81,7 @@ watch(totalPages, (total) => {
   page.value = Math.min(page.value, total)
 })
 
+/***********************选择与持久化*********************/
 if (props.storageKey && typeof localStorage !== 'undefined' && !model.value) {
   model.value = localStorage.getItem(props.storageKey) ?? undefined
 }
@@ -84,21 +96,27 @@ function selectIcon(icon: IconDefinition): void {
 </script>
 
 <template>
-  <div class="lumal-icon-picker">
+  <div class="lumal-icon-picker" :class="{ 'lumal-icon-picker--show-labels': showLabels }">
     <div class="lumal-icon-picker__toolbar">
       <label v-if="searchable" class="lumal-icon-picker__field">
         <span class="lumal-icon-picker__field-label">搜索图标</span>
-        <input v-model="keyword" type="search" placeholder="输入名称或 key">
+        <input v-model="keyword" type="search" aria-label="搜索图标" placeholder="输入名称或 key">
       </label>
-      <label v-if="groups.length" class="lumal-icon-picker__field">
+      <!-- 复合控件的选项层可能留在插槽内，不用 label 包裹，避免选择后触发原生二次点击。 -->
+      <div v-if="groups.length" class="lumal-icon-picker__field">
         <span class="lumal-icon-picker__field-label">图标分组</span>
-        <select v-model="activeGroup">
-          <option value="">全部分组</option>
-          <option v-for="groupItem in groups" :key="groupItem.key" :value="groupItem.key">
-            {{ groupItem.label }}
-          </option>
-        </select>
-      </label>
+        <!-- UI 框架由消费方接入，独立选择器保留原生控件作为默认实现。 -->
+        <slot name="group-select" :model-value="activeGroup" :groups="groups" :set-group="setGroup">
+          <select v-model="activeGroup" aria-label="图标分组">
+            <option value="">
+              全部分组
+            </option>
+            <option v-for="groupItem in groups" :key="groupItem.key" :value="groupItem.key">
+              {{ groupItem.label }}
+            </option>
+          </select>
+        </slot>
+      </div>
     </div>
 
     <p class="lumal-icon-picker__summary" role="status">
@@ -118,8 +136,8 @@ function selectIcon(icon: IconDefinition): void {
         :title="iconItem.label || iconItem.key"
         @click="selectIcon(iconItem)"
       >
-        <LumalIcon :name="iconItem.key" />
-        <span v-if="showLabels">{{ iconItem.label || iconItem.key }}</span>
+        <LumalIcon :name="iconItem.key" :size="28" />
+        <span v-if="showLabels" class="lumal-icon-picker__item-label">{{ iconItem.label || iconItem.key }}</span>
       </button>
     </div>
     <p v-else class="lumal-icon-picker__empty">
@@ -141,17 +159,20 @@ function selectIcon(icon: IconDefinition): void {
 <style scoped lang="scss">
 .lumal-icon-picker {
   display: grid;
+  min-width: 0;
   gap: 12px;
 }
 
 .lumal-icon-picker__toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(140px, 200px);
+  align-items: start;
   gap: 12px;
 }
 
 .lumal-icon-picker__field {
   display: grid;
+  min-width: 0;
   gap: 6px;
 }
 
@@ -165,12 +186,22 @@ function selectIcon(icon: IconDefinition): void {
 .lumal-icon-picker__field input,
 .lumal-icon-picker__field select,
 .lumal-icon-picker__pagination button {
-  min-height: 44px;
+  box-sizing: border-box;
+  height: var(--el-component-size, 32px);
+  min-height: var(--el-component-size, 32px);
   padding: 0 12px;
   border: 1px solid var(--el-border-color, currentColor);
   border-radius: var(--lumal-radius-base, 8px);
   color: var(--el-text-color-primary, CanvasText);
   background: var(--el-bg-color, Canvas);
+  font: inherit;
+  font-size: var(--lumal-font-size-base, 14px);
+}
+
+.lumal-icon-picker__field input,
+.lumal-icon-picker__field select {
+  width: 100%;
+  min-width: 0;
 }
 
 .lumal-icon-picker__summary,
@@ -182,6 +213,12 @@ function selectIcon(icon: IconDefinition): void {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
   gap: 8px;
+}
+
+/* 显示名称时预留文字宽度，完整换行，不再把名称压缩成省略号。 */
+.lumal-icon-picker--show-labels .lumal-icon-picker__grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(96px, 100%), 1fr));
+  grid-auto-rows: minmax(84px, auto);
 }
 
 .lumal-icon-picker__item {
@@ -215,12 +252,14 @@ function selectIcon(icon: IconDefinition): void {
   outline-offset: 2px;
 }
 
-.lumal-icon-picker__item span {
+.lumal-icon-picker__item-label {
+  width: 100%;
   max-width: 100%;
-  overflow: hidden;
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: calc(var(--lumal-font-size-base, 14px) - 2px);
+  line-height: 1.4;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .lumal-icon-picker__pagination {

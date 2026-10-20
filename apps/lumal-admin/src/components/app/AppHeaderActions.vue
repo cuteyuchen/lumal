@@ -9,6 +9,7 @@ import {
   ElDropdownMenu,
 } from 'element-plus'
 import { computed, inject } from 'vue'
+import { useAdminThemeIcon } from '../../composables/use-admin-theme-icon'
 
 /***********************属性定义*********************/
 const props = withDefaults(defineProps<{
@@ -37,6 +38,7 @@ const hasCockpitViewPermission = computed(
 
 /***********************显示状态*********************/
 const themeToggleTitle = computed(() => props.resolvedThemeMode === 'dark' ? '切换浅色模式' : '切换深色模式')
+const themeIcon = useAdminThemeIcon(() => props.resolvedThemeMode)
 const userInitial = computed(() => props.userName.trim().slice(0, 1).toUpperCase() || '管')
 
 /***********************事件处理*********************/
@@ -82,7 +84,7 @@ function handleMobileMenuCommand(command: unknown): void {
       data-action="toggle-theme"
       @click="handleToggleTheme"
     >
-      <LumalIcon name="app:theme" :size="16" />
+      <LumalIcon :name="themeIcon" morph :size="18" />
     </ElButton>
 
     <ElButton

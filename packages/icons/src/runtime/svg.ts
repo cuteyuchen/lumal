@@ -44,7 +44,12 @@ export function composeSvgIcons(svgTexts: string[]): string {
 
 /***********************SVG 编码*********************/
 export function svgToDataUri(svgText: string): string {
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`
+  // HTML 内联 SVG 可省略命名空间，作为独立图片或下载文件时必须声明。
+  const standaloneSvg = svgText.replace(/<svg\b[^>]*>/i, tag => (
+    /\sxmlns\s*=/.test(tag) ? tag : tag.replace(/<svg\b/i, '$& xmlns="http://www.w3.org/2000/svg"')
+  ))
+
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(standaloneSvg)}`
 }
 
 /***********************SVG 改色*********************/

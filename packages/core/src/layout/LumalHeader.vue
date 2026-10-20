@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ComponentPublicInstance } from 'vue'
+import { LumalIcon } from '@lumal/icons-vue'
 import { ElButton, ElHeader } from 'element-plus'
 import { computed, useTemplateRef } from 'vue'
 
@@ -60,9 +61,7 @@ defineExpose({
         data-action="toggle-sidebar"
         @click="handleToggleClick"
       >
-        <svg aria-hidden="true" viewBox="0 0 24 24">
-          <path d="M4 7h16M4 12h16M4 17h16" />
-        </svg>
+        <LumalIcon :name="collapsed ? 'lumal:sidebar-expand' : 'lumal:sidebar-collapse'" morph :size="18" />
       </ElButton>
     </div>
 
@@ -125,15 +124,6 @@ defineExpose({
 
 .lumal-header__toggle.is-mobile-only {
   display: none;
-}
-
-.lumal-header__toggle svg {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: currentcolor;
-  stroke-linecap: round;
-  stroke-width: 1.8;
 }
 
 .lumal-header__title {

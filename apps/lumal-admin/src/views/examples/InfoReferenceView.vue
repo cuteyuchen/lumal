@@ -3,8 +3,10 @@ import { LumalInfoTable, LumalPage } from '@lumal/core/components'
 import { LumalIconPicker } from '@lumal/icons-vue'
 import { ElButton, ElInput, ElSwitch } from 'element-plus'
 import { computed, shallowRef } from 'vue'
+import AppIconGroupSelect from '../../components/app/AppIconGroupSelect.vue'
 import { frameworkInfoItems } from './example-data'
 
+/***********************信息与图标状态*********************/
 const compact = shallowRef(false)
 const showEmpty = shallowRef(false)
 const selectedIcon = shallowRef('')
@@ -23,7 +25,12 @@ const apiItems = computed(() => [{ label: '字段语义', value: 'label / value 
       </div>
       <LumalInfoTable :items="infoItems" :columns="compact ? 1 : 2" label-width="96px" empty-text="没有匹配的信息项" />
     </LumalPage><LumalPage title="图标选择器" description="搜索并选择已注册图标，选择结果会同步到状态面板。">
-      <LumalIconPicker v-model="selectedIcon" /><LumalInfoTable class="info-state" :items="apiItems" :columns="2" label-width="96px" />
+      <LumalIconPicker v-model="selectedIcon">
+        <template #group-select="slotProps">
+          <AppIconGroupSelect v-bind="slotProps" />
+        </template>
+      </LumalIconPicker>
+      <LumalInfoTable class="info-state" :items="apiItems" :columns="2" label-width="96px" />
     </LumalPage>
   </main>
 </template>

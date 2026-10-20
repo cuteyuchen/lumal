@@ -106,7 +106,7 @@ defineExpose({
         <span>{{ item.title }}</span>
         <LumalMenuBadge :badge="item.badge" :label="item.title" :tone="item.badgeTone" :type="item.badgeType" />
       </span>
-      <span v-if="item.externalLink" class="lumal-top-nav__external" aria-hidden="true">↗</span>
+      <LumalIcon v-if="item.externalLink" class="lumal-top-nav__external" name="lumal:external-link" :size="12" />
     </component>
   </ElMenu>
 </template>

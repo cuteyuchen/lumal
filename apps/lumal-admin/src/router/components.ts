@@ -10,6 +10,7 @@ const routeComponents: Record<string, () => Promise<unknown>> = {
   'examples/composables': () => import('../views/examples/ComposablesView.vue'),
   'examples/crud-table': () => import('../views/examples/CrudTableView.vue'),
   'examples/dictionary': () => import('../views/examples/DictionaryView.vue'),
+  'examples/icons': () => import('../views/examples/IconsView.vue'),
   'examples/info-reference': () => import('../views/examples/InfoReferenceView.vue'),
   'examples/overview': () => import('../views/examples/OverviewView.vue'),
   'examples/page-layout': () => import('../views/examples/PageLayoutView.vue'),

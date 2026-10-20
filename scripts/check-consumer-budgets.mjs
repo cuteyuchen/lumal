@@ -109,6 +109,8 @@ export async function checkConsumerBudgets() {
   const baseline = await consumer('import {createApp} from "vue";createApp({render:()=>null}).mount("#app")')
   const minimal = await consumer('import {createLumalAdmin} from "@lumal/core/minimal";createLumalAdmin({rootComponent:{render:()=>null}}).mount("#app")')
   const request = await consumer('import {createRequestClient} from "@lumal/core/request";globalThis.client=createRequestClient()')
+  const iconCore = await consumer('import {getIconSvgText} from "./packages/icons/dist/index.js";globalThis.icon=getIconSvgText("lumal:settings")')
+  const icons = await consumer(`import {createApp,h} from "vue";import {LumalIcon} from "./packages/icons-vue/dist/index.js";createApp({render:()=>h(LumalIcon,{name:"lumal:settings"})}).mount("#app")`)
   const datav = await consumer('import {createApp,h} from "vue";import Charts from "@lumal/datav/charts";createApp({render:()=>h(Charts,{config:{series:[]}})}).mount("#app")')
   const failures = []
   if (minimal.gzip - baseline.gzip > 10000)
@@ -121,6 +123,13 @@ export async function checkConsumerBudgets() {
   }
   if (datav.gzip > 55000 || datav.modules.some(id => /(?:echarts|jiaminghi)[@/\\]/.test(id)))
     failures.push('DataV charts 的首屏超出 55 KB gzip 或静态包含引擎')
+  if (icons.modules.some(id => /(?:^|[/\\])morphicons[@/\\]/.test(id)))
+    failures.push('静态图标消费者加载了 Morphicons 动画引擎')
+  // UI 适配必须留在消费应用，不能改变独立内核与 Vue 图标包的依赖边界。
+  if (iconCore.modules.some(id => /(?:vue|@vue|@iconify|element-plus|@element-plus|morphicons)[@/\\]/.test(id)))
+    failures.push('静态图标内核加载了 Vue、UI 或动画引擎')
+  if (icons.modules.some(id => /(?:element-plus|@element-plus)[@/\\]/.test(id)))
+    failures.push('Vue 图标包加载了 Element Plus，UI 控件应由消费应用接入')
   console.log(`消费者 gzip：Vue ${baseline.gzip} B；minimal ${minimal.gzip} B（增量 ${minimal.gzip - baseline.gzip} B）；request ${request.gzip} B；DataV charts 初始 ${datav.gzip} B。`)
 
   const applications = [

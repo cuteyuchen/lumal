@@ -701,7 +701,7 @@ onBeforeUnmount(() => {
       data-action="maximize-content"
       @click="toggleMaximize"
     >
-      <LumalIcon :name="isMaximized ? 'lumal:restore' : 'lumal:maximize'" :size="16" />
+      <LumalIcon :name="isMaximized ? 'lumal:restore' : 'lumal:maximize'" morph :size="16" />
     </button>
 
     <Teleport to="body">
@@ -721,7 +721,7 @@ onBeforeUnmount(() => {
           <LumalIcon :name="canUnpin(menuActivePath) ? 'lumal:pin-off' : 'lumal:pin'" :size="14" /><span>{{ menuPinLabel(menuActivePath) }}</span>
         </button>
         <button type="button" role="menuitem" :disabled="isContextActionDisabled('maximize')" @click="handleContextAction('maximize')">
-          <LumalIcon :name="isMaximized ? 'lumal:restore' : 'lumal:maximize'" :size="14" /><span>{{ menuMaximizeLabel() }}</span>
+          <LumalIcon :name="isMaximized ? 'lumal:restore' : 'lumal:maximize'" morph :size="14" /><span>{{ menuMaximizeLabel() }}</span>
         </button>
         <button type="button" role="menuitem" :disabled="isContextActionDisabled('new-window')" @click="handleContextAction('new-window')">
           <LumalIcon name="lumal:external-link" :size="14" /><span>在新窗口打开</span>

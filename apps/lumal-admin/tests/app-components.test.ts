@@ -112,6 +112,7 @@ describe('app header actions', () => {
     const wrapper = mountHeaderActions()
 
     expect(wrapper.find('[data-action="toggle-theme"]').exists()).toBe(true)
+    expect(wrapper.find('[data-action="toggle-theme"] [data-icon]').attributes('data-icon')).toBe('lumal:sun')
     expect(wrapper.find('[data-action="open-cockpit"]').attributes('href')).toBe('http://localhost:5180/')
     expect(wrapper.find('[data-action="open-cockpit"]').attributes('target')).toBe('_blank')
     expect(wrapper.find('[data-action="open-settings"]').exists()).toBe(true)

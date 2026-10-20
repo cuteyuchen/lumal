@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { IconDefinition, IconGradientOptions } from '@lumal/icons'
 import type { Component } from 'vue'
+import type { LumalIconMorphSpring } from '../types'
 import { Icon as IconifyIcon } from '@iconify/vue'
 import { applySvgGradient, recolorSvgString } from '@lumal/icons'
-import { computed, toRaw, useId } from 'vue'
+import { computed, onErrorCaptured, toRaw, useId } from 'vue'
+import { useIconMorph } from '../composables/useIconMorph'
 import { useIconRegistry } from '../composables/useIconRegistry'
 
 /***********************属性定义*********************/
@@ -14,6 +16,8 @@ const props = defineProps<{
   color?: string
   gradient?: IconGradientOptions
   title?: string
+  morph?: boolean
+  morphSpring?: LumalIconMorphSpring
 }>()
 
 const gradientId = `lumal-icon-gradient-${useId()}`
@@ -30,11 +34,14 @@ const resolvedDefinition = computed(() => {
     : undefined
 })
 
-const resolvedSvgText = computed(() => {
+const rawSvgText = computed(() => {
   const icon = props.icon
-  const rawSvg = resolvedDefinition.value?.svgText
+  return resolvedDefinition.value?.svgText
     ?? (typeof icon === 'string' && icon.trim().startsWith('<svg') ? icon : '')
+})
 
+const resolvedSvgText = computed(() => {
+  const rawSvg = rawSvgText.value
   if (!rawSvg) {
     return ''
   }
@@ -70,6 +77,19 @@ const resolvedIconify = computed(() => {
   return undefined
 })
 
+/***********************可选状态形变*********************/
+const { state: morphState, reset: resetMorph } = useIconMorph(
+  rawSvgText,
+  () => props.morph === true && !props.gradient && !resolvedComponent.value && !resolvedIconify.value,
+)
+
+onErrorCaptured(() => {
+  if (morphState.value) {
+    resetMorph()
+    return false
+  }
+})
+
 /***********************渲染状态*********************/
 const iconStyle = computed(() => {
   const size = typeof props.size === 'number' ? `${props.size}px` : props.size ?? '1em'
@@ -95,6 +115,19 @@ const resolvedTitle = computed(() => props.title ?? resolvedDefinition.value?.la
   >
     <component :is="resolvedComponent" v-if="resolvedComponent" class="lumal-icon__component" />
     <IconifyIcon v-else-if="resolvedIconify" class="lumal-icon__component" :icon="resolvedIconify" />
+    <component
+      :is="morphState.component"
+      v-else-if="morphState"
+      class="lumal-icon__component"
+      :icon="morphState.icon"
+      :spring="morphSpring ?? 'smooth'"
+      :color="morphState.color"
+      :stroke-width="morphState.strokeWidth"
+      :stroke-linecap="morphState.linecap"
+      :stroke-linejoin="morphState.linejoin"
+      reduced-motion="user"
+      size="100%"
+    />
     <span v-else class="lumal-icon__svg" v-html="resolvedSvgText" />
   </span>
 </template>

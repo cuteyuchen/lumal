@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { LumalPage } from '@lumal/core/components'
+import { LumalIcon } from '@lumal/icons-vue'
 import { ElButton, ElInput, ElTag } from 'element-plus'
 import { computed, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 interface Capability { description: string, entry: string, group: string, route: string, status: 'stable' | 'enhancing', title: string }
+/***********************能力列表*********************/
 const router = useRouter()
 const keyword = shallowRef('')
 const activeGroup = shallowRef('全部')
 const capabilities: Capability[] = [
   { title: '页面布局', description: '查询、工具栏、内容与分页的标准编排。', entry: '@lumal/core/components', group: '基础', route: '/examples/page-layout', status: 'stable' },
   { title: '主题设置', description: '主题、布局与页面动画的实时偏好预览。', entry: '@lumal/core/theme', group: '基础', route: '/examples/theme-settings', status: 'enhancing' },
+  { title: '图标', description: '图标来源、渲染、选择器与 SVG 处理。', entry: '@lumal/icons-vue', group: '基础', route: '/examples/icons', status: 'stable' },
   { title: 'Schema Form', description: '字典、校验、模式和常用后台控件。', entry: '@lumal/core/components', group: '数据录入', route: '/examples/schema-form', status: 'stable' },
   { title: 'Schema Table', description: '选择、列设置、分页和字典回显。', entry: '@lumal/core/components', group: '数据展示', route: '/examples/schema-table', status: 'stable' },
   { title: 'CRUD Table', description: '查询、新增、编辑、删除和异常反馈闭环。', entry: '@lumal/core/components', group: '数据展示', route: '/examples/crud-table', status: 'stable' },
@@ -47,7 +50,7 @@ const visibleCapabilities = computed(() => capabilities.filter((item) => {
           </div>
           <h3>{{ item.title }}</h3><p>{{ item.description }}</p><code>{{ item.entry }}</code>
           <ElButton link type="primary" @click="router.push(item.route)">
-            打开完整示例 →
+            打开完整示例 <LumalIcon name="lumal:arrow-right" :size="16" />
           </ElButton>
         </article>
       </div>

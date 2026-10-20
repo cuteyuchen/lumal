@@ -22,6 +22,12 @@ export interface ThemeTransitionEnvironment {
 }
 
 let transitionRunning = false
+let transitionFinished = Promise.resolve()
+
+/** 等待页面快照释放后再播放局部图标形变。 */
+export function waitForAdminThemeTransition(): Promise<void> {
+  return transitionFinished
+}
 
 function resolveEnvironment(): ThemeTransitionEnvironment {
   return {
@@ -56,6 +62,12 @@ export async function runAdminThemeTransition(
   }
 
   transitionRunning = true
+  let finish!: () => void
+  // 必须先建立完成信号，updateTheme 中同步触发的 watcher 才能等待本次过渡。
+  transitionFinished = new Promise<void>((resolve) => {
+    finish = resolve
+  })
+  let transition: ViewTransitionLike | undefined
   const wasDark = documentRef.documentElement.classList.contains('dark')
   const x = Math.max(0, Math.min(origin?.clientX ?? viewport.innerWidth - 28, viewport.innerWidth))
   const y = Math.max(0, Math.min(origin?.clientY ?? 28, viewport.innerHeight))
@@ -69,7 +81,7 @@ export async function runAdminThemeTransition(
   ]
 
   try {
-    const transition = documentRef.startViewTransition(async () => {
+    transition = documentRef.startViewTransition(async () => {
       updateTheme()
       await nextTick()
     })
@@ -83,14 +95,16 @@ export async function runAdminThemeTransition(
       },
     )
 
-    try {
-      await animation.finished
-    }
-    finally {
-      transition.skipTransition?.()
-    }
+    await animation.finished
   }
   finally {
-    transitionRunning = false
+    try {
+      transition?.skipTransition?.()
+      await transition?.finished.catch(() => {})
+    }
+    finally {
+      transitionRunning = false
+      finish()
+    }
   }
 }

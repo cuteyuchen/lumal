@@ -10,6 +10,9 @@ const maxDatavEsSize = 80 * 1024
 const requiredArtifacts = [
   'packages/icons/dist/index.js',
   'packages/icons/dist/index.cjs',
+  'packages/icons/dist/morph.js',
+  'packages/icons/dist/morph.cjs',
+  'packages/icons/dist/src/morph/index.d.ts',
   'packages/icons-vue/dist/index.js',
   'packages/icons-vue/dist/index.cjs',
   'packages/icons-vue/dist/icons-vue.css',

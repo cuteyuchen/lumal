@@ -48,6 +48,12 @@ const PACKAGE_ENTRIES: PackageEntry[] = [
     specifier: '@lumal/icons/vite',
   },
   {
+    dist: 'packages/icons/dist/morph.js',
+    packageName: 'icons',
+    source: 'packages/icons/src/morph/index.ts',
+    specifier: '@lumal/icons/morph',
+  },
+  {
     dist: 'packages/icons-vue/dist/icons-vue.css',
     packageName: 'icons-vue',
     source: 'packages/icons-vue/src/source-style.css',

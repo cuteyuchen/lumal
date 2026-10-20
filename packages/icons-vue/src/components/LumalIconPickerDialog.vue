@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { LumalIconPickerGroupSelectSlotProps } from '../types'
 import { nextTick, onBeforeUnmount, shallowRef, useTemplateRef, watch } from 'vue'
+import LumalIcon from './LumalIcon.vue'
 import LumalIconPicker from './LumalIconPicker.vue'
 
 /***********************属性与事件*********************/
@@ -16,6 +18,10 @@ withDefaults(defineProps<{
 const emit = defineEmits<{
   cancel: []
   confirm: [icon: string]
+}>()
+
+defineSlots<{
+  'group-select'?: (props: LumalIconPickerGroupSelectSlotProps) => unknown
 }>()
 
 const visible = defineModel<boolean>('visible', { default: false })
@@ -106,13 +112,17 @@ function confirm(): void {
       >
         <header class="lumal-icon-picker-dialog__header">
           <h3>{{ title }}</h3>
-          <button type="button" aria-label="关闭图标选择器" @click="cancel">
-            ×
+          <button type="button" aria-label="关闭图标选择器" title="关闭图标选择器" @click="cancel">
+            <LumalIcon name="lumal:close" :size="18" />
           </button>
         </header>
 
         <div class="lumal-icon-picker-dialog__content">
-          <LumalIconPicker v-model="draftValue" />
+          <LumalIconPicker v-model="draftValue">
+            <template v-if="$slots['group-select']" #group-select="slotProps">
+              <slot name="group-select" v-bind="slotProps" />
+            </template>
+          </LumalIconPicker>
         </div>
 
         <footer class="lumal-icon-picker-dialog__footer">
@@ -142,8 +152,9 @@ function confirm(): void {
 
 .lumal-icon-picker-dialog__body {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   width: min(680px, 100%);
-  max-height: min(680px, 88dvh);
+  height: min(680px, 88dvh);
   overflow: hidden;
   border-radius: var(--lumal-radius-large, 12px);
   color: var(--el-text-color-primary, CanvasText);
@@ -174,6 +185,12 @@ function confirm(): void {
   min-height: 0;
   overflow: auto;
   padding: 20px;
+  scrollbar-gutter: stable;
+}
+
+/* 48 个图标按整行排布；末页不足一页时仍只展示真实图标。 */
+.lumal-icon-picker-dialog__content :deep(.lumal-icon-picker__grid) {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
 }
 
 .lumal-icon-picker-dialog__footer {
@@ -210,8 +227,20 @@ function confirm(): void {
   }
 
   .lumal-icon-picker-dialog__body {
-    max-height: 92dvh;
+    height: min(680px, 92dvh);
     border-radius: var(--lumal-radius-large, 12px) var(--lumal-radius-large, 12px) 0 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .lumal-icon-picker-dialog__content :deep(.lumal-icon-picker__grid) {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 360px) {
+  .lumal-icon-picker-dialog__content :deep(.lumal-icon-picker__grid) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 </style>

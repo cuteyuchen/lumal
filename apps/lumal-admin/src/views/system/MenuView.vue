@@ -9,8 +9,9 @@ import type {
 import type { SaveSystemMenuInput, SystemMenuRecord } from '../../api/system'
 import { LumalPage, LumalSchemaForm, LumalSchemaTable } from '@lumal/core/components'
 import { RequestError } from '@lumal/core/request'
+import { LumalIcon, LumalIconPicker } from '@lumal/icons-vue'
 import { ElAlert, ElButton, ElDialog } from 'element-plus'
-import { computed, onMounted, shallowRef } from 'vue'
+import { computed, onMounted, shallowRef, useTemplateRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
 import {
   createSystemMenu,
@@ -18,6 +19,7 @@ import {
   fetchSystemMenus,
   updateSystemMenu,
 } from '../../api/system'
+import AppIconGroupSelect from '../../components/app/AppIconGroupSelect.vue'
 import { useSchemaEntityCrud } from '../../composables/useSchemaEntityCrud'
 
 /***********************页面状态*********************/
@@ -49,6 +51,20 @@ const {
 
 const tableRows = computed(() => menus.value as unknown as SchemaTableRow[])
 const dialogTitle = computed(() => formMode.value === 'edit' ? '编辑菜单' : '新增菜单')
+
+/***********************菜单图标选择*********************/
+const iconPickerRef = useTemplateRef<HTMLDetailsElement>('iconPickerRef')
+const selectedIcon = computed({
+  get: () => String(formModel.value.icon ?? ''),
+  set: (icon: string) => {
+    formModel.value = { ...formModel.value, icon }
+  },
+})
+
+function handleIconSelect(): void {
+  if (iconPickerRef.value)
+    iconPickerRef.value.open = false
+}
 
 /***********************表格与表单配置*********************/
 const menuTypeOptions: SchemaFormOption[] = [
@@ -363,6 +379,12 @@ onMounted(() => {
         action-width="300"
         @retry="loadMenus"
       >
+        <template #table-icon="{ value }">
+          <span class="lumal-menu-icon-value">
+            <LumalIcon v-if="value" :name="String(value)" :size="18" />
+            <span>{{ value || '-' }}</span>
+          </span>
+        </template>
         <template #actions="{ row }">
           <ElButton
             v-if="canAddChild(row.type)"
@@ -421,12 +443,77 @@ onMounted(() => {
         show-actions
         submit-text="保存"
         @submit="handleSubmit"
-      />
+      >
+        <template #field-icon="{ value }">
+          <div class="lumal-menu-icon-field">
+            <details ref="iconPickerRef" class="lumal-menu-icon-field__picker">
+              <summary aria-label="选择菜单图标">
+                <LumalIcon :name="String(value || 'lumal:grid')" :size="18" />
+                <span>{{ value || '选择图标' }}</span>
+              </summary>
+              <LumalIconPicker v-model="selectedIcon" :page-size="12" show-labels @select="handleIconSelect">
+                <template #group-select="slotProps">
+                  <AppIconGroupSelect v-bind="slotProps" />
+                </template>
+              </LumalIconPicker>
+            </details>
+            <ElButton v-if="value" text title="清空菜单图标" aria-label="清空菜单图标" @click="selectedIcon = ''">
+              <LumalIcon name="lumal:close" :size="16" />
+            </ElButton>
+          </div>
+        </template>
+      </LumalSchemaForm>
     </ElDialog>
   </main>
 </template>
 
 <style scoped lang="scss">
+.lumal-menu-icon-field,
+.lumal-menu-icon-value,
+.lumal-menu-icon-field__picker summary {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.lumal-menu-icon-field {
+  width: 100%;
+  align-items: start;
+}
+
+.lumal-menu-icon-field__picker {
+  flex: 1;
+  min-width: 0;
+}
+
+.lumal-menu-icon-field__picker summary {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--el-border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.lumal-menu-icon-field__picker summary::-webkit-details-marker {
+  display: none;
+}
+
+.lumal-menu-icon-field__picker summary:focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 2px;
+}
+
+.lumal-menu-icon-field__picker[open] > :deep(.lumal-icon-picker) {
+  margin-top: 12px;
+}
+
+.lumal-menu-icon-value > span,
+.lumal-menu-icon-field__picker summary > span {
+  overflow-wrap: anywhere;
+}
+
 :global(.lumal-menu-dialog) {
   max-width: calc(100vw - 24px);
 }

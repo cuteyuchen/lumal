@@ -3,6 +3,7 @@ import type { SchemaFormMode, SchemaFormModel } from '@lumal/core/components'
 import { LumalInfoTable, LumalPage, LumalSchemaForm } from '@lumal/core/components'
 import { LumalIcon, LumalIconPickerDialog } from '@lumal/icons-vue'
 import { computed, shallowRef } from 'vue'
+import AppIconGroupSelect from '../../components/app/AppIconGroupSelect.vue'
 import { exampleFormSchemas } from './example-data'
 
 /***********************表单状态*********************/
@@ -134,7 +135,11 @@ function patchScore(): void {
           <LumalInfoTable :items="modelItems" label-width="92px" empty-text="-" />
         </div>
       </div>
-      <LumalIconPickerDialog v-model="selectedIcon" v-model:visible="iconPickerVisible" title="选择菜单图标" />
+      <LumalIconPickerDialog v-model="selectedIcon" v-model:visible="iconPickerVisible" title="选择菜单图标">
+        <template #group-select="slotProps">
+          <AppIconGroupSelect v-bind="slotProps" />
+        </template>
+      </LumalIconPickerDialog>
     </LumalPage>
   </main>
 </template>

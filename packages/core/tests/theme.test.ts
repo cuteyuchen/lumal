@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   applyThemePreferences,
@@ -41,6 +42,12 @@ class MemoryStorage implements Storage {
 }
 
 describe('theme runtime', () => {
+  it('主题入口包含单选按钮样式，保留处理方式的标签和选中态', () => {
+    const themeEntry = readFileSync(resolve(import.meta.dirname, '../theme-chalk/index.scss'), 'utf8')
+
+    expect(themeEntry).toContain('@use "element-plus/theme-chalk/src/radio-button.scss"')
+  })
+
   it('会创建默认主题状态并生成 CSS 变量 token', () => {
     const store = createThemeStore()
     const tokens = resolveThemeTokens(store.state)

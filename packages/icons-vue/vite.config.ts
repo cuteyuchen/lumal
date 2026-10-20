@@ -17,7 +17,8 @@ export default defineConfig({
       fileName: (format, entryName) => `${entryName}.${format === 'cjs' ? 'cjs' : 'js'}`,
     },
     rollupOptions: {
-      external: ['vue', '@iconify/vue', '@lumal/icons'],
+      // Morphicons 仅提供 ESM；保留动态 import，兼容 CJS 静态消费与按需加载。
+      external: id => ['vue', '@iconify/vue'].includes(id) || /^@lumal\/icons(?:\/|$)/.test(id) || /^morphicons(?:\/|$)/.test(id),
     },
   },
 })

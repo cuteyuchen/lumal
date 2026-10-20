@@ -69,6 +69,16 @@ describe('admin menu seed', () => {
           title: '示例总览',
         }),
       }),
+      expect.objectContaining({
+        component: 'examples/icons',
+        name: 'ExamplesIcons',
+        path: 'icons',
+        meta: expect.objectContaining({
+          authority: ['examples:view'],
+          icon: 'lumal:grid',
+          title: '图标',
+        }),
+      }),
     ]))
     expect(projectRoute).toMatchObject({
       path: '/project',

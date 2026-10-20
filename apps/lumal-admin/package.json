@@ -6,10 +6,13 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vue-tsc --noEmit -p tsconfig.json && vite build",
+    "icons:generate": "node scripts/generate-element-plus-icons.mjs",
     "test": "pnpm --filter lumal-mock-api build:test && vitest run --config vitest.config.ts tests",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "@iconify/vue": "^5.0.0",
     "@lumal/charts": "0.0.3-beta",
     "@lumal/core": "0.0.3-beta",
     "@lumal/icons": "0.0.3-beta",

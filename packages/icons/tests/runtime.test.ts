@@ -3,6 +3,7 @@ import {
   applySvgGradient,
   clearIconDataUriCache,
   composeSvgIcons,
+  getGradientIconDataUri,
   getIconDataUri,
   recolorSvgString,
   registerIcons,
@@ -15,6 +16,34 @@ describe('@lumal/icons runtime', () => {
 
   it('可以把 SVG 文本转换成 data URI', () => {
     expect(svgToDataUri(svgText)).toContain('data:image/svg+xml')
+  })
+
+  it.each([
+    svgText,
+    svgText.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"'),
+    svgText.replace('<svg', '<svg xmlns = \'http://www.w3.org/2000/svg\''),
+    svgText.replace('<svg', '<svg xmlns:xlink="http://www.w3.org/1999/xlink"'),
+    '<svg viewBox="0 0 16 16"><svg xmlns="http://www.w3.org/2000/svg"><path /></svg></svg>',
+  ])('独立 SVG 图片的 Data URI 保留且仅设置一个根命名空间：%s', (source) => {
+    const uri = svgToDataUri(source)
+    const decoded = decodeURIComponent(uri.slice(uri.indexOf(',') + 1))
+    const svgDocument = new DOMParser().parseFromString(decoded, 'image/svg+xml')
+
+    expect(svgDocument.querySelector('parsererror')).toBeNull()
+    expect(svgDocument.documentElement.namespaceURI).toBe('http://www.w3.org/2000/svg')
+    expect(svgDocument.documentElement.getAttribute('viewBox')).toBe('0 0 16 16')
+    expect(svgDocument.querySelector('path')?.namespaceURI).toBe('http://www.w3.org/2000/svg')
+  })
+
+  it('编码 Data URI 时保留颜色、中文和特殊字符', () => {
+    const source = '<svg><title>图标 #1 &amp; 100%</title><path fill="#1677ff"/></svg>'
+    const uri = svgToDataUri(source)
+    const decoded = decodeURIComponent(uri.slice(uri.indexOf(',') + 1))
+    const svgDocument = new DOMParser().parseFromString(decoded, 'image/svg+xml')
+
+    expect(uri).not.toContain('#')
+    expect(svgDocument.querySelector('title')?.textContent).toBe('图标 #1 & 100%')
+    expect(svgDocument.querySelector('path')?.getAttribute('fill')).toBe('#1677ff')
   })
 
   it('可以在运行时替换 currentColor', () => {
@@ -43,6 +72,14 @@ describe('@lumal/icons runtime', () => {
     ])
 
     expect(getIconDataUri('app:data-uri')).toContain('data:image/svg+xml')
+    for (const uri of [
+      getIconDataUri('app:data-uri', '#1677ff'),
+      getGradientIconDataUri('app:data-uri', { from: '#1677ff', to: '#10b981' }),
+    ]) {
+      const decoded = decodeURIComponent(uri.slice(uri.indexOf(',') + 1))
+      expect(new DOMParser().parseFromString(decoded, 'image/svg+xml').documentElement.namespaceURI)
+        .toBe('http://www.w3.org/2000/svg')
+    }
     clearIconDataUriCache()
     expect(getIconDataUri('app:data-uri')).toContain('data:image/svg+xml')
   })

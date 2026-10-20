@@ -24,7 +24,6 @@ const emit = defineEmits<{
   select: [path: string, item: LumalLayoutMenuItem]
 }>()
 
-const SEARCH_ICON = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="m16.2 16.2 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
 const dialogId = `lumal-global-search-${useId()}`
 const inputRef = useTemplateRef<HTMLInputElement>('inputRef')
 const triggerRef = useTemplateRef<HTMLButtonElement>('triggerRef')
@@ -188,7 +187,7 @@ defineExpose({ close: closeSearch, open: openSearch })
       title="全局搜索"
       @click="openSearch"
     >
-      <LumalIcon :icon="SEARCH_ICON" :size="17" />
+      <LumalIcon name="lumal:search" :size="17" />
       <span class="lumal-global-search__trigger-label">搜索</span>
       <kbd v-if="shortcut">Ctrl K</kbd>
     </button>
@@ -214,7 +213,7 @@ defineExpose({ close: closeSearch, open: openSearch })
 
           <label class="lumal-global-search__input-wrap">
             <span class="lumal-global-search__sr-only">搜索菜单</span>
-            <LumalIcon :icon="SEARCH_ICON" :size="18" />
+            <LumalIcon name="lumal:search" :size="18" />
             <input
               ref="inputRef"
               v-model="query"

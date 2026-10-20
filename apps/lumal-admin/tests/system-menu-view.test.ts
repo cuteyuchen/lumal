@@ -1,4 +1,5 @@
 import { createAuthorityDirective } from '@lumal/core/directives'
+import { registerIcons } from '@lumal/icons'
 import { mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
@@ -46,7 +47,10 @@ const TableStub = defineComponent({
     tableProps: Object,
   },
   setup(_, { slots }) {
-    return () => h('div', { class: 'table-stub' }, slots.actions?.({ index: 0, row: sampleMenu }))
+    return () => h('div', { class: 'table-stub' }, [
+      slots['table-icon']?.({ value: sampleMenu.icon }),
+      slots.actions?.({ index: 0, row: sampleMenu }),
+    ])
   },
 })
 
@@ -77,10 +81,11 @@ const FormStub = defineComponent({
     gutter: Number,
     labelWidth: [Number, String],
     mode: String,
+    modelValue: Object,
     schemas: Array,
   },
-  setup() {
-    return () => h('form', { class: 'form-stub' })
+  setup(props, { slots }) {
+    return () => h('form', { class: 'form-stub' }, slots['field-icon']?.({ value: props.modelValue?.icon }))
   },
 })
 
@@ -109,6 +114,12 @@ function mountMenuView() {
 
 describe('system menu view', () => {
   beforeEach(async () => {
+    registerIcons([{
+      key: 'app:user',
+      label: '用户',
+      source: 'local-svg',
+      svgText: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>',
+    }])
     await login('admin')
     permissionStore.clear()
   })
@@ -154,6 +165,28 @@ describe('system menu view', () => {
     expect(wrapper.find('[data-action="create-menu-child"]').attributes('style')).toContain('display: none')
     expect(wrapper.find('[data-action="edit-menu"]').attributes('style')).toContain('display: none')
     expect(wrapper.find('[data-action="delete-menu"]').attributes('style')).toContain('display: none')
+  })
+
+  it('菜单表格和编辑表单复用 Lumal 图标，选择与清空会回写菜单模型', async () => {
+    permissionStore.setPermissions(resolveMenuPermissions())
+    const wrapper = mountMenuView()
+    await flushPromises()
+
+    expect(wrapper.get('.lumal-menu-icon-value .lumal-icon').find('svg').exists()).toBe(true)
+    await wrapper.get('[data-action="edit-menu"]').trigger('click')
+    const picker = wrapper.get('details')
+    expect(wrapper.get('summary').text()).toContain('app:user')
+    picker.element.open = true
+    await wrapper.get('input[type="search"]').setValue('浅色模式')
+    await wrapper.get('[role="option"][aria-label="浅色模式"]').trigger('click')
+
+    expect(wrapper.findComponent(FormStub).props('modelValue')).toMatchObject({ icon: 'lumal:sun' })
+    expect(picker.element.open).toBe(false)
+    expect(wrapper.get('summary .lumal-icon').find('svg').exists()).toBe(true)
+    await wrapper.get('[aria-label="清空菜单图标"]').trigger('click')
+    expect(wrapper.findComponent(FormStub).props('modelValue')).toMatchObject({ icon: '' })
+    expect(wrapper.find('[aria-label="清空菜单图标"]').exists()).toBe(false)
+    wrapper.unmount()
   })
 
   it('打开新增弹窗并提供完整菜单表单字段', async () => {

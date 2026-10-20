@@ -6,6 +6,7 @@ import { computed } from 'vue'
 import LumalMenuBadge from './LumalMenuBadge.vue'
 import { includesMenuPath } from './state/menu-layout'
 
+/***********************属性与事件*********************/
 const props = withDefaults(defineProps<{
   activePath?: string
   item: LumalLayoutMenuItem
@@ -17,12 +18,14 @@ const emit = defineEmits<{
   select: [path: string]
 }>()
 
+/***********************菜单状态*********************/
 const visibleChildren = computed(() => props.item.children?.filter(child => !child.hidden) ?? [])
 // 新开页外链只是“打开动作”，不进入 ElMenu 选中态追踪，避免点击后高亮与实际页面错位。
 const isExternalAction = computed(() => Boolean(props.item.externalLink) && props.item.externalTarget !== '_self')
 // ElMenu 的 default-active 在路由切换后对“一级即叶子”项偶发不同步，这里用路径显式驱动选中样式。
 const isActive = computed(() => Boolean(props.activePath) && includesMenuPath(props.item, props.activePath))
 
+/***********************菜单事件*********************/
 function handleSelect(path: string): void {
   emit('select', path)
 }
@@ -40,7 +43,7 @@ function handleSelect(path: string): void {
         <span>{{ item.title }}</span>
         <LumalMenuBadge :badge="item.badge" :label="item.title" :tone="item.badgeTone" :type="item.badgeType" />
       </span>
-      <span v-if="item.externalLink" class="lumal-top-nav-menu-item__external" aria-hidden="true">↗</span>
+      <LumalIcon v-if="item.externalLink" class="lumal-top-nav-menu-item__external" name="lumal:external-link" :size="12" />
     </template>
 
     <LumalTopNavMenuItem
@@ -65,7 +68,7 @@ function handleSelect(path: string): void {
       <span>{{ item.title }}</span>
       <LumalMenuBadge :badge="item.badge" :label="item.title" :tone="item.badgeTone" :type="item.badgeType" />
     </span>
-    <span class="lumal-top-nav-menu-item__external" aria-hidden="true">↗</span>
+    <LumalIcon class="lumal-top-nav-menu-item__external" name="lumal:external-link" :size="12" />
   </li>
 
   <ElMenuItem
@@ -79,7 +82,7 @@ function handleSelect(path: string): void {
       <span>{{ item.title }}</span>
       <LumalMenuBadge :badge="item.badge" :label="item.title" :tone="item.badgeTone" :type="item.badgeType" />
     </span>
-    <span v-if="item.externalLink" class="lumal-top-nav-menu-item__external" aria-hidden="true">↗</span>
+    <LumalIcon v-if="item.externalLink" class="lumal-top-nav-menu-item__external" name="lumal:external-link" :size="12" />
   </ElMenuItem>
 </template>
 

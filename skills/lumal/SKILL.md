@@ -25,7 +25,7 @@ description: 使用 Lumal（@lumal/*、create-lumal-admin）构建或维护 Vue 
 | 后台 ECharts 图表、查询/图表/表格切换面板 | `@lumal/charts` | [图表](references/charts.md) |
 | 大屏边框、装饰、数字、飞线、滚动榜单、DataV 配置 | `@lumal/datav` | [DataV](references/datav.md) |
 | 驾驶舱左右区域编排、模块注册、多布局、可视化设计 | `@lumal/cockpit` | [驾驶舱](references/cockpit.md) |
-| 不依赖 Vue 的图标注册、SVG 处理、Data URI | `@lumal/icons` | [图标内核](references/icons.md) |
+| 不依赖 Vue 的图标注册、SVG 处理、Data URI、可选状态形变 | `@lumal/icons`、`@lumal/icons/morph` | [图标内核](references/icons.md) |
 | Vue 图标组件、选择器、响应式图标注册表 | `@lumal/icons-vue` | [Vue 图标](references/icons-vue.md) |
 | Vite resolver、Lumal 仓库源码 alias、可选 Devtools | `@lumal/vite` | [构建辅助](references/vite.md) |
 | 迁移已有 Vben 表单/Grid 写法 | `@lumal/vben-compat` | [Vben 迁移](references/vben-compat.md) |

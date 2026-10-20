@@ -10,10 +10,15 @@ export default defineConfig({
     lib: {
       entry: {
         index: resolve(packageRoot, 'src/index.ts'),
+        morph: resolve(packageRoot, 'src/morph/index.ts'),
         vite: resolve(packageRoot, 'src/vite/index.ts'),
       },
       formats: ['es', 'cjs'],
       fileName: (format, entryName) => `${entryName}.${format === 'cjs' ? 'cjs' : 'js'}`,
+    },
+    rollupOptions: {
+      // 可选 ESM 引擎只通过动态 import 加载，根入口与 CJS 不静态依赖它。
+      external: id => /^morphicons(?:\/|$)/.test(id),
     },
   },
 })

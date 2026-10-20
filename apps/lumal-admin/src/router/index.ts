@@ -10,6 +10,7 @@ import { setupPermissionGuard } from '@lumal/core/permission'
 import { createMenuRouteRuntime } from '@lumal/core/router'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { loadAdminMenus } from '../api/menu'
+import { registerAdminElementPlusIcons } from '../icons'
 import { permissionStore } from '../services/permission'
 import {
   isAuthenticated,
@@ -69,6 +70,19 @@ export async function ensureAdminRoutes(targetRouter: Router): Promise<void> {
   }
 
   await runtime.menuRoutes.loadRemote()
+  if (hasElementPlusIcons(runtime.menuRoutes.sidebarMenus)) {
+    try {
+      await registerAdminElementPlusIcons()
+    }
+    catch {
+      // 图标资源失败不阻断菜单导航，打开选择器时可以重新加载。
+    }
+  }
+}
+
+function hasElementPlusIcons(menus: SidebarMenuItem[]): boolean {
+  return menus.some(menu => (typeof menu.icon === 'string' && menu.icon.startsWith('element-plus:'))
+    || hasElementPlusIcons(menu.children))
 }
 
 export function resetAdminRoutes(targetRouter: Router): void {

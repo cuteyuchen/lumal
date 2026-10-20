@@ -307,6 +307,17 @@ export const adminMenuSeed: LumalMenuRecord[] = [
         },
       },
       {
+        component: 'examples/icons',
+        name: 'ExamplesIcons',
+        path: 'icons',
+        meta: {
+          authority: ['examples:view'],
+          icon: 'lumal:grid',
+          order: 14,
+          title: '图标',
+        },
+      },
+      {
         component: 'examples/info-reference',
         name: 'ExamplesRestricted',
         path: 'restricted',

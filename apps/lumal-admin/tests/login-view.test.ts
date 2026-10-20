@@ -1,3 +1,4 @@
+import { LumalIcon } from '@lumal/icons-vue'
 import { mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory } from 'vue-router'
@@ -28,6 +29,7 @@ describe('login view', () => {
     expect(wrapper.text()).toContain('Lumal Admin')
     expect(wrapper.find('img[src*="lumal-logo.svg"]').exists()).toBe(true)
     expect(wrapper.find('[data-action="toggle-theme"]').attributes('aria-label')).toContain('切换')
+    expect(wrapper.find('[data-action="toggle-theme"]').findComponent(LumalIcon).props('morph')).toBe(true)
     expect(wrapper.find('[data-testid="login-username"] input').element).toHaveProperty('value', 'admin')
 
     await wrapper.find('button[aria-label="表单居左"]').trigger('click')

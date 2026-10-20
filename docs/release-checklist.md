@@ -67,8 +67,8 @@ rg -n "guiren|gr-framework|GrFramework|GSchemaForm|GSchemaTable|GCrudTable|GPage
 
 ## 依赖方向
 
-- `@lumal/icons` 保持零运行时依赖和零 Vue 引用。
-- `@lumal/icons-vue` 只依赖 `@lumal/icons`，并把 Vue 与 Iconify Vue 保持为 peer dependency。
+- `@lumal/icons` 静态入口没有强制运行时依赖和 Vue 引用；`@lumal/icons/morph` 仅允许 `morphicons@2.0.0` 可选 peer，不静态加载引擎。
+- `@lumal/icons-vue` 依赖 `@lumal/icons` 与 `morphicons@2.0.0`，Vue 与 Iconify Vue 保持 peer；形变复用通用入口，静态消费不加载动画引擎。
 - `@lumal/core` 不依赖 `@lumal/vben-compat`。
 - Element Plus 保持为 `@lumal/core` 的 peer dependency，Lumal 不从零重写基础 UI 控件。
 - `@lumal/core` 不默认依赖 VXE。
@@ -150,6 +150,7 @@ pnpm --filter create-lumal-admin pack --dry-run
 - 包含包内 `CHANGELOG.md`，并记录当前版本。
 - `@lumal/core` 包含 `theme-chalk/index.scss` 和 `dist/core.css`。
 - `@lumal/core` 包含 `minimal.js` / `minimal.cjs` 及类型入口；`test:create-consumer` 在不安装 Element Plus 的临时项目中验证 minimal/request。
+- `@lumal/icons` 包含 `morph.js` / `morph.cjs` 及 `src/morph/index.d.ts`；核对 ESM/CJS 消费、可选 peer 缺失时的静态入口和动态失败回退。
 - `@lumal/icons-vue` 包含 `dist/icons-vue.css`。
 - `@lumal/cockpit` 包含 `dist/cockpit.css` 及 `dist/runtime.js`、`dist/designer.js` 独立入口。
 - `create-lumal-admin` 包含 `dist/cli.js` 和 `dist/index.js`，两模式生成的 Core/图标依赖精确等于脚手架版本，不能残留 `^0.0.0` 占位符。
@@ -167,6 +168,7 @@ pnpm --filter create-lumal-admin pack --dry-run
 - Chromium E2E 覆盖登录与动态菜单、403/404/退出、标签和设置持久化、用户查询/新增、会话凭据失效。
 - 移动端流程验证 375px 下不存在页面级横向溢出。
 - `release:artifacts` 检查必要构建产物、`vendor-echarts`、`vendor-element-plus`、`vendor-lumal` 分包和 500 KB 单块上限。
+- `release:artifacts` 同时运行 `node scripts/check-icon-consumers.mjs`，使用 Node DOM 环境验证图标 ESM/CJS 静态资源、Vue SSR、通用控制器动态加载和终态，不启动实机浏览器。
 - `release:budgets` 检查 Vue 基线、轻入口、request、DataV charts 和应用首屏静态闭包；构建四个示例后使用 `pnpm release:budgets --require-all` 防止漏验。
 - 每轮实际结果以对应审计/验收记录为准，不把历史 E2E 或块大小当作当前工作区的验收证明。本轮无浏览器验收的范围见 `architecture-audit-2026-10-16.md`。
 
@@ -213,7 +215,7 @@ Vercel 文档 READY 后，已使用无 Cookie、无 Authorization 的 HTTP 请�
 - `docs/changelog.md`、九包 CHANGELOG、文档导航版本、安装命令与公共包版本一致。
 - `docs/development-roadmap.md` 是唯一开发规划和阶段状态来源。
 - `docs/architecture.md` 说明包边界。
-- `docs/icons.md` 说明图标注册、渲染和选择器。
+- `docs/icons.md` 说明注册、渲染、选择器，以及通用 DOM/其他框架转换与 Vue 形变的入口、安装和回退边界。
 - `docs/core-api.md` 说明 core 公开入口。
 - `docs/migration-from-vben.md` 说明兼容映射、迁移边界和不支持项。
 - `apps/lumal-docs/src/reference` 仅 include 对应 `docs/*.md`，`release:boundaries` 阻止正文副本重新出现。

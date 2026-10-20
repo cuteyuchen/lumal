@@ -65,6 +65,12 @@ importers:
 
   apps/lumal-admin:
     dependencies:
+      '@element-plus/icons-vue':
+        specifier: ^2.3.2
+        version: 2.3.2(vue@3.5.39(typescript@6.0.3))
+      '@iconify/vue':
+        specifier: ^5.0.0
+        version: 5.0.1(vue@3.5.39(typescript@6.0.3))
       '@lumal/charts':
         specifier: 0.0.3-beta
         version: link:../../packages/charts
@@ -344,7 +350,11 @@ importers:
         specifier: ^6.1.0
         version: 6.1.0
 
-  packages/icons: {}
+  packages/icons:
+    devDependencies:
+      morphicons:
+        specifier: 2.0.0
+        version: 2.0.0(vue@3.5.39(typescript@6.0.3))
 
   packages/icons-vue:
     dependencies:
@@ -354,6 +364,9 @@ importers:
       '@lumal/icons':
         specifier: 0.0.3-beta
         version: link:../icons
+      morphicons:
+        specifier: 2.0.0
+        version: 2.0.0(vue@3.5.39(typescript@6.0.3))
       vue:
         specifier: ^3.5.0
         version: 3.5.39(typescript@6.0.3)
@@ -4133,6 +4146,26 @@ packages:
 
   module-replacements@3.0.0:
     resolution: {integrity: sha512-tHIZqde+RlyNRobAIjfcH5UIgIrEbZbDGRL6J/x+HERX/g8O9mrm0p6knJbsTXmQtDvZ+eFP+xfOP3/9jHk6YA==}
+
+  morphicons@2.0.0:
+    resolution: {integrity: sha512-/pyqQjUhq8FUKz2SjJ6sXe4KjAa0QEmEbtzG13158/pl+G6bCJGvo1zIEDGNQ+Hagl69hIu4Mn9kJgTvvTf8Ew==}
+    peerDependencies:
+      react: '>=18'
+      react-native: '>=0.71'
+      react-native-svg: '>=14'
+      svelte: '>=5'
+      vue: '>=3.3'
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-native:
+        optional: true
+      react-native-svg:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
 
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
@@ -10349,6 +10382,10 @@ snapshots:
       ufo: 1.6.4
 
   module-replacements@3.0.0: {}
+
+  morphicons@2.0.0(vue@3.5.39(typescript@6.0.3)):
+    optionalDependencies:
+      vue: 3.5.39(typescript@6.0.3)
 
   mri@1.2.0: {}
 

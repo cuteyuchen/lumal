@@ -7,6 +7,7 @@ import {
   registerIconGroups,
   registerIcons,
   resolveIconDefinition,
+  validateMonochromeSvg,
 } from '../src'
 
 describe('@lumal/icons registry', () => {
@@ -21,6 +22,31 @@ describe('@lumal/icons registry', () => {
     expect(resolveIconDefinition('lumal:fullscreen-exit')).toMatchObject({ label: '退出全屏' })
     expect(resolveIconDefinition('lumal:grid')).toMatchObject({ label: '列设置' })
     expect(resolveIconDefinition('lumal:filter')).toMatchObject({ label: '筛选' })
+    for (const key of ['menu', 'search', 'arrow-up', 'arrow-down', 'arrow-right', 'copy', 'download']) {
+      expect(resolveIconDefinition(`lumal:${key}`)).toMatchObject({ group: 'lumal', source: 'local-svg' })
+    }
+  })
+
+  it('设置图标的内圆居中，外齿轮对称且描边一致', () => {
+    const svgText = resolveIconDefinition('lumal:settings')!.svgText!
+    const svgDocument = new DOMParser().parseFromString(svgText, 'image/svg+xml')
+    const svg = svgDocument.documentElement
+    const circle = svg.querySelector('circle')
+    const outline = svg.querySelector('path')
+
+    expect(svgDocument.querySelector('parsererror')).toBeNull()
+    expect(svg.getAttribute('viewBox')).toBe('0 0 24 24')
+    expect(circle?.getAttribute('cx')).toBe('12')
+    expect(circle?.getAttribute('cy')).toBe('12')
+    expect(circle?.getAttribute('r')).toBe('3.5')
+    // 顶部与底部齿槽以 (12, 12) 为中心，防止相对坐标再次累积偏移。
+    expect(outline?.getAttribute('d')).toMatch(/^M10 3h4/)
+    expect(outline?.getAttribute('d')).toContain('L14 21h-4')
+    for (const shape of svg.querySelectorAll('path, circle')) {
+      expect(shape.getAttribute('stroke')).toBe('currentColor')
+      expect(shape.getAttribute('stroke-width')).toBe('1.8')
+    }
+    expect(validateMonochromeSvg(svgText).valid).toBe(true)
   })
 
   it('注册图标后可以按 key 同步解析', () => {

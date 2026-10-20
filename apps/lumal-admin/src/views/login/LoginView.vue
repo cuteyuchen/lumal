@@ -7,6 +7,7 @@ import { computed, reactive, shallowRef, useTemplateRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { adminAccountOptions } from '../../api/auth'
 import LumalBrand from '../../components/app/LumalBrand.vue'
+import { useAdminThemeIcon } from '../../composables/use-admin-theme-icon'
 import { ensureAdminRoutes, resolveFirstAccessibleAdminPath } from '../../router'
 import { adminResolvedThemeMode, patchAdminPreferences } from '../../services/preferences'
 import { login } from '../../services/session'
@@ -38,6 +39,7 @@ const router = useRouter()
 const loginLayout = shallowRef<LoginLayout>(readLoginLayout())
 const resolvedThemeMode = adminResolvedThemeMode
 const themeToggleTitle = computed(() => resolvedThemeMode.value === 'dark' ? '切换浅色模式' : '切换深色模式')
+const themeIcon = useAdminThemeIcon(resolvedThemeMode)
 
 /***********************表单状态*********************/
 const loginFormRef = useTemplateRef<FormInstance>('loginFormRef')
@@ -160,7 +162,7 @@ async function handleSubmit(): Promise<void> {
           data-action="toggle-theme"
           @click="handleToggleTheme"
         >
-          <LumalIcon :name="resolvedThemeMode === 'dark' ? 'lumal:sun' : 'lumal:moon'" :size="18" />
+          <LumalIcon :name="themeIcon" morph :size="18" />
         </ElButton>
       </div>
     </header>

@@ -9,3 +9,4 @@ export {
 }
 export { useIconRegistry } from './composables/useIconRegistry'
 export type { UseIconRegistryReturn } from './composables/useIconRegistry'
+export type { LumalIconMorphSpring, LumalIconPickerGroupSelectSlotProps } from './types'

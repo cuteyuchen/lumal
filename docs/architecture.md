@@ -4,8 +4,8 @@ Lumal 使用 pnpm workspace 组织包和示例应用。`packages/*` 按最终发
 
 ## 分层
 
-- `packages/icons`：框架无关的纯 TypeScript 图标内核，保持零运行时依赖。
-- `packages/icons-vue`：Vue 图标组件和响应式适配层，只依赖 `@lumal/icons`、Vue 与 Iconify Vue peer。
+- `packages/icons`：框架无关的 TypeScript 图标内核，静态入口无强制运行时依赖；`@lumal/icons/morph` 提供通用转换和 DOM 形变控制器，Morphicons 为可选 peer。
+- `packages/icons-vue`：Vue 图标组件和响应式适配层，依赖 `@lumal/icons`、`morphicons@2.0.0`，Vue 与 Iconify Vue 保持 peer；复用通用形变转换并动态加载官方 Vue 绑定。
 - `packages/core`：后台核心包，可以依赖 `@lumal/icons` 与 `@lumal/icons-vue`。
 - `packages/charts`：可选图表包，独立承载 ECharts 面板能力。
 - `packages/datav`：独立驾驶舱可视化组件包，提供 15 个导出组件，含边框/装饰变体共 38 种形态，以 DataV 2.10.0（MIT）为基准重构；`vue` 和 `echarts` 为 peer dependency，`config` 使用 `@jiaminghi/charts` 专用运行时；不依赖 `@lumal/core`。

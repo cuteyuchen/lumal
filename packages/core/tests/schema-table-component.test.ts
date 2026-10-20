@@ -518,6 +518,8 @@ describe('lumal schema table', () => {
 
     await nextTick()
     expect(wrapper.findAllComponents({ name: 'ElTableColumn' }).map(item => item.props('prop'))).toEqual(['name'])
+    expect(wrapper.get('[aria-label="上移状态"] .lumal-icon').find('svg').exists()).toBe(true)
+    expect(wrapper.get('[aria-label="下移状态"] .lumal-icon').find('svg').exists()).toBe(true)
 
     await wrapper.find('.lumal-schema-table__column-options-header button').trigger('click')
     await nextTick()

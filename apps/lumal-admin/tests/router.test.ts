@@ -1,7 +1,9 @@
 import { MenuRouteConflictError } from '@lumal/core/router'
+import { resolveIconDefinition } from '@lumal/icons'
 import { ElMessageBox } from 'element-plus'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory } from 'vue-router'
+import * as adminIcons from '../src/icons'
 import {
   createAdminRouter,
   createAdminSidebarMenus,
@@ -150,6 +152,12 @@ describe('lumal admin router', () => {
             path: '/examples/chart-panel',
             title: 'Chart Panel',
           },
+          {
+            children: [],
+            icon: 'lumal:grid',
+            path: '/examples/icons',
+            title: '图标',
+          },
         ],
         icon: 'app:examples',
         path: '/examples',
@@ -198,6 +206,18 @@ describe('lumal admin router', () => {
     expect(router.hasRoute('About')).toBe(true)
     expect(router.hasRoute('AdminCockpit')).toBe(false)
     expect(router.hasRoute('System')).toBe(false)
+  })
+
+  it.each(['admin', 'operator', 'guest'] as const)('%s 可从菜单访问图标示例并恢复深层地址', async (role) => {
+    await login(role)
+    const router = createAdminRouter(createMemoryHistory())
+    await router.push('/examples/icons?source=refresh')
+    await router.isReady()
+
+    expect(router.currentRoute.value.fullPath).toBe('/examples/icons?source=refresh')
+    expect(router.currentRoute.value.name).toBe('ExamplesIcons')
+    expect(createAdminSidebarMenus(router).find(menu => menu.path === '/examples')?.children)
+      .toContainEqual({ children: [], icon: 'lumal:grid', path: '/examples/icons', title: '图标' })
   })
 
   it('operator 只能看到字典系统菜单、项目和示例字典能力', async () => {
@@ -513,5 +533,28 @@ describe('lumal admin router', () => {
     await router.isReady()
 
     expect(router.currentRoute.value.path).toBe('/project')
+  })
+
+  it('菜单实际使用 Element Plus 时准备图标资源，加载失败也不阻断路由', async () => {
+    await login('admin')
+    const loadRemoteMenus = async () => [{
+      path: '/element-plus-menu',
+      name: 'ElementPlusMenu',
+      meta: { title: '图标菜单' },
+      children: [{
+        path: 'child',
+        name: 'ElementPlusMenuChild',
+        component: 'dashboard/index',
+        meta: { title: '子页面', icon: 'element-plus:Edit' },
+      }],
+    }]
+    const firstRouter = createAdminRouter(createMemoryHistory(), { loadRemoteMenus })
+    await ensureAdminRoutes(firstRouter)
+    expect(resolveIconDefinition('element-plus:Edit')?.svgText).toContain('<svg')
+
+    vi.spyOn(adminIcons, 'registerAdminElementPlusIcons').mockRejectedValueOnce(new Error('offline'))
+    const secondRouter = createAdminRouter(createMemoryHistory(), { loadRemoteMenus })
+    await expect(ensureAdminRoutes(secondRouter)).resolves.toBeUndefined()
+    expect(getAdminRouteNames(secondRouter)).toContain('ElementPlusMenuChild')
   })
 })

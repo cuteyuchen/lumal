@@ -161,6 +161,7 @@ assert(
 
 assert(corePackage.files?.includes('theme-chalk'), '@lumal/core files 未包含 theme-chalk')
 assert(iconsVuePackage.exports?.['./style.css'] === './dist/icons-vue.css', '@lumal/icons-vue 未导出 style.css')
+assert(iconsPackage.exports?.['./morph']?.import && iconsPackage.exports?.['./morph']?.require && iconsPackage.exports?.['./morph']?.types, '@lumal/icons 未完整导出 morph 入口')
 assert(corePackage.exports?.['./style.css'] === './dist/core.css', '@lumal/core 未导出 style.css')
 assert(corePackage.exports?.['./minimal']?.import && corePackage.exports?.['./minimal']?.require && corePackage.exports?.['./minimal']?.types, '@lumal/core 未完整导出 minimal 入口')
 assert(corePackage.exports?.['./theme-chalk/index.scss'], '@lumal/core 未导出 theme-chalk/index.scss')
@@ -229,7 +230,9 @@ const viteAllDependencies = getDependencyNames(vitePackage, [
   'optionalDependencies',
 ])
 
-assert(iconsAllDependencies.size === 0, '@lumal/icons 必须保持零运行时依赖')
+assert(getDependencyNames(iconsPackage, ['dependencies', 'optionalDependencies']).size === 0, '@lumal/icons 静态内核不能有强制或自动安装的运行时依赖')
+assert(iconsAllDependencies.size === 1 && iconsPackage.peerDependencies?.morphicons === '2.0.0'
+  && iconsPackage.peerDependenciesMeta?.morphicons?.optional === true, '@lumal/icons 仅允许 morphicons@2.0.0 可选 peer 用于 morph 子入口')
 
 assert(hasDependency(iconsVuePackage, 'dependencies', '@lumal/icons'), '@lumal/icons-vue 应通过 dependencies 依赖 @lumal/icons')
 assert(hasDependency(iconsVuePackage, 'peerDependencies', 'vue'), '@lumal/icons-vue 应把 vue 放在 peerDependencies')

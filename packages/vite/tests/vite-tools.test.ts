@@ -70,10 +70,16 @@ describe('@lumal/vite', () => {
       .toBe(resolve('E:/workspace/lumal', 'packages/datav/src/source-style.css'))
     expect(sourceAliases.find(alias => alias.find === '@lumal/icons-vue')?.replacement)
       .toBe(resolve('E:/workspace/lumal', 'packages/icons-vue/src/index.ts'))
+    expect(sourceAliases.find(alias => alias.find === '@lumal/icons/morph')?.replacement)
+      .toBe(resolve('E:/workspace/lumal', 'packages/icons/src/morph/index.ts'))
+    expect(sourceAliases.findIndex(alias => alias.find === '@lumal/icons/morph'))
+      .toBeLessThan(sourceAliases.findIndex(alias => alias.find === '@lumal/icons'))
     expect(sourceAliases.every(alias => !alias.replacement.replaceAll('\\', '/').includes('/dist/')))
       .toBe(true)
     expect(distAliases.find(alias => alias.find === '@lumal/icons/vite')?.replacement)
       .toBe(resolve('E:/workspace/lumal', 'packages/icons/dist/vite.js'))
+    expect(distAliases.find(alias => alias.find === '@lumal/icons/morph')?.replacement)
+      .toBe(resolve('E:/workspace/lumal', 'packages/icons/dist/morph.js'))
 
     const datavDistAliases = createLumalAliases({
       packages: ['datav'],

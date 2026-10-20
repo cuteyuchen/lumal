@@ -17,6 +17,8 @@ describe('lumalIcon', () => {
     try {
       await flushPromises()
       const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]')!
+      expect(dialog.querySelector('[aria-label="关闭图标选择器"] .lumal-icon svg')).not.toBeNull()
+      expect(dialog.querySelector('[role="option"] .lumal-icon')?.getAttribute('style')).toContain('--lumal-icon-size: 28px')
       expect(wrapper.element.contains(dialog)).toBe(false)
       expect(document.activeElement).toBe(dialog)
       const elements = [...dialog.querySelectorAll<HTMLElement>('button, input, select')]
@@ -123,6 +125,8 @@ describe('lumalIcon', () => {
     const search = wrapper.get('input[type="search"]')
     await search.setValue('响应式图标二')
     expect(wrapper.text()).toContain('共 1 个图标')
+    expect(wrapper.get('[role="option"] .lumal-icon').attributes('style')).toContain('--lumal-icon-size: 28px')
+    expect(wrapper.get('.lumal-icon-picker__item-label').text()).toBe('响应式图标二')
 
     await wrapper.get('[role="option"]').trigger('click')
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual(['reactive-test:second'])
@@ -148,5 +152,73 @@ describe('lumalIcon', () => {
     expect(onUpdate).toHaveBeenCalledWith('reactive-test:second')
     expect(wrapper.emitted('confirm')).toEqual([['reactive-test:second']])
     wrapper.unmount()
+  })
+
+  it('默认分组使用原生控件，消费方插槽可以替换控件并驱动筛选和分页', async () => {
+    registerIcons([
+      { key: 'slot-group:first', group: 'slot-group', source: 'local-svg', svgText: '<svg><path /></svg>' },
+      { key: 'slot-group:second', group: 'slot-group', source: 'local-svg', svgText: '<svg><circle /></svg>' },
+    ])
+    const fallback = mount(LumalIconPicker)
+    expect(fallback.get('select').attributes('aria-label')).toBe('图标分组')
+    fallback.unmount()
+
+    const wrapper = mount(LumalIconPicker, {
+      props: { group: 'slot-group', pageSize: 1 },
+      slots: {
+        'group-select': ({ modelValue, groups, setGroup }) => h('select', {
+          'data-custom-group': '',
+          'value': modelValue,
+          'onChange': (event: Event) => setGroup((event.target as HTMLSelectElement).value),
+        }, [
+          h('option', { value: '' }, '全部分组'),
+          ...groups.map(group => h('option', { value: group.key }, group.label)),
+        ]),
+      },
+    })
+    try {
+      expect(wrapper.findAll('select')).toHaveLength(1)
+      await wrapper.findAll('.lumal-icon-picker__pagination button')[1]!.trigger('click')
+      expect(wrapper.get('[role="option"]').attributes('title')).toBe('slot-group:second')
+
+      await wrapper.get('[data-custom-group]').setValue('lumal')
+      expect(wrapper.text()).toContain('第 1 /')
+      expect(wrapper.get('[role="option"]').attributes('title')).not.toContain('slot-group:')
+      await wrapper.setProps({ group: '' })
+      expect(wrapper.get<HTMLSelectElement>('[data-custom-group]').element.value).toBe('')
+    }
+    finally {
+      wrapper.unmount()
+    }
+  })
+
+  it('弹窗转发分组插槽，分组切换不提前提交选择', async () => {
+    registerIcons([
+      { key: 'dialog-slot:first', group: 'dialog-slot', source: 'local-svg', svgText: '<svg><path /></svg>' },
+      { key: 'dialog-slot:second', group: 'dialog-slot', source: 'local-svg', svgText: '<svg><circle /></svg>' },
+    ])
+    const wrapper = mount(LumalIconPickerDialog, {
+      props: { visible: true, modelValue: 'lumal:sun' },
+      global: { stubs: { Teleport: true } },
+      slots: {
+        'group-select': ({ setGroup }) => h('button', {
+          'type': 'button',
+          'data-custom-group': '',
+          'onClick': () => setGroup('dialog-slot'),
+        }, '切换分组'),
+      },
+    })
+    try {
+      await wrapper.get('[data-custom-group]').trigger('click')
+      expect(wrapper.find('select').exists()).toBe(false)
+      expect(wrapper.findAll('[role="option"]')).toHaveLength(2)
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+      await wrapper.get('[role="option"]').trigger('click')
+      await wrapper.get('.lumal-icon-picker-dialog__footer .is-primary').trigger('click')
+      expect(wrapper.emitted('update:modelValue')).toEqual([['dialog-slot:first']])
+    }
+    finally {
+      wrapper.unmount()
+    }
   })
 })
