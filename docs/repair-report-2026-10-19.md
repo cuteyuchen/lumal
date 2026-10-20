@@ -235,7 +235,7 @@ pnpm --filter @lumal/core exec vitest run --config ../../vitest.config.ts tests/
 | 新增回归后的 `pnpm test:scripts` | FAIL（预期红灯） | CF 前置要求 / 旧矩阵两个失败；随后文档模式两个失败；`vercel-only-red.log`、`vercel-docs-routing-red.log` |
 | 修复后 `pnpm test:scripts` | PASS | 4 文件、33 项；`vercel-only-tests.log` |
 | `pnpm exec eslint scripts/check-release-env.mjs scripts/prepare-vercel-output.mjs scripts/release-safety.test.mjs` | PASS | `vercel-only-scoped-lint.log` |
-| `pnpm lint` | FAIL | 工作期间新增的用户侧 `apps/lumal-admin/src/router/index.ts:84-85` 有两处 `style/no-mixed-operators`；本轮未修改或提交该文件；`vercel-only-lint.log` |
+| `pnpm lint` | PASS（最终） | 先因用户侧 `apps/lumal-admin/src/router/index.ts:84-85` 两处 `style/no-mixed-operators` 失败；工作区随后补充括号，再次执行通过。本轮未修改或提交该文件；`vercel-only-lint-before-user-update.log`、`vercel-only-lint.log` |
 | `pnpm release:workflows` | PASS | 唯一入口、门禁 needs、dry-run、Secret 隔离、完整生产 E2E 保留；`vercel-only-workflows.log` |
 | `output/repair/actionlint/bin/actionlint.exe -color` | PASS | 全部 workflow 无诊断；`vercel-only-actionlint.log` |
 | `pnpm docs:build` | PASS | VitePress 构建完成；`vercel-only-docs-build.log` |
@@ -243,6 +243,6 @@ pnpm --filter @lumal/core exec vitest run --config ../../vitest.config.ts tests/
 | Node 逐文件比较原始 dist 和 prebuilt/static，并断言配置 | PASS | 219 文件逐字节一致、63 条映射、首页和 404 配置；`vercel-only-prebuilt-verify.log` |
 | 新 Actions run / 真实部署 / 线上 URL 与 HTTP 行为 | 未运行 / 未验证 | 未推送、未触发远端、未使用生产凭据；本地结构测试不能证明 Vercel 服务端路由 |
 
-本次仅改发布配置、部署脚本和文档，没有重跑全量应用单测、类型检查、九包构建、浏览器 E2E 或完整 `release:check`，也不复用上文历史 PASS 充当本次结果。文档中的全量发布门禁仍必须在最终快照执行成功；当前全量 lint 不绿，不能声称可发布。
+本次仅改发布配置、部署脚本和文档，没有重跑全量应用单测、类型检查、九包构建、浏览器 E2E 或完整 `release:check`，也不复用上文历史 PASS 充当本次结果。最终全量 lint 已通过，但文档中的完整发布门禁仍必须在最终快照执行成功，不能仅凭本次定向验证声称可发布。
 
 人工后续：在 `production` 配置指向已有 `lumal-docs` 的 `VERCEL_PROJECT_ID_DOCS`，核对 Vercel token/team 和五项目权限。插件 OAuth 不会自动成为 Actions Secret。新文档部署 READY 后再用未登录访问核对 Deployment Protection、深层页面、静态资源与 404，随后迁移域名和既有 CF 在线链接并停用旧 Git 自动部署。本次不删除 CF 项目、不提前更换有效链接，也不修改任何线上项目设置。
