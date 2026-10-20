@@ -1,5 +1,11 @@
 # @lumal/datav
 
+## 0.0.4-beta (2026-10-20)
+
+### Patch Changes
+
+- 仅统一九包版本，无新增运行时 API；保留独立子入口与图表引擎动态加载边界。
+
 ## 0.0.3-beta (2026-10-16)
 
 ### Minor Changes

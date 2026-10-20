@@ -51,7 +51,7 @@ export function nav(): DefaultTheme.NavItem[] {
     },
     {
       // 与可发布包版本对齐（@lumal/* / create-lumal-admin）
-      text: '0.0.3-beta',
+      text: '0.0.4-beta',
       items: [
         { text: '开发路线图', link: '/reference/development-roadmap' },
         { text: '发布检查清单', link: '/reference/release-checklist' },

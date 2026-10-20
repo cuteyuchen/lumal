@@ -5,7 +5,7 @@ Lumal 可选图表包，基于 ECharts 与 vue-echarts 封装轻量图表组件�
 ## 安装
 
 ```bash
-pnpm add @lumal/charts@0.0.3-beta echarts@^6 vue-echarts@^8 vue
+pnpm add @lumal/charts@0.0.4-beta echarts@^6 vue-echarts@^8 vue
 ```
 
 支持 ECharts 6、vue-echarts 8 和 Vue 3.5+。应用仍需按需注册图表、组件和渲染器。

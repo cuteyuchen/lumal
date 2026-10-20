@@ -1,5 +1,16 @@
 # @lumal/icons
 
+## 0.0.4-beta (2026-10-20)
+
+### Minor Changes
+
+- 新增独立 morph 入口，提供 SVG 转换和原生 DOM 形变控制器；可选 Morphicons 2.0.0 按需加载，保留静态及 SSR 回退。
+
+### Patch Changes
+
+- SVG Data URI 补齐独立图片命名空间，修正设置图标轮廓并补充状态图标。
+- 补充 ESM/CJS、并发更新、销毁清理、减少动画和不支持图形的回归检查。
+
 ## 0.0.3-beta (2026-10-16)
 
 ### Patch Changes

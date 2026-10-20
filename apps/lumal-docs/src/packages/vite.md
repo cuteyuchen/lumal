@@ -12,7 +12,7 @@ Vite 配置助手：组件 resolver、工作区源码 / 产物 alias、可选 De
 ## 安装
 
 ```bash
-pnpm add -D @lumal/vite@0.0.3-beta
+pnpm add -D @lumal/vite@0.0.4-beta
 ```
 
 ## 公开入口

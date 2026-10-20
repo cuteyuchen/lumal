@@ -1,5 +1,11 @@
 # @lumal/cockpit
 
+## 0.0.4-beta (2026-10-20)
+
+### Patch Changes
+
+- 同步 Core 与图标依赖至 0.0.4-beta，保持 runtime/designer 分离及地图、图表引擎由应用接入的边界。
+
 ## 0.0.3-beta (2026-10-16)
 
 ### Patch Changes

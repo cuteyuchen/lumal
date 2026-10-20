@@ -4,7 +4,7 @@
 
 ## 版本准备
 
-九个公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。`0.0.3-beta` 的九包在 2026-10-19 已确认全部发布，不能再次作为新版本发布。以下 `NEXT_VERSION` 必须由维护者选择尚未发布的合法版本，不由修复任务自动提升版本。
+九个公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。`0.0.3-beta` 的九包在 2026-10-19 已确认全部发布，不能再次作为新版本发布。本轮按维护者要求准备 `0.0.4-beta`；以下 `NEXT_VERSION` 必须由维护者选择尚未发布的合法版本。
 
 ```bash
 pnpm release:version NEXT_VERSION
@@ -18,7 +18,7 @@ pnpm release:verify
 - 将 pending Changeset 汇总进每个公共包 CHANGELOG，确认完整后移除已消费记录；本轮不运行标准 `changeset:version`，避免把 beta 序列变为稳定版 `0.1.0`。
 - 更新 `docs/changelog.md`、路线图基线、文档导航、安装命令和脚手架说明；历史版本与验收证据保留。
 - 保留脚手架源码的三个版本占位符；`pnpm build` 时按脚手架 package.json 注入精确版本，再用 `pnpm test:create-consumer` 验证 tarball 的 minimal/request、local、HTTP 三种消费路径。
-- 以空 Changeset 注明变更已手工汇总（本轮为 `prepared-0-0-3-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。
+- 以空 Changeset 注明变更已手工汇总（本轮为 `prepared-0-0-4-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。
 
 唯一发布入口是 `release-gate.yml`：`v*` tag 或手动运行。手动运行默认 `dry_run=true`，只执行校验；分支上不能以 `dry_run=false` 发包。真实运行必须选择版本相符且指向当前 HEAD 的 tag。含预发布后缀的 tag 使用 `beta`，稳定版使用 `latest`。
 

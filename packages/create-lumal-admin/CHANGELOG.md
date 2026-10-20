@@ -1,5 +1,12 @@
 # create-lumal-admin
 
+## 0.0.4-beta (2026-10-20)
+
+### Patch Changes
+
+- 构建时注入精确的 0.0.4-beta Core 与图标依赖，源码版本占位符保持不变。
+- 继续通过实际 tarball 验证 minimal/request 无 UI 消费，以及 local/HTTP 两种生成模式的依赖、类型与生产构建。
+
 ## 0.0.3-beta (2026-10-16)
 
 ### Patch Changes

@@ -1,7 +1,7 @@
 {
   "name": "@lumal/charts",
   "type": "module",
-  "version": "0.0.3-beta",
+  "version": "0.0.4-beta",
   "description": "Lumal optional ECharts-based chart components.",
   "license": "MIT",
   "keywords": [

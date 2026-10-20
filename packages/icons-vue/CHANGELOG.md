@@ -1,5 +1,17 @@
 # @lumal/icons-vue
 
+## 0.0.4-beta (2026-10-20)
+
+### Minor Changes
+
+- LumalIcon 增加 morph 和 morphSpring，复用通用转换并动态加载官方 Vue 绑定；SSR、减少动画或加载失败时保留静态图标。
+- 图标选择器及弹窗公开 group-select 插槽与类型，允许消费应用接入 UI 分组控件，不在图标包中依赖 Element Plus。
+
+### Patch Changes
+
+- 修复名称换行、弹窗分页与尺寸布局，补充选择回写、组件复用和动画清理测试。
+- 同步 @lumal/icons 至 0.0.4-beta，保持静态图标不加载 Morphicons 引擎。
+
 ## 0.0.3-beta (2026-10-16)
 
 ### Patch Changes

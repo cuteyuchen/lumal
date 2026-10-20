@@ -12,7 +12,7 @@
 ## 安装
 
 ```bash
-pnpm add @lumal/charts@0.0.3-beta echarts@^6 vue-echarts@^8 vue
+pnpm add @lumal/charts@0.0.4-beta echarts@^6 vue-echarts@^8 vue
 ```
 
 ## 公开入口

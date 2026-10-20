@@ -18,15 +18,15 @@
 
 ## npm 安装
 
-当前公共包版本为 `0.0.3-beta`。以下命令显式指定版本，所有 Lumal 包保持同版；不使用不带版本的安装命令获取本次 beta。
+当前工作区公共包版本为 `0.0.4-beta`，尚未执行 npm 发布。以下命令在本版发布后使用，显式指定版本并保持所有 Lumal 包同版；不使用不带版本的安装命令获取本次 beta。
 
 ```bash
-pnpm add @lumal/core@0.0.3-beta @lumal/icons@0.0.3-beta @lumal/icons-vue@0.0.3-beta @iconify/vue element-plus vue vue-router
-pnpm add @lumal/charts@0.0.3-beta echarts@^6 vue-echarts@^8   # 可选
-pnpm add @lumal/datav@0.0.3-beta echarts@^6                  # 可选
-pnpm add @lumal/cockpit@0.0.3-beta                           # 可选
-pnpm add -D @lumal/vite@0.0.3-beta
-pnpm add @lumal/vben-compat@0.0.3-beta                       # 迁移
+pnpm add @lumal/core@0.0.4-beta @lumal/icons@0.0.4-beta @lumal/icons-vue@0.0.4-beta @iconify/vue element-plus vue vue-router
+pnpm add @lumal/charts@0.0.4-beta echarts@^6 vue-echarts@^8   # 可选
+pnpm add @lumal/datav@0.0.4-beta echarts@^6                  # 可选
+pnpm add @lumal/cockpit@0.0.4-beta                           # 可选
+pnpm add -D @lumal/vite@0.0.4-beta
+pnpm add @lumal/vben-compat@0.0.4-beta                       # 迁移
 ```
 
 Pinia 不是默认依赖，应用需要时自行安装。图表不再兼容 ECharts 5 / vue-echarts 7；默认主题与布局迁移注意事项见 [更新日志](/reference/changelog)。

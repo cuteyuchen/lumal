@@ -13,7 +13,7 @@
 ## 安装
 
 ```bash
-pnpm add @lumal/icons@0.0.3-beta
+pnpm add @lumal/icons@0.0.4-beta
 ```
 
 Vue 项目请同时安装 [@lumal/icons-vue](./icons-vue)。

@@ -9,14 +9,14 @@
 环境基线：Node.js 22.12+、pnpm 10.33.0。以下是本 Skill 对应版本的示例，不代表最新发布：
 
 ```bash
-pnpm create lumal-admin@0.0.3-beta my-admin
-pnpm create lumal-admin@0.0.3-beta my-admin-http --api-mode http
+pnpm create lumal-admin@0.0.4-beta my-admin
+pnpm create lumal-admin@0.0.4-beta my-admin-http --api-mode http
 ```
 
 npm 等价命令：
 
 ```bash
-npm create lumal-admin@0.0.3-beta my-admin -- --api-mode http
+npm create lumal-admin@0.0.4-beta my-admin -- --api-mode http
 ```
 
 未指定 `--api-mode` 时为 `local`；只接受 `local/http`。生成完成后进入新目录安装依赖并启动：

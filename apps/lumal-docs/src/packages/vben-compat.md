@@ -14,7 +14,7 @@
 ## 安装
 
 ```bash
-pnpm add @lumal/vben-compat@0.0.3-beta @lumal/core@0.0.3-beta vue element-plus @iconify/vue
+pnpm add @lumal/vben-compat@0.0.4-beta @lumal/core@0.0.4-beta vue element-plus @iconify/vue
 ```
 
 ## 用法

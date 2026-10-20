@@ -69,12 +69,12 @@ features:
 
 ## 快速安装
 
-当前公共包版本为 `0.0.3-beta`，安装时显式指定版本，不依赖 npm 的 `latest` 标签，见 [更新日志](/reference/changelog)。
+当前工作区准备版本为 `0.0.4-beta`，以下命令在本版发布后使用；显式指定版本，不依赖 npm 的 `latest` 标签，见 [更新日志](/reference/changelog)。
 
 ::: code-group
 
 ```bash [npm]
-pnpm add @lumal/core@0.0.3-beta @lumal/icons@0.0.3-beta @lumal/icons-vue@0.0.3-beta @iconify/vue element-plus vue vue-router
+pnpm add @lumal/core@0.0.4-beta @lumal/icons@0.0.4-beta @lumal/icons-vue@0.0.4-beta @iconify/vue element-plus vue vue-router
 ```
 
 ```bash [本地 monorepo]
@@ -85,7 +85,7 @@ pnpm add @lumal/core@file:../lumal/packages/core
 ```
 
 ```bash [脚手架]
-pnpm create lumal-admin@0.0.3-beta my-admin
+pnpm create lumal-admin@0.0.4-beta my-admin
 cd my-admin && pnpm install && pnpm dev
 ```
 

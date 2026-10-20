@@ -1,5 +1,11 @@
 # @lumal/vben-compat
 
+## 0.0.4-beta (2026-10-20)
+
+### Patch Changes
+
+- 同步 Core 依赖至 0.0.4-beta，继续保持既有表单与表格迁移子集 API。
+
 ## 0.0.3-beta (2026-10-16)
 
 ### Patch Changes

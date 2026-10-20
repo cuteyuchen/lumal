@@ -4,12 +4,12 @@
 
 ## 命令
 
-本版为 `0.0.3-beta`，要求 Node.js `>=22.12.0`、pnpm `10.33.0`。以下 npm 命令显式指定版本：
+工作区准备版本为 `0.0.4-beta`，要求 Node.js `>=22.12.0`、pnpm `10.33.0`。以下 npm 命令在本版发布后使用，显式指定版本：
 
 ```bash
-pnpm create lumal-admin@0.0.3-beta my-admin
-pnpm create lumal-admin@0.0.3-beta my-admin --api-mode local   # 默认
-pnpm create lumal-admin@0.0.3-beta my-admin-http --api-mode http
+pnpm create lumal-admin@0.0.4-beta my-admin
+pnpm create lumal-admin@0.0.4-beta my-admin --api-mode local   # 默认
+pnpm create lumal-admin@0.0.4-beta my-admin-http --api-mode http
 ```
 
 | 模式 | 内容 |
@@ -28,7 +28,7 @@ pnpm create lumal-admin@0.0.3-beta my-admin-http --api-mode http
 
 **不会**生成完整用户 / 角色 / 菜单 / 字典系统管理业务（参考 `apps/lumal-admin`）。
 
-Core 与图标依赖精确使用同版 `0.0.3-beta`，不依赖浮动标签。模板按用户隔离布局状态，登录前清理旧快照。HTTP 模式仍需项目实现实际接口、响应适配和认证接线。
+Core 与图标依赖精确使用同版 `0.0.4-beta`，不依赖浮动标签。模板按用户隔离布局状态，登录前清理旧快照。HTTP 模式仍需项目实现实际接口、响应适配和认证接线。
 
 ## 本地调试脚手架本身
 

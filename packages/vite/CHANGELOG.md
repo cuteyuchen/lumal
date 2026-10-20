@@ -1,5 +1,12 @@
 # @lumal/vite
 
+## 0.0.4-beta (2026-10-20)
+
+### Patch Changes
+
+- 工作区 alias 补齐 @lumal/icons/morph 的源码与 ESM 产物入口，并增加映射回归测试。
+- 与其他 Lumal 公共包保持同版。
+
 ## 0.0.3-beta (2026-10-16)
 
 ### Patch Changes

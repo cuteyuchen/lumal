@@ -2,10 +2,10 @@
 
 来自 `@lumal/datav`。支持 DataV `config` 与现代 props；优先级：显式 props > config > 默认。
 
-显式安装 `0.0.3-beta`：
+本版发布后显式安装 `0.0.4-beta`：
 
 ```bash
-pnpm add @lumal/datav@0.0.3-beta vue echarts@^6
+pnpm add @lumal/datav@0.0.4-beta vue echarts@^6
 ```
 
 ```ts

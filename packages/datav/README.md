@@ -5,7 +5,7 @@
 ## 安装
 
 ```bash
-pnpm add @lumal/datav@0.0.3-beta vue echarts@^6
+pnpm add @lumal/datav@0.0.4-beta vue echarts@^6
 ```
 
 ```ts

@@ -12,11 +12,11 @@
 
 ## 使用
 
-版本：`0.0.3-beta`，环境要求 Node.js `>=22.12.0`、pnpm `10.33.0`。以下命令显式指定版本，不依赖 npm 的 `latest` 标签。
+工作区准备版本：`0.0.4-beta`，环境要求 Node.js `>=22.12.0`、pnpm `10.33.0`。以下命令在本版发布后使用，显式指定版本，不依赖 npm 的 `latest` 标签。
 
 ```bash
-pnpm create lumal-admin@0.0.3-beta my-admin
-pnpm create lumal-admin@0.0.3-beta my-admin-http --api-mode http
+pnpm create lumal-admin@0.0.4-beta my-admin
+pnpm create lumal-admin@0.0.4-beta my-admin-http --api-mode http
 ```
 
 | 选项 | 说明 |
@@ -53,7 +53,7 @@ node packages/create-lumal-admin/dist/cli.js my-admin
 
 - 生成项目只依赖公开包入口，不 alias 到 monorepo 源码
 - 业务协议写在应用层 `API-CONTRACT.md` / adapter，不进入 `@lumal/core`
-- Core 与图标包使用和脚手架相同的精确版本 `0.0.3-beta`，构建时注入
+- Core 与图标包使用和脚手架相同的精确版本 `0.0.4-beta`，构建时注入
 - 用户切换重建布局壳，登录前清理旧会话与标签快照；轻入口不意味着模板没有 Element Plus
 
 维护验收：先在仓库根目录 `pnpm build`，再运行 `pnpm test:create-consumer`，检查实际 tarball 的 minimal/request 无 UI 消费及 local、HTTP 两模式的独立安装与构建。变更见 [更新日志](/reference/changelog)。

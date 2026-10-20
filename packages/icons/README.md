@@ -25,7 +25,7 @@ const blueSvg = recolorSvgString(svgText, '#1677ff')
 当前仓库提供 `@lumal/icons/morph`；已发布版本请核对安装包的 `exports` 和声明文件。原生 DOM 或其他框架使用时显式安装可选 peer：
 
 ```bash
-pnpm add @lumal/icons@0.0.3-beta morphicons@2.0.0
+pnpm add @lumal/icons@0.0.4-beta morphicons@2.0.0
 ```
 
 ```ts

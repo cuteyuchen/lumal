@@ -69,12 +69,12 @@ pnpm --filter lumal-datav-guide dev
 
 ## 创建业务项目
 
-当前公共包版本为 `0.0.3-beta`，以下命令显式指定版本：
+当前工作区准备版本为 `0.0.4-beta`，以下命令在本版发布后使用并显式指定版本：
 
 ```bash
-pnpm create lumal-admin@0.0.3-beta my-admin
+pnpm create lumal-admin@0.0.4-beta my-admin
 # HTTP API 模式
-pnpm create lumal-admin@0.0.3-beta my-admin-http --api-mode http
+pnpm create lumal-admin@0.0.4-beta my-admin-http --api-mode http
 
 cd my-admin
 pnpm install

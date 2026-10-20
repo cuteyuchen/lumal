@@ -1,5 +1,11 @@
 # @lumal/charts
 
+## 0.0.4-beta (2026-10-20)
+
+### Patch Changes
+
+- 仅统一九包版本，无新增运行时 API；继续使用 ECharts 6 / vue-echarts 8 peer。
+
 ## 0.0.3-beta (2026-10-16)
 
 ### Minor Changes

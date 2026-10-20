@@ -5,7 +5,7 @@
  * 始终同版本发布；apps/* 通过 workspace 引用这些包，也需要同步版本，
  * 否则 pnpm install --frozen-lockfile 会因 specifier 不一致而失败。
  *
- * 用法：pnpm release:version 0.0.3-beta
+ * 用法：pnpm release:version 0.0.4-beta
  */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'

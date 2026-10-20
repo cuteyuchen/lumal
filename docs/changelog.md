@@ -1,5 +1,42 @@
 # 更新日志
 
+## 0.0.4-beta (2026-10-20)
+
+九个公共包统一准备为 `0.0.4-beta`，内部依赖和锁文件同步。本轮仅提交代码与版本准备，不创建 tag、不执行 npm 发布或生产部署；以下安装命令在本版发布后使用。
+
+### Core 与示例修复
+
+- 请求前 `onRequest` 可以改写真实 fetch URL；缓存、身份作用域、重复提交、错误回调和认证刷新重放统一使用最终请求上下文。
+- `LumalRouterView` 以真实页面容器承接 Transition，支持多根路由页面，保留 KeepAlive、标签关闭/刷新、容量淘汰和 `meta.keepAlive=false` 语义；关闭动画不再启用 out-in。
+- 修复内容最大化时的零宽度、退出登录竞态、系统表格插槽及多根页面导航；补充普通路由、403/404、缓存生命周期和会话回归。
+
+### 图标
+
+- 新增 `@lumal/icons/morph` 通用 SVG 转换与原生 DOM 形变控制器，Morphicons 2.0.0 为可选 peer，静态入口不加载动画引擎。
+- `LumalIcon` 增加按需形变与弹簧预设，支持 SSR 静态渲染、减少动画偏好和失败回退；选择器增加分组插槽与标签换行，修复弹窗布局。
+- Admin 增加离线图标示例、菜单图标选择和按需 Element Plus SVG 资源，保留资源许可；主题图标等待整页主题过渡完成后切换。
+- 修复独立 SVG Data URI 的命名空间和内置设置图标；Vite alias 补齐 morph 的源码及产物入口。
+
+### 发布链路
+
+- 发布与部署统一由 Release Gate 的显式 needs 阻断；旧工作流仅保留 workflow_call，发布凭据作业之前执行版本、registry 和环境配置预检。
+- 完整发布 E2E 改用 Admin dist 与 Mock Node 产物，保留失败截图、trace 和报告；开发态 E2E 入口继续保留。
+- 五个站点统一使用 Vercel，文档旧 Cloudflare 项目已下线，公开文档地址为 `https://luma-docs-seven.vercel.app`。
+- 增加图标 ESM/CJS、Vue SSR、原生 DOM 形变消费者和轻量入口边界检查，不提高现有体积预算。
+- 发布边界扫描排除根目录诊断快照，保留源码检查，并补充四项真实 CLI 回归测试。
+
+### 脚手架与同步包
+
+- 脚手架生成的 Core 和图标依赖精确同步为 `0.0.4-beta`，保留 minimal/request、local 和 HTTP 三种独立 tarball 消费验收。
+- Charts、DataV 无新的运行时 API 改动；Cockpit 与 Vben 兼容层同步 Core/图标依赖，保持九包同版。
+
+```bash
+pnpm create lumal-admin@0.0.4-beta my-admin
+pnpm create lumal-admin@0.0.4-beta my-admin-http --api-mode http
+```
+
+历史修复与平台操作证据见 [修复报告](./repair-report-2026-10-19.md)。版本准备不等于完整发布门禁或线上部署成功；本轮代码验收不替代后续生产 E2E 和正式 tag 门禁。
+
 ## 0.0.3-beta (2026-10-16)
 
 本版统一更新九个公共包：`@lumal/core`、`@lumal/icons`、`@lumal/icons-vue`、`@lumal/charts`、`@lumal/datav`、`@lumal/cockpit`、`@lumal/vben-compat`、`@lumal/vite` 和 `create-lumal-admin`。

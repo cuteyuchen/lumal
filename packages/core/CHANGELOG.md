@@ -1,5 +1,14 @@
 # @lumal/core
 
+## 0.0.4-beta (2026-10-20)
+
+### Patch Changes
+
+- 落实 onRequest URL 改写契约，缓存、认证作用域、重复提交、错误报告及刷新重放使用最终请求上下文。
+- 修复多根路由页面的 Transition/KeepAlive 切换，保留标签关闭、刷新与缓存淘汰生命周期；关闭动画不启用 out-in。
+- 修复内容最大化的零宽度和表格插槽回显，统一导航、全屏等状态图标，补齐 radio-button 主题样式。
+- Core 与图标依赖同步为 0.0.4-beta，minimal/request 保持轻量边界。
+
 ## 0.0.3-beta (2026-10-16)
 
 ### Minor Changes

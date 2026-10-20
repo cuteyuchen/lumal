@@ -13,7 +13,7 @@
 ## 安装
 
 ```bash
-pnpm add @lumal/core@0.0.3-beta @lumal/icons@0.0.3-beta @lumal/icons-vue@0.0.3-beta vue vue-router element-plus @iconify/vue
+pnpm add @lumal/core@0.0.4-beta @lumal/icons@0.0.4-beta @lumal/icons-vue@0.0.4-beta vue vue-router element-plus @iconify/vue
 ```
 
 Pinia 按需安装。只使用 minimal / request 等纯服务入口时无需 UI peer，详见 [安装与包地址](/guide/essentials/installation)。

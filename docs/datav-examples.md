@@ -6,10 +6,10 @@
 
 ## 安装与注册
 
-以下命令显式安装 `0.0.3-beta`，ECharts 需要 6.x。
+以下命令在本版发布后显式安装 `0.0.4-beta`，ECharts 需要 6.x。
 
 ```bash
-pnpm add @lumal/datav@0.0.3-beta vue echarts@^6
+pnpm add @lumal/datav@0.0.4-beta vue echarts@^6
 ```
 
 `vue` 和 `echarts` 是 peer dependency，需要应用侧安装。`LumalCharts` 按 `config` / `option` 模式动态加载 DataV / ECharts 引擎；`LumalActiveRingChart` 也通过它使用 ECharts。其他纯 SVG、数字和列表子入口不加载图表运行时。
