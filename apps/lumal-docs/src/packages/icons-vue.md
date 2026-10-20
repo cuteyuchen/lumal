@@ -6,7 +6,7 @@
 | --- | --- |
 | 包名 | `@lumal/icons-vue` |
 | 本地路径 | `packages/icons-vue` |
-| 在线文档 | https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/icons-vue |
+| 在线文档 | https://luma-docs-seven.vercel.app/packages/icons-vue |
 | 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/icons-vue` |
 
 ## 安装

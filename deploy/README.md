@@ -51,7 +51,7 @@ pnpm install --frozen-lockfile
 
 Node.js 使用 22，pnpm 使用 `package.json` 中声明的 10.33.0。
 
-文档生产域名为 `https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app`。Vercel 项目若从 Git 构建，仓库根目录下使用 `pnpm docs:build`，Output Directory 必须是 `apps/lumal-docs/dist`，不能写成根目录的 `dist`。
+文档生产域名为 `https://luma-docs-seven.vercel.app`，已核对可免登录访问。带团队后缀的长域名受 Vercel 登录保护，不能用作公开文档链接。Vercel 项目若从 Git 构建，仓库根目录下使用 `pnpm docs:build`，Output Directory 必须是 `apps/lumal-docs/dist`，不能写成根目录的 `dist`。
 
 正式发布使用 `scripts/prepare-vercel-output.mjs` 封装已验证的静态目录，再执行固定版本 Vercel CLI 的 `deploy --prebuilt --prod`，不在凭据作业重新构建。Docs 启用 `--clean-urls`，保留无扩展名深层路径、目录首页和 HTTP 404。完整说明见 [发布检查清单](../docs/release-checklist.md#部署配置)。
 

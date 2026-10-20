@@ -6,7 +6,7 @@
 | --- | --- |
 | 包名 | `create-lumal-admin` |
 | 本地路径 | `packages/create-lumal-admin` |
-| 在线文档 | https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/create-lumal-admin |
+| 在线文档 | https://luma-docs-seven.vercel.app/packages/create-lumal-admin |
 | 正式地址（上线后） | `https://www.npmjs.com/package/create-lumal-admin` |
 | CLI | `create-lumal-admin` |
 

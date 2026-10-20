@@ -13,7 +13,7 @@ function env(name: string, fallback: string): string {
 }
 
 export const siteLinks = {
-  docs: env('LUMAL_DOCS_URL', 'https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app'),
+  docs: env('LUMAL_DOCS_URL', 'https://luma-docs-seven.vercel.app'),
   adminDemo: env('LUMAL_ADMIN_DEMO_URL', 'https://lumal-admin-demo.vercel.app'),
   cockpitDemo: env('LUMAL_COCKPIT_DEMO_URL', 'https://lumal-cockpit-demo.vercel.app'),
   datavGuide: env('LUMAL_DATAV_GUIDE_URL', 'https://lumal-datav-guide.vercel.app'),

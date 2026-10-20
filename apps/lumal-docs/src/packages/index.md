@@ -20,15 +20,15 @@ Lumal 按职责拆包。应用只消费 **公开 `exports` 入口** 与样式路
 
 | 包 | 说明 | 文档 | 本地路径 |
 | --- | --- | --- | --- |
-| [@lumal/core](./core) | 安装器、布局、路由权限、请求、主题、Schema 组件 | [在线文档](https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/core) | `packages/core` |
-| [@lumal/icons](./icons) | 框架无关图标内核 | [在线文档](https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/icons) | `packages/icons` |
-| [@lumal/icons-vue](./icons-vue) | Vue 图标组件 | [在线文档](https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/icons-vue) | `packages/icons-vue` |
-| [@lumal/charts](./charts) | ECharts 图表与面板 | [在线文档](https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/charts) | `packages/charts` |
-| [@lumal/datav](./datav) | DataV 风格可视化组件 | [在线文档](https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/datav) | `packages/datav` |
-| [@lumal/cockpit](./cockpit) | 驾驶舱编排框架 | [在线文档](https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/cockpit) | `packages/cockpit` |
-| [@lumal/vite](./vite) | Resolver 与 workspace alias | [在线文档](https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/vite) | `packages/vite` |
-| [@lumal/vben-compat](./vben-compat) | Vben 常用 API 兼容 | [在线文档](https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/vben-compat) | `packages/vben-compat` |
-| [create-lumal-admin](./create-lumal-admin) | 脚手架 CLI | [在线文档](https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/create-lumal-admin) | `packages/create-lumal-admin` |
+| [@lumal/core](./core) | 安装器、布局、路由权限、请求、主题、Schema 组件 | [在线文档](https://luma-docs-seven.vercel.app/packages/core) | `packages/core` |
+| [@lumal/icons](./icons) | 框架无关图标内核 | [在线文档](https://luma-docs-seven.vercel.app/packages/icons) | `packages/icons` |
+| [@lumal/icons-vue](./icons-vue) | Vue 图标组件 | [在线文档](https://luma-docs-seven.vercel.app/packages/icons-vue) | `packages/icons-vue` |
+| [@lumal/charts](./charts) | ECharts 图表与面板 | [在线文档](https://luma-docs-seven.vercel.app/packages/charts) | `packages/charts` |
+| [@lumal/datav](./datav) | DataV 风格可视化组件 | [在线文档](https://luma-docs-seven.vercel.app/packages/datav) | `packages/datav` |
+| [@lumal/cockpit](./cockpit) | 驾驶舱编排框架 | [在线文档](https://luma-docs-seven.vercel.app/packages/cockpit) | `packages/cockpit` |
+| [@lumal/vite](./vite) | Resolver 与 workspace alias | [在线文档](https://luma-docs-seven.vercel.app/packages/vite) | `packages/vite` |
+| [@lumal/vben-compat](./vben-compat) | Vben 常用 API 兼容 | [在线文档](https://luma-docs-seven.vercel.app/packages/vben-compat) | `packages/vben-compat` |
+| [create-lumal-admin](./create-lumal-admin) | 脚手架 CLI | [在线文档](https://luma-docs-seven.vercel.app/packages/create-lumal-admin) | `packages/create-lumal-admin` |
 
 > npm 包地址与安装方式见 [安装与版本](/guide/essentials/installation)。
 

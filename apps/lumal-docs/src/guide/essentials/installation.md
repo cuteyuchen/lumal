@@ -2,7 +2,7 @@
 
 ## 包列表
 
-> 在线文档：[Lumal 文档](https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app)
+> 在线文档：[Lumal 文档](https://luma-docs-seven.vercel.app)
 
 | 包名 | 本地路径 | 文档 | npm / 外链（占位→正式） |
 | --- | --- | --- | --- |
@@ -57,7 +57,7 @@ pnpm add @lumal/core@file:../lumal/packages/core
 
 | 变量 | 含义 | 默认 |
 | --- | --- | --- |
-| `LUMAL_DOCS_URL` | 文档站根 | `https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app` |
+| `LUMAL_DOCS_URL` | 文档站根 | `https://luma-docs-seven.vercel.app` |
 | `LUMAL_ADMIN_DEMO_URL` | Admin 演示 | `https://lumal-admin-demo.vercel.app` |
 | `LUMAL_COCKPIT_DEMO_URL` | 驾驶舱演示 | `https://lumal-cockpit-demo.vercel.app` |
 | `LUMAL_DATAV_GUIDE_URL` | DataV 指南 | `https://lumal-datav-guide.vercel.app` |

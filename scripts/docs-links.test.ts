@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const docsUrl = 'https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app'
+const docsUrl = 'https://luma-docs-seven.vercel.app'
 
 afterEach(() => {
   vi.unstubAllEnvs()
@@ -24,7 +24,7 @@ describe('published documentation links', () => {
     expect(siteLinks.docs).toBe('https://docs.example.com')
   })
 
-  it('在线文档、关于页与部署说明不再引用已停用的 CF 文档站', () => {
+  it('在线文档、关于页与部署说明不再引用旧站或需登录的长域名', () => {
     const docs = join(root, 'apps/lumal-docs/src')
     const files = [
       ...readdirSync(docs, { recursive: true })
@@ -34,7 +34,10 @@ describe('published documentation links', () => {
       join(root, 'deploy/README.md'),
     ]
     // 历史执行报告不在扫描范围内，避免改写原部署失败证据。
-    for (const file of files)
-      expect(readFileSync(file, 'utf8'), file).not.toContain('lumal-docs-cf.pages.dev')
+    for (const file of files) {
+      const content = readFileSync(file, 'utf8')
+      expect(content, file).not.toContain('lumal-docs-cf.pages.dev')
+      expect(content, file).not.toContain('lumal-docs-yu-chens-projects-3f7e3071.vercel.app')
+    }
   })
 })

@@ -6,7 +6,7 @@
 | --- | --- |
 | 包名 | `@lumal/icons` |
 | 本地路径 | `packages/icons` |
-| 在线文档 | https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/icons |
+| 在线文档 | https://luma-docs-seven.vercel.app/packages/icons |
 | 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/icons` |
 | 详细说明 | [图标系统](/reference/icons) |
 

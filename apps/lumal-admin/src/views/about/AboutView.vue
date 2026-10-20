@@ -22,7 +22,7 @@ const basicInfo = [
   { datetime: adminBuildInfo.builtAt, label: '最近构建时间（UTC+8）', value: buildTime },
   { label: '提交标识', value: adminBuildInfo.commit },
   { label: '开源许可协议', value: adminBuildInfo.license },
-  { href: 'https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app', label: '文档地址', value: 'Lumal 文档' },
+  { href: 'https://luma-docs-seven.vercel.app', label: '文档地址', value: 'Lumal 文档' },
   { href: 'https://lumal-admin-demo.vercel.app', label: '预览地址', value: 'Lumal Admin' },
   { href: 'https://github.com/cuteyuchen/lumal', label: 'GitHub', value: 'cuteyuchen/lumal' },
   { label: '构建环境', value: environment },

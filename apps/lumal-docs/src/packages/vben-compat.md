@@ -6,7 +6,7 @@
 | --- | --- |
 | 包名 | `@lumal/vben-compat` |
 | 本地路径 | `packages/vben-compat` |
-| 在线文档 | https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/vben-compat |
+| 在线文档 | https://luma-docs-seven.vercel.app/packages/vben-compat |
 | 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/vben-compat` |
 | 迁移指南 | [从 Vben 迁移](/reference/migration-from-vben) |
 | 示例 | `apps/vben-compat-demo` |
