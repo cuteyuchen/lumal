@@ -4,6 +4,8 @@
 
 2026-10-20 后续更新：按维护者要求，发布链已改为 Docs 与四个示例统一使用 Vercel，不再要求 Cloudflare 凭据；当前配置以[发布检查清单](release-checklist.md#部署配置)为准。下文保留 2026-10-19 的历史执行证据，不代表最新部署结构。后续验证见文末。
 
+同日维护者随后明确授权实际迁移和删除旧站：Docs 已在 Vercel 上线，旧 CF 项目及部署已删除，详见 G 节。A 至 F 节中的“未部署/不删除”是当时的操作范围，不代表本次迁移的最终状态。
+
 ## 执行范围
 
 - 实际仓库：`F:/my-project/luma`；初始分支 `master`、HEAD `dd343faf9e2c122dd23a34309c391e400b200a78`，与只读远端核对结果一致，没有回退。
@@ -246,3 +248,53 @@ pnpm --filter @lumal/core exec vitest run --config ../../vitest.config.ts tests/
 本次仅改发布配置、部署脚本和文档，没有重跑全量应用单测、类型检查、九包构建、浏览器 E2E 或完整 `release:check`，也不复用上文历史 PASS 充当本次结果。最终全量 lint 已通过，但文档中的完整发布门禁仍必须在最终快照执行成功，不能仅凭本次定向验证声称可发布。
 
 人工后续：在 `production` 配置指向已有 `lumal-docs` 的 `VERCEL_PROJECT_ID_DOCS`，核对 Vercel token/team 和五项目权限。插件 OAuth 不会自动成为 Actions Secret。新文档部署 READY 后再用未登录访问核对 Deployment Protection、深层页面、静态资源与 404，随后迁移域名和既有 CF 在线链接并停用旧 Git 自动部署。本次不删除 CF 项目、不提前更换有效链接，也不修改任何线上项目设置。
+
+## G. 2026-10-20 后续：实际迁移与 CF 下线
+
+本轮按维护者“删除旧的 cf 地址和部署；更新 vercel 的 docs 部署”的明确授权执行真实 Docs 部署和旧 Pages 项目删除。没有发布 npm、推送 Git、打 tag 或部署其他站点；没有新增绕过发布门禁的工作流入口。
+
+### 最终平台结果
+
+- **Vercel：PASS / READY**。公开生产地址为 `https://luma-docs-seven.vercel.app`。最终 Deployment 为 `dpl_AWzFcwVaYPDXcRf5Az6YFUhDsQpJ`，创建于 **2026-10-20 10:02:28.115（UTC+8）**，10:02:31.447 READY；来源为显式 CLI prebuilt，Git 元数据为 `37648201c89c6310644ae8ee4aa3fe584925bdb0` / `codex/release-hardening`。
+- 平台项目创建时间是 **2026-07-19 18:29:32.398（UTC+8）**；迁移前最近一次部署是 2026-10-19 的 ERROR / `STATIC_BUILD_NO_OUT_DIR`，不能把项目创建时间或失败部署当作最新成功部署。本轮将项目根设为仓库根、构建命令设为 `pnpm docs:build`、输出目录设为 `apps/lumal-docs/dist`，不再错误寻找根目录 `dist`。实际上传使用本地构建产物，没有执行 Git 远端重建来证明上述设置。
+- 带团队后缀的长域名实际返回 302 并跳转 Vercel 登录；CLI 返回的正式生产短域名直接返回 200。所有在线地址、九包文档链接、安装说明和 About 页改为正式短域名；保留环境变量覆盖，未关闭 Deployment Protection。
+- Docs 的 Ignored Build Step 已设置并经 API 回读确认为 `exit 0`，避免独立 Git 构建部署绕过门禁。没有推送来实测 Git 触发行为，也没有修改其他四个 Vercel 项目的设置。
+- **Cloudflare：PASS / 项目已删除**。仅操作 `lumal-docs-cf`（`db1fbf7a-5951-439f-9686-05902903e874`），删除前确认无自定义域名、无 Functions 和存储绑定。首次删除因 126 条部署超过直接删除限制，返回 HTTP 400 / `8000076`；随后先关闭生产和预览自动部署，完整分页核对记录，删除 30 条最旧部署，再由项目删除 API 清理余下 96 条。09:56:57.503 删除返回 HTTP 200 / success，09:57:30.093 查询项目返回 404，完整项目列表已无此项目，另两个项目未操作。
+- 旧 CF 域名的公网探测返回传输错误 `ECONNRESET`，**不是 HTTP 404 的证据**；旧项目已删除的结论来自 Cloudflare API。API 操作响应整理见 `output/repair/docs-cf-removal-record.json`，原始响应保留在本次工具记录中。
+
+### 本轮验证
+
+Node `24.14.1`、pnpm `10.33.0`、Vitest `4.1.10`、VitePress `1.6.4`。日志均在 `F:/my-project/luma/output/repair/`，本轮结果不复用 A 至 F 节的历史绿色记录。
+
+| 实际命令 / 范围 | 状态 | 证据 |
+| --- | --- | --- |
+| 链接回归先红后修 | PASS | 旧 CF 地址与需登录长域名均先复现 2 项失败；`docs-migration-links-red.log`、`docs-public-domain-red.log` |
+| `pnpm test:scripts` | PASS | 5 文件、36 项；`docs-final-scripts.log` |
+| `pnpm --filter lumal-admin exec vitest run --config ../../vitest.config.ts tests/about-view.test.ts` | PASS | 4 项；`docs-final-about.log` |
+| `pnpm exec eslint scripts/docs-links.test.ts apps/lumal-docs/src/.vitepress/config/links.ts apps/lumal-admin/src/views/about/AboutView.vue apps/lumal-admin/tests/about-view.test.ts` | PASS | `docs-final-scoped-lint.log`（无诊断） |
+| `pnpm lint` | **FAIL（最后一次）** | 用户未提交的 `apps/lumal-admin/tests/icons-view.test.ts:113` 以 `Iconify` 开头，不符合 `test/prefer-lowercase-title`；`docs-final-lint.log`。此前完整 lint 已通过，见 `docs-public-domain-lint.log`，不能用此前 PASS 覆盖本次 FAIL。本轮未修改或提交该文件 |
+| `pnpm docs:build` | PASS | 最终 VitePress 构建完成；`docs-final-build.log` |
+| `node scripts/prepare-vercel-output.mjs apps/lumal-docs/dist output/repair/docs-final-prod-20261020 --clean-urls` | PASS | 固定上传快照含 219 文件、63 条映射；`docs-final-prebuilt.log` |
+| `npx --yes vercel@64.5.0 deploy --prebuilt --prod --yes --scope yu-chens-projects-3f7e3071 --cwd output/repair/docs-final-prod-20261020` | PASS / READY | 仅 Docs；`docs-final-deploy.log`，API 回读 `docs-final-platform.log` |
+| `node --use-env-proxy output/repair/verify-docs-deployment.mjs https://luma-docs-seven.vercel.app output/repair/docs-final-prod-20261020/.vercel/output` | PASS | 219/219 无登录 HTTP 请求，218 项 200、未知路径 404，逐文件 SHA-256 与实际上传快照一致；`docs-final-http-artifact-snapshot.log` |
+| `pnpm release:workflows` | PASS | 原发布 needs、唯一入口、dry-run、Secrets 隔离与完整生产 E2E 约束保持；`docs-migration-workflows.log` |
+| GitHub Actions 服务端调度、其他四站点部署 | 未运行 | 本轮没有推送或触发远端 Actions，不能据 Docs 成功声称全链发布成功 |
+| 全量单测、类型、九包构建、预算、浏览器 E2E、完整 `release:check` | 未运行 | 本次仅迁移文档，不改变公开包 API；按本轮范围未重跑，E2E 未验证，未启动实机浏览器 |
+
+公开 HTTP 检查不带 Cookie、Authorization 或 Vercel bypass token；执行上述 Node 命令前，仅在同一命令进程设置 `HTTP_PROXY` / `HTTPS_PROXY` 指向 Windows 已配置的代理，不修改全局配置。首次直接连接超时不能作为站点失败的证据。最终校验时间为 10:06:11.726（UTC+8），固定上传快照 SHA-256 为 `81b340646cfa724a59d4657c0eb47feb5b8eb58a9923f70942e96353d480eb0b`，涵盖首页、所有深层文档、JS/CSS、搜索索引、字体、Logo 和 404。HTTP 文件校验不等于浏览器交互或持续运行监控。
+
+首次最终文件比较期间，工作区 `apps/lumal-docs/dist` 被并发构建重写，审计脚本因 `ENOENT` 中断（`docs-final-http-all-files.log`）。定位后仅将审计脚本改为读取**实际上传的固定 `.vercel/output/static` 快照**，不改线上文件、不放宽断言、不重试单个失败请求，再完整校验 219 项通过。旧失败日志保留，没有把这次本地并发读取问题误报为生产构建缺文件。
+
+部署来源是当时的工作区文档快照，包含用户此前尚未提交的文档改动，不等同干净 checkout。原工作区和并发新增文件均保留；共享 `release-checklist.md` 只暂存本轮部署相关 hunk，没有代提交图标文档改动。CLI 项目链接生成的临时 `.env.local` 已删除，未读取、输出或提交凭据。
+
+### 提交与人工后续
+
+| SHA | 提交 |
+| --- | --- |
+| `6a8e9c5729aa51df0086c8d91ce14a0e378c2f9d` | `fix(docs): 将文档地址迁移至 Vercel 并补充链接回归` |
+| `150f0e4143e8e160dddef40111af20b471184bb9` | `fix(docs): 使用免登录的正式生产域名` |
+| `37648201c89c6310644ae8ee4aa3fe584925bdb0` | `docs(deploy): 更新文档迁移与旧站下线清单` |
+
+上述三个提交的 `git diff --stat 45da566c..37648201` 为 **17 files changed, 101 insertions(+), 58 deletions(-)**，不含本节执行记录及用户未提交改动。
+
+本节执行记录另作文档提交，所有提交均未推送。本轮没有自动改 GitHub Secrets；今后的 Actions 发布仍需在 `production` 配置并验证 `VERCEL_TOKEN`、`VERCEL_ORG_ID` 和五个 `VERCEL_PROJECT_ID_*`（含 `VERCEL_PROJECT_ID_DOCS`），npm 发布还需 `npm-release` 的 `NPM_TOKEN`。确认旧 CF 配置没有其他用途后，可人工移除旧的两项 Secret 和 `CF_PAGES_PROJECT` Variable。维护者审阅合并原有工作区改动并解决上述 lint 后，再执行完整发布门禁和安全 dry-run。
