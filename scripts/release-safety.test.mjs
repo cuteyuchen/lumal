@@ -17,6 +17,15 @@ describe('release dependency graph', () => {
     expect(() => verifyReleaseWorkflows(readWorkflows(), scripts)).not.toThrow()
   })
 
+  it('npm 发布不自动授权生产部署，部署需显式启用', () => {
+    const workflows = readWorkflows()
+    const { publish, deploy } = workflows['release-gate.yml'].jobs
+    expect(publish.if).toBe('github.event_name == \'push\' || !inputs.dry_run')
+    expect(deploy.if).toBe('(github.event_name == \'push\' || !inputs.dry_run) && vars.DEPLOY_PRODUCTION == \'true\'')
+    deploy.if = publish.if
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('显式部署授权')
+  })
+
   it('文档与四个示例共用受门禁约束的 Vercel 部署矩阵', () => {
     const workflows = readWorkflows()
     const deploy = workflows['deploy.yml']

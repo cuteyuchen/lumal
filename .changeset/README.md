@@ -22,4 +22,4 @@ pnpm install --frozen-lockfile --ignore-scripts
 
 构建脚手架时会把 package.json 版本注入生成项目的三个 Lumal 依赖；源码占位符应保持不变。验收步骤见 `docs/release-checklist.md`。
 
-唯一发布入口是 `release-gate.yml`：推送匹配工作区版本的 `v*` tag，或手动选择该 tag 并关闭 `dry_run`；完整门禁成功后才调用 npm 发布与部署。分支手动运行保持默认 `dry_run=true`，不会发包。`release-npm.yml` 仅能由门禁复用。Beta 使用 `beta` dist-tag；本地版本准备不会提交、推送、打 tag 或发布包。
+唯一发布入口是 `release-gate.yml`：推送匹配工作区版本的 `v*` tag，或手动选择该 tag 并关闭 `dry_run`；完整门禁成功后才调用 npm 发布。生产部署额外要求仓库 Actions Variable `DEPLOY_PRODUCTION=true`，默认不部署。分支手动运行保持默认 `dry_run=true`，不会发包。`release-npm.yml` 仅能由门禁复用。Beta 使用 `beta` dist-tag；本地版本准备不会提交、推送、打 tag 或发布包。

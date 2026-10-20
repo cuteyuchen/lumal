@@ -22,6 +22,8 @@ pnpm release:verify
 
 唯一发布入口是 `release-gate.yml`：`v*` tag 或手动运行。手动运行默认 `dry_run=true`，只执行校验；分支上不能以 `dry_run=false` 发包。真实运行必须选择版本相符且指向当前 HEAD 的 tag。含预发布后缀的 tag 使用 `beta`，稳定版使用 `latest`。
 
+默认只发布 npm，不自动授权生产部署。仅在维护者明确要求部署时，将仓库 Actions Variable `DEPLOY_PRODUCTION` 设为字符串 `true`，再启动本次发布；缺失或其他值均跳过部署，npm 发布仍受全部门禁约束。仅发包时应确认该变量不存在或不为 `true`。不要通过反复重跑已发布版本来补做部署，仍需遵守下方中断恢复流程。
+
 `release:verify` 读取九包 manifests、所有工作区内部依赖和 lockfile；Actions 上还校验 tag 版本和 Git commit。安装使用 frozen lockfile。发布作业在任何 `publish` 之前额外执行 `release:verify --require-tag --check-registry`，逐包只读查询，只有九包版本全部不存在才继续；任一已发布、部分发布、网络或 registry 异常均中断。
 
 ## 实际发布依赖
@@ -39,12 +41,14 @@ tag / workflow_dispatch (默认 dry_run=true)
 
   四个校验 job 全部成功
     → publish (needs: 四个校验)：凭据预检 → registry 预检 → 九包串行发布
-      → deploy (needs: 四个校验 + publish)
+      → deploy (needs: 四个校验 + publish；DEPLOY_PRODUCTION=true 才运行)
           configuration：全部 Vercel 项目配置预检
             └─ vercel：五站点矩阵（Docs / Admin / Cockpit / DataV Guide / Compat）
 ```
 
 `release-npm.yml`、`deploy.yml` 保留为 `workflow_call` 复用单元，没有 tag、分支或独立手动触发器。发布/部署 job 使用默认成功条件，不使用 `always()` 或状态函数覆盖；上游失败、取消或跳过均阻断。只有失败诊断上传步骤使用 `if: failure()`。所有生产 run 共用串行 concurrency，不取消正在进行的版本发布。
+
+`DEPLOY_PRODUCTION` 只收紧部署条件，不能越过任一门禁或 npm 成功依赖；`dry_run=true` 时无论该变量为何值都不发包、不部署。
 
 普通 CI 继续运行 lint/单测/类型/构建/边界，增加发布图与 actionlint；Build Validation 保留独立脚手架消费者校验。`deployment-artifacts.yml` 仅构建产物，不访问云部署。
 
@@ -186,6 +190,7 @@ pnpm --filter create-lumal-admin pack --dry-run
 
 | 名称 | 类型 / 使用位置 | 用途与人工验证 |
 | --- | --- | --- |
+| `DEPLOY_PRODUCTION` | 仓库 Actions Variable / release-gate | 部署显式开关，仅字符串 `true` 启用；在 Settings → Secrets and variables → Actions → Variables 配置；仅发 npm 时留空或设为 `false` |
 | `NPM_TOKEN` | Secret / npm-release | 允许发布九包的细粒度令牌；维护者核对 scope、包写权限、有效期与组织 2FA 策略 |
 | `VERCEL_TOKEN` | Secret / production | Vercel CLI 身份；核对 team 和五项目访问权限 |
 | `VERCEL_ORG_ID` | Secret / production | 五项目所属 team/org；与平台 project 设置一致 |

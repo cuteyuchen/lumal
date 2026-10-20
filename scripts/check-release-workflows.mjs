@@ -8,6 +8,7 @@ import { parse } from 'yaml'
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const gates = ['version-check', 'release-check', 'windows-check', 'site-build']
 const sideEffectsCondition = 'github.event_name == \'push\' || !inputs.dry_run'
+const deploymentCondition = `(${sideEffectsCondition}) && vars.DEPLOY_PRODUCTION == 'true'`
 
 export function readWorkflows(baseDir = rootDir) {
   const dir = join(baseDir, '.github/workflows')
@@ -28,7 +29,11 @@ export function verifyReleaseWorkflows(workflows, scripts) {
     assert.equal(job.uses, `./.github/workflows/${path}`)
     for (const gate of gates)
       assert.ok(job.needs.includes(gate), `${name} 缺少门禁依赖 ${gate}`)
-    assert.equal(job.if, sideEffectsCondition, `${name} 必须受 dry-run 保护`)
+    assert.equal(
+      job.if,
+      name === 'deploy' ? deploymentCondition : sideEffectsCondition,
+      `${name} 必须受 dry-run 保护${name === 'deploy' ? '和显式部署授权' : ''}`,
+    )
     assert.ok(!/always\s*\(|failure\s*\(|cancelled\s*\(|success\s*\(/.test(job.if), '禁止覆盖默认成功条件')
     assert.notEqual(job.secrets, 'inherit', '仅传递需要的 Secret')
   }

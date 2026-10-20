@@ -214,7 +214,8 @@ jobs:
   deploy:
     name: Gated production deployment
     needs: [version-check, release-check, windows-check, site-build, publish]
-    if: github.event_name == 'push' || !inputs.dry_run
+    # 发包授权不等于部署授权；未显式启用时只发布 npm。
+    if: (github.event_name == 'push' || !inputs.dry_run) && vars.DEPLOY_PRODUCTION == 'true'
     uses: ./.github/workflows/deploy.yml
     secrets:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
