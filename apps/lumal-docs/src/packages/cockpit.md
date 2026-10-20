@@ -6,7 +6,7 @@
 | --- | --- |
 | 包名 | `@lumal/cockpit` |
 | 本地路径 | `packages/cockpit` |
-| 在线文档 | https://lumal-docs-cf.pages.dev/packages/cockpit |
+| 在线文档 | https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/cockpit |
 | 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/cockpit` |
 | 规范 | [驾驶舱开发规范](/reference/cockpit-development-spec) |
 | 示例 | `apps/lumal-cockpit` |

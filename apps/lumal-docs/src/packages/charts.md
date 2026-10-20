@@ -6,7 +6,7 @@
 | --- | --- |
 | 包名 | `@lumal/charts` |
 | 本地路径 | `packages/charts` |
-| 在线文档 | https://lumal-docs-cf.pages.dev/packages/charts |
+| 在线文档 | https://lumal-docs-yu-chens-projects-3f7e3071.vercel.app/packages/charts |
 | 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/charts` |
 
 ## 安装
