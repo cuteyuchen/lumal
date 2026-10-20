@@ -14,6 +14,8 @@ pnpm docs:preview
 
 本轮交付：[0.0.4-beta 版本准备与分支合并记录](./release-preparation-0.0.4-beta.md)，包含实际命令、预算及未验证项。
 
+发布执行：[0.0.4-beta npm 发布记录](./npm-release-0.0.4-beta.md)。正式门禁及生产 E2E 已通过，npm 首包写入失败，需要维护者修复发布凭据；九包均未发布本版。
+
 AI 接入：[Lumal 总 Skill](../skills/lumal/SKILL.md) 覆盖全部公共包，[安装与调用指南](../apps/lumal-docs/src/guide/essentials/ai-skills.md) 说明如何让 AI 按需读取分包用法。
 
 专项评估：[2026-10-16 轻量框架审计](./architecture-audit-2026-10-16.md)。该报告记录升级验收、体积基线与优化建议，不替代开发路线图。
