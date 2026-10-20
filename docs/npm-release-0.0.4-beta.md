@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-**BLOCKED：全部发布前门禁通过，但 npm 拒绝首包发布请求，九包均未发布 `0.0.4-beta`。** 需要维护者更新有效且具备九包发布权限的 GitHub `NPM_TOKEN` 后，才可继续。未绕过门禁本地发布，未盲目重试。
+**BLOCKED：全部发布前门禁通过；维护者再次更新 `NPM_TOKEN` 后，第 3 次发布不再报 `EOTP`，但被 npm 以 `E403 / E_STAGE_REQUIRED` 拒绝，明确提示 Token 仅允许 staging，九包均未发布 `0.0.4-beta`。** 当前工作流直接发布，需与该流程匹配的 `Read and write (publish and stage)` 权限；stage-only Token 不能用于直接发布。未绕过门禁本地发布，未修改账户或组织安全设置。
 
 - 目标版本：九个公开包统一为 `0.0.4-beta`，npm dist-tag 为 `beta`，不改 `latest`。
 - 目标提交：`fd640c33469cc92d7f83e7e3ebea6d47040a7c94`。
@@ -79,7 +79,7 @@ Ubuntu 日志实际汇总：13 组、110 个测试文件、805 项单测通过�
 27. 用户管理支持机构筛选、批量启停和批量追加角色。
 28. 用户管理在移动端紧凑显示机构筛选，并在五档视口下无页面级横向溢出。
 
-## 正式发布结果
+## 首次正式发布（attempt 1）
 
 正式运行 `39364257259` 已完成，结论 **failure**，失败发生在 npm 写入，不是构建或 E2E：
 
@@ -103,9 +103,56 @@ npm error 404 Not Found - PUT https://registry.npmjs.org/@lumal%2ficons - Not fo
 
 CI 与本机使用的认证来源不同，不能据此断言 GitHub 令牌一定过期。CI 令牌是否过期、被撤销、缺少包写权限或受其他策略约束，尚需维护者在 npm 控制台确认。`npm-release` Environment 的 Secret 列表为空，当前发布流程使用仓库级 `NPM_TOKEN`；只检查了配置名称，没有获取秘密值。
 
-### 发布后只读核查
+## 更新 Token 后重跑（attempt 2）
 
-失败后逐包查询 npm registry，全部目标版本不存在；`beta` 和 `latest` 均未改变，没有部分发布：
+维护者确认 Token 已更新后，只读检查仓库 `NPM_TOKEN` 的 `updated_at=2026-10-20T03:41:19Z`（北京时间 11:41:19），未读取或打印值。再次执行 `pnpm release:verify --check-registry` 通过，确认九包目标版本仍全部不存在；原运行的 npm artifact `12239047486` 未过期，tag 仍指向 `fd640c3`，`DEPLOY_PRODUCTION` 仍未设置。
+
+本次仅执行一次有凭据变更依据的失败作业重跑，没有重新发 tag 或绕过成功门禁：
+
+```bash
+gh run rerun 39364257259 --repo cuteyuchen/lumal --failed
+gh run watch 39364257259 --repo cuteyuchen/lumal --compact --interval 30 --exit-status
+```
+
+重跑于 2026-10-20 03:45 UTC（北京时间 11:45）结束。发布 job `118442632880` 已下载并校验同一运行的构建 artifact，版本、tag 与 registry 预检通过，但首包发布返回：
+
+```text
+npm error code EOTP
+npm error This operation requires a one-time password from your authenticator.
+```
+
+| 远端作业 | attempt 2 结果 |
+| --- | --- |
+| Version / lockfile / workflow safety | PASS，沿用同一运行已成功的门禁 |
+| Ubuntu release check / Windows checks / Static site builds | PASS，沿用已验证结果和产物；没有宣称本次重新运行测试 |
+| Gated npm publication / Publish validated packages | FAIL，首包 `@lumal/icons@0.0.4-beta` 返回 `EOTP` |
+| Gated production deployment | SKIPPED，没有生产部署 |
+
+该次错误表明当次发布要求交互式 2FA；不能据此宣称九包的写权限已全部验证，也不能将其写成首次 `E404`。没有传入或收集 OTP，没有禁用 2FA。
+
+## 再次更新 Token 后重跑（attempt 3）
+
+维护者再次确认已更新免交互验证的 Token 后，只读确认仓库 `NPM_TOKEN` 的 `updated_at=2026-10-20T03:49:54Z`（北京时间 11:49:54）。`pnpm release:verify --check-registry` 再次通过，九包没有部分发布，原 tag 不变；随后只重跑失败作业，没有修改发布命令或生产部署开关。
+
+发布 job `118444278254` 于 2026-10-20 03:51 UTC（北京时间 11:51）执行，产物下载及版本、tag、registry 校验均通过；npm 首包写入返回不同且明确的错误：
+
+```text
+npm error code E403
+This token can only publish to a staging area.
+Run `npm stage publish` to publish this version, then approve it. (E_STAGE_REQUIRED)
+```
+
+| 远端作业 | attempt 3 结果 |
+| --- | --- |
+| Version / Ubuntu / Windows / Static site 门禁 | PASS，沿用同一运行的成功结果与校验产物 |
+| Gated npm publication / Publish validated packages | FAIL，首包 `@lumal/icons@0.0.4-beta` 返回 `E403 / E_STAGE_REQUIRED` |
+| Gated production deployment | SKIPPED，没有生产部署 |
+
+该错误与 npm 官方对 stage-only Token 的限制一致：它可以上传待审批版本，但不能直接发布新版本。本轮没有擅自切换成 staging 流程、代替维护者审批、提高 Token 权限或再盲目重跑；`0.0.4-beta` 也没有因此成为已发布版本。
+
+## 发布后只读核查
+
+三次失败后均逐包查询 npm registry；第 3 次快照再次确认全部目标版本不存在，`beta` 和 `latest` 均未改变，没有部分发布，也没有可记录的本版 integrity 或发布时间：
 
 | 包 | `0.0.4-beta` | `beta` | `latest` |
 | --- | --- | --- | --- |
@@ -119,13 +166,33 @@ CI 与本机使用的认证来源不同，不能据此断言 GitHub 令牌一定
 | `@lumal/vite` | 未发布 | `0.0.3-beta` | `0.0.1-beta` |
 | `create-lumal-admin` | 未发布 | `0.0.3-beta` | `0.0.1-beta` |
 
-### 人工恢复步骤
+## 人工恢复步骤
 
-1. 在 npm 登录维护者账号，核对其对上述九包的发布权限。新建或修复 granular access token，必须在 Packages and scopes 中授予九包的发布写权限，包含非 scope 包 `create-lumal-admin`，不能只配置组织管理权限。核对有效期及 npm / 组织的 2FA 自动发布策略，不降低组织安全要求。
-2. 在 GitHub 仓库 Settings → Secrets and variables → Actions 更新仓库 Secret `NPM_TOKEN`。秘密值只在可信 npm / GitHub 页面输入，不粘贴到聊天、源码、终端命令参数或报告。
-3. 更新凭据后，先重新执行 `pnpm release:verify --check-registry`，只有九包仍全部未发布才能继续。保留 tag `v0.0.4-beta` 及其原提交，不删除或移动 tag。
-4. 在已验证构建 artifact 的七天保留期内，可对运行 `39364257259` 执行 Re-run failed jobs，复用同一 tag 与成功门禁的产物；凭据未修复前不要重试。若 artifact 过期，须在相同 tag 上重新跑完整门禁，不能直接本机发包。
-5. 若再次核查发现部分包已发布，立即停止全量重跑并按 [发布清单](./release-checklist.md) 的中断恢复规则处理。只有九包版本、`beta`、integrity 和发布作业都核对成功，才能宣布发布完成。
+1. 在 npm 登录维护者账号，核对其对上述九包的发布权限及各包 Settings → Publishing access。若安全策略允许使用自动发布 Token，新建最小范围、短有效期的 granular access token，在 Packages and scopes 中选择九包的 `Read and write (publish and stage)`，包含非 scope 包 `create-lumal-admin`，并在创建时启用 `Bypass two-factor authentication`。该选项默认关闭；不能只授予组织管理权限，也不能使用仅 stage 权限代替直接发布权限。
+2. 若包选择 `Require two-factor authentication and disallow tokens`，或组织要求完整强制 2FA，则不要降低安全策略来让当前脚本通过。应另行配置 npm Trusted Publishing 并调整受门禁保护的发布作业，或使用维护者批准的交互式发布流程；本轮未自动变更这些设置。不要把 OTP 写入 GitHub Secret、工作流或聊天，也不要关闭账户 2FA。
+3. 若有意保留更受限的 stage-only Token，需要另行设计受门禁保护的 staging 上传与维护者 2FA 审批流程，不能只把现有命令改成 `npm stage publish` 就宣称完成发布。本轮未自动变更这条发布链路。
+4. 继续使用 Token 路径时，在 GitHub 仓库 Settings → Secrets and variables → Actions 更新仓库 Secret `NPM_TOKEN`。秘密值只在可信 npm / GitHub 页面输入，不粘贴到聊天、源码、终端命令参数或报告。
+5. 更新凭据后，先重新执行 `pnpm release:verify --check-registry`，只有九包仍全部未发布才能继续。保留 tag `v0.0.4-beta` 及其原提交，不删除或移动 tag。
+6. 在已验证构建 artifact 的七天保留期内，可对运行 `39364257259` 执行 Re-run failed jobs，复用同一 tag 与成功门禁的产物；发布权限与 2FA 策略未处理前不要重试。若 artifact 过期，须在相同 tag 上重新跑完整门禁，不能直接本机发包。
+7. 若再次核查发现部分包已发布，立即停止全量重跑并按 [发布清单](./release-checklist.md) 的中断恢复规则处理。只有九包版本、`beta`、integrity 和发布作业都核对成功，才能宣布发布完成。
+
+上述配置按 2026-10-20 查阅的 npm 官方文档核对：[创建 Token](https://docs.npmjs.com/creating-and-viewing-access-tokens/)、[Token 权限与 stage-only](https://docs.npmjs.com/about-access-tokens/)、[包级 2FA 策略](https://docs.npmjs.com/requiring-2fa-for-package-publishing-and-settings-modification/)、[CI/CD 认证](https://docs.npmjs.com/using-private-packages-in-a-ci-cd-workflow/)。
+
+## 本次本机验证
+
+重跑及文档更新后实际执行，以下通过仅证明对应检查，不代表 npm 或生产部署成功：
+
+| 命令 | 结果 | 日志 |
+| --- | --- | --- |
+| `pnpm release:verify --check-registry` | PASS，两次重跑前九包版本、内部依赖和 lockfile 一致，registry 无本版 | `npm-0.0.4-retry-preflight.log` / `npm-0.0.4-retry3-preflight.log` |
+| `pnpm lint` | PASS | `npm-0.0.4-retry-docs-lint.log` |
+| `pnpm docs:build` | PASS，VitePress 成功构建 | `npm-0.0.4-retry-docs-build.log` |
+| `pnpm test:scripts` | PASS，6 个文件、41 项测试 | `npm-0.0.4-retry-scripts-tests.log` |
+| `pnpm release:boundaries` | PASS | `npm-0.0.4-retry-boundaries.log` |
+| `pnpm release:workflows` | PASS，唯一入口、needs、Secrets 隔离与生产 E2E 约束保留 | `npm-0.0.4-retry-workflows.log` |
+| `git diff --check` | PASS，仅提示仓库 CRLF 转换策略，无空白错误 | 终端退出码 0 |
+
+本次只改文档，未重新执行整套本机单测或浏览器测试；远端完整校验结果及其执行阶段见上文，没有将沿用结果写成本次重跑测试。
 
 ## 本机证据
 
@@ -140,5 +207,13 @@ CI 与本机使用的认证来源不同，不能据此断言 GitHub 令牌一定
 - `npm-0.0.4-release-ubuntu.log`：正式 tag 的 805 项单测和 28 项生产 E2E 通过证据。
 - `npm-0.0.4-publish.log`：npm 首包 PUT E404，GitHub 已遮蔽凭据；报告不包含 Secret 值。
 - `npm-0.0.4-registry-after-attempt.jsonl`：失败后九包均未发布的 registry 快照。
+- `npm-0.0.4-retry-preflight.log`：更新 Token 后的 registry 和版本预检。
+- `npm-0.0.4-release-retry-watch.log` / `npm-0.0.4-release-retry.json`：attempt 2 的失败结论、门禁成功与部署跳过状态。
+- `npm-0.0.4-publish-retry.log`：job `118442632880` 的 `EOTP` 原始日志。
+- `npm-0.0.4-registry-after-retry.jsonl`：attempt 2 后九包目标版本仍全部不存在，dist-tag 未改变。
+- `npm-0.0.4-retry3-preflight.log`：再次更新 Token 后的 registry 和版本预检。
+- `npm-0.0.4-release-retry3-watch.log` / `npm-0.0.4-release-retry3.json`：attempt 3 的失败结论、门禁成功与部署跳过状态。
+- `npm-0.0.4-publish-retry3.log`：job `118444278254` 的 `E403 / E_STAGE_REQUIRED` 原始日志。
+- `npm-0.0.4-registry-after-retry3.jsonl`：attempt 3 后九包目标版本仍全部不存在，dist-tag 未改变。
 
 此前 [版本准备记录](./release-preparation-0.0.4-beta.md) 的“未发布 / E2E 未验证”是上一阶段状态。本记录补充后续真实远端验收，不将演练成功等同于 npm 或线上部署成功。
