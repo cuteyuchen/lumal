@@ -1,5 +1,8 @@
 # 三模板与 Vben 5 升级验收
 
+本文保留升级阶段的本地验收与版本准备事实；2026-10-21 的后续托管门禁、
+标签和 npm 发布执行另见 [0.0.5-beta 发布记录](./npm-release-0.0.5-beta.md)。
+
 本轮基于 Lumal `4112ecc`，环境为 Windows、Node.js 24.14.1、pnpm 10.33.0。
 系统为 Windows 11 10.0.26200 x64，CPU 为 Intel Core Ultra X7 358H
 （16 核/16 逻辑处理器），系统报告物理内存 33,873,752,064 bytes。

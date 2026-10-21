@@ -4,9 +4,9 @@
 
 ## 当前基线
 
-- 日期：2026-10-20。
-- 工作区版本：`0.0.5-beta`（九个可发布包统一版本；私有示例应用仍为 `0.0.0`）。npm beta 仍为 `0.0.4-beta`；本轮只验证本地 tarball，未打标签或执行发布，详见 [更新日志](./changelog.md)。
-- 当前分支：`codex/lumal-admin-upgrade`，起点 `4112ecc`。
+- 日期：2026-10-21。
+- 工作区版本：`0.0.5-beta`（九个可发布包统一版本；私有示例应用仍为 `0.0.0`）。正式门禁与九包发布命令成功，八包 registry 核验通过，Cockpit 新版尚未可见；三种真实 npm 模板已通过，详见 [发布记录](./npm-release-0.0.5-beta.md)。
+- 当前分支：`master`；升级起点 `4112ecc`，正式标签源提交 `53395dc`。
 - 前一阶段提交记录（历史基线，不代表本轮工作区已提交）：
   - `671f739 perf: 落地 admin/core/cockpit 整体性能与正确性优化`
   - `4d7a0e8 feat(components): 增强飞线图组件与文档，优化可访问性与交互体验`
@@ -427,12 +427,15 @@ Vben 兼容层同步 number、switch、date/datetime/daterange、radio、checkbo
 - Phase E：复用 Core 已有上传下载和列设置；路由轻入口避免启动时加载迁移 UI，未增加 VXE/图表依赖。
 - Phase F：九包同步 0.0.5-beta；完整质量门禁、性能与最终提交见 [升级验收](./upgrade-verification.md)。
 
-最终完整工作区单测 881 项、16 个独立生成组合的 82 项测试、
+升级阶段最终完整工作区单测 881 项、16 个独立生成组合的 82 项测试、
 十二组合生产 Chromium 流程及 28 项 Admin 生产 E2E 均通过。
 `pnpm release:check`、完整 `pnpm test:e2e:release`、文档构建、
 frozen lockfile、registry 预检与 Changesets 状态均实际通过，九包准备为
-未发布的 `0.0.5-beta`。逐项结果、性能样本及未验证范围以验收报告为准。
-本轮同时产生的域名/文档入口用户修改保留，不纳入此任务的代码提交。
+当时未发布的 `0.0.5-beta`。逐项结果、性能样本及未验证范围以验收报告为准。
+后续 Skill/文档同步增加 27 项回归；2026-10-21 的正式远端门禁为 908 项工作区测试、
+82 项生成项目测试及 28 项生产 E2E 全部通过。
+升级分支与 master 已推送，用户域名/文档修改另在 `53395dc` 提交。
+九包发布命令成功，registry 暂为 8/9，具体状态见发布记录，生产部署作业未运行。
 
 ## 验收门禁
 
@@ -459,7 +462,7 @@ pnpm release:boundaries
 pnpm release:check
 ```
 
-该命令串行包含 Lint、发布边界、全部测试、类型检查、全包构建、Admin/Compat 构建、发布产物检查、Playwright E2E 和六个发布包 dry-run。
+该命令串行包含 Lint、发布边界、全部测试、类型检查、全包构建、Admin/Compat 构建、发布产物检查、Playwright E2E 和九个发布包 dry-run。
 
 浏览器矩阵：
 

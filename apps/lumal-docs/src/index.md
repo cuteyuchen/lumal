@@ -69,9 +69,10 @@ features:
 
 ## 快速安装
 
-本页对应工作区 `0.0.5-beta`；registry 的 beta 仍为 `0.0.4-beta`，本轮仅验证本地 tarball。
-下列命令以 registry 存在对应版本为前提，保持 Lumal 包同版，不依赖 `latest`。
-实际验收见 [升级验收](/reference/upgrade-verification)，可用版本以 registry 为准。
+`0.0.5-beta` 的正式门禁、九包发布命令和三种真实 npm 脚手架消费者已通过。
+registry 已核验八包，Cockpit 新版仍未可见，详见 [发布记录](/reference/npm-release-0.0.5-beta)。
+下列脚手架与 Core 安装命令已验证，保持 Lumal 包同版，不依赖 `latest`。
+功能与性能边界见 [升级验收](/reference/upgrade-verification)。
 
 ::: code-group
 

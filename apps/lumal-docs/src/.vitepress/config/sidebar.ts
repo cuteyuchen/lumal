@@ -169,6 +169,7 @@ function sidebarReference(): DefaultTheme.SidebarItem[] {
         { text: '升级验收与性能', link: 'upgrade-verification' },
         { text: '包边界', link: 'package-boundaries' },
         { text: '更新日志', link: 'changelog' },
+        { text: '0.0.5-beta 发布记录', link: 'npm-release-0.0.5-beta' },
         { text: '发布检查清单', link: 'release-checklist' },
         { text: '开发路线图', link: 'development-roadmap' },
       ],

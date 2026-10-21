@@ -8,10 +8,12 @@ Changesets 记录九个公共包的发布意图，公共包按 fixed 组统一�
 
 ## Beta 版本准备
 
-本轮沿用 `0.0.x-beta` 序列，目标为 `0.0.5-beta`：
+沿用 `0.0.x-beta` 序列。`0.0.5-beta` 已完成发布命令，实际 registry 核验状态见
+[发布记录](../docs/npm-release-0.0.5-beta.md)，不得重跑本版全量发布。
+下一轮先核对 registry 并由维护者选择未发布的 `NEXT_VERSION`：
 
 ```bash
-pnpm release:version 0.0.5-beta
+pnpm release:version NEXT_VERSION
 pnpm install --lockfile-only --ignore-scripts
 pnpm install --frozen-lockfile --ignore-scripts
 ```
