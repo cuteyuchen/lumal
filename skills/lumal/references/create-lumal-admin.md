@@ -6,9 +6,9 @@
 
 ## 命令与版本选择
 
-环境基线：Node.js 22.12+、pnpm 10.33.0。`0.0.5-beta` 是本 Skill 对应的工作区待发布基线，
-下列 registry 命令以对应版本已发布为前提，不代表现在可以安装或 npm 最新版本。
-未发布时使用仓库构建的真实 tarball 验证，不用旧 CLI 的 `beta/latest` 标签代替新版能力。
+环境基线：Node.js 22.12+、pnpm 10.33.0。下列命令对应 `0.0.5-beta` 的公开 API，
+不代表 npm 最新版本；接入前核对 registry 与实际安装的声明。
+开发未发布源码时使用真实 tarball 验证，不用旧 CLI 的 `beta/latest` 标签代替新版能力。
 
 ```bash
 pnpm create lumal-admin@0.0.5-beta my-admin

@@ -6,17 +6,18 @@
 | --- | --- |
 | 包名 | `@lumal/vben-compat` |
 | 本地路径 | `packages/vben-compat` |
-| 在线文档 | https://luma-docs-seven.vercel.app/packages/vben-compat |
-| 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/vben-compat` |
+| 在线文档 | https://lumal.cuteyuchen.top/packages/vben-compat |
+| npm 地址 | `https://www.npmjs.com/package/@lumal/vben-compat` |
+| 在线示例 | https://lumal-compat.cuteyuchen.top |
 | 迁移指南 | [从 Vben 迁移](/reference/migration-from-vben) |
 | 示例 | `apps/vben-compat-demo` |
 
 ## 安装
 
-```bash
 下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
 
-pnpm add @lumal/vben-compat@0.0.5-beta @lumal/core@0.0.5-beta vue element-plus @iconify/vue
+```bash
+pnpm add @lumal/vben-compat@0.0.5-beta @lumal/core@0.0.5-beta vue@^3.5 element-plus@^2.11 @iconify/vue@^5
 ```
 
 ## 用法

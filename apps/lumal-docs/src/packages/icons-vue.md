@@ -6,15 +6,15 @@
 | --- | --- |
 | 包名 | `@lumal/icons-vue` |
 | 本地路径 | `packages/icons-vue` |
-| 在线文档 | https://luma-docs-seven.vercel.app/packages/icons-vue |
-| 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/icons-vue` |
+| 在线文档 | https://lumal.cuteyuchen.top/packages/icons-vue |
+| npm 地址 | `https://www.npmjs.com/package/@lumal/icons-vue` |
 
 ## 安装
 
 下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm add @lumal/icons@0.0.5-beta @lumal/icons-vue@0.0.5-beta vue @iconify/vue
+pnpm add @lumal/icons@0.0.5-beta @lumal/icons-vue@0.0.5-beta vue@^3.5 @iconify/vue@^5
 ```
 
 ## 公开入口
@@ -54,5 +54,5 @@ SVG 改色、合成、Data URI 等纯 TS 能力在 [@lumal/icons](./icons)，本
 
 ## Peer
 
-- `vue`
-- `@iconify/vue`
+- `vue`：`^3.5.0`
+- `@iconify/vue`：`^5.0.0`

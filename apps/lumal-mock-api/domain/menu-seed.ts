@@ -5,7 +5,7 @@ import type { LumalMenuRecord, LumalStaticMenuRecord } from '@lumal/core/router'
 // 说明：此处作为后端菜单种子的一部分，运行时由 mock-api 进程读取环境变量。
 // 内嵌时带 embed=1，指南站据此隐藏自身 Header（iframe 上下文也会自动隐藏）。
 const datavGuideUrl = (() => {
-  const base = process.env.VITE_DATAV_GUIDE_URL || 'https://lumal-datav-guide.vercel.app/'
+  const base = process.env.VITE_DATAV_GUIDE_URL?.trim() || 'https://lumal-datav.cuteyuchen.top/'
   try {
     const url = new URL(base)
     url.searchParams.set('embed', '1')

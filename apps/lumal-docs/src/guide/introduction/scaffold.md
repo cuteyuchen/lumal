@@ -4,9 +4,9 @@
 
 ## 命令
 
-当前工作区为 `0.0.5-beta`，要求 Node.js `>=22.12.0`、pnpm `10.33.0`。
-registry 的 beta 仍为 `0.0.4-beta`；本轮仅做本地 tarball 验证。
-以下新版命令以 registry 存在对应版本为前提，见 [安装说明](/guide/essentials/installation)。
+下列命令对应 `0.0.5-beta`，要求 Node.js `>=22.12.0`、pnpm `10.33.0`。
+显式选择版本而不依赖 `latest`；尚未发布的源码需先构建 tarball，
+见 [安装说明](/guide/essentials/installation)。
 
 ```bash
 pnpm create lumal-admin@0.0.5-beta my-admin

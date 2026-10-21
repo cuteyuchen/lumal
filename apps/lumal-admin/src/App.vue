@@ -36,7 +36,7 @@ const preferences = adminPreferences
 const settingsVisible = adminSettingsVisible
 const resolvedThemeMode = adminResolvedThemeMode
 const routeRefreshKeys = reactive<Record<string, number>>({})
-const cockpitUrl = import.meta.env.VITE_COCKPIT_URL?.trim() || 'https://lumal-cockpit-demo.vercel.app/'
+const cockpitUrl = import.meta.env.VITE_COCKPIT_URL?.trim() || 'https://lumal-cockpit.cuteyuchen.top/'
 
 /***********************路由状态*********************/
 const route = useRoute()

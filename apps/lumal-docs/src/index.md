@@ -22,7 +22,7 @@ hero:
       link: /components/introduction
     - theme: alt
       text: GitHub
-      link: https://github.com/example/lumal
+      link: https://github.com/cuteyuchen/lumal
 
 features:
   - icon: 🚀
@@ -75,8 +75,8 @@ features:
 
 ::: code-group
 
-```bash [npm]
-pnpm add @lumal/core@0.0.5-beta @lumal/icons@0.0.5-beta @lumal/icons-vue@0.0.5-beta @iconify/vue element-plus vue vue-router
+```bash [pnpm]
+pnpm add @lumal/core@0.0.5-beta @lumal/icons@0.0.5-beta @lumal/icons-vue@0.0.5-beta vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
 ```
 
 ```bash [本地 monorepo]
@@ -93,9 +93,19 @@ cd my-admin && pnpm install && pnpm dev
 
 :::
 
-## 包地址占位
+## 在线站点
 
-| 包 | 文档 | 本地路径 | 正式地址（上线后） |
+| 站点 | 地址 |
+| --- | --- |
+| 文档 | https://lumal.cuteyuchen.top |
+| Admin | https://lumal-admin.cuteyuchen.top |
+| 驾驶舱 | https://lumal-cockpit.cuteyuchen.top |
+| DataV 指南 | https://lumal-datav.cuteyuchen.top |
+| Vben 兼容示例 | https://lumal-compat.cuteyuchen.top |
+
+## npm 包
+
+| 包 | 文档 | 本地路径 | npm 地址 |
 | --- | --- | --- | --- |
 | `@lumal/core` | [/packages/core](/packages/core) | `packages/core` | `https://www.npmjs.com/package/@lumal/core` |
 | `@lumal/icons` | [/packages/icons](/packages/icons) | `packages/icons` | `https://www.npmjs.com/package/@lumal/icons` |
@@ -107,4 +117,4 @@ cd my-admin && pnpm install && pnpm dev
 | `@lumal/vben-compat` | [/packages/vben-compat](/packages/vben-compat) | `packages/vben-compat` | `https://www.npmjs.com/package/@lumal/vben-compat` |
 | `create-lumal-admin` | [/packages/create-lumal-admin](/packages/create-lumal-admin) | `packages/create-lumal-admin` | `https://www.npmjs.com/package/create-lumal-admin` |
 
-> 演示与 npm 外链当前指向本地占位，部署时通过环境变量替换，见 [安装与包地址](/guide/essentials/installation)。
+> 以上为当前公开地址；自建部署可通过环境变量覆盖站点链接，见 [安装与包地址](/guide/essentials/installation)。

@@ -4,9 +4,10 @@
 
 ## 使用
 
-环境要求：Node.js `>=22.12.0`、pnpm `10.33.0`。当前工作区为 `0.0.5-beta`；
-registry 的 beta 仍为 `0.0.4-beta`，本轮仅验证本地 tarball。下列新版命令以
-registry 存在对应版本为前提，不依赖旧的 latest。
+环境要求：Node.js `>=22.12.0`、pnpm `10.33.0`。以下命令面向 `0.0.5-beta`，
+显式指定版本，不依赖 npm 的 `latest`。源码开发时以真实 tarball 验证独立消费者，
+不使用旧版 CLI 代替新版模板能力。
+在线文档：https://lumal.cuteyuchen.top/packages/create-lumal-admin。
 
 ```bash
 pnpm create lumal-admin@0.0.5-beta my-admin

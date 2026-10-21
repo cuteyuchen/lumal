@@ -35,13 +35,13 @@
 
 ## 构建命令与产物
 
-| 站点 | 构建脚本 | 产物目录 | 部署目标 |
+| 站点 | 构建脚本 | 产物目录 | 公开地址 |
 | --- | --- | --- | --- |
-| 文档 | `pnpm docs:build` | `apps/lumal-docs/dist` | Vercel `lumal-docs` |
-| admin demo | `pnpm admin:build` | `apps/lumal-admin/dist` | Vercel |
-| cockpit demo | `pnpm cockpit:build` | `apps/lumal-cockpit/dist` | Vercel |
-| datav-guide | `pnpm datav-guide:build` | `apps/lumal-datav-guide/dist` | Vercel |
-| vben-compat demo | `pnpm compat:build` | `apps/vben-compat-demo/dist` | Vercel |
+| 文档 | `pnpm docs:build` | `apps/lumal-docs/dist` | https://lumal.cuteyuchen.top |
+| admin demo | `pnpm admin:build` | `apps/lumal-admin/dist` | https://lumal-admin.cuteyuchen.top |
+| cockpit demo | `pnpm cockpit:build` | `apps/lumal-cockpit/dist` | https://lumal-cockpit.cuteyuchen.top |
+| datav-guide | `pnpm datav-guide:build` | `apps/lumal-datav-guide/dist` | https://lumal-datav.cuteyuchen.top |
+| vben-compat demo | `pnpm compat:build` | `apps/vben-compat-demo/dist` | https://lumal-compat.cuteyuchen.top |
 
 Install Command 统一使用：
 
@@ -51,7 +51,7 @@ pnpm install --frozen-lockfile
 
 Node.js 使用 22，pnpm 使用 `package.json` 中声明的 10.33.0。
 
-文档生产域名为 `https://luma-docs-seven.vercel.app`，已核对可免登录访问。带团队后缀的长域名受 Vercel 登录保护，不能用作公开文档链接。Vercel 项目若从 Git 构建，仓库根目录下使用 `pnpm docs:build`，Output Directory 必须是 `apps/lumal-docs/dist`，不能写成根目录的 `dist`。
+五站点沿用现有 Vercel Project，公开链接统一使用上表中的自定义域名；Cloudflare 使用 DNS-only CNAME，不负责产物托管。不使用受登录保护的部署长域名作为文档入口。Vercel 项目若从 Git 构建，仓库根目录下使用 `pnpm docs:build`，Output Directory 必须是 `apps/lumal-docs/dist`，不能写成根目录的 `dist`。
 
 正式发布使用 `scripts/prepare-vercel-output.mjs` 封装已验证的静态目录，再执行固定版本 Vercel CLI 的 `deploy --prebuilt --prod`，不在凭据作业重新构建。Docs 启用 `--clean-urls`，保留无扩展名深层路径、目录首页和 HTTP 404。完整说明见 [发布检查清单](../docs/release-checklist.md#部署配置)。
 
@@ -76,6 +76,7 @@ LUMAL_DOCS_URL
 LUMAL_ADMIN_DEMO_URL
 LUMAL_COCKPIT_DEMO_URL
 LUMAL_DATAV_GUIDE_URL
+LUMAL_VBEN_COMPAT_DEMO_URL
 LUMAL_GITHUB_URL
 LUMAL_NPM_SCOPE_URL
 LUMAL_DOCS_EDIT_PATTERN
@@ -93,4 +94,4 @@ pnpm --filter lumal-mock-api start
 
 Docker 构建文件在 `apps/lumal-mock-api/Dockerfile`。
 
-仓库部署链不再使用 Cloudflare。迁移操作及实际平台验证见 [修复执行报告](../docs/repair-report-2026-10-19.md)；历史部署错误保留为审计证据，不是当前配置要求。
+仓库部署链不再调用 Cloudflare Pages，Cloudflare 仅负责自定义域名的 DNS 解析。历史迁移操作及平台验证见 [修复执行报告](../docs/repair-report-2026-10-19.md)；历史部署错误保留为审计证据，不是当前配置要求。

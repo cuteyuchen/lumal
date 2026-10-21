@@ -6,8 +6,8 @@ Vite 配置助手：组件 resolver、工作区源码 / 产物 alias、可选 De
 | --- | --- |
 | 包名 | `@lumal/vite` |
 | 本地路径 | `packages/vite` |
-| 在线文档 | https://luma-docs-seven.vercel.app/packages/vite |
-| 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/vite` |
+| 在线文档 | https://lumal.cuteyuchen.top/packages/vite |
+| npm 地址 | `https://www.npmjs.com/package/@lumal/vite` |
 
 ## 安装
 

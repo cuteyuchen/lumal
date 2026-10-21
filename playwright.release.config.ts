@@ -16,7 +16,7 @@ export default defineConfig({
   ],
   retries: 0,
   metadata: {
-    cockpitUrl: 'https://lumal-cockpit-demo.vercel.app/',
+    cockpitUrl: 'https://lumal-cockpit.cuteyuchen.top/',
     productionPreview: true,
   },
   use: { ...development.use, baseURL: adminUrl },

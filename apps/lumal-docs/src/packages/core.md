@@ -6,8 +6,8 @@
 | --- | --- |
 | 包名 | `@lumal/core` |
 | 本地路径 | `packages/core` |
-| 在线文档 | https://luma-docs-seven.vercel.app/packages/core |
-| 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/core` |
+| 在线文档 | https://lumal.cuteyuchen.top/packages/core |
+| npm 地址 | `https://www.npmjs.com/package/@lumal/core` |
 | 详细 API | [Core API](/reference/core-api) |
 
 ## 安装
@@ -15,7 +15,7 @@
 下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm add @lumal/core@0.0.5-beta @lumal/icons@0.0.5-beta @lumal/icons-vue@0.0.5-beta vue vue-router element-plus @iconify/vue
+pnpm add @lumal/core@0.0.5-beta @lumal/icons@0.0.5-beta @lumal/icons-vue@0.0.5-beta vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
 ```
 
 Pinia 按需安装。只使用 minimal / request 等纯服务入口时无需 UI peer，详见 [安装与包地址](/guide/essentials/installation)。
@@ -47,6 +47,8 @@ Pinia 按需安装。只使用 minimal / request 等纯服务入口时无需 UI 
 | `@lumal/core/theme-chalk/index.scss` | 主题 SCSS 变量与样式 |
 
 ## 默认 UI 启动
+
+下例显式使用 Pinia，另需安装 `pinia@^3.0.3`；框架不会自动创建或安装 Pinia。
 
 ```ts
 import { createLumalAdmin } from '@lumal/core'

@@ -6,7 +6,7 @@
 - `apps/lumal-admin` 是公开 API 的集成示例与验收入口。
 - 文档站结构对齐常见企业级文档（指南 / 包 / 组件 / 参考），便于检索与二次维护。
 
-[Lumal](https://github.com/example/lumal) 是一套面向中小型后台项目的轻量 Vue Admin 基础设施，基于 [Vue 3](https://vuejs.org/)、[Vite](https://vitejs.dev/)、[TypeScript](https://www.typescriptlang.org/) 与 [Element Plus](https://element-plus.org/)，提供应用安装、布局导航、主题、权限、路由、请求、字典、Schema 表单 / 表格、CRUD、图标、图表、DataV 可视化与驾驶舱编排能力。
+[Lumal](https://github.com/cuteyuchen/lumal) 是一套面向中小型后台项目的轻量 Vue Admin 基础设施，基于 [Vue 3](https://vuejs.org/)、[Vite](https://vitejs.dev/)、[TypeScript](https://www.typescriptlang.org/) 与 [Element Plus](https://element-plus.org/)，提供应用安装、布局导航、主题、权限、路由、请求、字典、Schema 表单 / 表格、CRUD、图标、图表、DataV 可视化与驾驶舱编排能力。
 
 ## 特点
 

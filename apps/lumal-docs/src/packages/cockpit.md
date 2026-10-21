@@ -6,17 +6,18 @@
 | --- | --- |
 | 包名 | `@lumal/cockpit` |
 | 本地路径 | `packages/cockpit` |
-| 在线文档 | https://luma-docs-seven.vercel.app/packages/cockpit |
-| 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/cockpit` |
+| 在线文档 | https://lumal.cuteyuchen.top/packages/cockpit |
+| npm 地址 | `https://www.npmjs.com/package/@lumal/cockpit` |
 | 规范 | [驾驶舱开发规范](/reference/cockpit-development-spec) |
-| 示例 | `apps/lumal-cockpit` |
+| 在线示例 | https://lumal-cockpit.cuteyuchen.top |
+| 本地示例 | `apps/lumal-cockpit` |
 
 ## 安装
 
-```bash
 下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
 
-pnpm add @lumal/cockpit@0.0.5-beta @lumal/core@0.0.5-beta @lumal/icons-vue@0.0.5-beta vue element-plus @iconify/vue
+```bash
+pnpm add @lumal/cockpit@0.0.5-beta @lumal/core@0.0.5-beta @lumal/icons-vue@0.0.5-beta vue@^3.5 element-plus@^2.11 @iconify/vue@^5
 ```
 
 可视化组件按需另装 `@lumal/datav`。

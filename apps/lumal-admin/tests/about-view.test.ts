@@ -84,8 +84,8 @@ describe('about view', () => {
     const links = mountAboutView().findAll('a')
 
     expect(links.map(link => [link.text(), link.attributes('href')])).toEqual([
-      ['Lumal 文档', 'https://luma-docs-seven.vercel.app'],
-      ['Lumal Admin', 'https://lumal-admin-demo.vercel.app'],
+      ['Lumal 文档', 'https://lumal.cuteyuchen.top'],
+      ['Lumal Admin', 'https://lumal-admin.cuteyuchen.top'],
       ['cuteyuchen/lumal', 'https://github.com/cuteyuchen/lumal'],
     ])
     for (const link of links) {

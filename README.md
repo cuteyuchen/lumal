@@ -7,8 +7,8 @@ Lumal 是一套面向中小型后台项目的轻量 Vue Admin 基础设施。它
 九个公共包已于 2026-10-20 发布 `0.0.4-beta`，正式门禁、生产 E2E 和发布后逐包核验均通过，详见 [发布执行记录](docs/npm-release-0.0.4-beta.md)。Beta 使用 npm 的 `beta` 标签，`latest` 未改动；安装时显式指定版本。升级说明见 [更新日志](docs/changelog.md)，实际发布状态以 npm registry 和仓库发布工作流为准。
 
 当前工作区为 `0.0.5-beta`，新增三模板、真实 HTTP 认证和显式 Vben 5 迁移入口。
-本轮只做本地 tarball 验证，不执行 npm 发布；registry 的 beta 仍为 `0.0.4-beta`。
-以下新版命令以 registry 存在对应版本为前提，本地完整验证见 [升级验收](docs/upgrade-verification.md)。
+下列命令显式选择此版本，不依赖 npm 的 `latest`；发布前可通过本地 tarball 验证，
+完整功能与兼容边界见 [升级验收](docs/upgrade-verification.md)。
 
 ## 快速开始
 
@@ -155,10 +155,18 @@ pnpm docs:preview
 ```
 
 - 指南：简介 · 基础 · 深入 · 工程 · FAQ
-- 包使用：`@lumal/*` 与 `create-lumal-admin`（含本地路径 / npm 占位表）
+- 包使用：`@lumal/*` 与 `create-lumal-admin`（含本地路径、npm 地址与 peer 依赖）
 - 组件：Layout · Schema 表单表格 · Charts · DataV · Cockpit
 - 参考：同步自根目录 `docs/*.md`
 
-外链占位配置：`apps/lumal-docs/src/.vitepress/config/links.ts`（`LUMAL_DOCS_URL`、`LUMAL_ADMIN_DEMO_URL`、`LUMAL_GITHUB_URL` 等）。
+| 公开站点 | 地址 |
+| --- | --- |
+| 文档 | https://lumal.cuteyuchen.top |
+| Admin | https://lumal-admin.cuteyuchen.top |
+| 驾驶舱 | https://lumal-cockpit.cuteyuchen.top |
+| DataV 指南 | https://lumal-datav.cuteyuchen.top |
+| Vben 兼容示例 | https://lumal-compat.cuteyuchen.top |
+
+站点链接默认使用上述自定义域名；自建部署可在 `apps/lumal-docs/src/.vitepress/config/links.ts` 对应的 `LUMAL_*_URL` 环境变量中覆盖。
 
 仓库内 Markdown 索引见 [docs/README.md](docs/README.md)。

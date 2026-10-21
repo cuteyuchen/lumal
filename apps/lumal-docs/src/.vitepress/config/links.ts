@@ -5,18 +5,20 @@
  * - LUMAL_ADMIN_DEMO_URL  Admin 演示
  * - LUMAL_COCKPIT_DEMO_URL 驾驶舱演示
  * - LUMAL_DATAV_GUIDE_URL DataV 指南
+ * - LUMAL_VBEN_COMPAT_DEMO_URL Vben 兼容示例
  * - LUMAL_GITHUB_URL      仓库地址
  * - LUMAL_NPM_SCOPE_URL   npm scope 页
  */
 function env(name: string, fallback: string): string {
-  return process.env[name] || fallback
+  return process.env[name]?.trim() || fallback
 }
 
 export const siteLinks = {
-  docs: env('LUMAL_DOCS_URL', 'https://luma-docs-seven.vercel.app'),
-  adminDemo: env('LUMAL_ADMIN_DEMO_URL', 'https://lumal-admin-demo.vercel.app'),
-  cockpitDemo: env('LUMAL_COCKPIT_DEMO_URL', 'https://lumal-cockpit-demo.vercel.app'),
-  datavGuide: env('LUMAL_DATAV_GUIDE_URL', 'https://lumal-datav-guide.vercel.app'),
+  docs: env('LUMAL_DOCS_URL', 'https://lumal.cuteyuchen.top'),
+  adminDemo: env('LUMAL_ADMIN_DEMO_URL', 'https://lumal-admin.cuteyuchen.top'),
+  cockpitDemo: env('LUMAL_COCKPIT_DEMO_URL', 'https://lumal-cockpit.cuteyuchen.top'),
+  datavGuide: env('LUMAL_DATAV_GUIDE_URL', 'https://lumal-datav.cuteyuchen.top'),
+  vbenCompatDemo: env('LUMAL_VBEN_COMPAT_DEMO_URL', 'https://lumal-compat.cuteyuchen.top'),
   github: env('LUMAL_GITHUB_URL', 'https://github.com/cuteyuchen/lumal'),
   npmScope: env('LUMAL_NPM_SCOPE_URL', 'https://www.npmjs.com/org/lumal'),
   editPattern: env(

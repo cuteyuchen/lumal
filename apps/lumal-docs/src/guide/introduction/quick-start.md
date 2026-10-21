@@ -21,7 +21,7 @@ Windows 开发环境请直接使用项目声明的 pnpm 版本；避免可能切
 ## 获取源码
 
 ```bash
-git clone https://github.com/example/lumal.git
+git clone https://github.com/cuteyuchen/lumal.git
 cd lumal
 ```
 
@@ -69,8 +69,8 @@ pnpm --filter lumal-datav-guide dev
 
 ## 创建业务项目
 
-当前工作区为 `0.0.5-beta`，以下为新版目标命令。registry 的 beta 仍为 `0.0.4-beta`，
-本轮仅做本地 tarball 验证；命令以 registry 存在对应版本为前提，见 [安装说明](/guide/essentials/installation)。
+以下命令显式选择 `0.0.5-beta`，不依赖 npm 的 `latest`。
+开发尚未发布的源码时使用本地 tarball，见 [安装说明](/guide/essentials/installation)。
 
 ```bash
 pnpm create lumal-admin@0.0.5-beta my-admin

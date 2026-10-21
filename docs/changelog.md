@@ -41,7 +41,7 @@
 
 - 发布与部署统一由 Release Gate 的显式 needs 阻断；旧工作流仅保留 workflow_call，发布凭据作业之前执行版本、registry 和环境配置预检。
 - 完整发布 E2E 改用 Admin dist 与 Mock Node 产物，保留失败截图、trace 和报告；开发态 E2E 入口继续保留。
-- 五个站点统一使用 Vercel，文档旧 Cloudflare 项目已下线，公开文档地址为 `https://luma-docs-seven.vercel.app`。
+- 五个站点统一使用 Vercel，文档旧 Cloudflare Pages 项目已下线；公开文档地址为 `https://lumal.cuteyuchen.top`，四个演示入口统一使用 `cuteyuchen.top` 下的专用子域名，Cloudflare 仅负责 DNS 解析。
 - 增加图标 ESM/CJS、Vue SSR、原生 DOM 形变消费者和轻量入口边界检查，不提高现有体积预算。
 - 发布边界扫描排除根目录诊断快照，保留源码检查，并补充四项真实 CLI 回归测试。
 

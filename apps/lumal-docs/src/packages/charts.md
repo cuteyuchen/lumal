@@ -6,15 +6,15 @@
 | --- | --- |
 | 包名 | `@lumal/charts` |
 | 本地路径 | `packages/charts` |
-| 在线文档 | https://luma-docs-seven.vercel.app/packages/charts |
-| 正式地址（上线后） | `https://www.npmjs.com/package/@lumal/charts` |
+| 在线文档 | https://lumal.cuteyuchen.top/packages/charts |
+| npm 地址 | `https://www.npmjs.com/package/@lumal/charts` |
 
 ## 安装
 
 下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm add @lumal/charts@0.0.5-beta echarts@^6 vue-echarts@^8 vue
+pnpm add @lumal/charts@0.0.5-beta echarts@^6 vue-echarts@^8 vue@^3.5
 ```
 
 ## 公开入口

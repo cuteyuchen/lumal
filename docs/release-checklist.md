@@ -4,7 +4,7 @@
 
 ## 版本准备
 
-九个公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。`0.0.3-beta` 的九包在 2026-10-19 已确认全部发布，不能再次作为新版本发布。本轮按维护者要求准备 `0.0.4-beta`；以下 `NEXT_VERSION` 必须由维护者选择尚未发布的合法版本。
+九个公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。`0.0.3-beta`、`0.0.4-beta` 的九包均已发布，不能再次作为新版本发布；`0.0.4-beta` 的实际结果见 [发布执行记录](./npm-release-0.0.4-beta.md)。下一轮的 `NEXT_VERSION` 必须由维护者选择尚未发布的合法版本。
 
 ```bash
 pnpm release:version NEXT_VERSION
@@ -18,7 +18,7 @@ pnpm release:verify
 - 将 pending Changeset 汇总进每个公共包 CHANGELOG，确认完整后移除已消费记录；本轮不运行标准 `changeset:version`，避免把 beta 序列变为稳定版 `0.1.0`。
 - 更新 `docs/changelog.md`、路线图基线、文档导航、安装命令和脚手架说明；历史版本与验收证据保留。
 - 保留脚手架源码的三个版本占位符；`pnpm build` 时按脚手架 package.json 注入精确版本，再用 `pnpm test:create-consumer` 验证 tarball 的 minimal/request、local、HTTP 三种消费路径。
-- 以空 Changeset 注明变更已手工汇总（本轮为 `prepared-0-0-4-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。
+- 以空 Changeset 注明变更已手工汇总（本轮为 `prepared-0-0-5-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。
 
 唯一发布入口是 `release-gate.yml`：`v*` tag 或手动运行。手动运行默认 `dry_run=true`，只执行校验；分支上不能以 `dry_run=false` 发包。真实运行必须选择版本相符且指向当前 HEAD 的 tag。含预发布后缀的 tag 使用 `beta`，稳定版使用 `latest`。
 
@@ -206,7 +206,17 @@ Vercel 五个静态目录来自同 run 的校验 artifact，文档使用 `apps/l
 
 文档矩阵额外传 `--clean-urls`，为非首页 HTML 生成 Build Output API `overrides`，使 `/guide/essentials/installation` 等链接定位到实际 `.html` 文件；目录首页仍由文件系统处理。未知路径返回文档 `404.html` 并保留 HTTP 404，不改为 SPA 首页兜底；其余四站点不启用该模式。可在本机只打包、不上传：`node scripts/prepare-vercel-output.mjs apps/lumal-docs/dist output/deploy/docs --clean-urls`。
 
-2026-10-20 已按维护者授权完成 Docs 独立迁移：公开生产地址为 `https://luma-docs-seven.vercel.app`，`LUMAL_DOCS_URL` 默认值、在线文档及 Admin 关于页均已更新。带团队后缀的长域名会跳转 Vercel 登录，不能用作公开文档链接；本次保留了 Deployment Protection，没有关闭访问保护。
+2026-10-20 已按维护者授权将五站点绑定到以下自定义域名；Cloudflare 使用灰云 CNAME，仅负责 DNS，不恢复 Pages。公开域名的 DNS 配置与 HTTPS 200 已验证，未修改 Vercel Deployment Protection；默认平台长域名不能替代公开地址。
+
+| 站点 | 公开地址 | 文档构建覆盖变量 |
+| --- | --- | --- |
+| Docs | https://lumal.cuteyuchen.top | `LUMAL_DOCS_URL` |
+| Admin | https://lumal-admin.cuteyuchen.top | `LUMAL_ADMIN_DEMO_URL` |
+| Cockpit | https://lumal-cockpit.cuteyuchen.top | `LUMAL_COCKPIT_DEMO_URL` |
+| DataV Guide | https://lumal-datav.cuteyuchen.top | `LUMAL_DATAV_GUIDE_URL` |
+| Vben Compat | https://lumal-compat.cuteyuchen.top | `LUMAL_VBEN_COMPAT_DEMO_URL` |
+
+绑定域名只切换访问入口，不会构建新文档。版本号、安装依赖或外链变更后，必须重新构建并部署 Docs，验证生产首页、安装页、九包文档及静态资源，而不是仅检查域名配置。历史部署快照的旧域名和版本保留在对应执行报告中，不作为当前默认地址；大陆不同运营商的可达性需要另行验证。
 
 Vercel 文档 READY 后，已使用无 Cookie、无 Authorization 的 HTTP 请求校验全部 219 个产物及 63 条无扩展名映射，线上文件 SHA-256 与上传产物一致，未知路径返回真实 404。之后关闭旧 `lumal-docs-cf` 的生产与预览自动部署，清理超过平台直接删除限制的历史记录，再删除项目及剩余部署；删除 API 返回成功，查询项目返回 404。仓库发布链不再调用 Cloudflare，不再要求 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID` 或 `CF_PAGES_PROJECT`；维护者可在确认无其他用途后移除旧 Actions 配置。
 

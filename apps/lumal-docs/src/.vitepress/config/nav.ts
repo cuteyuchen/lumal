@@ -32,30 +32,20 @@ export function nav(): DefaultTheme.NavItem[] {
     {
       text: '演示',
       items: [
-        {
-          text: '本地演示（占位）',
-          items: [
-            { text: 'Admin', link: siteLinks.adminDemo },
-            { text: '驾驶舱', link: siteLinks.cockpitDemo },
-            { text: 'DataV 指南', link: siteLinks.datavGuide },
-          ],
-        },
-        {
-          text: '线上演示（部署后替换）',
-          items: [
-            { text: 'Admin Demo', link: siteLinks.adminDemo },
-            { text: 'Cockpit Demo', link: siteLinks.cockpitDemo },
-          ],
-        },
+        { text: 'Admin', link: siteLinks.adminDemo },
+        { text: '驾驶舱', link: siteLinks.cockpitDemo },
+        { text: 'DataV 指南', link: siteLinks.datavGuide },
+        { text: 'Vben 兼容示例', link: siteLinks.vbenCompatDemo },
       ],
     },
     {
-      // 与可发布包版本对齐（@lumal/* / create-lumal-admin）
+      // 与公共包保持同版，由文档回归测试和发布边界校验共同检查。
       text: '0.0.5-beta',
       items: [
         { text: '开发路线图', link: '/reference/development-roadmap' },
         { text: '发布检查清单', link: '/reference/release-checklist' },
         { text: '更新日志', link: '/reference/changelog' },
+        { text: '发布执行记录', link: '/reference/npm-release-0.0.4-beta' },
         { text: 'GitHub', link: siteLinks.github },
       ],
     },
