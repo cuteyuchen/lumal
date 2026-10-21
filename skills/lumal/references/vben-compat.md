@@ -37,9 +37,22 @@ const [Grid, gridApi] = useVbenVxeGrid({
 `page.currentPage/pageSize` 是 V5 对象结构，非标准返回值用 `proxyConfig.response` 映射。
 Form 支持值/校验 API、dependencies.if/show/disabled/required/componentProps 与字段插槽；
 Grid 支持分页/排序/查询/刷新/列设置、多选 facade、工具栏/列插槽和错误重试。
-只支持声明中的轻量子集，未知顶层或 VXE 配置报错。完整矩阵读 `docs/migration-from-vben.md`。
+只支持安装包公开声明中的轻量子集，未知顶层或 VXE 配置报错；
+维护仓库时再核对 `docs/migration-from-vben.md` 的完整矩阵。
 配置通过 hook/setState 更新，不能当作返回组件的 schema/gridOptions props；
 Lumal 的 Form 泛型约束模型字段，并非 Vben 的控件名称泛型。
+
+## V5 行为边界
+
+- `getValues/setValues/setFieldValue/resetForm/resetValidate` 是异步 API；`validate()` 返回 `{ valid, errors }`，不是裸布尔值。
+- `dependencies.if` 不渲染字段；`show` 保留实例和值，隐藏字段仍可能参与校验。仅想禁用提交时用 `submitButtonOptions.disabled`，不是 `commonConfig.disabled`。
+- `gridApi.reload()` 回到首页，`query()` 保留页码；二者失败均拒绝 Promise，调用方必须处理。不要照搬 legacy 的 `Promise<boolean>` 判断。
+- `gridApi.grid` 是当前已加载行的多选/数据 facade，不是 VXE 实例；无跨页选择或任意原生方法。
+- hook 在组件 setup 中创建；`formApi.isMounted` 和实例方法遵守挂载/卸载生命周期，不缓存成全局单例。Grid 在卸载后忽略旧加载结果，不能借此替代应用服务的会话隔离。
+- 路由适配的 `authority→roles`、`activePath→activeMenu`、`link→externalLink` 在应用边界完成；iframe 必须显式提供本地白名单 `iframeComponent`，外链只接受 HTTP(S) 绝对地址。
+
+真实迁移还需调整应用请求与权限注入、弹窗组件和自定义 renderer；不能笼统承诺“只改 import”。
+字段校验不提供完整 VeeValidate 规则系统；Zod transform 的结果也不会自动替换提交值。
 
 ## Legacy 最小迁移
 

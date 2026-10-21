@@ -652,6 +652,12 @@ const request = createRequestClient({
 
 HTTP 401 或 parser 产生的 `kind: 'session'` 会进入认证刷新。并发请求共享同一个刷新 Promise；GET 默认允许最多重放一次，POST/PUT/PATCH/DELETE 必须逐请求显式设置 `retryOnAuthRefresh: true`。`RequestError.kind` 可用于统一区分 `network`、`http`、`business`、`session`、`duplicate` 与 `cancelled`，业务字段和状态码仍由应用 adapter 决定。
 
+上述 `refreshSession` 是应用自行实现的接口，不是 Core 导出。刷新接口应使用独立的公共客户端，
+避免自身 401 再次进入刷新。生产接线还需携带会话 AbortSignal，并在刷新结果写入前确认
+未取消、原始刷新凭据仍属于当前会话；旧用户的失败不能清理新用户的权限和路由。
+完整示例位于脚手架 `templates/base/src/services/session-runtime.ts` 与
+`templates/modes/http/src/services/data-source.ts`，其应用服务不是 Core 公共协议。
+
 ### 可选缓存与失效
 
 缓存默认关闭。`cache: { enabled: true }` 默认只缓存 GET；非 GET 必须显式提供能区分请求体的 `cache.key`，框架不自动序列化所有 body 类型。
@@ -684,6 +690,10 @@ await client.get('/users', { query: { page: 1 } }) // 实际请求 /gateway/api/
 缓存始终包含 hook 最终的 method/URL，即使显式使用同一 `cache.key`，不同目标也不会串缓存。默认仅最终 GET 可以缓存，非 GET 仍需自定义 key 区分请求体。重复提交按最终 method/URL、字符串请求体、认证身份与作用域判断；请求失败或重放完成后释放占用。
 
 Authorization 或 `getCacheScope()` 变化会清空本客户端缓存。请求级 `scope` 可区分同一身份下的数据用途。Token 不写入缓存 key；不同客户端共享缓存存储时也保持隔离。`clearCache()` 仅删除本客户端写入的条目，不清除共享存储中的其他数据；会话最终过期也会触发清理。命中缓存仍遵守 hook 最终的 AbortSignal。
+
+`clearCache()` 也会解绑当前共享刷新任务，新会话不会继续等待旧刷新，旧任务完成时不会移除
+新任务。但它不自动取消在途网络请求，也不能阻止应用自己的刷新回调写入旧 Token；
+取消、身份检查和业务 Store 清理由应用负责。HTTP 模板已包含这层会话隔离。
 
 网络错误、响应错误和会话回调报告实际发送的 URL。认证重放从原始已解析 URL 再执行 hook，避免重复叠加路径，并复用原 requestId；hook 改成写请求后仍需 `retryOnAuthRefresh: true`，改成外部 Authorization 则不自动刷新/重放。requestId 仅用于追踪，不参与缓存身份。
 

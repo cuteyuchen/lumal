@@ -6,7 +6,9 @@
 
 ## 命令与版本选择
 
-环境基线：Node.js 22.12+、pnpm 10.33.0。以下是本 Skill 对应版本的示例，不代表最新发布：
+环境基线：Node.js 22.12+、pnpm 10.33.0。`0.0.5-beta` 是本 Skill 对应的工作区待发布基线，
+下列 registry 命令以对应版本已发布为前提，不代表现在可以安装或 npm 最新版本。
+未发布时使用仓库构建的真实 tarball 验证，不用旧 CLI 的 `beta/latest` 标签代替新版能力。
 
 ```bash
 pnpm create lumal-admin@0.0.5-beta my-admin
@@ -21,7 +23,9 @@ npm create lumal-admin@0.0.5-beta my-admin -- --api-mode http
 ```
 
 TTY 提问目录、名称、预设、数据源、路由和可选模块；非 TTY/CI 自动禁用交互。
-默认 `standard/local/hash`。生成完成后进入新目录安装依赖并启动：
+默认 `standard/local/hash`，省略目录时为 `lumal-admin`。显式指定的参数不会再次提问。
+自动化命令可加 `--no-interactive`，用 `--name` 指定与目录不同的 npm 包名；
+`--help`、`--version` 不生成文件。生成完成后进入新目录安装依赖并启动：
 
 ```bash
 cd my-admin
@@ -32,12 +36,13 @@ pnpm dev
 - 需要“最新版本”时先查询 registry 的版本和 dist-tag，再选择精确版本或明确标签。Beta 不保证标在 `latest`。
 - 全局安装较新 CLI 不保证 `npm create lumal-admin` 使用该版本；命令应显式指定目标版本，不优先建议清空所有 npm 缓存。
 - 先确认目标目录不存在或为空。不要删除非空目录来强行让创建成功。
+- 不支持 `--force`；文件、符号链接和含链接的祖先路径会被拒绝。写入失败只清理本次拥有的文件及空目录，不递归删除用户目录。
 
 ## 生成范围
 
 - Vue + TypeScript + Vite + Element Plus。
 - `@lumal/core/minimal` 启动、公开包导入和必要 SCSS/CSS。
-- 三预设均有动态路由、权限、认证、403/404、布局、标签缓存、主题偏好和应用服务。
+- 三预设均有动态路由、权限、认证、403/404、布局、标签缓存、主题偏好和应用服务；minimal 的标签与缓存默认关闭，可在偏好中启用。
 - minimal 不含管理模块与 Schema 示例；standard 默认包含 system/examples，可用 `--features` 选择单个或 `none`。
 - system 提供用户、角色授权、菜单、机构、字典类型/项和配置 CRUD，业务代码不进入 Core。
 - vben-compatible 在 standard 上增加 `/v5` 和真实 Form/Grid/Dialog CRUD/权限迁移页面，读 [迁移参考](vben-compat.md)。
@@ -47,10 +52,20 @@ pnpm dev
 
 模板生成后业务接口、权限模型和存储策略属于应用；不要把 Demo 的 Mock 凭据、菜单或公司状态码写进公共包。
 
+## 接入真实后端
+
+- 按生成项目 `API-CONTRACT.md` 配置 `VITE_API_BASE_URL`；`VITE_API_ADAPTER` 默认为 `standard`，只有显式接入 Lumal Mock API 时才选择 `lumal-mock`。
+- `src/services/contracts.ts` 是应用服务接口；Local/HTTP 的 `data-source.ts` 实现同一接口，`http-adapter.ts` 负责业务包装、Token、用户、权限、菜单和分页字段转换。
+- 登录后必须等待用户、角色权限和菜单初始化，再注册动态路由并重新匹配首次深层链接；已有 Token 也不能跳过初始化。
+- 退出、重新登录或刷新失败统一清理会话、权限、菜单、动态路由、缓存与标签。请求携带会话 AbortSignal，并在写入新 Token 或用户状态前验证会话仍有效。
+- GET 401 单飞刷新并最多重放一次，写请求默认不重放；刷新接口使用独立公共客户端，避免递归刷新。`createApplicationSession` 是生成应用的实现，不是 Core 的公开 API。
+- `.env.production.example` 说明生产配置；`VITE_*` 会进入客户端产物，不能放密钥。History 部署应回退非文件页面到 `index.html`，不能将 API 回退到 HTML。
+
 ## 编程 API 与维护
 
-根入口导出 `createLumalAdminProject`，传入 `targetDir/name/preset/apiMode/routerMode/features`；
-后三类选项有默认值，具体以声明为准。CLI 是 `create-lumal-admin`。
+根入口导出 `createLumalAdminProject`。`targetDir/name` 必填；
+`preset/apiMode/routerMode/features` 均可省略，默认标准预设包含 `system/examples`，minimal 默认无模块。
+`--features none` 对应编程 API 的 `features: []`，不是字符串；minimal 不能启用业务模块。CLI 是 `create-lumal-admin`。
 
 修改模板时核对：
 

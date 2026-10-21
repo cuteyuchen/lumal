@@ -28,7 +28,7 @@ description: 使用 Lumal（@lumal/*、create-lumal-admin）构建或维护 Vue 
 | 不依赖 Vue 的图标注册、SVG 处理、Data URI、可选状态形变 | `@lumal/icons`、`@lumal/icons/morph` | [图标内核](references/icons.md) |
 | Vue 图标组件、选择器、响应式图标注册表 | `@lumal/icons-vue` | [Vue 图标](references/icons-vue.md) |
 | Vite resolver、Lumal 仓库源码 alias、可选 Devtools | `@lumal/vite` | [构建辅助](references/vite.md) |
-| 迁移已有 Vben 表单/Grid 写法 | `@lumal/vben-compat` | [Vben 迁移](references/vben-compat.md) |
+| 迁移 Vben 5 页面或旧 Lumal 适配代码 | `@lumal/vben-compat/v5` 或 `/legacy` | [Vben 迁移](references/vben-compat.md) |
 | 修改包源码、公共 API、脚手架模板、发布边界 | 对应包及受影响消费者 | [仓库维护](references/repository.md)，再读相应分包参考 |
 
 ## 共同约束
@@ -37,6 +37,7 @@ description: 使用 Lumal（@lumal/*、create-lumal-admin）构建或维护 Vue 
 - 纯请求等场景直接使用服务子入口，不为了一个函数导入 core 根入口；图表、DataV、Designer 和兼容层均按需引入。
 - UI 包需要显式样式及对应 peer。`minimal` 不代表使用 UI 时可以省略 Element Plus。
 - 后端字段和业务状态码留在应用 adapter。分页使用 `{ items, total }`，字典使用 `{ items }`，会话使用 `{ accessToken, refreshToken?, expiresAt? }`；异常字段通过 `fieldNames`、`parseResponse` 或 `transform` 显式转换。
+- 脚手架默认 `standard/local/hash`，HTTP 模式必须接真实后端，不能将未配置或认证失败静默改为演示登录。新版命令须先确认对应版本已发布，不能用旧版 CLI 验证新版模板。
 - 菜单隐藏、按钮权限只改善前端体验，不能代替服务端鉴权；远程菜单组件只允许映射到应用白名单。
 - 图标 SVG 必须来自可信静态资源。图标注册和格式校验不等于安全净化。
 - 不把消费方的地图、业务接口、行业皮肤和持久化策略写进通用包；Cockpit 不负责这些业务能力。
@@ -44,7 +45,7 @@ description: 使用 Lumal（@lumal/*、create-lumal-admin）构建或维护 Vue 
 ## 写代码时
 
 - 沿用消费项目约定；Lumal 仓库内使用 `<script setup lang="ts">`，按 `/***********************说明*********************/` 划分组合式逻辑功能块，模板引用使用 `useTemplateRef`。
-- 优先原生 Lumal schema；只有迁移旧 Vben 写法才使用兼容层。不承诺 Vben/VXE 的完整兼容。
+- 优先原生 Lumal schema；迁移 Vben 5 使用 `/v5` 的组件元组与单数 `schema`，根及 `/legacy` 仍是旧 `[register, api]`。不承诺 Vben/VXE 的完整兼容。
 - 使用图表前先确认引擎：`@lumal/charts` 使用 ECharts + vue-echarts；DataV 的 `config` 与 ECharts 的 `option` 是不同协议，不互转。
 - 一个大屏只选择一层缩放责任；DataV 全屏容器包裹 Cockpit 时读取驾驶舱参考中的 `external` 模式。
 

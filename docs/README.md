@@ -10,11 +10,11 @@ pnpm docs:preview
 
 本目录是长文 Markdown（架构、Core API、路线图等）的唯一编辑源。文档站 `src/reference/` 只通过 VitePress include 引用对应文件，不再维护第二份正文。指南 / 包使用 / 组件文档仍以 `apps/lumal-docs` 为准。
 
-当前发布版本：[0.0.4-beta 更新日志](./changelog.md)。九个公共包已发布至 npm 的 `beta` 标签。
+工作区基线：`0.0.5-beta`，本轮升级已完成版本准备与本地验收，尚未执行 npm 发布、tag 推送或生产部署。
 
-本轮交付：[0.0.4-beta 版本准备与分支合并记录](./release-preparation-0.0.4-beta.md)，包含实际命令、预算及未验证项。
+本轮交付：[三模板与 Vben 5 升级验收](./upgrade-verification.md)，包含实际命令、测试数量、体积样本和未验证范围；能力起点见 [源码审计](./upgrade-audit.md)，迁移边界见 [Vben 5 兼容矩阵](./migration-from-vben.md)。
 
-发布执行：[0.0.4-beta npm 发布记录](./npm-release-0.0.4-beta.md)。正式门禁及生产 E2E 已通过，九包发布、registry 版本、dist-tag、tarball 校验和与公开入口均已核验通过；本轮未执行生产部署。
+最近发布记录：[0.0.4-beta npm 发布记录](./npm-release-0.0.4-beta.md)。该记录核对日为 2026-10-20，九包发布、`beta` 标签、tarball 校验和与公开入口均已核验通过；不能将工作区新版命令视为已在 registry 可用。历史版本准备见 [分支合并记录](./release-preparation-0.0.4-beta.md)。
 
 AI 接入：[Lumal 总 Skill](../skills/lumal/SKILL.md) 覆盖全部公共包，[安装与调用指南](../apps/lumal-docs/src/guide/essentials/ai-skills.md) 说明如何让 AI 按需读取分包用法。
 

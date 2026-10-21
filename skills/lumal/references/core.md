@@ -62,6 +62,11 @@ await createLumalAdmin({
 
 Schema Form/Table 使用 `field`，不要混用 Vben 的 `fieldName`。字典优先使用 `dictionary`；`view` 模式用于文本回显，不用一组禁用输入框代替详情。
 
+表单联动区分 `hidden` 与 `visible`：前者不渲染字段，后者用 CSS 显隐并保留实例、值和校验。
+`visible/hidden/disabled/required/componentProps` 等动态配置读取当前模型上下文。
+`submitDisabled` 只禁用提交，`submitLoading` 同时阻止重复提交；都不应通过禁用整张表单来模拟。
+原生 `novalidate` 已将提交校验交给 Element Plus，不要额外叠加浏览器原生校验弹窗。
+
 ## CRUD 最小示例
 
 这是只展示列表的可独立组件。接真实接口时替换数据源，并保持 `{ items, total }` 协议：

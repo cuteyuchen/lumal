@@ -31,14 +31,22 @@ const page = await request.get<{ items: { id: number }[], total: number }>('/pro
 - 刷新最终失败走 `onSessionExpired`；路由、权限、标签和业务 Store 的退出清理由应用统一完成。
 - 非标准分页使用 `parsePageResult(raw, { fieldNames: { items: 'records', total: 'count' } })`，不要在组件里猜字段。
 
+上面的客户端只展示请求接线，没有实现刷新接口或完整登录流程。新项目优先使用
+[脚手架的应用服务](create-lumal-admin.md)，而不是把示例当作可用认证系统。
+自行接入时，刷新请求用不参与认证刷新的客户端；捕获旧凭据与会话 AbortSignal，
+响应后确认未取消且身份未切换，再调用 `session.setSession`。取消应传播为取消错误，
+不能再触发新用户的退出。Core 不会替应用取消所有旧请求或清理业务 Store。
+
 ## 可选请求缓存
 
-缓存默认关闭。需要时逐请求或客户端配置 `cache: { enabled: true }`。
+缓存默认关闭。需要时逐请求配置 `cache: { enabled: true }`；
+客户端的 `cache` 选项接收 `RequestCache` 存储实现，不是启用开关。
 
 - 默认只缓存 GET；非 GET 必须提供能区分请求体的 `cache.key`。
 - 多租户可传 `getCacheScope`，同一用户的用途可传请求级 `cache.scope`。
 - 退出/切换上下文调用 `request.clearCache()`；不要把 Token 拼入自定义 cache key，也不要让不同用户共用无身份区分的数据。
 - 旧在途请求在清理后不能重新回填缓存；不要用额外的全局 Map 绕开此生命周期。
+- `clearCache()` 同时解绑共享刷新任务，让新会话不等待旧刷新，但不会自动取消旧网络请求；应用仍须传入会话 signal 并保护刷新结果写入。
 
 ## 字典
 

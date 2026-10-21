@@ -59,6 +59,8 @@ const menus = createMenuRouteRuntime({
 - 通用路由模型与 Vue Router 的重载类型不同，严格类型项目沿用上例显式桥接，不用 `any` 隐藏不匹配。
 - 路由必须通过 `name/path` 保持稳定身份；不要在业务 watcher 里反复 `addRoute`。
 - 简单场景也可用 `createRouteRegistry`；退出时调用 `reset()`，不要遗留跨账号动态路由。
+- 首次深层链接需要等待会话及菜单加载，注册完成后重新匹配目标路由，再判断 404；不能先让 catch-all 决定结果。
+- Vben 5 菜单先在应用边界用 `@lumal/vben-compat/v5/router` 转换。其 `meta.authority` 表示角色，不是 Core 的权限码；不要直接把原始菜单交给 Core。
 
 ## 权限接入
 
@@ -68,6 +70,7 @@ const menus = createMenuRouteRuntime({
 - 路由守卫逐层检查 matched 记录，父级约束不能被子级覆盖。
 - 菜单可见不等于路由可访问。保留路由守卫和服务端鉴权。
 - 退出时清理会话、权限、字典、动态菜单及标签快照；切换用户应重建壳层或使用用户作用域 storage key。
+- 清理菜单的同时使旧会话请求失效；仅移除路由不能阻止在途初始化将旧用户菜单重新写回。完整会话接线读 [脚手架](create-lumal-admin.md)。
 
 ## 布局和标签缓存
 

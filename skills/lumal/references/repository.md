@@ -46,4 +46,12 @@ pnpm release:budgets
 
 示例应使用真实公开 API；标明应用自有文件与接线片段，不能把片段声称为完整应用。检查 Markdown 相对链接、导入路径、导出符号和示例类型；版本变化后不要将旧版本号继续称为“最新”。
 
+更新后执行 `pnpm exec vitest run --config vitest.config.ts scripts/lumal-skill.test.ts`，
+检查 Skill 内相对链接可独立分发、代码示例只使用公共 exports；这不能替代类型和行为测试。
+文档改动再运行 `pnpm docs:build`，不要为纯文档同步默认重跑生产浏览器。
+
+同步安装副本时先比较整个目录，保留消费方自定义内容和 `agents/openai.yaml` 中未改动的元数据。
+只复制已核对的知识文件与 references，不删除目标目录中的额外文件。同步后再次比较内容并运行宿主可用的 Skill 校验器；
+本机安装路径不是所有宿主的默认路径，不应写死在可分发 Skill 中。
+
 发布前按 `docs/release-checklist.md` 核对包版本、内部依赖、锁文件、变更日志、文档和脚手架。创建 Skill 不等于获得提交、推送、npm 发布或修改 dist-tag 的授权。
