@@ -70,7 +70,7 @@ features:
 ## 快速安装
 
 `0.0.5-beta` 的正式门禁、九包发布命令和三种真实 npm 脚手架消费者已通过。
-registry 已核验八包，Cockpit 新版仍未可见，详见 [发布记录](/reference/npm-release-0.0.5-beta)。
+九包 registry、实际 tarball 与公开入口均已核验，详见 [发布记录](/reference/npm-release-0.0.5-beta)。
 下列脚手架与 Core 安装命令已验证，保持 Lumal 包同版，不依赖 `latest`。
 功能与性能边界见 [升级验收](/reference/upgrade-verification)。
 

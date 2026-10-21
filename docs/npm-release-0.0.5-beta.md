@@ -4,11 +4,10 @@
 
 ## 当前状态
 
-**正式 Release Gate 成功，九个发布命令全部完成；registry 核验暂为 8/9。**
-截至 2026-10-21 10:31（北京时间），仅 `@lumal/cockpit@0.0.5-beta` 仍不可见，
-其 `beta` 仍为 `0.0.4-beta`。其余八包的版本、`beta`、实际 tarball 和公开入口均通过核验，
-三种真实 npm 脚手架消费者全部通过；不能据此声明九包发布验收完成。
-九包 `latest` 均保持 `0.0.1-beta`，生产部署作业已跳过。
+**PASS：正式 Release Gate 成功，九包 `0.0.5-beta` 已发布并通过完整 registry 与 tarball 核验。**
+2026-10-21 10:36（北京时间）严格检查退出 0，九包版本与 `beta` 一致，
+`latest` 均保持 `0.0.1-beta`；三种真实 npm 脚手架消费者全部通过，生产部署作业已跳过。
+此前 Cockpit 的公开可用性延迟及 8/9 失败记录保留在下文，不再是当前阻塞。
 
 - 目标版本：九个公共包统一 `0.0.5-beta`，使用 npm `beta` 标签，保留 `latest`。
 - 源提交：`53395dc8753361d9e79e2da496d67da2e39ac35e`。
@@ -24,6 +23,7 @@
 | `14c7d2a` | 三预设文件模板、真实 HTTP 认证与会话、显式 Vben 5 兼容入口及完整消费者验收 |
 | `f8d1e25` | Skill、三预设使用契约、Vben 5 迁移及文档同步 |
 | `53395dc` | 发布前文档、正式域名与站点配置，保留并提交工作区已有修改 |
+| `663ddba` | 如实记录发布作业成功但 registry 暂为 8/9 的中间状态及三种真实 npm 消费者验收 |
 
 九包 manifests、内部精确依赖、lockfile、各包 CHANGELOG 和空 Changeset 已在版本准备阶段同步；
 此次没有再次提升版本。功能矩阵、参考 Vben 版本与 SHA、兼容限制及性能样本分别见
@@ -84,13 +84,16 @@ Node.js 22.23.3、pnpm 10.33.0。Actions 自身 Node 20 弃用及 Ubuntu runner
 发布作业于北京时间 10:14:05 结束。逐包日志均包含 `+ <package>@0.0.5-beta`，
 同时提示版本仍在处理、可能需要数分钟才能公开。没有重新发布任何包或移动标签。
 发布后的只读等待经历 1/9、7/9、8/9；十分钟上限到达时明确失败，
-后续逐包核验仍以退出码 1 保留 8/9 状态，没有放宽通过标准。
+10:31 的逐包核验仍以退出码 1 保留 8/9 状态，没有放宽通过标准。
+10:35:57 最后一次只读复核发现 Cockpit 已公开，随即重新执行严格九包检查；
+10:36:29 全部通过，退出码 0。期间没有重发、撤包或修改 dist-tag。
 
 ### Registry 与实际 tarball
 
-以下为 10:31 的公开 registry 快照；八包实际下载的 SHA-512 / SHA-1
-分别与 `dist.integrity` / `dist.shasum` 一致，SHA-1 另与发布 job 日志逐包一致，
-入口文件与公开 manifest 配置一致。
+以下为 10:36 的完整公开 registry 核验；九包实际下载的 SHA-512 / SHA-1
+分别与 `dist.integrity` / `dist.shasum` 一致，SHA-1 另与发布 job 日志九包逐一一致，
+入口文件与公开 manifest 配置一致。表中时间是 registry 记录的发布时间，
+不是本机首次观察其可见的时间，元数据记录与边缘节点可用性可能有时间差。
 
 | 包 | 版本 / beta | 发布时间（北京时间） | tarball 字节数 | 校验 |
 | --- | --- | --- | ---: | --- |
@@ -99,14 +102,14 @@ Node.js 22.23.3、pnpm 10.33.0。Actions 自身 Node 20 弃用及 Ubuntu runner
 | `@lumal/core` | `0.0.5-beta` | 10:14:45.332 | 176,023 | PASS |
 | `@lumal/charts` | `0.0.5-beta` | 10:14:43.973 | 12,076 | PASS |
 | `@lumal/datav` | `0.0.5-beta` | 10:17:58.624 | 92,335 | PASS |
-| `@lumal/cockpit` | 目标不可见，beta 仍为 `0.0.4-beta` | 未确认 | 未下载 | 未通过 |
+| `@lumal/cockpit` | `0.0.5-beta` | 10:31:09.316 | 96,621 | PASS |
 | `@lumal/vben-compat` | `0.0.5-beta` | 10:14:52.692 | 33,067 | PASS |
 | `@lumal/vite` | `0.0.5-beta` | 10:14:36.152 | 5,702 | PASS |
 | `create-lumal-admin` | `0.0.5-beta` | 10:14:58.135 | 43,546 | PASS |
 
 已核验包没有 `workspace:` 消费依赖，内部依赖精确为 `0.0.5-beta`；
 CLI 的 HTTP、system 和 V5 迁移模板资源随 tarball 存在。
-registry 未提供这八包的 `gitHead`，不伪造其校验结果；
+registry 未提供九包的 `gitHead`，不伪造其校验结果；
 源提交关联由 Actions SHA、同 run 已验证产物与发布日志和实际 tarball 校验和共同佐证。
 
 ### 真实 npm CLI 消费者
@@ -125,26 +128,28 @@ registry 未提供这八包的 `gitHead`，不伪造其校验结果；
 环境为 Windows、Node.js 24.14.1、pnpm 10.33.0，项目位于
 `C:/Users/yuchen/AppData/Local/Temp/lumal-npm-0.0.5-YERCmK`。
 安装的 Lumal 直接依赖均再次核对为精确 `0.0.5-beta`；
-这些模板不依赖 Cockpit，因此上述检查不代表最后一包已可安装。
+这些模板不依赖 Cockpit，最后一包由独立的完整 registry/tarball 检查覆盖，
+不将三模板检查冒充驾驶舱应用的行为测试。
 此次没有重复启动本机浏览器，生产 Chromium 行为由正式门禁的真实产物验证；
 不把三项目 15 项测试加进 908 项工作区测试。
 
-### 未完成边界
+### 处理延迟与恢复记录
 
-`@lumal/cockpit` 的公开版本接口仍返回 404，原因尚不能由公开数据确定。
+10:31 时 `@lumal/cockpit` 的公开版本接口仍返回 404，当时原因不能由公开数据确定。
 npm 官方 API 提供需身份认证的版本状态查询，区分 processing / published / failed 等状态；
 公开 404 不能证明仅需继续等待，也不能证明发布已被拒绝。
 按 [官方 API 文档](https://api-docs.npmjs.com/) 对
 `GET /-/package/@lumal%2fcockpit/version/0.0.5-beta/status` 发起不带凭据的只读查询，
 实际返回 HTTP 401，未能取得内部处理状态。
+随后只读查询发现公开版本已可用，严格九包核验通过，没有使用认证接口取得内部处理状态。
+不把这次延迟推断为已确认的扫描失败、审批阻塞或账户权限故障。
 本轮没有读取 GitHub Secret 值、改变 2FA、撤包、重发或擅自采用新统一版本。
-后续应由维护者核对 npm 版本生命周期，或在其变为公开后执行严格九包只读核验。
-遵守 [中断恢复](./release-checklist.md#中断与恢复)，禁止重跑全量发布链。
+当前无待修复的 npm 发布阻塞；本版禁止重跑全量发布链，未来变更仍需新版本与完整门禁。
 
 ## 文档与 Skill 补验
 
 正式发布源提交之后仅补充发布结果文档，不改包源码、版本或既有标签。
-README、更新日志、路线图、发布清单、Changesets 指引和文档导航均标出 8/9 边界。
+README、更新日志、路线图、发布清单、Changesets 指引和文档导航均已同步九包成功状态。
 历史升级验收保留原始阶段事实，新增链接指向本记录。
 
 | 检查 | 实际结果 |
@@ -157,7 +162,7 @@ README、更新日志、路线图、发布清单、Changesets 指引和文档导
 | `pnpm changeset:status` | PASS，无待再次提升的版本 |
 | Skill Creator `quick_validate.py` | PASS，仓库与安装副本均通过 |
 | Skill 分发 SHA-256 比较 | PASS，14 个文件一致；只同步知识文件，未修改宿主元数据或删除额外文件 |
-| 严格九包 registry 核验 | FAIL，8/9；保留失败退出码，不声称全部通过 |
+| 严格九包 registry 核验 | PASS，9/9；此前十分钟等待与 8/9 失败保留，不混入最终通过结果 |
 
 本轮新增的本机消费者测试只使用 npm 上的真实包；没有为了文档同步再启动浏览器，
 也没有把同一源提交的演练结果当成正式作业的重复执行证明。
@@ -179,6 +184,9 @@ README、更新日志、路线图、发布清单、Changesets 指引和文档导
 - `registry-verified-0.0.5-beta.json`：八包完整核验和 Cockpit pending；`complete=false`，不是通过报告。
 - `registry-final-0.0.5-beta.json`：10:31 再次严格复核仍为 8/9，退出码 1。
 - `publisher-checksums-0.0.5-beta.json`：九个发布日志校验和，八个可下载包逐一匹配。
+- `cockpit-final-snapshot-0.0.5-beta.json`：10:35:57 首次观察最后一包已公开。
+- `registry-complete-0.0.5-beta.json`：10:36 严格九包版本、dist-tag、manifest、入口及 tarball 全部通过，`complete=true`。
+- `publisher-checksums-complete-0.0.5-beta.json`：最终九包 SHA-1 与正式发布日志逐一一致。
 - `cockpit-version-status-0.0.5-beta.json`：官方版本状态接口无凭据查询返回 401。
 - `registry-consumers-0.0.5-beta.json` 及 `registry-*-{create,install,lint,typecheck,test,build}.log`：
   三种真实 registry 消费者逐命令结果。

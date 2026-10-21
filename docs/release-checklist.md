@@ -4,7 +4,7 @@
 
 ## 版本准备
 
-九个公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。`0.0.3-beta`、`0.0.4-beta` 的九包均已发布；`0.0.5-beta` 的九包发布命令已完成，registry 八包可见、Cockpit 尚待确认，见 [当前发布记录](./npm-release-0.0.5-beta.md)。这些版本不能用于新的全量发布；部分可见也不得重发。下一轮的 `NEXT_VERSION` 必须由维护者核对 registry 后选择尚未发布的合法版本。
+九个公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。`0.0.3-beta`、`0.0.4-beta`、`0.0.5-beta` 的九包均已发布，当前版本的完整门禁、registry 与实际 tarball 核验见 [发布记录](./npm-release-0.0.5-beta.md)。这些版本不能用于新的全量发布；部分可见也不得重发。下一轮的 `NEXT_VERSION` 必须由维护者核对 registry 后选择尚未发布的合法版本。
 
 ```bash
 pnpm release:version NEXT_VERSION
