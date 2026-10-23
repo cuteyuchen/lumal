@@ -185,6 +185,7 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
   let refreshPromise: Promise<void> | undefined
   let refreshScope: string | undefined
   let refreshResetVersion = -1
+  let refreshAuthorization: string | null = null
   let expiredSessionKey: string | undefined
 
   function clearCache(): void {
@@ -397,9 +398,9 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
     ): Promise<TValue> {
       // 会话切换可能发生在响应解析或刷新期间，旧请求不能再影响新身份。
       const signal = context.init.signal
-      if (signal?.aborted)
-        throw normalizeFetchError(signal.reason, signal)
       function assertCurrentSession() {
+        if (signal?.aborted)
+          throw normalizeFetchError(signal.reason, signal)
         if (resetVersion !== cacheResetVersion || sessionScope !== clientOptions.getCacheScope?.()) {
           throw new RequestError('会话已切换，忽略旧请求', {
             code: 'STALE_SESSION',
@@ -409,48 +410,56 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
         }
       }
       assertCurrentSession()
-      const currentToken = await clientOptions.getToken?.()
-      assertCurrentSession()
       const managedAuthorization = usedToken ? `${clientOptions.tokenPrefix ?? 'Bearer'} ${usedToken}` : null
+      const usesManagedAuthorization = !new Headers(options.headers).has('Authorization')
+        && new Headers(context.init.headers).get('Authorization') === managedAuthorization
+      const tracksCredentials = usesManagedAuthorization && Boolean(clientOptions.getToken)
       const replayAllowed = attempt === 0
         && canReplayAfterAuthRefresh((context.init.method ?? 'GET').toUpperCase(), options, context.init)
         // hook 注入外部身份时不使用客户端凭据重放，避免越权或覆盖外部认证。
-        && new Headers(context.init.headers).get('Authorization') === managedAuthorization
+        && usesManagedAuthorization
         && Boolean(clientOptions.authRefresh)
 
-      // 只有安全重放可使用已更新的凭据，旧写请求或退出后的 401 不能影响新会话。
-      if (usedToken !== undefined && currentToken !== usedToken && (!replayAllowed || !currentToken)) {
-        throw new RequestError('访问凭据已变更，忽略旧请求', { code: 'STALE_SESSION', kind: 'cancelled', originalError: error })
+      async function readCurrentToken() {
+        const token = tracksCredentials ? await clientOptions.getToken?.() : undefined
+        assertCurrentSession()
+        return token
       }
+      function assertCurrentCredentials(token: string | undefined, allowUpdated = false) {
+        // 只有安全重放可使用已更新的凭据，外部 Authorization 不受客户端 Token 变化影响。
+        if (tracksCredentials && token !== usedToken && (!allowUpdated || !token)) {
+          throw new RequestError('访问凭据已变更，忽略旧请求', { code: 'STALE_SESSION', kind: 'cancelled', originalError: error })
+        }
+      }
+      const currentToken = await readCurrentToken()
+      assertCurrentCredentials(currentToken, replayAllowed)
 
       if (replayAllowed) {
-        if (usedToken && currentToken && currentToken !== usedToken) {
+        if (currentToken && currentToken !== usedToken) {
           return executeRequest<TValue>(attempt + 1)
         }
 
         try {
-          if (!refreshPromise || refreshScope !== sessionScope || refreshResetVersion !== resetVersion) {
+          if (!refreshPromise || refreshScope !== sessionScope || refreshResetVersion !== resetVersion
+            || refreshAuthorization !== managedAuthorization) {
             const pending = clientOptions.authRefresh!.refresh(context).finally(() => {
               if (refreshPromise === pending)
                 refreshPromise = undefined
             })
             refreshScope = sessionScope
             refreshResetVersion = resetVersion
+            refreshAuthorization = managedAuthorization
             refreshPromise = pending
           }
 
           await refreshPromise
-          assertCurrentSession()
-          if (signal?.aborted)
-            throw normalizeFetchError(signal.reason, signal)
+          assertCurrentCredentials(await readCurrentToken(), true)
           if (expiredSessionKey === sessionErrorKey(context.init))
             expiredSessionKey = undefined
           return executeRequest<TValue>(attempt + 1)
         }
         catch (refreshError) {
           assertCurrentSession()
-          if (signal?.aborted)
-            throw normalizeFetchError(refreshError, signal)
           error = new RequestError(error.message, {
             code: error.code,
             data: error.data,
@@ -462,7 +471,8 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
         }
       }
 
-      assertCurrentSession()
+      // 刷新可能异步失败；通知退出之前重新校验，避免迟到失败清除新登录的凭据。
+      assertCurrentCredentials(await readCurrentToken())
       const expiredKey = sessionErrorKey(context.init)
       if (expiredSessionKey !== expiredKey) {
         expiredSessionKey = expiredKey
