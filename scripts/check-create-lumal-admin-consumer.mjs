@@ -292,7 +292,17 @@ async function main() {
           const boundaries = await assertLazyModuleBoundaries(projectDir)
           const project = { projectDir, preset, apiMode, routerMode }
           projects.push(project)
-          results.push({ preset, apiMode, routerMode, installSeconds: install.seconds, buildSeconds: build.seconds, ...metrics, boundaries })
+          results.push({
+            preset,
+            apiMode,
+            routerMode,
+            runtimeDependencyCount: Object.keys(generatedPackage.dependencies ?? {}).length,
+            developmentDependencyCount: Object.keys(generatedPackage.devDependencies ?? {}).length,
+            installSeconds: install.seconds,
+            buildSeconds: build.seconds,
+            ...metrics,
+            boundaries,
+          })
           browserEvidence.push(...await verifyScaffoldBrowsers([project], api, screenshotDirectory))
           console.log(`create-lumal-admin ${preset}/${apiMode}/${routerMode} tarball 独立安装、类型、测试、lint 与生产构建通过。`)
           await writeFile(join(reportDirectory, 'scaffold-report.json'), `${JSON.stringify({ environment: { node: process.version, platform: process.platform }, cliCases: cliCases.length, tempRoot, projects, results, browserEvidence, optionalFeatures }, null, 2)}\n`)
@@ -324,7 +334,14 @@ async function main() {
       runPnpm(['lint'], projectDir)
       runPnpm(['format:check'], projectDir)
       const build = runPnpm(['exec', 'vite', 'build'], projectDir, false, { VITE_ENABLE_LOCAL_DEMO: 'true' })
-      optionalFeatures.push({ preset, features, buildSeconds: build.seconds, ...await measureAdminBuild(projectDir) })
+      optionalFeatures.push({
+        preset,
+        features,
+        runtimeDependencyCount: Object.keys(manifest.dependencies ?? {}).length,
+        developmentDependencyCount: Object.keys(manifest.devDependencies ?? {}).length,
+        buildSeconds: build.seconds,
+        ...await measureAdminBuild(projectDir),
+      })
     }
     await writeFile(join(reportDirectory, 'scaffold-report.json'), `${JSON.stringify({ environment: { node: process.version, platform: process.platform }, cliCases: cliCases.length, tempRoot, projects, results, browserEvidence, optionalFeatures }, null, 2)}\n`)
   }
