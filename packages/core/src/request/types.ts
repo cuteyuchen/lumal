@@ -73,7 +73,7 @@ export interface RequestClientOptions<TData = unknown> {
   requestIdHeader?: string
   /** 默认缓存存储，供开启缓存的请求复用。 */
   cache?: RequestCache
-  /** 当前会话/租户的非敏感标识；变化时自动失效，不能使用明文 Token。 */
+  /** 当前会话/租户的非敏感标识；变化时缓存失效，旧401不触发新会话退出；不能使用明文Token。 */
   getCacheScope?: () => string | undefined
   onRequest?: (context: RequestBeforeContext) => Promise<void> | void
   onRequestError?: (context: RequestErrorContext) => Promise<void> | void
@@ -108,7 +108,7 @@ export interface RequestUploadOptions extends Omit<RequestOptions, 'body' | 'met
 }
 
 export interface RequestClient {
-  /** 清除本客户端使用的缓存，并阻止在途请求重新填充。退出/切换账号时调用。 */
+  /** 清除缓存、解绑刷新并忽略旧会话401；不取消旧成功请求，应用仍须保护异步状态写入。 */
   clearCache: () => void
   delete: <TResult = unknown>(url: string, options?: Omit<RequestOptions, 'method'>) => Promise<TResult>
   get: <TResult = unknown>(url: string, options?: Omit<RequestOptions, 'body' | 'method'>) => Promise<TResult>

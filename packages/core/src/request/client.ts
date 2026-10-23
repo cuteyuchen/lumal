@@ -78,6 +78,9 @@ function isPlainJsonBody(body: unknown): body is Record<string, unknown> | unkno
   if (typeof ArrayBuffer !== 'undefined' && body instanceof ArrayBuffer) {
     return false
   }
+  if (typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView(body)) {
+    return false
+  }
 
   return true
 }
@@ -180,6 +183,8 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
   let cacheResetVersion = 0
   let cacheIdentity: string | undefined
   let refreshPromise: Promise<void> | undefined
+  let refreshScope: string | undefined
+  let refreshResetVersion = -1
   let sessionExpiredNotified = false
 
   function clearCache(): void {
@@ -197,6 +202,7 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
 
   async function request<TResult = unknown>(url: string, options: RequestOptions = {}): Promise<TResult> {
     const resetVersion = cacheResetVersion
+    const sessionScope = clientOptions.getCacheScope?.()
     const method = options.method ?? 'GET'
     const resolvedUrl = appendQuery(joinBaseURL(clientOptions.baseURL, url), options.query)
     const requestId = resolveRequestId(clientOptions)
@@ -342,8 +348,10 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
           ? await clientOptions.onResponse<TValue>(context)
           : (data as TValue)
 
-        sessionExpiredNotified = false
-        if (cacheEnabled && generation === cacheGeneration && resetVersion === cacheResetVersion) {
+        if (resetVersion === cacheResetVersion && sessionScope === clientOptions.getCacheScope?.())
+          sessionExpiredNotified = false
+        if (cacheEnabled && generation === cacheGeneration && resetVersion === cacheResetVersion
+          && sessionScope === clientOptions.getCacheScope?.()) {
           cache.set(cacheKey, result)
           const keys = cachedKeys.get(cache) ?? new Set<string>()
           keys.add(cacheKey)
@@ -383,6 +391,22 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
       const signal = context.init.signal
       if (signal?.aborted)
         throw normalizeFetchError(signal.reason, signal)
+      function assertCurrentSession() {
+        if (resetVersion !== cacheResetVersion || sessionScope !== clientOptions.getCacheScope?.()) {
+          throw new RequestError('会话已切换，忽略旧请求', {
+            code: 'STALE_SESSION',
+            kind: 'cancelled',
+            originalError: error,
+          })
+        }
+      }
+      assertCurrentSession()
+      const currentToken = await clientOptions.getToken?.()
+      assertCurrentSession()
+      // 无刷新机制时，迟到的旧 Token 401 也不能清除已经替换的新凭据。
+      if (!clientOptions.authRefresh && usedToken !== undefined && currentToken !== usedToken) {
+        throw new RequestError('访问凭据已变更，忽略旧请求', { code: 'STALE_SESSION', kind: 'cancelled', originalError: error })
+      }
       const managedAuthorization = usedToken ? `${clientOptions.tokenPrefix ?? 'Bearer'} ${usedToken}` : null
       const replayAllowed = attempt === 0
         && canReplayAfterAuthRefresh((context.init.method ?? 'GET').toUpperCase(), options, context.init)
@@ -391,28 +415,30 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
         && Boolean(clientOptions.authRefresh)
 
       if (replayAllowed) {
-        const currentToken = await clientOptions.getToken?.()
-
         if (usedToken && currentToken && currentToken !== usedToken) {
           return executeRequest<TValue>(attempt + 1)
         }
 
         try {
-          if (!refreshPromise) {
+          if (!refreshPromise || refreshScope !== sessionScope || refreshResetVersion !== resetVersion) {
             const pending = clientOptions.authRefresh!.refresh(context).finally(() => {
               if (refreshPromise === pending)
                 refreshPromise = undefined
             })
+            refreshScope = sessionScope
+            refreshResetVersion = resetVersion
             refreshPromise = pending
           }
 
           await refreshPromise
+          assertCurrentSession()
           if (signal?.aborted)
             throw normalizeFetchError(signal.reason, signal)
           sessionExpiredNotified = false
           return executeRequest<TValue>(attempt + 1)
         }
         catch (refreshError) {
+          assertCurrentSession()
           if (signal?.aborted)
             throw normalizeFetchError(refreshError, signal)
           error = new RequestError(error.message, {
@@ -426,9 +452,10 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
         }
       }
 
+      assertCurrentSession()
       if (!sessionExpiredNotified) {
         sessionExpiredNotified = true
-        clearCache()
+        invalidateCache()
         await clientOptions.onSessionExpired?.(context)
       }
 
