@@ -69,4 +69,20 @@ describe('release source boundaries', () => {
     expect(result.status).toBe(1)
     expect(result.stderr).toContain(path)
   })
+
+  it.each(['docs/real-consumer-compatibility.md', 'docs/upgrade-guide.md'])('迁移证据可准确提及旧API：%s', (path) => {
+    const fixture = createFixture()
+    writeFixture(fixture, path)
+    expect(check(fixture).status).toBe(0)
+  })
+
+  it.each(['charts', 'viewport'])('新消费包也不能绕过公开入口：%s', (name) => {
+    const fixture = createFixture()
+    const path = 'apps/consumer/src/main.ts'
+    mkdirSync(dirname(join(fixture, path)), { recursive: true })
+    writeFileSync(join(fixture, path), `import 'packages/${name}/src/index'`)
+    const result = check(fixture)
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('不能直连包源码')
+  })
 })

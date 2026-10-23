@@ -169,6 +169,7 @@ assert(corePackage.exports?.['./style.css'] === './dist/core.css', '@lumal/core 
 assert(corePackage.exports?.['./minimal']?.import && corePackage.exports?.['./minimal']?.require && corePackage.exports?.['./minimal']?.types, '@lumal/core 未完整导出 minimal 入口')
 assert(corePackage.exports?.['./theme-chalk/index.scss'], '@lumal/core 未导出 theme-chalk/index.scss')
 assert(createPackage.bin?.['create-lumal-admin'] === './dist/cli.js', 'create-lumal-admin 缺少 bin.create-lumal-admin')
+assert(createPackage.bin?.['create-lumal'] === './dist/project-cli.js', 'create-lumal-admin 缺少通用 bin.create-lumal')
 assert(datavPackage.exports?.['./style.css'] === './dist/datav.css', '@lumal/datav 未导出 style.css')
 for (const entry of [
   'active-ring-chart',
@@ -257,6 +258,7 @@ assert(!hasDependency(chartsPackage, 'dependencies', 'echarts'), '@lumal/charts 
 assert(!chartsAllDependencies.has('@lumal/core'), '@lumal/charts 不应依赖 @lumal/core')
 assert(hasDependency(datavPackage, 'peerDependencies', 'vue'), '@lumal/datav 应把 vue 放在 peerDependencies')
 assert(hasDependency(datavPackage, 'peerDependencies', 'echarts'), '@lumal/datav 应把 echarts 放在 peerDependencies')
+assert(datavPackage.peerDependenciesMeta?.echarts?.optional === true, '@lumal/datav 的 ECharts peer 必须可选，不能污染无引擎模板')
 assert(hasDependency(datavPackage, 'dependencies', '@jiaminghi/charts'), '@lumal/datav config 模式应声明 @jiaminghi/charts 运行时依赖')
 assert(datavAllDependencies.size === 4 && hasDependency(datavPackage, 'dependencies', '@lumal/viewport'), '@lumal/datav 仅允许 vue、echarts peer、@jiaminghi/charts 和共享 viewport')
 assert(getDependencyNames(viewportPackage, ['dependencies', 'optionalDependencies']).size === 0
@@ -335,7 +337,7 @@ for (const match of datavForbiddenMatches) {
 
 const appSourceAliasMatches = findTextMatches(
   join(rootDir, 'apps'),
-  /\.\.\/\.\.\/packages|packages\/(?:icons|icons-vue|core|datav|cockpit|vben-compat|vite)\/src|packages\\(?:icons|icons-vue|core|datav|cockpit|vben-compat|vite)\\src/,
+  /\.\.\/\.\.\/packages|packages\/(?:icons|icons-vue|core|charts|viewport|datav|cockpit|vben-compat|vite)\/src|packages\\(?:icons|icons-vue|core|charts|viewport|datav|cockpit|vben-compat|vite)\\src/,
   new Set(),
   ['../../packages/vite/src/aliases'],
 )
@@ -346,6 +348,9 @@ for (const match of appSourceAliasMatches) {
 
 const oldNameMatches = findTextMatches(rootDir, oldNamePattern, new Set([
   'docs/release-checklist.md',
+  // 迁移矩阵必须准确引用前身API；只放行这两份说明，不允许在源码恢复旧别名。
+  'docs/real-consumer-compatibility.md',
+  'docs/upgrade-guide.md',
   'apps/lumal-docs/src/reference/release-checklist.md',
   'scripts/check-release-boundaries.mjs',
 ]))
