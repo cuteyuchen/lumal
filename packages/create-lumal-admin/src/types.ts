@@ -10,6 +10,8 @@ export interface CreateLumalAdminProjectOptions {
   preset?: AdminPreset
   routerMode?: RouterMode
   targetDir: string
+  /** 取消创建时仅回滚本次拥有的文件。 */
+  signal?: AbortSignal
 }
 
 export interface CreateLumalAdminProjectResult {

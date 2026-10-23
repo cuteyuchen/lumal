@@ -4,11 +4,10 @@ import { dirname, join, parse, resolve } from 'node:path'
 import { resolveOptions } from './presets.js'
 import { composeTemplates } from './templates.js'
 
-export async function createLumalAdminProject(
-  input: CreateLumalAdminProjectOptions,
-): Promise<CreateLumalAdminProjectResult> {
-  const options = resolveOptions(input)
-  const targetDir = resolve(options.targetDir)
+export async function assertTargetDirectory(input: string): Promise<void> {
+  if (!input.trim() || /\p{Cc}/u.test(input))
+    throw new Error('目标目录不能为空或包含控制字符')
+  const targetDir = resolve(input)
   if (targetDir === parse(targetDir).root)
     throw new Error('不能在文件系统根目录创建项目')
   const stat = await lstat(targetDir).catch((error: NodeJS.ErrnoException) => {
@@ -30,7 +29,15 @@ export async function createLumalAdminProject(
     if (parent?.isSymbolicLink())
       throw new Error('目标祖先目录不能包含符号链接')
   }
+}
 
+export async function createLumalAdminProject(
+  input: CreateLumalAdminProjectOptions,
+): Promise<CreateLumalAdminProjectResult> {
+  const options = resolveOptions(input)
+  const targetDir = resolve(options.targetDir)
+  await assertTargetDirectory(targetDir)
+  input.signal?.throwIfAborted()
   // 先读取、校验全部发布资源，再开始写入。回滚从不递归删除目标目录。
   const files = await composeTemplates(options)
   const ownedFiles: string[] = []
@@ -60,6 +67,7 @@ export async function createLumalAdminProject(
   try {
     await ensureDirectory(targetDir)
     for (const file of files) {
+      input.signal?.throwIfAborted()
       const filePath = join(targetDir, file.path)
       await ensureDirectory(dirname(filePath))
       const handle = await open(filePath, 'wx')
@@ -71,6 +79,7 @@ export async function createLumalAdminProject(
         await handle.close()
       }
     }
+    input.signal?.throwIfAborted()
   }
   catch (error) {
     const cleanupErrors: unknown[] = []
