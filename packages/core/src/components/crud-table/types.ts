@@ -6,7 +6,7 @@ import type {
   SchemaFormModel,
   SchemaFormRule,
 } from '../schema-form'
-import type { SchemaTableColumn, SchemaTableColumnSettings, SchemaTableRow } from '../schema-table'
+import type { SchemaTableColumn, SchemaTableColumnSettings, SchemaTableRecord, SchemaTableRow } from '../schema-table'
 
 export type CrudTableQueryModel = SchemaFormModel
 
@@ -84,7 +84,7 @@ export interface CrudTableConfig {
   emptyText?: string
 }
 
-export interface CrudTableColumn extends SchemaTableColumn {
+export type CrudTableColumn<T extends SchemaTableRecord = SchemaTableRow> = SchemaTableColumn<T> & {
   component?: SchemaFormComponentType
   defaultValue?: unknown
   editDisabled?: boolean

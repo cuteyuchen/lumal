@@ -54,6 +54,8 @@ export function resolveSchemaTableCellDisplay(
   options: readonly DictionaryOption[] = [],
   optionIndex?: ReadonlyMap<string, DictionaryOption>,
 ): SchemaTableCellDisplay {
+  if (column.type === 'index')
+    return { tags: [], text: String(index + 1) }
   const rawValue = row[column.field]
   const formattedValue = column.formatter?.(rawValue, row, index) ?? rawValue
 

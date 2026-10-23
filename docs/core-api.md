@@ -278,7 +278,11 @@ function handlePageChange(payload: SchemaTablePaginationChangePayload) {
 `LumalSchemaTable` 支持：
 
 - `selection`：渲染选择列，并通过 `selection-change(rows, rowKeys)` 同时返回选中行和主键。
-- `showIndex`：渲染序号列。
+- `showIndex`：保留旧的页内序号列。
+- `columns: [{ type: 'index', label: '序号' }]`：不绑定业务 `field`，开启分页时使用跨页序号，
+  支持列设置与当前页/选中行导出；不参与字典加载或 CRUD 自动表单。
+  CRUD 会透传当前分页，不能把序号写入业务行。普通列依然要求真实模型字段。
+  `SchemaTableColumn` 和 `CrudTableColumn<T>` 为判别联合类型，扩展列使用交叉类型而非 interface extends。
 - `showColumnSettings`：显示可键盘操作的列设置。
 - `columnSettings`：配置列设置显示、拖动排序和 `storageKey` 持久化；至少保留一个可配置列，固定列不会被无效隐藏。
 - `defaultExpandAll` / `treeProps`：树表配置，同时兼容旧 `tableProps` 写法。
@@ -693,6 +697,10 @@ Authorization 或 `getCacheScope()` 变化会清空本客户端缓存。请求�
 
 `clearCache()` 也会解绑当前共享刷新任务，新会话不会继续等待旧刷新，旧任务完成时不会移除
 新任务。但它不自动取消在途网络请求，也不能阻止应用自己的刷新回调写入旧 Token；
+`getCacheScope()` 变化或 `clearCache()` 后，旧401/旧刷新失败会以
+`code: 'STALE_SESSION', kind: 'cancelled'` 拒绝，不触发新身份的退出或响应错误通知。
+共享刷新任务按会话作用域隔离。scope 应为不含Token的会话代次/租户标识，不能重复使用旧会话标识。
+成功旧响应仍可返回给原调用方，但不能回填缓存；应用仍须校验身份后写Store。
 取消、身份检查和业务 Store 清理由应用负责。HTTP 模板已包含这层会话隔离。
 
 网络错误、响应错误和会话回调报告实际发送的 URL。认证重放从原始已解析 URL 再执行 hook，避免重复叠加路径，并复用原 requestId；hook 改成写请求后仍需 `retryOnAuthRefresh: true`，改成外部 Authorization 则不自动刷新/重放。requestId 仅用于追踪，不参与缓存身份。

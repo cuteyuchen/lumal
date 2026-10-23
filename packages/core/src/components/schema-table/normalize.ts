@@ -1,6 +1,7 @@
 import type {
   NormalizedSchemaTableColumn,
   SchemaTableColumn,
+  SchemaTableColumnBase,
   SchemaTableContext,
   SchemaTableRecord,
   SchemaTableRow,
@@ -24,7 +25,7 @@ function resolveState<T extends SchemaTableRecord>(
 }
 
 function canRenderByAuthority<T extends SchemaTableRecord>(
-  column: SchemaTableColumn<T>,
+  column: SchemaTableColumnBase<T>,
   options: NormalizeSchemaTableColumnsOptions<T>,
 ): boolean {
   if (!column.authority) {
@@ -44,9 +45,9 @@ export function normalizeSchemaTableColumns<T extends SchemaTableRecord = Schema
   }
 
   return columns
-    .map(column => ({
+    .map((column, index) => ({
       ...column,
-      field: column.field.trim() as SchemaTableColumn<T>['field'],
+      field: (column.type === 'index' ? `__lumal_index__${index}` : column.field?.trim()) as NormalizedSchemaTableColumn<T>['field'],
     }))
     .filter(column => column.field)
     .map(column => ({

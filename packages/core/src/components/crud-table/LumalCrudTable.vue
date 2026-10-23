@@ -646,6 +646,9 @@ defineExpose({
         <LumalSchemaTable
           ref="tableRef"
           :columns="resolvedColumns"
+          :page="page"
+          :page-size="pageSize"
+          :pagination="paginationEnabled"
           :rows="data.currentRows.value"
           :row-key="resolvedRowKey"
           :empty-text="resolvedEmptyText"

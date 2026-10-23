@@ -6,6 +6,32 @@ import { createDictionaryStore, dictionaryContextKey } from '../src/dictionary'
 import { elementPlusStubs } from './helpers/element-plus-stubs'
 
 describe('lumal schema table', () => {
+  it('序号列支持分页、选中行导出及关闭分页，不读取或修改业务行', async () => {
+    const rows = [{ id: 1, name: '甲' }, { id: 2, name: '乙' }]
+    const wrapper = mount(LumalSchemaTable, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        columns: [{ type: 'index', label: '序号' }, { field: 'name', label: '名称' }],
+        rows,
+        pagination: true,
+        page: 2,
+        pageSize: 10,
+        total: 30,
+      },
+    })
+    const indexColumn = wrapper.findAllComponents({ name: 'ElTableColumn' })[0]!
+    expect(indexColumn.props('prop')).toBeUndefined()
+    expect(indexColumn.props('type')).toBe('index')
+    expect(indexColumn.props('formatter')(rows[0], {}, undefined, 0)).toBe('11')
+    const api = wrapper.vm as unknown as { getExportData: (sourceRows?: typeof rows) => { rows: string[][] } }
+    expect(api.getExportData().rows).toEqual([['11', '甲'], ['12', '乙']])
+    expect(api.getExportData([rows[1]!]).rows).toEqual([['12', '乙']])
+    await wrapper.setProps({ pagination: false })
+    expect(api.getExportData().rows).toEqual([['1', '甲'], ['2', '乙']])
+    expect(rows[0]).toEqual({ id: 1, name: '甲' })
+    wrapper.unmount()
+  })
+
   it('会使用 Element Plus 表格组件渲染可见列，并保留 formatter', () => {
     const rows = [
       {

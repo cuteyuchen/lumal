@@ -10,7 +10,7 @@ export function deriveCrudFormSchemas(
   }
 
   return columns
-    .filter(column => column.showInForm !== false && column.field !== 'action')
+    .filter(column => column.type !== 'index' && column.showInForm !== false && column.field !== 'action')
     .map(column => ({
       append: column.append,
       component: column.component ?? (column.dictionary || column.dictType ? 'select' : 'input'),

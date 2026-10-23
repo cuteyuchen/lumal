@@ -18,6 +18,7 @@ async function flushPromises(): Promise<void> {
 describe('lumal crud table', () => {
   it('会从列配置派生编辑表单并保留字典及显示范围', () => {
     expect(deriveCrudFormSchemas([
+      { type: 'index', label: '序号', showInForm: true },
       {
         dictionary: 'status',
         field: 'status',
@@ -47,6 +48,27 @@ describe('lumal crud table', () => {
       [{ dictionary: 'status', field: 'status', label: '状态' }],
       [{ component: 'input', field: 'name', label: '显式字段' }],
     )).toEqual([{ component: 'input', field: 'name', label: '显式字段' }])
+  })
+
+  it('序号列从当前CRUD分页计算，但不生成第二个分页器或编辑字段', async () => {
+    const wrapper = mount(LumalCrudTable, {
+      global: { stubs: elementPlusStubs },
+      props: {
+        columns: [{ type: 'index', label: '序号' }, { field: 'name', label: '名称' }],
+        rows: [{ id: 1, name: '项目' }],
+        total: 100,
+        page: 3,
+        pageSize: 20,
+      },
+    })
+    const table = wrapper.findComponent(LumalSchemaTable)
+    expect(table.props()).toMatchObject({ page: 3, pageSize: 20, pagination: true })
+    expect(wrapper.findAllComponents(LumalPagination)).toHaveLength(1)
+    const indexColumn = table.findAllComponents({ name: 'ElTableColumn' })[0]!
+    expect(indexColumn.props('type')).toBe('index')
+    expect(indexColumn.props('formatter')({}, {}, undefined, 0)).toBe('41')
+    await wrapper.get('[data-action="create"]').trigger('click')
+    expect(wrapper.findAll('.el-dialog [data-field]').map(field => field.attributes('data-field'))).toEqual(['name'])
   })
 
   it('会组合查询表单、表格、分页和 Element Plus 操作按钮', () => {
