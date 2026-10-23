@@ -185,12 +185,13 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
   let refreshPromise: Promise<void> | undefined
   let refreshScope: string | undefined
   let refreshResetVersion = -1
-  let sessionExpiredNotified = false
+  let expiredSessionKey: string | undefined
 
   function clearCache(): void {
     cacheResetVersion += 1
     // 新会话不能等待旧会话的刷新；旧 Promise 完成时也不能清除新刷新任务。
     refreshPromise = undefined
+    expiredSessionKey = undefined
     invalidateCache()
   }
 
@@ -211,6 +212,11 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
     const cache = cacheConfig?.cache ?? defaultCache
     // 重放期间保留已占用的目标；本次请求可以重入自己的锁，其他请求不能。
     const ownedDuplicateKeys = new Set<string>()
+
+    // 通知与会话版本、作用域和实际凭据绑定；此标识只保存在内存，不写入缓存。
+    function sessionErrorKey(init: RequestInit): string {
+      return JSON.stringify([resetVersion, sessionScope, new Headers(init.headers).get('Authorization')])
+    }
 
     try {
       return await executeRequest<TResult>(0)
@@ -348,8 +354,10 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
           ? await clientOptions.onResponse<TValue>(context)
           : (data as TValue)
 
-        if (resetVersion === cacheResetVersion && sessionScope === clientOptions.getCacheScope?.())
-          sessionExpiredNotified = false
+        if (resetVersion === cacheResetVersion && sessionScope === clientOptions.getCacheScope?.()
+          && expiredSessionKey === sessionErrorKey(init)) {
+          expiredSessionKey = undefined
+        }
         if (cacheEnabled && generation === cacheGeneration && resetVersion === cacheResetVersion
           && sessionScope === clientOptions.getCacheScope?.()) {
           cache.set(cacheKey, result)
@@ -434,7 +442,8 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
           assertCurrentSession()
           if (signal?.aborted)
             throw normalizeFetchError(signal.reason, signal)
-          sessionExpiredNotified = false
+          if (expiredSessionKey === sessionErrorKey(context.init))
+            expiredSessionKey = undefined
           return executeRequest<TValue>(attempt + 1)
         }
         catch (refreshError) {
@@ -453,8 +462,9 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
       }
 
       assertCurrentSession()
-      if (!sessionExpiredNotified) {
-        sessionExpiredNotified = true
+      const expiredKey = sessionErrorKey(context.init)
+      if (expiredSessionKey !== expiredKey) {
+        expiredSessionKey = expiredKey
         invalidateCache()
         await clientOptions.onSessionExpired?.(context)
       }

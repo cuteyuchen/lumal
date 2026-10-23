@@ -690,6 +690,77 @@ describe('create request client', () => {
     expect(token).toBe('account-b')
   })
 
+  it.each(['reset', 'scope', 'token'] as const)('%s 切换后新会话仍独立通知失效，同一会话只通知一次', async (change) => {
+    let token = 'account-a'
+    let scope = 'session-a'
+    const expired = vi.fn()
+    const client = createRequestClient({
+      fetch: async () => createJsonResponse({}, { status: 401 }),
+      getToken: () => token,
+      getCacheScope: () => scope,
+      onSessionExpired: expired,
+    })
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    expect(expired).toHaveBeenCalledTimes(1)
+    if (change === 'reset')
+      client.clearCache()
+    if (change === 'scope')
+      scope = 'session-b'
+    if (change === 'token')
+      token = 'account-b'
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    expect(expired).toHaveBeenCalledTimes(2)
+  })
+
+  it('旧会话迟到401不占用或重置新会话的失效通知', async () => {
+    let scope = 'session-a'
+    let respond!: (response: Response) => void
+    const expired = vi.fn()
+    const responseError = vi.fn()
+    const client = createRequestClient({
+      fetch: async url => String(url) === '/late'
+        ? new Promise<Response>((resolve) => { respond = resolve })
+        : createJsonResponse({}, { status: 401 }),
+      getToken: () => scope,
+      getCacheScope: () => scope,
+      onSessionExpired: expired,
+      onResponseError: responseError,
+    })
+    const old = client.get('/late').catch(error => error)
+    await vi.waitFor(() => expect(respond).toBeDefined())
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    scope = 'session-b'
+    respond(createJsonResponse({}, { status: 401 }))
+    expect(await old).toMatchObject({ code: 'STALE_SESSION', kind: 'cancelled' })
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    expect(expired).toHaveBeenCalledTimes(2)
+    expect(responseError).toHaveBeenCalledTimes(3)
+  })
+
+  it('旧凭据迟到成功不会重新开启新凭据的重复失效通知', async () => {
+    let token = 'account-a'
+    let respond!: (response: Response) => void
+    const expired = vi.fn()
+    const client = createRequestClient({
+      fetch: async url => String(url) === '/late'
+        ? new Promise<Response>((resolve) => { respond = resolve })
+        : createJsonResponse({}, { status: 401 }),
+      getToken: () => token,
+      onSessionExpired: expired,
+    })
+    const old = client.get('/late')
+    await vi.waitFor(() => expect(respond).toBeDefined())
+    token = 'account-b'
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    respond(createJsonResponse({ ok: true }))
+    await expect(old).resolves.toEqual({ ok: true })
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    expect(expired).toHaveBeenCalledTimes(1)
+  })
+
   it('旧刷新失败不能清除新会话或与新请求共享刷新', async () => {
     let scope = 'session-a'
     let rejectRefresh!: (error: Error) => void
