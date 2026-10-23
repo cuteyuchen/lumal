@@ -18,6 +18,10 @@
 pnpm add @lumal/datav@0.0.5-beta vue@^3.5 echarts@^6
 ```
 
+上例保留历史发布版的完整 peer 接线。开发分支将 ECharts 改为可选 peer，
+只用数字、边框和列表时无需安装；ECharts 图表模式与 `LumalActiveRingChart` 仍需引擎。
+这些未发布变更应通过候选 tarball 验证，不能由同版本号判断是否包含。
+
 ## 公开入口
 
 根入口与按需子入口（节选）：
@@ -125,7 +129,8 @@ DataV 原生配置：
 
 ## 边界
 
-- 仅 peer：`vue`、`echarts`
+- Vue 为必需 peer；开发分支的 ECharts 为可选 peer，仅图表模式需要
+- 开发分支与 Cockpit 共享轻量 `@lumal/viewport`，旧全屏缩放契约保持
 - **不**依赖 `@lumal/core` / charts / cockpit
 - 不得引入业务接口、状态码或字段映射
 - 版权说明见包内 `THIRD_PARTY_NOTICES.md`

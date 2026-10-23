@@ -2,7 +2,35 @@
 
 ## 什么时候用
 
-创建新的独立轻量后台基座时使用。已有 Vue 应用应增量接入公开包，不在原目录运行脚手架来覆盖项目。
+创建 Admin、独立 Screen 或 Blank 项目时使用。已有 Vue 应用应增量接入公开包，不在原目录运行脚手架来覆盖项目。
+
+## 开发分支的新项目类型
+
+新增能力未发布，不由下面历史npm命令取得。现有包内增加 `create-lumal` bin 和
+`createLumalProject` API，旧 `create-lumal-admin` bin/API/defaults不变。
+本地构建后可执行：
+
+```bash
+node packages/create-lumal-admin/dist/project-cli.js blank-app --template blank --no-interactive
+node packages/create-lumal-admin/dist/project-cli.js static-screen --template screen --no-interactive
+node packages/create-lumal-admin/dist/project-cli.js internal-screen --template screen --auth http --data http --router-mode history --no-interactive
+```
+
+Blank默认仅Vue，不能为了质量工具安装Core/Element Plus/Pinia/Router。
+Screen默认也只有Vue，无API、无认证、无管理布局。
+`--auth none|local-demo|http`、`--data none|local|http`、
+`--router-mode none|hash|history`分别组合；HTTP认证即使data=none也会联网。
+Local Demo仅开发可用，HTTP失败不能回退演示。
+
+`--visualization none|charts|datav|cockpit`只选所需引擎，Cockpit仅runtime/external，
+DataV数字/边框不安装ECharts。`--viewport disabled|responsive|contain|width|vw`
+与项目类型独立，非默认适配使用 [视口](viewport.md)；Admin不接受Screen专属参数。
+非Admin不能叠Admin base，不能靠先生成再删除无用文件实现轻量。
+
+新项目均生成独立ESLint/Prettier/EditorConfig、AI规范和统一check。
+首次install生成lockfile，再frozen复装；完成前运行 `pnpm check`。
+`pnpm test:create-projects`覆盖14组独立消费者；旧Admin矩阵继续保留。
+通用bin不等于已发布 `create-lumal` npm包；名称查询未占用也不代表取得发布权。
 
 ## 命令与版本选择
 

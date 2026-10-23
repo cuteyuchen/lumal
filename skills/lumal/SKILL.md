@@ -18,7 +18,7 @@ description: 使用 Lumal（@lumal/*、create-lumal-admin）构建或维护 Vue 
 
 | 需求 | 选择 | 按需读取 |
 | --- | --- | --- |
-| 新建独立后台项目 | `create-lumal-admin` | [脚手架](references/create-lumal-admin.md) |
+| 新建 Admin / Screen / Blank 项目 | `create-lumal-admin`（通用bin在开发分支） | [脚手架](references/create-lumal-admin.md) |
 | 已有 Vue 应用接入、页面、Schema 表单/表格、CRUD | `@lumal/core` | [启动与组件](references/core.md) |
 | 菜单、动态路由、权限、布局、标签缓存 | `@lumal/core` 对应子入口 | [路由与布局](references/core-routing.md) |
 | 请求、登录会话、字典、主题和偏好 | `@lumal/core` 对应子入口 | [服务能力](references/core-services.md) |

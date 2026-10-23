@@ -6,7 +6,9 @@
 
 ## 接入与入口
 
-peer 为 Vue 3.5+、ECharts 6。组件优先独立子入口导入，样式统一引入：
+Vue 3.5+ 为必需 peer。开发分支将 ECharts 6 改为可选 peer，仅使用 ECharts
+图表模式或 `LumalActiveRingChart` 时安装；历史发布版本以其实际 manifest 为准。
+数字、边框等子入口不要求图表引擎。组件优先独立子入口导入，样式统一引入：
 
 ```vue
 <script setup lang="ts">

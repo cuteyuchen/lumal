@@ -2,12 +2,13 @@
   "name": "create-lumal-admin",
   "type": "module",
   "version": "0.0.5-beta",
-  "description": "Create a modular Lumal admin application with minimal, standard and Vben 5 presets.",
+  "description": "Create lightweight Vue Blank, Screen or Lumal Admin projects with optional capabilities.",
   "license": "MIT",
   "keywords": [
     "lumal",
     "vue",
     "admin",
+    "screen",
     "scaffold",
     "create"
   ],

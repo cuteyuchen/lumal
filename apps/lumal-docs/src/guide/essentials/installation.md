@@ -33,7 +33,12 @@ pnpm add @lumal/vben-compat@0.0.5-beta                       # 迁移
 
 Pinia 是可选 peer；使用 `createPinia()` 时另装 `pinia@^3.0.3`，框架不会自动创建 Store。图表不再兼容 ECharts 5 / vue-echarts 7；默认主题与布局迁移注意事项见 [更新日志](/reference/changelog)。
 
-只使用 `@lumal/core/minimal` 或 request 等纯服务子入口时，只需安装 Core 和 Vue，无需 Element Plus；消费 UI、图标或 Router 子入口时再安装对应 peer。脚手架本身是带 Element Plus 的后台基座。
+只使用 `@lumal/core/minimal` 或 request 等纯服务子入口时，只需安装 Core 和 Vue，无需 Element Plus；消费 UI、图标或 Router 子入口时再安装对应 peer。
+
+开发分支新增 Blank/Screen 模板与仅 Vue peer 的 `@lumal/viewport`，并把 DataV 的
+ECharts peer 改为可选；纯数字/边框不需要图表引擎。这些能力尚未发布，不能由历史
+`0.0.5-beta` 命令取得。候选接入与按需依赖见[项目模板](/reference/project-template-guide)
+及[屏幕适配](/reference/screen-viewport-guide)；历史脚手架仍是 Admin 基座。
 
 ## 本地 monorepo
 

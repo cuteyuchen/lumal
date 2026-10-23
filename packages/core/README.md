@@ -23,3 +23,14 @@ await createLumalAdmin({ rootComponent: App }).mount('#app')
 路由子入口提供 `createMenuRouteRuntime`，统一静态与远程菜单的校验、排序、组件解析和原子注册。布局子入口提供面包屑、全局搜索、菜单徽标与 `activeMenu` 高亮；主题偏好支持持久化动态标题、导航开关和 12-20px 全局字号。
 
 详细说明见仓库文档 `docs/core-api.md`。
+
+## 开发分支修复
+
+以下变更尚未发布，不通过重新安装历史同版本取得：
+
+- 序号列 `{ type: 'index', label: '序号' }` 不要求业务 field，支持跨页/选中行导出，不派生 CRUD 表单。
+- 清理缓存、切换 scope 或替换客户端凭据后，旧写请求401/刷新失败不触发新会话退出；刷新与过期通知按会话隔离。
+- TypedArray 保留二进制请求体。业务成功码、字段和上下文继续由应用 Adapter 处理。
+
+`clearCache` 不替应用取消在途请求或保护自定义刷新写入。应用仍须使用会话 AbortSignal/代次。
+升级含旧补丁的消费者前，先在隔离副本验证候选tarball；详见 `docs/upgrade-guide.md`。

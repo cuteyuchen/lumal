@@ -4,12 +4,16 @@
 
 ## 安装
 
-下列命令对应工作区 0.0.5-beta；npm beta 仍为 0.0.4-beta。本轮仅验证本地 tarball，
-registry 存在对应版本后才可使用精确版本安装，当前也可从源码构建后 file 接入。
+下列命令为历史 `0.0.5-beta` 的接入示例；本轮新增能力使用本地构建或候选 tarball，
+不能通过重新安装历史同版本取得，也不根据本文推断 npm 的当前 dist-tag。
 
 ```bash
 pnpm add @lumal/datav@0.0.5-beta vue echarts@^6
 ```
+
+开发分支将 ECharts 改为可选 peer：仅 ECharts 图表模式与 `LumalActiveRingChart`
+需要安装，纯数字、边框和列表子入口不要求引擎。Vue 仍为必需 peer。
+DataV 与 Cockpit 共享轻量 `@lumal/viewport`，保留既有全屏缩放 API 与组件行为。
 
 ```ts
 import { createApp } from 'vue'

@@ -4,7 +4,7 @@
 
 ## 版本准备
 
-九个公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。`0.0.3-beta`、`0.0.4-beta`、`0.0.5-beta` 的九包均已发布，当前版本的完整门禁、registry 与实际 tarball 核验见 [发布记录](./npm-release-0.0.5-beta.md)。这些版本不能用于新的全量发布；部分可见也不得重发。下一轮的 `NEXT_VERSION` 必须由维护者核对 registry 后选择尚未发布的合法版本。
+公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。历史九包 `0.0.3-beta`、`0.0.4-beta`、`0.0.5-beta` 均已发布，完整门禁、registry 与实际 tarball 核验见 [发布记录](./npm-release-0.0.5-beta.md)。开发分支新增未发布的 `@lumal/viewport`，当前发布清单为十包。这些历史版本不能用于新的全量发布；部分可见也不得重发。下一轮的 `NEXT_VERSION` 必须由维护者核对 registry 后选择尚未发布的合法版本。
 
 ```bash
 pnpm release:version NEXT_VERSION
@@ -24,23 +24,24 @@ pnpm release:verify
 
 默认只发布 npm，不自动授权生产部署。仅在维护者明确要求部署时，将仓库 Actions Variable `DEPLOY_PRODUCTION` 设为字符串 `true`，再启动本次发布；缺失或其他值均跳过部署，npm 发布仍受全部门禁约束。仅发包时应确认该变量不存在或不为 `true`。不要通过反复重跑已发布版本来补做部署，仍需遵守下方中断恢复流程。
 
-`release:verify` 读取九包 manifests、所有工作区内部依赖和 lockfile；Actions 上还校验 tag 版本和 Git commit。安装使用 frozen lockfile。发布作业在任何 `publish` 之前额外执行 `release:verify --require-tag --check-registry`，逐包只读查询，只有九包版本全部不存在才继续；任一已发布、部分发布、网络或 registry 异常均中断。
+`release:verify` 读取全部公共包 manifests、所有工作区内部依赖和 lockfile；Actions 上还校验 tag 版本和 Git commit。安装使用 frozen lockfile。发布作业在任何 `publish` 之前额外执行 `release:verify --require-tag --check-registry`，逐包只读查询，只有全部包版本均不存在才继续；任一已发布、部分发布、网络或 registry 异常均中断。
 
 ## 实际发布依赖
 
 ```text
 tag / workflow_dispatch (默认 dry_run=true)
-  version-check：九包 / lockfile / tag / YAML / 发布图
+  version-check：全部公共包 / lockfile / tag / YAML / 发布图
     ├─ release-check (Ubuntu)：完整 release:check
-    │    lint → 单测 → 类型 → 九包构建 → tarball 消费者
+    │    lint / format → 单测 → 类型 → 公共包构建 → Admin及14类tarball消费者
+    │    → 三级视口 / Dev与Build真实浏览器zoom
     │    → Admin / Compat → 产物与预算 → Mock Node 构建
-    │    → 完整生产 Chromium E2E → 九包 pack dry-run
+    │    → 完整生产 Chromium E2E → 全部公共包 pack dry-run
     │      └─ site-build：复用上面验证的包、Admin/Compat dist
     │           → Docs / Cockpit / DataV Guide → 全部消费者预算
-    └─ windows-check：lint / test / typecheck / build
+    └─ windows-check：lint / format / test / typecheck / build
 
   四个校验 job 全部成功
-    → publish (needs: 四个校验)：凭据预检 → registry 预检 → 九包串行发布
+    → publish (needs: 四个校验)：凭据预检 → registry 预检 → 全部公共包串行发布
       → deploy (needs: 四个校验 + publish；DEPLOY_PRODUCTION=true 才运行)
           configuration：全部 Vercel 项目配置预检
             └─ vercel：五站点矩阵（Docs / Admin / Cockpit / DataV Guide / Compat）
@@ -51,6 +52,11 @@ tag / workflow_dispatch (默认 dry_run=true)
 `DEPLOY_PRODUCTION` 只收紧部署条件，不能越过任一门禁或 npm 成功依赖；`dry_run=true` 时无论该变量为何值都不发包、不部署。
 
 普通 CI 继续运行 lint/单测/类型/构建/边界，增加发布图与 actionlint；Build Validation 保留独立脚手架消费者校验。`deployment-artifacts.yml` 仅构建产物，不访问云部署。
+
+开发分支的 `release:check` 不允许遗漏 `format:check`、`test:create-projects` 或 `test:viewport`，
+Windows校验同样检查模板格式；`release-safety.test.mjs` 用移除/容错变体保护这些门禁。
+Ubuntu的生成器单测包含原有Linux PTY交互，不能以Windows执行替代其实际结果。
+新模板、Screen可选能力及真实缩放的报告/截图随消费者artifact上传，不需要发布权限。
 
 校验作业没有发布 Secrets。只有门禁成功后的作业才能访问所需凭据；npm 使用 `npm-release` Environment，部署使用 `production` Environment。维护者应在 Settings → Environments 配置审批人和 tag 限制，同时关闭 Vercel 的独立 Git 自动生产部署，避免仓库外的平台旁路。2026-10-20 已将 Docs 项目的 Ignored Build Step 设为 `exit 0`，跳过 Git 构建但保留显式 prebuilt 部署；另外四个项目仍需逐个核对，不能据此认定整个账户已关闭自动部署。
 
@@ -80,6 +86,7 @@ rg -n "guiren|gr-framework|GrFramework|GSchemaForm|GSchemaTable|GCrudTable|GPage
 - `@lumal/charts` 将 ECharts 和 vue-echarts 保持为 peer dependency。
 - `@lumal/cockpit` 依赖 `@lumal/core`，`@lumal/core` 不反向依赖 `@lumal/cockpit`；`@lumal/cockpit` 不依赖 `@lumal/charts` 或任何地图/图表运行时。
 - `@lumal/vite` 不引入强制运行时依赖。
+- `@lumal/viewport` 仅以 Vue 为 peer；DataV/Cockpit 共享其算法，不反向依赖 Admin/地图/图表。
 
 ## 验证命令
 
@@ -107,11 +114,14 @@ pnpm release:names
 
 ```bash
 pnpm lint
+pnpm format:check
 pnpm release:boundaries
 pnpm test
 pnpm typecheck
 pnpm build
 pnpm test:create-consumer
+pnpm test:create-projects
+pnpm test:viewport
 pnpm docs:build
 pnpm admin:build
 pnpm compat:build
@@ -140,6 +150,7 @@ pnpm --filter @lumal/icons pack --dry-run
 pnpm --filter @lumal/icons-vue pack --dry-run
 pnpm --filter @lumal/core pack --dry-run
 pnpm --filter @lumal/charts pack --dry-run
+pnpm --filter @lumal/viewport pack --dry-run
 pnpm --filter @lumal/datav pack --dry-run
 pnpm --filter @lumal/cockpit pack --dry-run
 pnpm --filter @lumal/vben-compat pack --dry-run
@@ -157,7 +168,8 @@ pnpm --filter create-lumal-admin pack --dry-run
 - `@lumal/icons` 包含 `morph.js` / `morph.cjs` 及 `src/morph/index.d.ts`；核对 ESM/CJS 消费、可选 peer 缺失时的静态入口和动态失败回退。
 - `@lumal/icons-vue` 包含 `dist/icons-vue.css`。
 - `@lumal/cockpit` 包含 `dist/cockpit.css` 及 `dist/runtime.js`、`dist/designer.js` 独立入口。
-- `create-lumal-admin` 包含 `dist/cli.js` 和 `dist/index.js`，两模式生成的 Core/图标依赖精确等于脚手架版本，不能残留 `^0.0.0` 占位符。
+- `@lumal/viewport` 包含 ESM/CJS、声明和 README/CHANGELOG，不带 Element Plus、ECharts 或业务夹具。
+- `create-lumal-admin` 包含 `dist/cli.js`、`dist/project-cli.js` 和 `dist/index.js`，模板所需 Lumal 依赖精确等于脚手架版本，不能残留 `^0.0.0` 占位符；不假定独立 `create-lumal` npm包已发布。
 - 不包含 `apps/*`。
 - 不包含本地日志、IDE 文件和构建缓存。
 

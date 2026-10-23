@@ -1,6 +1,6 @@
 # Lumal
 
-Lumal 是一套面向中小型后台项目的轻量 Vue Admin 基础设施。它以 Vue 3、TypeScript、Vite 和 Element Plus 为基础，提供应用安装、布局导航、主题、权限、路由、请求、字典、Schema 表单、Schema 表格、CRUD、图标、图表、驾驶舱编排、DataV 可视化组件和迁移兼容能力。
+Lumal 是一套供个人长期使用、同时开放给其他开发者的轻量 Vue 3 项目基础设施。Admin 以 TypeScript、Vite 和 Element Plus 为基础；独立 Screen 和纯 Blank 按需组合，不为普通 Vue 应用强加后台依赖。公共包集中维护布局、权限、请求、CRUD、图表和屏幕适配等重复能力。
 
 `apps/lumal-admin` 是公开 API 的集成示例与验收入口；可复用能力必须沉淀到 `packages/*`，业务接口字段、状态码和页面逻辑不得进入框架包。
 
@@ -9,6 +9,21 @@ Lumal 是一套面向中小型后台项目的轻量 Vue Admin 基础设施。它
 当前工作区为 `0.0.5-beta`，新增三模板、真实 HTTP 认证和显式 Vben 5 迁移入口。
 下列命令显式选择已核验的脚手架版本，不依赖 npm 的 `latest`；
 完整功能与兼容边界见 [升级验收](docs/upgrade-verification.md)。
+
+## 本轮开发分支
+
+2026-10-23 的新增能力尚未发布，不能通过重新安装历史同版本包取得：
+
+- 统一 `create-lumal` bin 生成 Admin、Screen、Blank，旧 Admin 命令与参数保留。
+- 所有模板具备 ESLint、Prettier、EditorConfig、AI 规范和统一 `pnpm check`。
+- Screen 的认证、业务数据、路由、可视化和视口能力独立选择；Blank 默认仅 Vue。
+- 新 `@lumal/viewport` 支持应用默认、页面和容器适配，不变换 DOM 根或全局后台字号。
+- 请求会话隔离与无业务字段序号列的修复，配套脱敏真实消费者契约。
+
+创建方式见 [项目模板](docs/project-template-guide.md)，
+三级适配见 [屏幕与工作区](docs/screen-viewport-guide.md)，
+兼容边界见 [真实消费者](docs/real-consumer-compatibility.md) 与 [升级指南](docs/upgrade-guide.md)。
+`pnpm create lumal` 的独立 npm 包尚未发布；当前使用本仓库构建或候选 tarball。
 
 ## 快速开始
 
@@ -53,7 +68,7 @@ await createLumalAdmin({
 | `packages/cockpit` | 通用驾驶舱编排框架：布局运行时、组件注册、设计器与消息总线 |
 | `packages/vben-compat` | 常用旧项目写法到 Lumal 原生 API 的迁移层 |
 | `packages/vite` | 组件 resolver、工作区 alias 和可选 Devtools 配置助手 |
-| `packages/create-lumal-admin` | 轻量后台项目脚手架 |
+| `packages/create-lumal-admin` | Admin/Screen/Blank 项目脚手架，保留旧 Admin 入口 |
 | `apps/lumal-admin` | 原生 Admin 集成、系统管理示例和浏览器验收入口 |
 | `apps/lumal-cockpit` | 独立驾驶舱示例应用 |
 | `apps/lumal-datav-guide` | `@lumal/datav` 组件指南站，可静态托管并作为 Admin 外链嵌入 |
@@ -73,12 +88,13 @@ await createLumalAdmin({
 @lumal/vben-compat  ←  apps/vben-compat-demo
 
 @lumal/charts  ←  apps/lumal-admin
+@lumal/viewport ← @lumal/datav, @lumal/cockpit, 普通 Vue / Screen
 @lumal/datav   ←  apps/lumal-admin, apps/lumal-cockpit, apps/lumal-datav-guide
 @lumal/vite    →  Vite 配置与构建辅助
 create-lumal-admin  →  生成消费公开包入口的应用
 ```
 
-`@lumal/datav` 是独立可视化包，不依赖 `@lumal/core`；它把 `vue` 和 `echarts` 作为 peer dependency，并为 DataV `config` 模式声明 `@jiaminghi/charts` 运行时依赖。开发分支的 DataV/Cockpit 共享 `@lumal/viewport` 的算法与尺寸监听；旧缩放契约保持。三级适配与地图约定见[屏幕适配指南](docs/screen-viewport-guide.md)。
+`@lumal/datav` 是独立可视化包，不依赖 `@lumal/core`；Vue 保持 peer，开发分支的 ECharts peer 为可选，只有实际使用 ECharts 图表才需安装。DataV `config` 模式声明 `@jiaminghi/charts` 运行时依赖。开发分支的 DataV/Cockpit 共享 `@lumal/viewport` 的算法与尺寸监听；旧缩放契约保持。三级适配与地图约定见[屏幕适配指南](docs/screen-viewport-guide.md)。
 
 需要严格轻量启动时使用 `@lumal/core/minimal`，只显式注册需要的组件；根入口保留默认 UI 便利接线。`@lumal/core/request` 等纯服务子入口无需 Element Plus。DataV 通用图表按模式动态加载引擎，无引擎组件可使用独立子入口。
 
@@ -128,6 +144,9 @@ pnpm admin:build
 pnpm compat:build
 pnpm test:e2e
 pnpm lint
+pnpm format:check
+pnpm test:create-projects
+pnpm test:viewport
 pnpm release:boundaries
 pnpm release:artifacts
 pnpm pack:dry-run

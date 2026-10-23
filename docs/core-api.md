@@ -699,9 +699,19 @@ Authorization 或 `getCacheScope()` 变化会清空本客户端缓存。请求�
 新任务。但它不自动取消在途网络请求，也不能阻止应用自己的刷新回调写入旧 Token；
 `getCacheScope()` 变化或 `clearCache()` 后，旧401/旧刷新失败会以
 `code: 'STALE_SESSION', kind: 'cancelled'` 拒绝，不触发新身份的退出或响应错误通知。
-共享刷新任务按会话作用域隔离。scope 应为不含Token的会话代次/租户标识，不能重复使用旧会话标识。
+共享刷新任务按会话作用域、缓存清理代次与客户端实际管理的Authorization隔离。
+仅替换Token时，不可重放的旧写请求和迟到刷新失败也返回STALE_SESSION；
+安全GET可按原有规则使用更新后的凭据重放一次。退出后不会匿名重放旧请求。
+显式或Hook注入的外部Authorization不跟随客户端Token自动刷新或凭据比较，
+其失效回调应由对应客户端的应用策略处理。
+scope 应为不含Token的会话代次/租户标识，不能重复使用旧会话标识。
 成功旧响应仍可返回给原调用方，但不能回填缓存；应用仍须校验身份后写Store。
 取消、身份检查和业务 Store 清理由应用负责。HTTP 模板已包含这层会话隔离。
+
+会话失效通知按缓存清理代次、scope与实际Authorization隔离，同一失效会话避免重复通知，
+新登录后即使首个请求也失效仍能独立退出；旧会话的迟到成功不会重开新会话的重复通知。
+这些身份标识仅保留于客户端内存，不写入缓存key或报告。
+`ArrayBuffer`、TypedArray保持二进制body，FormData保持原生multipart，不被误JSON编码。
 
 网络错误、响应错误和会话回调报告实际发送的 URL。认证重放从原始已解析 URL 再执行 hook，避免重复叠加路径，并复用原 requestId；hook 改成写请求后仍需 `retryOnAuthRefresh: true`，改成外部 Authorization 则不自动刷新/重放。requestId 仅用于追踪，不参与缓存身份。
 
@@ -751,6 +761,7 @@ Store 会清理损坏缓存、补齐新增默认字段，并只在主题模式�
 - `@lumal/icons`：框架无关的图标 registry、单色 SVG 校验/合成、改色、渐变和 Data URI 缓存。
 - `@lumal/icons-vue`：`LumalIcon`、选择器和 Vue 响应式注册表适配，详见 `docs/icons.md`。
 - `@lumal/charts`：`LumalChart` 与 `LumalChartPanel`；面板支持查询、表格替代视图、导出、错误恢复和无障碍摘要。
+- 开发分支 `@lumal/viewport`：无UI依赖的容器尺寸、画布策略与应用默认，不与Core主题字号混淆，详见 `docs/screen-viewport-guide.md`。
 - `@lumal/vben-compat`：Vben 高频表单/Grid 写法到 Lumal Schema/CRUD 的迁移适配，详见 `docs/migration-from-vben.md`。
 - `@lumal/vite`：组件 resolver、工作区 source/dist alias 和可选 Devtools 接线。
 

@@ -13,7 +13,12 @@ pnpm docs:preview
 工作区版本：`0.0.5-beta`。该版本的发布事实见下方发布记录；
 2026-10-23 的脚手架重构为未发布源码，不改变现有已发布版本。
 
-本轮交付：[脚手架专项重构验收](./scaffold-refactor-2026-10-23.md)。
+本轮交付：[下一阶段审计与验收](./lumal-next-phase-audit.md)、
+[项目模板](./project-template-guide.md)、[工程规范](./development-standards.md)、
+[屏幕适配](./screen-viewport-guide.md)与[隔离验收](./screen-viewport-verification.md)、
+[真实消费者](./real-consumer-compatibility.md)、
+[升级与迁移](./upgrade-guide.md)。
+前一阶段：[脚手架专项重构验收](./scaffold-refactor-2026-10-23.md)。
 历史交付：[三模板与 Vben 5 升级验收](./upgrade-verification.md)，能力起点见 [源码审计](./upgrade-audit.md)，迁移边界见 [Vben 5 兼容矩阵](./migration-from-vben.md)。
 
 最近发布记录：[0.0.5-beta npm 发布记录](./npm-release-0.0.5-beta.md)。
