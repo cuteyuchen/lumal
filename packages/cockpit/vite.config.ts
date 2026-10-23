@@ -22,7 +22,7 @@ export default defineConfig({
     },
     rollupOptions: {
       // vue / element-plus / @lumal/core / @lumal/icons-vue 作为外部依赖，不打进产物
-      external: id => id === 'vue' || id === 'element-plus' || id === '@lumal/icons-vue' || id === '@lumal/core' || id.startsWith('@lumal/core/'),
+      external: id => id === 'vue' || id === 'element-plus' || id === '@lumal/viewport' || id === '@lumal/icons-vue' || id === '@lumal/core' || id.startsWith('@lumal/core/'),
     },
   },
 })

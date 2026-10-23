@@ -48,6 +48,7 @@ await createLumalAdmin({
 | `packages/icons-vue` | Vue 图标组件、选择器和响应式注册表适配 |
 | `packages/core` | 安装器、布局、路由、权限、请求、主题、字典和核心组件 |
 | `packages/charts` | 可选 ECharts 面板与自适应能力 |
+| `packages/viewport` | 开发分支新增：纯 Vue 容器尺寸、全局默认/页面/容器适配，尚未发布 |
 | `packages/datav` | 面向驾驶舱的 Vue 3 DataV 可视化包（15 个导出组件，含变体共 38 种形态） |
 | `packages/cockpit` | 通用驾驶舱编排框架：布局运行时、组件注册、设计器与消息总线 |
 | `packages/vben-compat` | 常用旧项目写法到 Lumal 原生 API 的迁移层 |
@@ -56,6 +57,7 @@ await createLumalAdmin({
 | `apps/lumal-admin` | 原生 Admin 集成、系统管理示例和浏览器验收入口 |
 | `apps/lumal-cockpit` | 独立驾驶舱示例应用 |
 | `apps/lumal-datav-guide` | `@lumal/datav` 组件指南站，可静态托管并作为 Admin 外链嵌入 |
+| `apps/lumal-viewport-lab` | 脱敏工作区与真实浏览器缩放验收，非业务应用 |
 | `apps/lumal-mock-api` | Nitro/H3 演示接口服务 |
 | `apps/vben-compat-demo` | 兼容层构建示例 |
 
@@ -76,13 +78,13 @@ await createLumalAdmin({
 create-lumal-admin  →  生成消费公开包入口的应用
 ```
 
-`@lumal/datav` 是独立可视化包，不依赖 `@lumal/core`；它把 `vue` 和 `echarts` 作为 peer dependency，并为 DataV `config` 模式声明 `@jiaminghi/charts` 运行时依赖。驾驶舱和 Admin 可直接按需消费其组件。
+`@lumal/datav` 是独立可视化包，不依赖 `@lumal/core`；它把 `vue` 和 `echarts` 作为 peer dependency，并为 DataV `config` 模式声明 `@jiaminghi/charts` 运行时依赖。开发分支的 DataV/Cockpit 共享 `@lumal/viewport` 的算法与尺寸监听；旧缩放契约保持。三级适配与地图约定见[屏幕适配指南](docs/screen-viewport-guide.md)。
 
 需要严格轻量启动时使用 `@lumal/core/minimal`，只显式注册需要的组件；根入口保留默认 UI 便利接线。`@lumal/core/request` 等纯服务子入口无需 Element Plus。DataV 通用图表按模式动态加载引擎，无引擎组件可使用独立子入口。
 
 ## AI Skill
 
-[Lumal 总 Skill](skills/lumal/SKILL.md) 覆盖全部 9 个公共包，指导 AI 判断何时使用、如何接入及需要避免的误区。总入口负责包选型，详细示例按任务从 `references/` 读取，不要求每次加载整套文档。
+[Lumal 总 Skill](skills/lumal/SKILL.md) 覆盖已发布包与开发分支新增能力，指导 AI 判断何时使用、如何接入及需要避免的误区。总入口负责包选型，详细示例按任务从 `references/` 读取，不要求每次加载整套文档。
 
 将 `skills/lumal` 整个目录安装到 AI 工具支持的 Skill 目录后，可用 `$lumal` 显式调用。安装位置、示例请求与维护说明见 [AI Skill 指南](apps/lumal-docs/src/guide/essentials/ai-skills.md)。
 

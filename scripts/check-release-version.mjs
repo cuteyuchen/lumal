@@ -9,7 +9,7 @@ import { getPublishPackageNames } from './check-npm-package-names.mjs'
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const dependencyFields = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies']
 
-/** 校验九包、所有工作区内部依赖和锁文件，不改写版本或锁文件。 */
+/** 校验显式发布集合、所有工作区内部依赖和锁文件，不改写版本或锁文件。 */
 export function verifyWorkspaceRelease(baseDir = rootDir, expectedVersion) {
   const manifests = ['packages', 'apps'].flatMap(root =>
     readdirSync(join(baseDir, root), { withFileTypes: true })
@@ -20,8 +20,8 @@ export function verifyWorkspaceRelease(baseDir = rootDir, expectedVersion) {
       }))
   const names = getPublishPackageNames(baseDir)
   const packages = names.map(name => manifests.find(pkg => pkg.name === name && !pkg.private))
-  if (names.length !== 9 || packages.some(pkg => !pkg) || manifests.filter(pkg => !pkg.private).length !== 9)
-    throw new Error('发布集合必须恰好包含九个公共包')
+  if (!names.length || new Set(names).size !== names.length || packages.some(pkg => !pkg) || manifests.filter(pkg => !pkg.private).length !== names.length)
+    throw new Error('公共包必须与显式发布集合完全一致')
 
   const version = expectedVersion ?? packages[0].version
   if (!/^\d+\.\d+\.\d+(?:-[\da-z.-]+)?$/i.test(version ?? ''))
@@ -90,5 +90,5 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   }
   if (process.argv.includes('--check-registry'))
     await verifyUnpublishedRelease(release)
-  console.log(`发布版本校验通过：${release.version}，九包版本、内部依赖与 lockfile 一致${isTag ? '，tag 指向当前 HEAD' : '（未验证 tag）'}`)
+  console.log(`发布版本校验通过：${release.version}，${release.packages.length} 包版本、内部依赖与 lockfile 一致${isTag ? '，tag 指向当前 HEAD' : '（未验证 tag）'}`)
 }

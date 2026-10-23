@@ -1,0 +1,18 @@
+{
+  "name": "lumal-viewport-lab",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@lumal/viewport": "workspace:*",
+    "echarts": "^6.0.0",
+    "element-plus": "^2.11.0",
+    "ol": "10.11.0",
+    "vue": "^3.5.0",
+    "vue-router": "^4.5.0"
+  }
+}

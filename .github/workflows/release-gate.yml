@@ -85,6 +85,7 @@ jobs:
             packages/icons-vue/dist
             packages/core/dist
             packages/charts/dist
+            packages/viewport/dist
             packages/datav/dist
             packages/cockpit/dist
             packages/vben-compat/dist

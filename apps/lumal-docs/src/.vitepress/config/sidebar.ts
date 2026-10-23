@@ -168,6 +168,7 @@ function sidebarReference(): DefaultTheme.SidebarItem[] {
         { text: '升级能力审计', link: 'upgrade-audit' },
         { text: '升级验收与性能', link: 'upgrade-verification' },
         { text: '脚手架专项重构验收', link: 'scaffold-refactor-2026-10-23' },
+        { text: '屏幕与工作区适配', link: 'screen-viewport-guide' },
         { text: '包边界', link: 'package-boundaries' },
         { text: '更新日志', link: 'changelog' },
         { text: '0.0.5-beta 发布记录', link: 'npm-release-0.0.5-beta' },

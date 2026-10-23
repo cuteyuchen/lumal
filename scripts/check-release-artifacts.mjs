@@ -8,6 +8,9 @@ const maxDatavCssSize = 60 * 1024
 const maxDatavEsSize = 80 * 1024
 
 const requiredArtifacts = [
+  'packages/viewport/dist/index.js',
+  'packages/viewport/dist/index.cjs',
+  'packages/viewport/dist/src/index.d.ts',
   'packages/icons/dist/index.js',
   'packages/icons/dist/index.cjs',
   'packages/icons/dist/morph.js',
@@ -47,6 +50,7 @@ const requiredArtifacts = [
   'packages/vite/dist/index.cjs',
   'packages/create-lumal-admin/dist/index.js',
   'packages/create-lumal-admin/dist/cli.js',
+  'packages/create-lumal-admin/dist/project-cli.js',
   'packages/create-lumal-admin/templates/base/package.json',
   'packages/create-lumal-admin/templates/modes/http/src/app/services/data-source.ts',
   'packages/create-lumal-admin/templates/features/system/src/modules/system/module.ts',

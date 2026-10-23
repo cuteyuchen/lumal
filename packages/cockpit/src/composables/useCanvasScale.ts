@@ -1,5 +1,6 @@
 import type { MaybeRefOrGetter, Ref } from 'vue'
-import { onBeforeUnmount, ref, shallowRef, toValue, watch } from 'vue'
+import { computeViewportScale, useViewportScale } from '@lumal/viewport'
+import { shallowRef, watch } from 'vue'
 
 /***********************画布等比缩放*********************/
 
@@ -23,19 +24,8 @@ export function computeCanvasScale(
   baseWidth: number,
   baseHeight: number,
 ): CanvasScaleResult {
-  if (baseWidth <= 0 || baseHeight <= 0 || containerWidth <= 0 || containerHeight <= 0) {
-    return { scale: 1, scaledWidth: baseWidth, scaledHeight: baseHeight, offsetX: 0, offsetY: 0 }
-  }
-  const scale = Math.min(containerWidth / baseWidth, containerHeight / baseHeight)
-  const scaledWidth = baseWidth * scale
-  const scaledHeight = baseHeight * scale
-  return {
-    scale,
-    scaledWidth,
-    scaledHeight,
-    offsetX: (containerWidth - scaledWidth) / 2,
-    offsetY: (containerHeight - scaledHeight) / 2,
-  }
+  const { scale, scaledWidth, scaledHeight, offsetX, offsetY } = computeViewportScale(containerWidth, containerHeight, baseWidth, baseHeight)
+  return { scale, scaledWidth, scaledHeight, offsetX, offsetY }
 }
 
 export interface UseCanvasScaleOptions {
@@ -49,74 +39,20 @@ export interface UseCanvasScaleOptions {
  * 使用 requestAnimationFrame 节流 ResizeObserver 回调，避免频繁重排。
  */
 export function useCanvasScale(
-  containerRef: Ref<HTMLElement | null>,
+  containerRef: Readonly<Ref<HTMLElement | null>>,
   options: UseCanvasScaleOptions,
 ) {
-  const result = shallowRef<CanvasScaleResult>({
-    scale: 1,
-    scaledWidth: options.baseWidth(),
-    scaledHeight: options.baseHeight(),
-    offsetX: 0,
-    offsetY: 0,
+  const viewport = useViewportScale({
+    target: containerRef,
+    designWidth: options.baseWidth,
+    designHeight: options.baseHeight,
+    enabled: options.enabled,
   })
-  const ready = ref(false)
-
-  let observer: ResizeObserver | null = null
-  let frame = 0
-
-  function measure(): void {
-    const el = containerRef.value
-    if (!el)
-      return
-    result.value = computeCanvasScale(
-      el.clientWidth,
-      el.clientHeight,
-      options.baseWidth(),
-      options.baseHeight(),
-    )
-    ready.value = true
-  }
-
-  function scheduleMeasure(): void {
-    if (typeof requestAnimationFrame === 'undefined') {
-      measure()
-      return
-    }
-    if (frame)
-      cancelAnimationFrame(frame)
-    frame = requestAnimationFrame(() => {
-      frame = 0
-      measure()
-    })
-  }
-
-  function stopObserving(): void {
-    observer?.disconnect()
-    observer = null
-  }
-
-  function syncObservation(): void {
-    stopObserving()
-    if (options.enabled !== undefined && !toValue(options.enabled))
-      return
-    measure()
-    if (typeof ResizeObserver !== 'undefined' && containerRef.value) {
-      observer = new ResizeObserver(scheduleMeasure)
-      observer.observe(containerRef.value)
-    }
-  }
-
-  watch(
-    [containerRef, options.baseWidth, options.baseHeight, () => options.enabled === undefined || toValue(options.enabled)],
-    syncObservation,
-    { flush: 'post', immediate: true },
-  )
-
-  onBeforeUnmount(() => {
-    if (frame && typeof cancelAnimationFrame !== 'undefined')
-      cancelAnimationFrame(frame)
-    stopObserving()
-  })
-
-  return { result, ready, measure }
+  // 保留既有 Canvas 返回字段，不暴露容器实现细节。
+  const result = shallowRef<CanvasScaleResult>(computeCanvasScale(0, 0, options.baseWidth(), options.baseHeight()))
+  watch(viewport.result, () => {
+    const { scale, scaledWidth, scaledHeight, offsetX, offsetY } = viewport.result.value
+    result.value = { scale, scaledWidth, scaledHeight, offsetX, offsetY }
+  }, { immediate: true, flush: 'sync' })
+  return { result, ready: viewport.ready, measure: viewport.measure }
 }
