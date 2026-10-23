@@ -1,15 +1,19 @@
 # 下一阶段开发与验收报告
 
-日期：2026-10-23。工作分支：`codex/lumal-project-types-and-quality`。
+基线报告日期：2026-10-23；续办门禁日志写入于2026-10-23 20:08:59 UTC（北京时间2026-10-24 04:08:59），执行时间以日志为准。工作分支：`codex/lumal-project-types-and-quality`。
 实际开发基线为 `29e474ec637fafb93468232b095142864c7b05b1`，不是旧master。
-实现提交清单截止 `9276c3d1209770050a79e2488e086e4d0ded58ab`；本报告提交以Git历史为准。
+实现提交清单截止 `cf9940e`；本报告提交以Git历史为准。
 
-**第4轮完整 `corepack pnpm release:check` 已实际退出0。**
-1043项主链单测、12+4 Admin消费者、14组Blank/Screen、50项视口检查、
-31/31生产E2E、artifact/体积预算与十包pack dry run均通过，三预设模板比较也已完成。
-前序失败与修复证据保留；最终产物另经`release:budgets --require-all`独立验证通过。
-这不是所有检查全绿：DataV附加视觉当前及历史两轮均2/6，Linux PTY/候选Ubuntu CI仍未验证。
-下文区分本轮通过、附加失败、环境阻塞和真实消费者原有失败；
+**本次修改后的完整 `pnpm release:check` 已实际退出0。**
+1049项主链单测、12+4 Admin消费者、14组Blank/Screen、50项视口检查、
+31/31生产E2E、artifact与十包pack dry run均通过；E2E没有跳过或重试。
+Cockpit与DataV Guide随后按顺序重新构建，当前全部应用另经`release:budgets --require-all`验证通过。
+本次续办修复了DataV四张画廊的视觉遗留：两次独立三轮验证均21/21，无重试，
+第二次使用CI同款命令。前序第4轮1043项主链、三预设模板比较及失败/修复证据继续保留，
+不将历史模板比较、真实消费者候选或前序计时冒充本次复验。
+此前完整`release:check`三次授权请求因审批服务错误未启动，Git暂存授权又两次超时。
+权限恢复后已完成四组本地提交及修改后的完整门禁；终稿文档契约、格式、边界与生产构建亦已通过。
+Linux PTY/候选Ubuntu CI仍未验证。下文区分续办通过、历史失败、环境阻塞和真实消费者原有失败；
 历史发布报告、工作流静态检查及占位接口不能代替本轮真实执行证据。
 
 ## 基线与安全边界
@@ -18,8 +22,9 @@
   当时工作区干净，保留 `codex/scaffold-admin-refactor` 的完整Admin重构历史后创建本轮分支。
 - 实际origin为 `https://github.com/cuteyuchen/luma.git`，没有擅自改成任务书中的另一个仓库名。
   本地master为 `a938f1a`，是重构基线的祖先；没有用旧master覆盖重构。
-- Git HTTPS fetch多次连接失败；本地跟踪引用不能证明远端最新状态。
-  未取得本轮Ubuntu CI执行结果，不能用历史CI或REST读取结果推断已fetch、push或运行CI。
+- Git HTTPS fetch连接不稳定；续办曾成功获取，但末次沙箱内连接重置、沙箱外连接超时。
+  本地跟踪引用不能证明远端当前最新状态。未取得本轮Ubuntu CI执行结果，
+  不能用历史CI或REST读取结果推断已push或运行CI。
 - `.codegraph/`存在，但CodeGraph命令和MCP入口不可用，实际尝试后回退源码与`rg`。
 - 本机Windows、Node24.14.1、pnpm10.33.0、Chromium149.0.7827.55可用；
   没有可用WSL/Linux执行器，Docker命令不可用。
@@ -30,30 +35,31 @@
 
 ## A. 本轮功能
 
-表中“通过测试”仅指该行列出的实际证据；完整门禁已通过，仍不代表附加视觉和跨平台要求全部完成。
+表中“通过测试”仅指该行列出的实际证据；本次完整门禁和DataV视觉已通过，
+仍不代表Linux CI与真实业务验收全部完成。
 
-| 能力                                 | 状态                               | 实际结果与边界                                                                                                      |
-| ------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| 原Admin重构、Local/HTTP与旧CLI行为   | 已实现并通过测试                   | 复用既有三预设、系统管理七页、Dashboard/Profile、CRUD与动态授权；最终12组Admin及4组功能组合通过，12组生产浏览器通过 |
-| Admin生产Layout过渡回归              | 已实现并通过测试                   | 第4轮全量生产E2E31/31通过，三种最大化动画保留页面；前序两例过渡前置条件修复后重复6/6，原断言保留                    |
-| Windows交互、参数预填、取消与回滚    | 已实现并通过测试                   | 方向键、Space、Enter、Escape、Ctrl+C及非交互路径有包内/终端回归；最终生成器为5files/95tests，不引用混合计数         |
-| Linux PTY与候选Ubuntu CI             | 已实现但存在验证阻塞               | 测试代码和工作流保留，本机没有Linux执行器，未取得本轮Ubuntu实跑结果                                                 |
-| 工程规范与AI开发约定                 | 已实现并通过测试                   | 公共工程层、类型分层规范、ESLint/Prettier分工、统一check与格式幂等；不全量格式化公共包历史代码                      |
-| Blank与独立Screen                    | 已实现并通过测试                   | 不叠加Admin base；默认仅Vue，无Core/Element Plus/Pinia/Router、登录、管理菜单和系统管理                             |
-| Screen认证、数据和路由按需组合       | 已实现并通过测试                   | none/local-demo/http认证与none/local/http业务数据独立；HTTP失败不降级Demo，生产Local Demo禁用                       |
-| Charts/DataV/Cockpit按需生成         | 已实现并通过测试                   | 只生成所选演示；DataV数字/边框不要求ECharts，Cockpit仅runtime、内部external，Designer隔离                           |
-| DataV原gallery附加视觉门禁           | 已实现但存在验证阻塞               | 当前与有效历史两轮均2/6，四图失败；保留原快照与阈值，剩余差异未完全分离，合并前需独立修复并人工审核golden           |
-| 应用/页面/容器三级适配               | 已实现并通过测试                   | 通用Vue包提供默认策略及显式覆盖，不transform DOM根；实际内容容器ResizeObserver、RAF合并、清理与KeepAlive恢复        |
-| 响应式、contain、width和容器尺寸单位 | 已实现并通过测试                   | 14项视口单测；独立夹具40组工作区、8组局部画布和2组稳定检查通过，真实浏览器zoom有记录                                |
-| 可选定向px转换                       | 已实现并通过测试                   | Vite14项回归覆盖Dev/Build、SFC/SCSS/CSS、路径及来源边界；默认关闭、依赖白名单，不转换脚本或内联style                |
-| Admin与访客Screen共存                | 已审计，确认已有能力足够，无需修改 | 用一个Router与现有Layout/Permission/Registry组合，新增4项脱敏契约与文档，不增加第四种必选框架                       |
-| 请求Adapter与会话隔离                | 已实现并通过测试                   | 在原请求客户端修复迟到401、旧写请求、匿名请求、刷新/Abort竞态及失效通知，73项请求契约；不引入替代客户端             |
-| CRUD序号与旧补丁原生覆盖             | 已实现并通过测试                   | 修复无field序号、跨页序号、选中导出、派生表单/字典过滤；44项定向回归，普通字段类型不放宽                            |
-| 新CRUD巨型抽象                       | 已审计，确认已有能力足够，无需修改 | 两项目共20页审计，现有DataSource/Schema/字典/插槽能表达；没有证明新增工厂的维护收益，不恢复前身表格协议             |
-| 省级真实消费隔离升级                 | 已实现但存在验证阻塞               | c2dd616候选无旧patch时安装、lint、类型和构建通过；原测试与基线完全相同的失败仍在，真实后端/页面/部署未验收          |
-| 小流域整站迁移                       | 因复杂度过高而暂缓                 | 完成API、请求、CRUD、路由与视口迁移矩阵；不是改包名兼容，不擅改业务系统                                             |
-| P2增量模块生成                       | 因真实需求不足而暂缓               | 目录、动态路由和页面流程不统一，先记录最小安全方案，不创建未经收益验证的生成器                                      |
-| P2 OpenAPI类型接入                   | 已审计，确认成熟工具链足够         | 审计两后端Swagger配置并提供方案；未取得真实Schema，未声称完成真实类型生成                                           |
+| 能力                                 | 状态                               | 实际结果与边界                                                                                                             |
+| ------------------------------------ | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 原Admin重构、Local/HTTP与旧CLI行为   | 已实现并通过测试                   | 复用既有三预设、系统管理七页、Dashboard/Profile、CRUD与动态授权；最终12组Admin及4组功能组合通过，12组生产浏览器通过        |
+| Admin生产Layout过渡回归              | 已实现并通过测试                   | 本次全量生产E2E31/31通过，无跳过或重试，三种最大化动画保留页面；前序两例修复后重复6/6，原断言保留                          |
+| Windows交互、参数预填、取消与回滚    | 已实现并通过测试                   | 方向键、Space、Enter、Escape、Ctrl+C及非交互路径有包内/终端回归；最终生成器为5files/95tests，不引用混合计数                |
+| Linux PTY与候选Ubuntu CI             | 已实现但存在验证阻塞               | 测试代码和工作流保留，本机没有Linux执行器，未取得本轮Ubuntu实跑结果                                                        |
+| 工程规范与AI开发约定                 | 已实现并通过测试                   | 公共工程层、类型分层规范、ESLint/Prettier分工、统一check与格式幂等；不全量格式化公共包历史代码                             |
+| Blank与独立Screen                    | 已实现并通过测试                   | 不叠加Admin base；默认仅Vue，无Core/Element Plus/Pinia/Router、登录、管理菜单和系统管理                                    |
+| Screen认证、数据和路由按需组合       | 已实现并通过测试                   | none/local-demo/http认证与none/local/http业务数据独立；HTTP失败不降级Demo，生产Local Demo禁用                              |
+| Charts/DataV/Cockpit按需生成         | 已实现并通过测试                   | 只生成所选演示；DataV数字/边框不要求ECharts，Cockpit仅runtime、内部external，Designer隔离                                  |
+| DataV原gallery附加视觉门禁           | 已实现并通过本机测试               | 修复首帧事件、画廊尺寸反馈与动画时点，人工审核后仅更新四张陈旧画廊golden；两次三轮均21/21，原阈值/遮罩及上游飞线golden不变 |
+| 应用/页面/容器三级适配               | 已实现并通过测试                   | 通用Vue包提供默认策略及显式覆盖，不transform DOM根；实际内容容器ResizeObserver、RAF合并、清理与KeepAlive恢复               |
+| 响应式、contain、width和容器尺寸单位 | 已实现并通过测试                   | 14项视口单测；独立夹具40组工作区、8组局部画布和2组稳定检查通过，真实浏览器zoom有记录                                       |
+| 可选定向px转换                       | 已实现并通过测试                   | Vite14项回归覆盖Dev/Build、SFC/SCSS/CSS、路径及来源边界；默认关闭、依赖白名单，不转换脚本或内联style                       |
+| Admin与访客Screen共存                | 已审计，确认已有能力足够，无需修改 | 用一个Router与现有Layout/Permission/Registry组合，新增4项脱敏契约与文档，不增加第四种必选框架                              |
+| 请求Adapter与会话隔离                | 已实现并通过测试                   | 在原请求客户端修复迟到401、旧写请求、匿名请求、刷新/Abort竞态及失效通知，73项请求契约；不引入替代客户端                    |
+| CRUD序号与旧补丁原生覆盖             | 已实现并通过测试                   | 修复无field序号、跨页序号、选中导出、派生表单/字典过滤；44项定向回归，普通字段类型不放宽                                   |
+| 新CRUD巨型抽象                       | 已审计，确认已有能力足够，无需修改 | 两项目共20页审计，现有DataSource/Schema/字典/插槽能表达；没有证明新增工厂的维护收益，不恢复前身表格协议                    |
+| 省级真实消费隔离升级                 | 已实现但存在验证阻塞               | c2dd616候选无旧patch时安装、lint、类型和构建通过；原测试与基线完全相同的失败仍在，真实后端/页面/部署未验收                 |
+| 小流域整站迁移                       | 因复杂度过高而暂缓                 | 完成API、请求、CRUD、路由与视口迁移矩阵；不是改包名兼容，不擅改业务系统                                                    |
+| P2增量模块生成                       | 因真实需求不足而暂缓               | 目录、动态路由和页面流程不统一，先记录最小安全方案，不创建未经收益验证的生成器                                             |
+| P2 OpenAPI类型接入                   | 已审计，确认成熟工具链足够         | 审计两后端Swagger配置并提供方案；未取得真实Schema，未声称完成真实类型生成                                                  |
 
 ## B. 核心架构
 
@@ -149,7 +155,8 @@ Schema列从interface式扩展改为联合/交叉后，自定义`interface exten
 最终消费候选运行时为`c2dd61695a539859e89be780b6da28d6dc484b41`，
 pack附带未改变runtime的公开README/description更新，精确身份以十包SHA256为准。
 实际只安装五个Lumal包，逐一核对file tarball路径和SHA256/SHA512，九个overrides统一候选；
-没有workspace alias或混入registry旧Lumal包。其后提交涉及生成器、测试、工具链和文档，不改变该公共运行时证据。
+没有workspace alias或混入registry旧Lumal包。该隔离对照在本次DataV首帧事件修复前完成，
+不能直接作为本次DataV改动的真实业务验收；两个业务目录未修改，历史候选记录未被替换为当前工作区。
 
 | 项目                     | 实际结果                                                                                          | 不能推导的结论                           |
 | ------------------------ | ------------------------------------------------------------------------------------------------- | ---------------------------------------- |
@@ -172,6 +179,54 @@ OpenAPI采用业务devDependency中的成熟类型生成工具，Swagger2先本�
 
 ## D. 实际验证
 
+### 本次续办验证
+
+以下为当前工作区的实际结果，不混入前序完整门禁的计数：
+
+| 验证项                  | 实际结果                                                                | 证据                                                                                         |
+| ----------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 全仓单元主链            | 14组runner合计1049项通过，退出0                                         | `output/release/continue-release-check.log`中首次typecheck之前                               |
+| Lint/格式/工作流/边界   | 完整门禁前置步骤均通过，未扩大allowlist或降低安全检查                   | `continue-release-check.log`                                                                 |
+| CI附件保护定向回归      | 2files/39tests通过，已纳入本次主链，不重复相加                          | `continue-ci-evidence-contracts-escalated.log`                                               |
+| DataV单元、类型和构建   | 75项单测、包typecheck/build与视觉夹具typecheck通过                      | 完整门禁及`continue-datav-fixture-types.log`                                                 |
+| 首帧事件定向复验        | 真实SVG引擎2/2通过                                                      | `continue-runtime-final.log`                                                                 |
+| DataV三轮视觉回归       | 21/21，21.0s，无重试                                                    | `continue-datav-repeat.log`                                                                  |
+| CI同款视觉命令          | `corepack pnpm test:datav:visual --repeat-each=3`，21/21，21.4s，无重试 | `continue-datav-ci-command-escalated.log`                                                    |
+| Admin消费者             | 12组主场景、12组边界及生产浏览器通过，另有4组可选模块                   | 当前`scaffold-report.json`，TEMP标识`9FX3Qt`                                                 |
+| Tarball CLI回归         | 12项通过，其中10项PTY、2项非TTY；与主链和8项CLI场景分开统计             | `continue-release-check.log`、本轮刷新十份`win32-*.log`                                      |
+| Blank/Screen消费者      | 14个唯一场景check与browser通过，14×5共70组生产视口检查                  | 当前`project-templates-report.json`，TEMP标识`V6Zeb0`                                        |
+| 通用视口夹具            | 40+8+2共50项通过，24张截图尺寸匹配；运行时、页面和控制台异常均为空      | 当前`viewport-report.json`、`continue-viewport-types.log`                                    |
+| 生产E2E                 | 31/31通过，92.770s；skipped/unexpected/flaky均0，retry均0               | `.playwright-results/release-report.json`、完整门禁日志                                      |
+| 发布artifact与十包pack  | 在同一完整链中通过；没有发布npm或修改版本                               | `continue-release-check.log`末段                                                             |
+| 当前整链发布检查        | 权限恢复后实际完成，退出0                                               | `output/release/continue-release-check.log`                                                  |
+| Cockpit/DataV指南应用   | 串行build:app均退出0，含类型检查；Vite阶段10.35s/868ms                  | `continue-cockpit-build.log`、`continue-datav-guide-build.log`                               |
+| 当前严格体积预算        | `pnpm release:budgets --require-all`退出0，四应用均存在且未超原预算     | `continue-budgets.log`                                                                       |
+| 终稿文档与安全契约      | 6files/101tests通过，退出0；不与1049项主链相加                          | `continue-docs-acceptance-contracts.log`                                                     |
+| 终稿边界/格式/差异      | 公开边界、两份报告Prettier及git diff --check均退出0                     | `continue-final-boundaries.log`、`continue-docs-format-check.log`、`continue-diff-check.log` |
+| 文档生产构建            | `pnpm docs:build`退出0，仅有原有大chunk提示                             | `continue-docs-build.log`                                                                    |
+| 当前Git暂存/提交        | 运行时、视觉夹具、CI保护及使用文档四组本地提交已完成                    | `8978085`、`0b8fd15`、`5e96325`、`cf9940e`；没有推送                                         |
+| Linux PTY/候选Ubuntu CI | 未执行                                                                  | 无本机Linux执行器，尚未推送候选分支或创建本轮PR                                              |
+
+本次1049项分别为scripts104、viewport14、icons42、icons-vue27、Core392、Charts12、
+DataV75、Cockpit59、Vben35、Vite14、生成器95、Mock API14、Admin150、Cockpit应用16。
+先前`continue-code-tests.log`的1048项为追加CI附件案例前的阶段快照，
+39项定向结果、首帧2项及消费者自身测试均不与完整主链重复相加。
+Tarball CLI runner的12项也不增加为主链1061项；十份Windows终端日志本身不记录退出码。
+沙箱内视觉与定向Vitest分别因`spawn EPERM`未启动；批准的沙箱外重跑通过，
+失败装配日志分别保留在`continue-datav-ci-command.log`和`continue-ci-evidence-contracts.log`。
+审批服务错误发生在此前整链与Git请求，不能归类为代码检查失败。
+权限恢复后重新执行首帧回归2/2、文档/Skill/边界/CI定向契约101项，均通过；
+日志为`continue-runtime-final.log`及`continue-docs-final-contracts.log`。
+
+本次完整消费者矩阵、通用视口专项、生产Admin E2E和pack均已由当前整链完成。
+前序完整门禁与模板比较继续作为历史证据；后方当前体积表以本次JSON和严格预算为准。
+四份历史JSON报告已保留在`output/release/previous-attempt4-evidence/`，
+当前`output/release/*-report.json`已由续办门禁刷新，历史比较仍使用归档。
+这些JSON不包含HEAD指纹，提交身份需结合实现提交`cf9940e`、门禁执行记录及Git状态核对，
+不能仅凭报告文件推断源码版本。
+
+### 前序完整门禁
+
 第4轮完整门禁在Windows/Node24实际退出0，日志为
 `output/release/next-final-release-check-attempt4.log`。
 它完成全部主链命令，包括31/31生产E2E（1.5m）和最后十包pack dry run。
@@ -193,7 +248,9 @@ CLI帮助默认路由说明由`fa9e777`修复并进入该轮。首次失败日�
 不新增allowlist、不降低门禁，修正后完整发布边界复查通过。
 第2轮命令链在E2E退出，后面的pack未由该链执行；随后预算与十包pack独立补跑通过。
 第4轮则在同一完整链内执行pack成功，并对最终构建产物另运行
-`release:budgets --require-all`退出0，最新严格预算日志为`next-final-budgets-attempt4.log`。
+`release:budgets --require-all`退出0，该轮严格预算日志为`next-final-budgets-attempt4.log`。
+
+下表保留前序第4轮结果；DataV历史失败现已由上方续办结果补齐。
 
 | 验证项                          | 实际命令/环境                                                                                                                                                                        | 状态                                  | 证据                                                                                                                      |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
@@ -206,10 +263,10 @@ CLI帮助默认路由说明由`fa9e777`修复并进入该轮。首次失败日�
 | 请求/CRUD/Hybrid                | 请求73项、CRUD44项、Hybrid4项定向回归                                                                                                                                                | 通过，另纳入Core392项                 | `request-client.test.ts`、`consumer-request-contract.test.ts`、`next-crud-tests-final.log`、`next-hybrid-tests-final.log` |
 | Layout阶段基线                  | 布局、标签缓存、路由释放3files/35tests                                                                                                                                               | 通过                                  | `next-baseline-layout-corrected.log`                                                                                      |
 | 类型与公共包构建                | `pnpm typecheck`、`pnpm build`                                                                                                                                                       | 通过                                  | `next-final-build.log`、最终gate日志                                                                                      |
-| Admin独立消费者                 | `pnpm test:create-consumer`，12组主矩阵+4组功能                                                                                                                                      | 通过，12组生产浏览器及公开边界通过    | `scaffold-report.json`，第4轮TEMP标识AGii0S，含8项CLI案例                                                                 |
+| Admin独立消费者                 | `pnpm test:create-consumer`，12组主矩阵+4组功能                                                                                                                                      | 通过，12组生产浏览器及公开边界通过    | `previous-attempt4-evidence/scaffold-report.json`，第4轮TEMP标识AGii0S，含8项CLI案例                                      |
 | Admin基线模板比较               | `node scripts/compare-scaffold-builds.mjs 29e474e`，三预设Local/Hash                                                                                                                 | 通过，逐侧安装/类型/构建              | `next-final-scaffold-comparison.log`、`scaffold-comparison.json`；同候选tarball与归一化manifest/lock                      |
-| Blank/Screen独立消费者          | `pnpm test:create-projects`，14组                                                                                                                                                    | 通过，14组check及70组五视口检查       | `project-templates-report.json`，第4轮TEMP标识zLTMZ4，14项status/browser均passed                                          |
-| 真实缩放夹具                    | `pnpm test:viewport`及夹具typecheck/build/ESLint                                                                                                                                     | 通过，40+8+2项检查                    | `viewport-report.json`、`screen-viewport-verification.md`；Dev/Build无运行时错误                                          |
+| Blank/Screen独立消费者          | `pnpm test:create-projects`，14组                                                                                                                                                    | 通过，14组check及70组五视口检查       | `previous-attempt4-evidence/project-templates-report.json`，第4轮TEMP标识zLTMZ4                                           |
+| 真实缩放夹具                    | `pnpm test:viewport`及夹具typecheck/build/ESLint                                                                                                                                     | 通过，40+8+2项检查                    | `previous-attempt4-evidence/viewport-report.json`；Dev/Build无运行时错误                                                  |
 | DataV附加视觉与历史对照         | `pnpm test:datav:visual`；29e474e隔离副本相同六例再运行两次                                                                                                                          | 失败，当前及历史两轮均2/6             | `next-final-datav-visual.log`、`datav-baseline-29e474e-comparison.log`、`datav-baseline-29e474e-repeat.log`               |
 | 生产浏览器/Layout最大化         | `pnpm test:e2e:release:built`及Admin消费者浏览器                                                                                                                                     | 通过，第4轮31/31，1.5m                | `next-final-release-check-attempt4.log`；前序29/31及修复重复6/6日志保留                                                   |
 | 发布artifact与体积预算          | `pnpm release:artifacts`，内部含图标消费者与`check-consumer-budgets.mjs`                                                                                                             | 通过                                  | 最终gate日志；四应用及服务/轻量入口未上调预算                                                                             |
@@ -226,10 +283,10 @@ CLI帮助默认路由说明由`fa9e777`修复并进入该轮。首次失败日�
 DataV74、Cockpit59、Vben35、Vite14、生成器95、Mock API14、Admin150、Cockpit应用16。
 后续生成项目自己的测试单独统计，避免重复相加。早期54/72/78/88等是阶段快照，不再作为最终生成器计数。
 
-### DataV附加视觉检查
+### DataV视觉遗留与修复
 
-当前`9276c3d`与有效历史基线`29e474e`在相同Windows、Node24、已安装工具链和Chromium下，
-运行相同六项测试；当前及历史两轮均2/6通过，dark/light ×1920×1080/1366×768四张gallery快照失败。
+前序`9276c3d`与有效历史基线`29e474e`在相同Windows、Node24、已安装工具链和Chromium下，
+运行相同六项测试；前序工作区及历史两轮均2/6通过，dark/light ×1920×1080/1366×768四张gallery快照失败。
 gallery、spec和六张golden的SHA256均一致，本轮改变的全屏缩放逻辑未被gallery使用。
 这项检查不属于`release:check`；即使主链最终成功，也不能写为所有测试全绿。
 
@@ -237,10 +294,36 @@ golden最后更新为`1588983`（2026-07-16），仍显示改名前的包标题�
 后续改名`1e125cd`与异步引擎生命周期`eca0052`没有同步golden。
 历史源码自身两轮像素差异数仍波动，说明有陈旧golden及运行间状态不确定性；
 不能仅由相同失败数量证明四场景完全无回归，也不能声称剩余差异均已确定根因。
-没有修改快照或`maxDiffPixels: 2500`，未归因于已设duration0的数字动效或未检查的字体。
-图表ready、Canvas动画、SMIL时点与尺寸稳定应在合并前独立修复并重复验证，
-再人工审核陈旧golden；本轮尚未实施这些修复。
+该历史对照没有修改快照或`maxDiffPixels: 2500`，未归因于已设duration0的数字动效或未检查的字体。
+当时仅提出图表ready、Canvas动画、SMIL时点与尺寸稳定的修复建议，没有实施。
 完整逐文件哈希、像素数、有效命令及截图路径见`output/release/datav-baseline-comparison.md`。
+
+本次实际修复：
+
+- `LumalCharts`在首次`setOption`前绑定事件，真实SVG引擎回归验证静态首帧的`rendered/finished`通知。
+- 画廊为图表卡片给出明确高度和`auto minmax(0, 1fr)`内容行，消除100%子图表与仅有min-height父级的尺寸反馈。
+- 静态Canvas示例显式禁用动画、飞线时长固定；等待字体就绪，将所有SVG固定到同一SMIL时间。
+- 就绪通过测试入口读取ECharts公开实例并核对容器尺寸；另检查非空Canvas、连续三帧几何稳定、内容不覆盖标题。
+- 四场景在每次测试中重新加载并逐字节比较截图；独立动效、异步引擎加载和上游飞线对照继续执行。
+- `continue-datav-fixed-layout.log`保留尺寸修复后的不稳定失败；`continue-datav-fixed-motion.log`中跨加载比较已通过，
+  剩余失败仅在旧golden比对。逐图审核后，只更新四张陈旧画廊基准，更新日志为`continue-datav-golden-update.log`。
+
+原`maxDiffPixels: 2500`与四个随机装饰遮罩未扩大。两张上游飞线基准SHA256仍与历史记录一致：
+普通飞线`7B0DD1FBACD7DDA14DD108A0EE401355E12E0E679BB041D4B5780D48CB0E199D`；
+增强飞线`C24EAED15A61392FABB9B3F45AE561DB0040AFB1F4B683D9F565995B473A4A05`。
+
+| 更新的画廊基准  | 当前SHA256                                                         |
+| --------------- | ------------------------------------------------------------------ |
+| dark 1920×1080  | `0DE3426EC9113BCBA6EB8F25CD01A4A4007CAE1846662A595FF685B6BA337168` |
+| dark 1366×768   | `EF3242F338A047AE3009A115B4A22CC5D084C6972B4B43D1F6F4B5336DD6DAC8` |
+| light 1920×1080 | `E2FC67565FF9C619A3073DBC9B2F62E21B58761A91A754D592269799B6FD9930` |
+| light 1366×768  | `FAA363E3C449AB881C47C5574C6D57083738242108202E623CC42E263BEFAC9B` |
+
+测试增加异步引擎案例后由6项变7项，三轮为21项。两次独立三轮命令均通过，无重试；
+当前截图在`.playwright-results/datav/`，首次三轮归档在`output/playwright/datav-repeat/`。
+Build Validation新增Windows视觉job，发布Windows job也执行同款三轮命令；禁止only、重试、跳过或容错，不在CI更新golden。
+Linux CI与发布Windows job均始终上传终端日志，缺失附件作为错误。工作流已通过静态和拒绝变异回归，
+但尚未取得这些新增job的远端实跑结果；Windows基准不是Linux像素或不同字体环境的验收。
 
 ### 通用视口实测
 
@@ -251,17 +334,19 @@ golden最后更新为`1588983`（2026-07-16），仍显示改名前的包标题�
 五种校准内容尺寸为1280×720、1366×768、1440×900、1920×1080、2560×1440，
 各覆盖80/100/125/150%。窄窗口与模板五视口另由模板矩阵覆盖。
 KeepAlive返回保持地图实例/中心/zoom，系统页14px和无transform隔离，Teleport弹层有真实交互断言。
-第4轮50项均通过、24张PNG尺寸匹配，Dev/Build的运行时/页面/控制台错误均为空；
-最大地图点击误差为`1.6077746776921858e-13`CSS px。
-400ms稳定窗口内，Build地图resize为27→27、图表28→28，Dev分别24→24与25→25，
-每次均仅一个地图和图表实例。该轮夹具Vite构建15.40s、2354modules，不复用前序457ms计时。
+本次50项均通过、24张PNG尺寸匹配，Dev/Build的运行时/页面/控制台错误均为空；
+最大地图点击误差为`1.2710574864626038e-13`CSS px。
+400ms稳定窗口内，Build地图resize为26→26、图表27→27，Dev分别23→23与24→24，
+每次均仅一个地图和图表实例。本次夹具Vite构建446ms、2354modules，
+不复用第4轮15.40s或更早457ms计时，也不据此宣称性能提升。
 这不是省级原页面、物理显示器DPI或多屏切换验收。
 
 ## E. 性能与体积
 
 ### 已完成的Admin矩阵
 
-本轮`scaffold-report.json`已包含全部12组主矩阵、12组通过的生产浏览器和4组可选模块。
+本轮`scaffold-report.json`已包含全部12组主矩阵、12组通过的生产浏览器和4组可选模块，
+对应TEMP标识`9FX3Qt`，不是归档第4轮报告。
 下表单位为bytes；“入口”仅入口依赖图，“首路由”包含初次登录路由，“总量”为全部JS/CSS逐文件gzip之和，
 不等于首次网络传输。各项目开发依赖均为13个；Minimal/Standard运行时7个，Vben为8个。
 
@@ -269,16 +354,16 @@ KeepAlive返回保持地图实例/中心/zoom，系统页14px和无transform隔�
 | ---------------------- | ----------- | ------------- | --------- | ---------- |
 | minimal/local/hash     | 167,852     | 181,106       | 210,103   | 42,372     |
 | minimal/local/history  | 167,852     | 181,107       | 210,105   | 42,372     |
-| minimal/http/hash      | 170,798     | 184,054       | 213,055   | 42,372     |
-| minimal/http/history   | 170,803     | 184,057       | 213,056   | 42,372     |
+| minimal/http/hash      | 170,796     | 184,050       | 213,047   | 42,372     |
+| minimal/http/history   | 170,802     | 184,057       | 213,054   | 42,372     |
 | standard/local/hash    | 181,115     | 193,288       | 381,400   | 43,174     |
 | standard/local/history | 181,108     | 193,280       | 381,391   | 43,174     |
-| standard/http/hash     | 183,862     | 196,034       | 378,622   | 43,174     |
-| standard/http/history  | 183,862     | 196,033       | 378,590   | 43,174     |
+| standard/http/hash     | 183,858     | 196,029       | 378,589   | 43,174     |
+| standard/http/history  | 183,862     | 196,034       | 378,606   | 43,174     |
 | vben/local/hash        | 183,962     | 196,144       | 394,391   | 43,456     |
 | vben/local/history     | 183,961     | 196,145       | 394,413   | 43,456     |
-| vben/http/hash         | 184,542     | 196,708       | 388,368   | 43,456     |
-| vben/http/history      | 184,540     | 196,706       | 388,359   | 43,456     |
+| vben/http/hash         | 184,542     | 196,708       | 388,365   | 43,456     |
+| vben/http/history      | 184,541     | 196,706       | 388,363   | 43,456     |
 
 4组模块组合均为Local/Hash；仅所选业务文件生成，不用全量模块证明精简项目可用。
 
@@ -291,8 +376,9 @@ KeepAlive返回保持地图实例/中心/zoom，系统页14px和无transform隔�
 
 ### 29e474e模板基线对照
 
-`scaffold-comparison.json`已更新为实际开发基线`29e474e`，三预设Local/Hash各在两侧全新目录生成同名应用。
-两侧共用本轮候选tarball，基线package.json及lockfile对齐当前消费者。
+前序`scaffold-comparison.json`以实际开发基线`29e474e`比较，三预设Local/Hash各在两侧全新目录生成同名应用，
+本次未重跑该历史比较；对应报告亦保留在`previous-attempt4-evidence/`。
+两侧共用该次候选tarball，基线package.json及lockfile对齐当时的消费者。
 这是归一化后的**模板比较，不是旧npm发布包原样升级性能**；
 原始生成依赖数另行记录，不能把新增开发工具解释成运行时代码增量。
 归一化后resolved依赖分别为509/509/510，installed instances为430/430/431，两侧均不变。
@@ -315,7 +401,7 @@ KeepAlive返回保持地图实例/中心/zoom，系统页14px和无transform隔�
 
 ### Blank与Screen最终矩阵
 
-本轮`project-templates-report.json`已是完整14组，全部安装、lock冻结复装、check、
+本轮`project-templates-report.json`已是完整14组，TEMP标识`V6Zeb0`；全部安装、lock冻结复装、check、
 格式幂等和五种视口生产浏览器通过，不再引用旧3组筛选快照。
 下表均为bytes，直接开发依赖均12个，运行时依赖只计package.json声明，不含dev或传递依赖。
 
@@ -328,38 +414,41 @@ KeepAlive返回保持地图实例/中心/zoom，系统页14px和无transform隔�
 | screen-local     | 1            | 64,645  | 1,131   | 25,276      | 25,276 / 543     |
 | screen-http      | 2            | 71,442  | 1,131   | 27,909      | 27,909 / 543     |
 | screen-demo-auth | 2            | 70,735  | 1,555   | 27,646      | 27,646 / 643     |
-| screen-auth-only | 2            | 77,313  | 1,555   | 30,126      | 30,126 / 643     |
-| screen-auth-http | 3            | 103,706 | 1,555   | 39,540      | 39,540 / 643     |
+| screen-auth-only | 2            | 77,313  | 1,555   | 30,125      | 30,125 / 643     |
+| screen-auth-http | 3            | 103,706 | 1,555   | 39,539      | 39,539 / 643     |
 | screen-charts    | 4            | 583,008 | 3,442   | 200,247     | 200,247 / 1,097  |
-| screen-datav     | 3            | 101,909 | 23,926  | 35,249      | 35,249 / 4,710   |
+| screen-datav     | 3            | 101,909 | 23,926  | 35,249      | 35,249 / 4,709   |
 | screen-cockpit   | 4            | 270,390 | 431,031 | 81,444      | 100,714 / 57,618 |
 | screen-width     | 2            | 69,691  | 1,327   | 27,004      | 27,004 / 603     |
 | screen-units     | 2            | 69,688  | 1,327   | 27,006      | 27,006 / 605     |
 
 Blank此前没有对应模板，不虚构改造前大小。
 Charts/DataV/Cockpit增量只与同轮静态Screen比较，不与包含三引擎的验收夹具混比。
-其中Charts总JS/CSS增量为175,392/554bytes，DataV为10,394/4,167bytes，
+其中Charts总JS/CSS增量为175,392/554bytes，DataV为10,394/4,166bytes，
 Cockpit为75,859/57,075bytes；DataV/Cockpit场景含显式contain视口，后者还包含Element Plus必要样式。
 这些是完整生成场景增量，不是单一包的体积；Cockpit入口81,444bytes不等于总JS100,714bytes。
 Blank与静态Screen的运行时都只有Vue，没有隐式Core、Router、Pinia或Element Plus。
 
 ### 现有发布预算
 
-本次artifact及独立`release:budgets --require-all`实际读取全部构建产物并通过，未修改原有预算。
+本次完整门禁artifact通过后，串行重建Cockpit/DataV Guide，再独立执行
+`release:budgets --require-all`读取全部当前构建产物并通过，未修改原有预算。
 
 | 应用              | 首屏JS gzip/预算  | 首屏CSS gzip/预算 |
 | ----------------- | ----------------- | ----------------- |
-| lumal-admin       | 313,013 / 335,000 | 42,591 / 50,000   |
-| lumal-cockpit     | 703,774 / 800,000 | 71,191 / 80,000   |
-| lumal-datav-guide | 417,326 / 850,000 | 46,285 / 55,000   |
+| lumal-admin       | 312,398 / 335,000 | 42,591 / 50,000   |
+| lumal-cockpit     | 703,778 / 800,000 | 71,192 / 80,000   |
+| lumal-datav-guide | 417,327 / 850,000 | 46,286 / 55,000   |
 | vben-compat-demo  | 285,636 / 300,000 | 40,627 / 45,000   |
 
 轻量消费者gzip为Vue23,303bytes、minimal26,090bytes（增量2,787）、
-request2,741bytes、DataV charts初始26,398bytes。不同夹具和模板不能混用作同条件升级比较。
+request2,741bytes、DataV charts初始26,395bytes。不同夹具和模板不能混用作同条件升级比较，
+本次与历史报告的少量gzip差异亦不构成性能收益证据。
 
 ### 已完成的真实消费者对照
 
-以下是相同省级源码和占位环境的实际产物，候选c2dd616公共运行时证据不受后续生成器修复影响。
+以下是相同省级源码和占位环境的实际产物，候选c2dd616公共运行时证据不受后续生成器修复影响，
+但不包含本次DataV首帧事件修复；本次没有再次执行真实消费者隔离升级。
 gzip逐文件压缩后求和，不包含私有静态资产，不等于首屏传输。
 
 | 项目                             | 0.0.4基线 | c2dd616候选 | 增量   |
@@ -382,7 +471,7 @@ gzip逐文件压缩后求和，不包含私有静态资产，不等于首屏传�
 ## F. 提交与剩余事项
 
 分支为`codex/lumal-project-types-and-quality`，基线历史保留，无强推或重写。
-以下为实际`git log --reverse 29e474e..HEAD`，截止9276c3d；最终报告/文档提交另以Git历史为准。
+以下为实际`git log --reverse 29e474e..HEAD`，截止cf9940e；最终报告提交另以Git历史为准。
 
 | Commit    | 变更摘要                             |
 | --------- | ------------------------------------ |
@@ -410,17 +499,23 @@ gzip逐文件压缩后求和，不包含私有静态资产，不等于首屏传�
 | `df79be9` | 模板规范、公共入口与发布说明         |
 | `1a53243` | 记录依赖数量并明确模板比较基线       |
 | `9276c3d` | 保留断言并等待生产布局稳定后验收     |
+| `fdab429` | 完成前序下一阶段与真实视口验收报告   |
+| `8978085` | 保证静态图表首帧事件通知             |
+| `0b8fd15` | 固定视觉时点并验证跨加载一致性       |
+| `5e96325` | 三轮视觉门禁与跨平台终端附件保护     |
+| `cf9940e` | 首帧监听、容器布局与候选发布门禁说明 |
 
 PR：本轮尚未提供已创建的PR地址；不能用本地分支或静态工作流代替远端审核。
-第4轮完整门禁、最终严格预算及文档生产构建已通过，交付提交以Git历史为准。
+前序第4轮完整门禁、严格预算及文档生产构建已通过，历史交付提交以Git记录为准。
+`fdab429`已提交前序两份验收报告；权限恢复后的四组本地提交已完成，
+本次完整门禁、补充应用构建、严格预算及终稿文档检查/构建均已通过。
+两份验收终稿随本轮本地提交交付，精确提交以Git历史为准。
 不发布、不打Tag、不部署，主链通过不等于允许跳过下列残余验收。
 
 明确未完成事项：
 
-- DataV附加视觉当前及有效历史两轮均2/6，四张gallery失败，原快照和阈值保留。
-  已证实陈旧标题golden及同源码状态波动，未完全分离剩余差异；合并前独立修复ready/Canvas/SMIL稳定性，
-  连续复测并人工审核golden，不能用主链成功覆盖该失败。
 - Linux PTY、本轮Ubuntu CI与远端分支推送/审核证据未取得。
+  仓库约定不自动推送；取得明确推送/Draft PR授权后才能触发候选CI，不能将工作流静态检查写成Linux实跑。
 - 真实后端、上传、生产权限、业务Dashboard改造/浏览器验收和部署未执行。
 - 省级原门禁的环境断言、既有图标失败与未执行部署suite仍需业务升级流程处理；
   不能直接删除原patch或宣布整站升级成功。
