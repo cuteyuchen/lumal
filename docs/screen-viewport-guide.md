@@ -181,3 +181,4 @@ node scripts/check-viewport-consumer.mjs
 记录80/100/125/150%的实际 zoom、innerWidth/innerHeight、DPR、工作区及组件矩形。
 扩展只装在临时 profile，不修改用户浏览器。没有扩展支持时测试失败而非静默降级。
 此夹具不能代替真实消费者的最终部署验收，业务仓库保持只读。
+实际尺寸、原生缩放、交互与实例稳定性证据见 [隔离验收报告](./screen-viewport-verification.md)。

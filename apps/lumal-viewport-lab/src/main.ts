@@ -3,6 +3,7 @@ import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import App from './App.vue'
 import DashboardPage from './pages/DashboardPage.vue'
+import ScalePage from './pages/ScalePage.vue'
 import SystemPage from './pages/SystemPage.vue'
 import 'element-plus/dist/index.css'
 import 'ol/ol.css'
@@ -14,6 +15,7 @@ const router = createRouter({
     { path: '/', redirect: '/dashboard' },
     { path: '/dashboard', component: DashboardPage, meta: { viewport: { mode: 'responsive', designWidth: 1920, designHeight: 964, minFontSize: 12 } } },
     { path: '/system', component: SystemPage, meta: { viewport: false } },
+    { path: '/scale/:mode(contain|width)', component: ScalePage },
   ],
 })
 

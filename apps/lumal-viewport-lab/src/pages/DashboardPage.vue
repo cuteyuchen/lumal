@@ -11,6 +11,7 @@ import TrendSurface from '../components/TrendSurface.vue'
 const route = useRoute()
 const policy = computed(() => route.meta.viewport as ViewportPolicy | false)
 const dialog = shallowRef(false)
+const tableReady = shallowRef(false)
 const selected = shallowRef('all')
 const rows = Array.from({ length: 24 }, (_, index) => ({ id: index + 1, name: `示例 ${index + 1}`, value: 10 + index }))
 </script>
@@ -47,8 +48,12 @@ const rows = Array.from({ length: 24 }, (_, index) => ({ id: index + 1, name: `�
           <TrendSurface />
         </section>
       </div>
-      <ElDialog v-model="dialog" title="统计详情" width="min(640px, 94vw)" append-to-body destroy-on-close>
-        <ElTable :data="rows" max-height="240">
+      <ElDialog
+        v-model="dialog" title="统计详情" width="min(640px, 94vw)" append-to-body destroy-on-close
+        @opened="tableReady = true" @closed="tableReady = false"
+      >
+        <!-- 固定局部滚动区并在入场结束后测量，不以表格内容反推弹窗高度。 -->
+        <ElTable v-if="tableReady" :data="rows" :height="240">
           <ElTableColumn prop="name" label="名称" min-width="140" /><ElTableColumn prop="value" label="值" min-width="100" />
         </ElTable>
       </ElDialog>
