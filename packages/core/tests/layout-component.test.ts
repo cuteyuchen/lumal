@@ -171,7 +171,8 @@ describe('lumal layout', () => {
   it('顶部导航会从完整菜单树自动渲染并透传最终导航目标', async () => {
     const wrapper = mount(LumalLayout, {
       global: {
-        stubs: elementPlusStubs,
+        // 真实 Transition 不生成包裹节点，继续检查面包屑的实际布局层级。
+        stubs: { ...elementPlusStubs, transition: false },
       },
       props: {
         activeMenuPath: '/system/user',
@@ -190,12 +191,13 @@ describe('lumal layout', () => {
 
     expect(wrapper.emitted('topMenuSelect')?.[0]).toEqual(['/system/user'])
     expect(wrapper.emitted('menuSelect')?.[0]).toEqual(['/system/user'])
+    wrapper.unmount()
   })
 
   it('混合导航默认只切换顶级分组并展示其侧栏子菜单', async () => {
     const wrapper = mount(LumalLayout, {
       global: {
-        stubs: elementPlusStubs,
+        stubs: { ...elementPlusStubs, transition: false },
       },
       props: {
         activeMenuPath: '/dashboard',
@@ -216,6 +218,7 @@ describe('lumal layout', () => {
     expect(wrapper.findComponent(LumalSidebar).props('menus')).toEqual(menus[1]!.children)
     expect(wrapper.emitted('topMenuSelect')?.at(-1)).toEqual(['/system'])
     expect(wrapper.emitted('menuSelect')).toBeUndefined()
+    wrapper.unmount()
   })
 
   it('混合导航开启自动激活后会优先采用目录重定向', async () => {
