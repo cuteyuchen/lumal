@@ -3,8 +3,8 @@ import type { AddressInfo } from 'node:net'
 import { createServer } from 'node:http'
 import { setTimeout as delay } from 'node:timers/promises'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { createHttpBackend } from '../src/services/data-source'
-import { createApplicationSession } from '../src/services/session-runtime'
+import { createHttpBackend } from '../src/app/services/data-source'
+import { createApplicationSession } from '../src/app/services/session-runtime'
 
 const tokens = new Map<string, string>()
 const refreshTokens = new Map<string, string>()
@@ -12,6 +12,8 @@ const expired = new Set<string>()
 const calls = new Map<string, number>()
 let failRefresh = false
 let failLogout = false
+let failAccess = false
+let menuPayload: unknown
 let baseURL = ''
 const server = createServer(async (request, response) => {
   const path = new URL(request.url!, 'http://localhost').pathname
@@ -48,9 +50,9 @@ const server = createServer(async (request, response) => {
   if (path === '/session/me')
     return send({ id: username, name: username, username })
   if (path === '/session/access')
-    return send({ roles: [username], permissions: [`${username}:read`] })
+    return failAccess ? send({ message: '权限读取失败' }, 503) : send({ roles: [username], permissions: [`${username}:read`] })
   if (path === '/menus')
-    return send([{ path: '/deep', name: 'Deep', component: 'dashboard/index', meta: { title: username } }])
+    return send(menuPayload ?? [{ path: '/deep', name: 'Deep', component: 'dashboard/index', meta: { title: username } }])
   if (path === '/auth/logout') {
     tokens.delete(token)
     return send({}, failLogout ? 503 : 200)
@@ -70,6 +72,8 @@ beforeEach(() => {
   expired.clear()
   failRefresh = false
   failLogout = false
+  failAccess = false
+  menuPayload = undefined
 })
 afterAll(async () => {
   server.closeAllConnections()
@@ -91,6 +95,38 @@ function application(url = baseURL) {
   return createApplicationSession(context => createHttpBackend(context, url), storage, storage)
 }
 describe('真实 HTTP 应用服务', () => {
+  it('权限重读失败清理旧授权，保留凭据以供显式重试且并发刷新单飞', async () => {
+    const app = application()
+    await app.login({ username: 'alice', password: 'valid' })
+    const token = app.session.getToken()
+    failAccess = true
+    const failed = app.refreshAccess()
+    expect(app.refreshAccess()).toBe(failed)
+    await expect(failed).rejects.toThrow('权限读取失败')
+    expect(app.permissionStore.permissions).toEqual([])
+    expect(app.menus.value).toEqual([])
+    expect(app.ready.value).toBe(false)
+    expect(app.session.getToken()).toBe(token)
+    failAccess = false
+    await app.refreshAccess()
+    expect(app.ready.value).toBe(true)
+    expect(app.permissionStore.permissions).toEqual(['alice:read'])
+  })
+  it.each([
+    { component: 'constructor' },
+    { component: '__proto__' },
+    { component: 'not-registered' },
+    { meta: { externalLink: 'javascript:alert(1)' } },
+    { meta: { externalLink: '//evil.invalid' } },
+    { meta: { authority: [7] } },
+  ])('真实 HTTP 下发的恶意子菜单拒绝初始化 %j', async (invalid) => {
+    menuPayload = [{ path: '/remote', name: 'Remote', children: [{ path: '/remote/page', name: 'RemotePage', component: 'dashboard/index', ...invalid }] }]
+    const app = application()
+    await expect(app.login({ username: 'alice', password: 'valid' })).rejects.toThrow()
+    expect(app.ready.value).toBe(false)
+    expect(app.menus.value).toEqual([])
+    expect(app.isAuthenticated()).toBe(false)
+  })
   it('配置缺失明确失败，不产生演示会话', async () => {
     const app = application('')
     await expect(app.login({ username: 'alice', password: 'valid' })).rejects.toThrow('VITE_API_BASE_URL')
@@ -99,7 +135,7 @@ describe('真实 HTTP 应用服务', () => {
   })
   it('登录失败、成功、用户权限菜单与真实 CRUD 请求', async () => {
     const app = application()
-    await expect(app.login({ username: 'alice', password: 'wrong' })).rejects.toThrow()
+    await expect(app.login({ username: 'alice', password: 'wrong' })).rejects.toThrow('登录失败')
     expect(app.currentUser.value).toBeNull()
     await app.login({ username: 'alice', password: 'valid' })
     expect(app.ready.value).toBe(true)

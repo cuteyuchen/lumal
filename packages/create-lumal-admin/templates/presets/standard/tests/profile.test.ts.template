@@ -1,0 +1,45 @@
+import type { BusinessTransport, DataRow } from '../src/app/services/contracts'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { createProfileService, passwordInput, profileInput } from '../src/modules/profile/api'
+import { createLocalHandler } from '../src/modules/profile/local'
+
+let users: DataRow[]
+let api: ReturnType<typeof createProfileService>
+beforeEach(() => {
+  users = [{ id: 'admin', username: 'admin', nickname: '管理员', phone: '', roles: ['admin'], status: 'enabled', password: 'lumal123' }]
+  const handler = createLocalHandler({
+    db: {
+      read: <T extends DataRow>() => structuredClone(users) as T[],
+      write: (_key, rows) => { users = structuredClone(rows) },
+    },
+    user: () => ({ id: 'admin', username: 'admin', name: '管理员' }),
+    assertPermission: () => {},
+  })
+  const transport: BusinessTransport = { request: async <T>(method: Parameters<BusinessTransport['request']>[0], path: string, input = {}) => await handler.request(method, path, input) as T }
+  api = createProfileService(transport)
+})
+describe('个人资料与密码业务契约', () => {
+  it('读取与修改允许字段，不泄露密码或允许修改身份与角色', async () => {
+    expect(await api.get()).not.toHaveProperty('password')
+    const saved = await api.save(profileInput({ nickname: '已修改', phone: '13800138000', username: 'injected', roles: [] }))
+    expect(saved.nickname).toBe('已修改')
+    expect(saved.username).toBe('admin')
+    expect(saved.roles).toEqual(['admin'])
+    expect(users[0]?.password).toBe('lumal123')
+    expect(() => profileInput({ nickname: '', phone: 'bad' })).toThrow()
+  })
+  it('错误密码不写入；真实保存后新密码才生效', async () => {
+    await expect(api.changePassword({ currentPassword: 'wrong', newPassword: 'new-password' })).rejects.toThrow('当前密码')
+    expect(users[0]?.password).toBe('lumal123')
+    expect(() => passwordInput({ currentPassword: 'lumal123', newPassword: 'new-password', confirmPassword: 'other' })).toThrow('两次')
+    await api.changePassword(passwordInput({ currentPassword: 'lumal123', newPassword: 'new-password', confirmPassword: 'new-password' }))
+    expect(users[0]?.password).toBe('new-password')
+  })
+  it('hTTP 能力未接入时向页面传播失败，不伪造保存结果', async () => {
+    const http = createProfileService({
+      request: async () => { throw new Error('HTTP 404：未配置个人资料接口') },
+    })
+    await expect(http.get()).rejects.toThrow('HTTP 404')
+    await expect(http.changePassword({ currentPassword: 'old', newPassword: 'new-password' })).rejects.toThrow('HTTP 404')
+  })
+})

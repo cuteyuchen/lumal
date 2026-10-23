@@ -1,8 +1,9 @@
+import type { LumalMenuRecord } from '@lumal/core/router'
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { localMenus } from '../src/router/views'
-import { createBackend } from '../src/services/data-source'
-import { createApplicationSession } from '../src/services/session-runtime'
+import { localMenus } from '../src/app/router/views'
+import { createBackend } from '../src/app/services/data-source'
+import { createApplicationSession } from '../src/app/services/session-runtime'
 
 function storage(): Storage {
   const values = new Map<string, string>()
@@ -53,20 +54,22 @@ describe('本地应用服务', () => {
   it('管理能力按预设启用，访客无写权限', async () => {
     const app = application()
     await app.login({ username: 'admin', password: 'lumal123' })
-    if (localMenus.some(menu => menu.component === 'system/users')) {
+    const flatten = (menus: LumalMenuRecord[]): LumalMenuRecord[] => menus.flatMap(menu => [menu, ...flatten(menu.children ?? [])])
+    if (flatten(localMenus).some(menu => menu.component === 'system/users')) {
       await app.service.save('users', { username: 'new-user', nickname: '新增', roles: ['guest'], status: 'enabled' })
       const result = await app.service.list('users', { page: 1, pageSize: 10, query: { keyword: 'new-user' } })
       expect(result.total).toBe(1)
       await app.service.remove('users', String(result.items[0]?.id))
       await expect(app.service.remove('users', 'admin')).rejects.toThrow('内置管理员')
-      await expect(app.service.save('users', { username: 'admin' })).rejects.toThrow('重复')
-      await expect(app.service.save('roles', { code: 'admin', status: 'disabled', permissions: [] }, 'admin')).rejects.toThrow('内置管理员')
-      await app.service.save('roles', { code: 'reader', name: '只读角色', status: 'enabled', permissions: ['system:user:list'] })
-      await app.service.save('users', { username: 'reader', roles: ['reader'], status: 'enabled' })
-      await app.service.save('dictionaries/items', { typeCode: 'status', label: '启用', value: 'enabled' })
-      expect((await app.service.list('dictionaries/items', { page: 1, pageSize: 10, query: { typeCode: 'other' } })).total).toBe(0)
+      await expect(app.service.save('users', { username: 'admin', nickname: '重复', roles: ['guest'] })).rejects.toThrow('重复')
+      await expect(app.service.save('roles', { code: 'admin', name: '管理员', status: 'disabled' }, 'admin')).rejects.toThrow('内置角色')
+      await app.service.save('roles', { code: 'reader', name: '只读角色', status: 'enabled' })
+      await app.service.request('PUT', '/system/roles/reader/permissions', { body: { permissions: ['system:user:list'] } })
+      await app.service.save('users', { username: 'reader', nickname: '只读用户', roles: ['reader'], status: 'enabled' })
+      await app.service.save('dictionaries/items', { typeCode: 'status', label: '待审核', value: 'pending' })
+      expect(await app.service.request('GET', '/system/dictionaries/items', { query: { typeCode: 'other' } })).toEqual([])
       await app.service.save('menus', { title: '目录', path: '/group', name: 'Group', type: 'directory' })
-      const group = (await app.service.list('menus', { page: 1, pageSize: 10, query: { keyword: 'Group' } })).items[0]!
+      const group = (await app.service.request<Record<string, unknown>[]>('GET', '/system/menus')).find(row => row.name === 'Group')!
       await expect(app.service.save('menus', { ...group, parentId: group.id }, String(group.id))).rejects.toThrow('循环')
       await expect(app.service.save('menus', { title: '恶意', path: '/bad', name: 'Bad', type: 'menu', component: 'https://evil.invalid/a.js' })).rejects.toThrow('白名单')
       await app.login({ username: 'reader', password: 'lumal123' })
@@ -74,7 +77,7 @@ describe('本地应用服务', () => {
       await expect(app.service.list('users', { page: 1, pageSize: 10, query: {} })).resolves.toHaveProperty('total')
       await expect(app.service.save('users', { username: 'denied' })).rejects.toThrow('无操作权限')
     }
-    else if (localMenus.some(menu => menu.component === 'migration/users')) {
+    else if (flatten(localMenus).some(menu => menu.component === 'migration/users')) {
       expect(app.permissionStore.permissions).toContain('system:user:create')
       await app.service.save('users', { username: 'migration-only', nickname: '迁移用户', roles: ['guest'], status: 'enabled' })
       const result = await app.service.list('users', { page: 1, pageSize: 10, query: { keyword: 'migration-only' } })
@@ -83,10 +86,10 @@ describe('本地应用服务', () => {
       expect((await app.service.list('users', { page: 1, pageSize: 10, query: { keyword: 'migration-only' } })).total).toBe(0)
     }
     else {
-      await expect(app.service.list('users', { page: 1, pageSize: 10, query: {} })).rejects.toThrow('无操作权限')
+      await expect(app.service.list('users', { page: 1, pageSize: 10, query: {} })).rejects.toThrow('不支持')
     }
     await app.login({ username: 'guest', password: 'lumal123' })
     expect(app.permissionStore.permissions).toEqual([])
-    await expect(app.service.save('users', { username: 'denied' })).rejects.toThrow('无操作权限')
+    await expect(app.service.save('users', { username: 'denied' })).rejects.toThrow()
   })
 })

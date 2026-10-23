@@ -48,9 +48,9 @@ const requiredArtifacts = [
   'packages/create-lumal-admin/dist/index.js',
   'packages/create-lumal-admin/dist/cli.js',
   'packages/create-lumal-admin/templates/base/package.json',
-  'packages/create-lumal-admin/templates/modes/http/src/services/data-source.ts',
-  'packages/create-lumal-admin/templates/features/system/src/modules/system.ts',
-  'packages/create-lumal-admin/templates/vben-compatible/src/modules/vben.ts',
+  'packages/create-lumal-admin/templates/modes/http/src/app/services/data-source.ts',
+  'packages/create-lumal-admin/templates/features/system/src/modules/system/module.ts',
+  'packages/create-lumal-admin/templates/vben-compatible/src/modules/vben-migration/module.ts',
   'apps/lumal-admin/dist/index.html',
 ]
 

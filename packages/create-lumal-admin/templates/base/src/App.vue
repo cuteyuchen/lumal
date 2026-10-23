@@ -12,18 +12,19 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import { computed, defineAsyncComponent, onErrorCaptured, reactive, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { appConfig } from './app.config'
-import AppHeaderActions from './components/app/AppHeaderActions.vue'
-import { createAdminSidebarMenus, createAdminTabs } from './router'
+import AppHeaderActions from './app/components/AppHeaderActions.vue'
+import { safeExternalUrl } from './app/menu-policy'
+import { createAdminSidebarMenus, createAdminTabs } from './app/router'
 import {
   adminPreferenceDefaults,
   adminPreferences,
   adminResolvedThemeMode,
   patchAdminPreferences,
-} from './services/preferences'
-import { adminTabSnapshotStorageKey, currentUser, logout } from './services/session'
+} from './app/services/preferences'
+import { adminTabSnapshotStorageKey, application, currentUser, logout } from './app/services/session'
 
 /***********************页面状态*********************/
-const AppSettingsDrawer = defineAsyncComponent(() => import('./components/app/AppSettingsDrawer.vue'))
+const AppSettingsDrawer = defineAsyncComponent(() => import('./app/components/AppSettingsDrawer.vue'))
 const title = appConfig.title
 const settingsVisible = shallowRef(false)
 const pageError = shallowRef('')
@@ -68,8 +69,12 @@ watch([
 function handleMenuSelect(path: string): void {
   const item = findMenuItemByPath(allMenus.value, path)
 
-  if (item?.externalLink && item.externalTarget !== '_self') {
-    window.open(item.externalLink, item.externalTarget ?? '_blank', 'noopener,noreferrer')
+  if (item?.externalLink) {
+    const url = safeExternalUrl(item.externalLink)
+    if (item.externalTarget === '_self')
+      window.location.assign(url)
+    else
+      window.open(url, '_blank', 'noopener,noreferrer')
     return
   }
 
@@ -159,7 +164,7 @@ async function handleLogout(): Promise<void> {
 
     <LumalLayout
       v-else
-      :key="currentUser?.username"
+      :key="`${currentUser?.username}:${application.accessVersion.value}`"
       v-model:active-tab-path="activePath"
       :title="title"
       :menus="allMenus"
@@ -180,6 +185,8 @@ async function handleLogout(): Promise<void> {
         <AppHeaderActions
           :resolved-theme-mode="adminResolvedThemeMode"
           :user-name="currentUser?.name"
+          :has-profile="router.hasRoute('Profile')"
+          @open-profile="router.push('/profile')"
           @logout="handleLogout"
           @open-settings="settingsVisible = true"
           @toggle-theme="toggleTheme"

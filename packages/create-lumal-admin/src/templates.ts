@@ -15,6 +15,8 @@ export async function getVersion(): Promise<string> {
 async function readLayer(name: string, directory = '', result: TemplateFile[] = []): Promise<TemplateFile[]> {
   const entries = await readdir(join(templateRoot, name, directory), { withFileTypes: true })
   for (const entry of entries) {
+    if (entry.isSymbolicLink())
+      throw new Error(`模板资源不能是符号链接：${entry.name}`)
     const path = directory ? `${directory}/${entry.name}` : entry.name
     if (entry.isDirectory()) {
       await readLayer(name, path, result)
@@ -31,6 +33,8 @@ async function readLayer(name: string, directory = '', result: TemplateFile[] = 
 
 export async function composeTemplates(options: ReturnType<typeof resolveOptions>): Promise<TemplateFile[]> {
   const layers = ['base', `modes/${options.apiMode}`, ...options.features.map(feature => `features/${feature}`)]
+  if (options.preset !== 'minimal')
+    layers.push('presets/standard')
   if (options.preset === 'vben-compatible')
     layers.push('vben-compatible')
   const files = new Map<string, string>()

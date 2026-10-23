@@ -23,7 +23,7 @@ pnpm preview
 HTTP 接入前配置 `.env.development`，完整接口见 [API 契约](./API-CONTRACT.md)。
 Local 模式是明确的开发演示，账号 `admin/guest`，密码 `lumal123`；
 生产默认禁用，不应将演示模式当作生产认证。
-标准业务模块使用应用服务和原生 CRUD，初始数据为空，可自行新增。
+系统模块包含有明确关联的开发种子数据；示例数据与系统数据分离。
 
 ## 部署
 
@@ -38,5 +38,22 @@ localStorage Token 示例不是生产安全策略的唯一选择。
 
 minimal 没有管理页面与兼容层；standard 的 system/examples 是可选模板层。
 系统页面的 CRUD 和 Schema 不进入 Core 的业务实现。图表、驾驶舱、富文本、
-国际化与 VXE 高级编辑均不默认安装。新增页面时在 `src/modules` 声明白名单懒加载器，
-并让后端菜单使用相应 component key。服务端菜单改变后需重新加载会话。
+国际化与 VXE 高级编辑均不默认安装。
+
+```text
+src/app/                     路由、认证、请求、布局接线与异常页
+src/modules/dashboard/       工作台
+src/modules/profile/         个人中心（标准预设）
+src/modules/system/          系统父模块（可选）
+  user/ role/ menu/ organization/ dictionary/ config/
+src/modules/examples/        开发示例（可选）
+src/modules/vben-migration/  迁移示例（仅兼容预设）
+src/modules/business/        自有业务模块
+src/shared/                  共享组件、类型与组合式函数
+```
+
+每个模块通过 `module.ts` 导出 menus/views/permissions，注册表只加载小型元数据，
+页面使用动态 import。在 business 中新增一个子目录及 module.ts 即可注册，不需要修改中心文件；
+完整接入示例见该目录 README。业务类型和强类型 API 放在模块内，不写入全局实体配置。
+系统、开发示例和迁移示例各有真实父路由，权限变化后目录重定向重新计算。
+HTTP 菜单使用已生成页面的 component key，并由后端提供完整菜单；不会静默混入本地菜单。

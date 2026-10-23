@@ -1,0 +1,167 @@
+import type { BusinessTransport, DataRow, ListInput, PageResult } from '../src/app/services/contracts'
+import type { LocalDatabase } from '../src/app/services/local-contracts'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { permissionCodes, viewComponents } from '../src/app/router/views'
+import { buildStoredMenus } from '../src/app/stored-menus'
+import { createConfigService } from '../src/modules/system/config/api'
+import { createDictionaryService } from '../src/modules/system/dictionary/api'
+import { createLocalHandler } from '../src/modules/system/local'
+import { createMenuService } from '../src/modules/system/menu/api'
+import { createOrganizationService } from '../src/modules/system/organization/api'
+import { createRoleService } from '../src/modules/system/role/api'
+import { parsePermissionTree } from '../src/modules/system/role/permission-tree'
+import { createUserService, userInput } from '../src/modules/system/user/api'
+
+let transport: BusinessTransport & { list: (resource: string, input: ListInput) => Promise<PageResult> }
+let allowed = new Set<string>()
+let records: Map<string, DataRow[]>
+beforeEach(() => {
+  records = new Map([
+    ['users', [{ id: 'admin', username: 'admin', nickname: '管理员', organizationId: 'root', roles: ['admin'], status: 'enabled', password: 'lumal123' }]],
+    ['roles', [{ id: 'admin', code: 'admin', name: '管理员', builtIn: true, status: 'enabled', permissions: permissionCodes }]],
+  ])
+  allowed = new Set(permissionCodes)
+  const db: LocalDatabase = {
+    read: <T extends DataRow>(key: string, fallback?: () => T[]): T[] => structuredClone(records.get(key) ?? fallback?.() ?? []) as T[],
+    write: (key, rows) => { records.set(key, structuredClone(rows)) },
+  }
+  const handler = createLocalHandler({
+    db,
+    user: () => ({ id: 'admin', username: 'admin', name: '管理员' }),
+    assertPermission: (code) => {
+      if (!allowed.has(code))
+        throw new Error(`无操作权限：${code}`)
+    },
+  })
+  const request: BusinessTransport['request'] = async <T>(method: Parameters<BusinessTransport['request']>[0], path: string, input = {}) => await handler.request(method, path, input) as T
+  transport = {
+    request,
+    list: (resource, input) => request('GET', `/system/${resource}`, { query: { page: input.page, pageSize: input.pageSize, ...input.query } as Record<string, string | number> }),
+  }
+})
+const newUser = (username = 'new-user') => userInput({ username, nickname: '新增用户', organizationId: 'root', roles: ['admin'], status: 'enabled' })
+
+describe('用户业务约束', () => {
+  it('独立 CRUD、机构筛选、角色与状态筛选', async () => {
+    const users = createUserService(transport)
+    const row = await users.create(newUser())
+    expect(row).not.toHaveProperty('password')
+    await users.update(row.id, { ...newUser(), nickname: '已修改' })
+    expect((await users.list({ page: 1, pageSize: 10, query: { organizationId: 'root', roles: 'admin', status: 'enabled' } })).items).toHaveLength(2)
+    await users.setStatus(row.id, 'disabled')
+    expect((await users.list({ page: 1, pageSize: 10, query: { status: 'disabled' } })).items[0]?.nickname).toBe('已修改')
+    await users.remove(row.id)
+    expect((await users.list({ page: 1, pageSize: 10, query: { keyword: 'new-user' } })).total).toBe(0)
+  })
+  it('批量先校验再写入，管理员与关联保护', async () => {
+    const users = createUserService(transport)
+    const row = await users.create(newUser())
+    await expect(users.batchStatus([row.id, 'admin'], 'disabled')).rejects.toThrow('内置管理员')
+    expect(records.get('users')?.find(item => item.id === row.id)?.status).toBe('enabled')
+    await expect(users.remove('admin')).rejects.toThrow('内置管理员')
+    await expect(users.assignRoles('admin', [])).rejects.toThrow()
+    await expect(users.create({ ...newUser('missing-org'), organizationId: 'missing' })).rejects.toThrow('机构')
+    const result = await users.resetPassword(row.id)
+    expect(result.temporaryPassword.length).toBeGreaterThanOrEqual(8)
+    expect(records.get('users')?.find(item => item.id === row.id)?.password).toBe(result.temporaryPassword)
+  })
+  it('资料更新不能绕过专用状态和角色权限', async () => {
+    const users = createUserService(transport)
+    const row = await users.create(newUser())
+    allowed.delete('system:user:status')
+    await expect(users.update(row.id, { ...newUser(), status: 'disabled' })).rejects.toThrow('无操作权限')
+    allowed.delete('system:user:create')
+    await expect(users.create(newUser('blocked'))).rejects.toThrow('无操作权限')
+  })
+})
+describe('角色资料与授权是两个独立业务流程', () => {
+  it('非叶访问权限独立回显，并拒绝循环、重复和异常权限树', () => {
+    const tree = parsePermissionTree([{ id: 'page', label: '用户', permission: 'system:user:list', children: [{ id: 'create', label: '新增', permission: 'system:user:create' }] }])
+    expect(tree[0]?.permission).toBeUndefined()
+    expect(tree[0]?.children?.map(node => node.permission)).toEqual(['system:user:list', 'system:user:create'])
+    expect(() => parsePermissionTree([{ id: 'same', label: '1' }, { id: 'same', label: '2' }])).toThrow('重复')
+    expect(() => parsePermissionTree([{ id: 'bad', label: '1', children: {} }])).toThrow('数组')
+    const cycle = { id: 'cycle', label: '循环', children: [] as unknown[] }
+    cycle.children.push(cycle)
+    expect(() => parsePermissionTree([cycle])).toThrow('循环')
+  })
+  it('真实权限树、授权回显、未知授权拒绝、引用和内置保护', async () => {
+    const roles = createRoleService(transport)
+    const role = await roles.create({ code: 'reader', name: '只读角色', description: '', status: 'enabled' })
+    expect((await roles.tree()).length).toBeGreaterThan(0)
+    expect(await roles.authorize('reader', ['system:user:list'])).toEqual(['system:user:list'])
+    expect(await roles.permissions('reader')).toEqual(['system:user:list'])
+    await expect(roles.authorize('reader', ['not-registered'])).rejects.toThrow('未注册')
+    await expect(roles.authorize('admin', [])).rejects.toThrow('内置管理员')
+    await expect(roles.remove('admin')).rejects.toThrow('内置')
+    const user = await createUserService(transport).create({ ...newUser(), roles: ['reader'] })
+    await expect(roles.remove(role.id)).rejects.toThrow('引用')
+    await createUserService(transport).remove(user.id)
+    await roles.remove(role.id)
+  })
+  it('资料已写入而授权失败时不会回滚或声称原子更新', async () => {
+    const roles = createRoleService(transport)
+    const role = await roles.create({ code: 'reader', name: '只读角色', description: '', status: 'enabled' })
+    await roles.update(role.id, { ...role, name: '已保存资料' })
+    allowed.delete('system:role:authorize')
+    await expect(roles.authorize(role.code, ['system:user:list'])).rejects.toThrow('无操作权限')
+    expect((await roles.list({ page: 1, pageSize: 10, query: { keyword: 'reader' } })).items[0]?.name).toBe('已保存资料')
+    allowed.add('system:role:authorize')
+    expect(await roles.authorize(role.code, ['system:user:list'])).toEqual(['system:user:list'])
+    await expect(transport.request('PUT', `/system/roles/${role.id}`, { body: { ...role, permissions: [] } })).rejects.toThrow('分别保存')
+  })
+})
+describe('菜单、机构、字典和配置', () => {
+  it('目录、菜单、按钮树，路径、白名单、循环与层级约束', async () => {
+    const api = createMenuService(transport)
+    const directory = await api.create({ parentId: '', type: 'directory', path: '/custom', name: 'Custom', title: '扩展目录', component: '', icon: '', permissions: [], order: 0, hidden: false, externalLink: '' })
+    const page = await api.create({ ...directory, parentId: directory.id, type: 'menu', path: '/custom/page', name: 'CustomPage', title: '扩展页', component: 'system/users' })
+    await api.create({ ...page, parentId: page.id, type: 'button', path: '', name: '', title: '操作', component: '', permissions: ['system:user:create'] })
+    expect((await api.list())[0]?.children?.[0]?.children?.[0]?.type).toBe('button')
+    await expect(api.update(directory.id, { ...directory, parentId: page.id })).rejects.toThrow('循环')
+    await expect(api.create({ ...page, component: 'constructor', name: 'Bad', path: '/custom/bad' })).rejects.toThrow('白名单')
+    await expect(api.create({ ...page, name: 'BadPath', path: '/other' })).rejects.toThrow('父级')
+    const nav = buildStoredMenus(records.get('menus')!, viewComponents)
+    expect(nav[0]?.children).toHaveLength(1)
+    expect(nav[0]?.children?.[0]?.children).toEqual([])
+    await expect(api.remove(directory.id)).rejects.toThrow('子节点')
+  })
+  it('机构新增、更新、循环和关联用户删除保护', async () => {
+    const api = createOrganizationService(transport)
+    const org = await api.create({ name: '研发部', code: 'dev', parentId: 'root', leader: '', phone: '', email: '', order: 1, status: 'enabled' })
+    await api.update(org.id, { ...org, name: '研发中心' })
+    const root = (await api.list())[0]!
+    await expect(api.update('root', { ...root, parentId: org.id })).rejects.toThrow('循环')
+    const users = createUserService(transport)
+    const user = await users.create({ ...newUser(), organizationId: org.id })
+    await expect(api.remove(org.id)).rejects.toThrow('关联用户')
+    expect((await users.list({ page: 1, pageSize: 10, query: { organizationId: 'root' } })).items).toHaveLength(2)
+    await users.remove(user.id)
+    await api.remove(org.id)
+  })
+  it('字典关联、值唯一、级联删除及缓存失效', async () => {
+    const invalidate = vi.fn()
+    const api = createDictionaryService(transport, invalidate)
+    const type = await api.createType({ code: 'approval', name: '审批', description: '', status: 'enabled' })
+    const input = { typeCode: 'approval', label: '通过', value: 'approved', order: 1, color: '#15803d', status: 'enabled' as const }
+    const item = await api.createItem(input)
+    await api.updateItem(item.id, { ...input, label: '已通过' })
+    expect((await api.items('approval'))[0]?.label).toBe('已通过')
+    expect(await api.items('other')).toEqual([])
+    await expect(api.createItem(input)).rejects.toThrow('重复')
+    await api.removeType(type.id)
+    expect(await api.items('approval')).toEqual([])
+    expect(invalidate).toHaveBeenCalledTimes(4)
+  })
+  it('配置验证、独立保存与权限拒绝', async () => {
+    const api = createConfigService(transport)
+    const initial = await api.get()
+    expect((await api.save({ ...initial, appName: '测试应用' })).appName).toBe('测试应用')
+    await expect(api.save({ ...initial, colorPrimary: 'javascript:bad' })).rejects.toThrow('无效')
+    expect((await api.get()).appName).toBe('测试应用')
+    await api.restore()
+    expect((await api.get()).appName).toBe(initial.appName)
+    allowed.delete('system:config:update')
+    await expect(api.save(initial)).rejects.toThrow('无操作权限')
+  })
+})

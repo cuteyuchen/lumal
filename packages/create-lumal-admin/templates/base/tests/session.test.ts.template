@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createApplicationSession } from '../src/services/session-runtime'
+import { createApplicationSession } from '../src/app/services/session-runtime'
 
 describe('应用会话', () => {
   it('统一清理认证、权限、菜单与标签', () => {
@@ -19,6 +19,7 @@ describe('应用会话', () => {
       getMenus: async () => [],
       logout: async () => {},
       clearCache: () => {},
+      request: async <T>() => undefined as T,
       list: async () => ({ items: [], total: 0 }),
       save: async () => {},
       remove: async () => {},
