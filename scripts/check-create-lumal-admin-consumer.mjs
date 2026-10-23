@@ -103,6 +103,27 @@ async function readJson(filePath) {
   return JSON.parse(await readFile(filePath, 'utf8'))
 }
 
+async function assertLazyModuleBoundaries(projectDir) {
+  const manifest = await readJson(join(projectDir, 'dist/.vite/manifest.json'))
+  function closure(key, visited = new Set()) {
+    if (visited.has(key))
+      return visited
+    visited.add(key)
+    for (const dependency of manifest[key]?.imports ?? [])
+      closure(dependency, visited)
+    return visited
+  }
+  const businessFiles = new Set(Object.entries(manifest)
+    .filter(([key]) => /src\/modules\/(?:system|vben-migration)\/.*View\.vue$/.test(key))
+    .map(([, value]) => value.file))
+  const critical = Object.keys(manifest).filter(key => manifest[key].isEntry || /(?:Login|Forbidden|NotFound|Dashboard)View\.vue$/.test(key))
+  for (const key of critical) {
+    if ([...closure(key)].some(dependency => businessFiles.has(manifest[dependency]?.file)))
+      throw new Error(`${key} 静态提前装载系统管理或迁移页面`)
+  }
+  return { criticalEntries: critical, isolatedBusinessPages: businessFiles.size, status: 'passed' }
+}
+
 async function checkMinimalConsumer(tempRoot, tarballs) {
   const projectDir = join(tempRoot, 'minimal-consumer')
   await mkdir(projectDir)
@@ -183,6 +204,7 @@ async function main() {
       toFileSpecifier(runnerDir, tarballs['create-lumal-admin']),
     ], runnerDir)
     const cliPath = join(runnerDir, 'node_modules/create-lumal-admin/dist/cli.js')
+    runPnpm(['exec', 'vitest', 'run', '--config', 'vitest.config.ts', 'packages/create-lumal-admin/tests/cli-terminal.test.ts'], rootDir, false, { LUMAL_TEST_CLI: cliPath })
     const createPackage = await readJson(join(rootDir, packageDirectories['create-lumal-admin'], 'package.json'))
     const cliCases = [
       [['--help'], 0, '--preset'],
@@ -265,9 +287,10 @@ async function main() {
             VITE_ENABLE_LOCAL_DEMO: 'true',
           })
           const metrics = await measureAdminBuild(projectDir)
+          const boundaries = await assertLazyModuleBoundaries(projectDir)
           const project = { projectDir, preset, apiMode, routerMode }
           projects.push(project)
-          results.push({ preset, apiMode, routerMode, installSeconds: install.seconds, buildSeconds: build.seconds, ...metrics })
+          results.push({ preset, apiMode, routerMode, installSeconds: install.seconds, buildSeconds: build.seconds, ...metrics, boundaries })
           browserEvidence.push(...await verifyScaffoldBrowsers([project], api, screenshotDirectory))
           console.log(`create-lumal-admin ${preset}/${apiMode}/${routerMode} tarball 独立安装、类型、测试、lint 与生产构建通过。`)
           await writeFile(join(reportDirectory, 'scaffold-report.json'), `${JSON.stringify({ environment: { node: process.version, platform: process.platform }, cliCases: cliCases.length, tempRoot, projects, results, browserEvidence, optionalFeatures }, null, 2)}\n`)
