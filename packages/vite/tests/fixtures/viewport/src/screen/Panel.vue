@@ -17,3 +17,10 @@ $size: 192px;
   .caption { font-size: 14px; }
 }
 </style>
+
+<style lang="scss">
+@use '../shared/panel.scss';
+.screen-mixed-sfc {
+  height: 384px;
+}
+</style>

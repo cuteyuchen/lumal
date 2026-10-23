@@ -155,6 +155,13 @@ fontSize/customProperties须各自显式启用；不扫描脚本或模板内联s
 这项限制避免误转地图坐标、接口字符串和动态组件配置，动态布局使用响应式尺寸工具。
 已有PostCSS插件与配置文件保留；配置错误明确失败，不忽略。
 
+SCSS等预处理输出有原始source map时，逐声明校验其来源，避免Screen入口合并
+Element Plus、Shared或Admin样式后绕过白名单。没有可靠map时，含跨文件
+`@use` / `@forward` / Sass `@import`、无法解析语法或函数`additionalData`的
+style整体跳过并发出警告；将外部样式与Screen声明拆成独立文件或style块。
+纯SCSS声明与同一SFC中的独立安全style仍可转换。低层PostCSS入口处理预编译
+SCSS/SFC时也必须提供原始map；来源不明的声明保留px，不能扩大转换范围。
+
 ## 隔离验收
 
 `apps/lumal-viewport-lab` 通过公开包名使用视口，使用真实 OpenLayers 矢量图、ECharts Canvas、
