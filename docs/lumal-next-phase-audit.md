@@ -17,9 +17,10 @@
 
 | 阶段 | 范围 | 状态 |
 | --- | --- | --- |
-| 0 | 现有 Admin、PTY、Local/HTTP、生产浏览器与布局回归 | Windows 生成器 51 项通过；消费者运行中；Linux 待 CI |
+| 0 | 现有 Admin、PTY、Local/HTTP、生产浏览器与布局回归 | Windows 终端通过；12 组消费者及生产浏览器通过；布局35项通过；Linux 待 CI |
 | 1 | 公共工程层、ESLint/Prettier、AI 约定与统一 check | 已实现，54 项生成器测试及 Standard/HTTP 独立 check 通过 |
-| 2–3 | Blank、Screen、旧 CLI 兼容、可选请求与认证 | 待实施 |
+| 2 | Blank、静态 Screen、旧 CLI 兼容 | 已实现；72 项生成器测试、4 组独立消费者及五种视口生产浏览器通过 |
+| 3 | Screen 可选请求与认证 | 待实施 |
 | 4 | 缩放复用、独立视口入口、定向 px 转换 | 待实施 |
 | 5–8 | 混合路由、请求/CRUD 契约、真实消费者兼容 | 已开始只读审计 |
 | 9 | 增量模块与 OpenAPI 收益审查 | 待审查 |
@@ -37,3 +38,16 @@
 
 GitHub REST API 已确认远端 master 仍为 `a938f1af6f8980adf000e96d3231f0d5499174d4`。
 本机 Git HTTPS 连接仍失败，不能由 REST 查询推断已成功 fetch/push。
+
+## 阶段 0–2 证据
+
+- `output/release/scaffold-report.json`：本轮 Windows Node 24，
+  12 组 Admin 消费者和 Chromium 149 生产浏览器通过，4 组可选模块构建通过。
+- `output/release/next-baseline-layout-corrected.log`：布局、标签、路由释放35项通过。
+- `output/release/next-project-types-tests.log`：72 项生成器测试通过，含 Windows PTY。
+- `output/release/project-templates-report.json`：独立 Blank/Screen 质量、幂等性、体积与多视口浏览器结果。
+- `output/release/next-quality-final-check.log`、`next-quality-frozen.log`：Standard/HTTP 46 项单测、
+  完整 check 及锁文件复装通过。
+
+消费者测试均以打包后的公开入口安装，不用源码 alias；报告中的临时目录在执行结束后清理。
+Linux PTY 未在本机执行，不能用 Windows PTY 结果替代。

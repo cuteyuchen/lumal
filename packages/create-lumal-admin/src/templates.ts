@@ -37,25 +37,7 @@ export async function composeTemplates(options: ReturnType<typeof resolveOptions
     layers.push('presets/standard')
   if (options.preset === 'vben-compatible')
     layers.push('vben-compatible')
-  const files = new Map<string, string>()
-  for (const layer of layers) {
-    for (const file of await readLayer(layer)) {
-      if (file.path === 'package.json' && files.has(file.path)) {
-        const previous = JSON.parse(files.get(file.path)!)
-        const current = JSON.parse(file.content)
-        files.set(file.path, JSON.stringify({
-          ...previous,
-          ...current,
-          dependencies: { ...previous.dependencies, ...current.dependencies },
-          devDependencies: { ...previous.devDependencies, ...current.devDependencies },
-        }))
-      }
-      else {
-        files.set(file.path, file.content)
-      }
-    }
-  }
-
+  const files = await readTemplateLayers(layers)
   const version = await getVersion()
   const manifest = JSON.parse(files.get('package.json')!) as {
     name: string
@@ -92,4 +74,28 @@ HTTP 登录失败不得回退 Local。Local 仅供演示，生产默认禁用。
   title: '${options.name}',
 };\n`)
   return [...files].map(([path, content]) => ({ path, content })).sort((a, b) => a.path.localeCompare(b.path))
+}
+
+/** 工程层只读合成，缺失资源在首次写入前失败。 */
+export async function readTemplateLayers(layers: string[]): Promise<Map<string, string>> {
+  const files = new Map<string, string>()
+  for (const layer of layers) {
+    for (const file of await readLayer(layer)) {
+      if (file.path === 'package.json' && files.has(file.path)) {
+        const previous = JSON.parse(files.get(file.path)!)
+        const current = JSON.parse(file.content)
+        files.set(file.path, JSON.stringify({
+          ...previous,
+          ...current,
+          dependencies: { ...previous.dependencies, ...current.dependencies },
+          devDependencies: { ...previous.devDependencies, ...current.devDependencies },
+        }))
+      }
+      else {
+        files.set(file.path, file.content)
+      }
+    }
+  }
+
+  return files
 }

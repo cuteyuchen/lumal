@@ -27,3 +27,42 @@ export interface TemplateFile {
   path: string
   content: string
 }
+
+/***********************通用项目生成协议*********************/
+export type ProjectTemplate = 'admin' | 'blank' | 'screen'
+export type ScreenAuth = 'none' | 'local-demo' | 'http'
+export type ScreenData = 'none' | 'local' | 'http'
+export type ScreenVisualization = 'none' | 'charts' | 'datav' | 'cockpit'
+export type ScreenViewport = 'responsive' | 'width' | 'scale' | 'vw'
+export type ProjectRouterMode = RouterMode | 'none'
+
+export interface CreateLumalProjectOptions {
+  targetDir: string
+  name: string
+  template?: ProjectTemplate
+  preset?: AdminPreset
+  apiMode?: ApiMode
+  features?: AdminFeature[]
+  routerMode?: ProjectRouterMode
+  auth?: ScreenAuth
+  data?: ScreenData
+  visualization?: ScreenVisualization
+  viewport?: ScreenViewport
+  signal?: AbortSignal
+}
+
+export interface ResolvedScreenOptions {
+  template: 'blank' | 'screen'
+  name: string
+  targetDir: string
+  auth: ScreenAuth
+  data: ScreenData
+  routerMode: ProjectRouterMode
+  visualization: ScreenVisualization
+  viewport: ScreenViewport
+  signal?: AbortSignal
+}
+
+export type CreateLumalProjectResult = (ResolvedScreenOptions | (CreateLumalAdminProjectResult & { template: 'admin' })) & {
+  createdFiles: string[]
+}

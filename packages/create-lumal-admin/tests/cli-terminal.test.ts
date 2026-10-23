@@ -15,14 +15,14 @@ const temporary: string[] = []
 const processes: { pty: IPty, exited: Promise<void> }[] = []
 let caseNumber = 0
 
-async function terminal(args: string[] = []) {
+async function terminal(args: string[] = [], entry = cli) {
   const cwd = await mkdtemp(join(tmpdir(), 'lumal-cli-pty-'))
   temporary.push(cwd)
   const env = Object.fromEntries(Object.entries(process.env).filter(([key, value]) => key !== 'CI' && value !== undefined)) as Record<string, string>
   const command = process.platform === 'win32' ? 'powershell.exe' : process.execPath
   const commandArgs = process.platform === 'win32'
-    ? ['-NoLogo', '-NoProfile', '-Command', `& ${[process.execPath, cli, ...args].map(value => `'${value.replaceAll('\'', '\'\'')}'`).join(' ')}`]
-    : [cli, ...args]
+    ? ['-NoLogo', '-NoProfile', '-Command', `& ${[process.execPath, entry, ...args].map(value => `'${value.replaceAll('\'', '\'\'')}'`).join(' ')}`]
+    : [entry, ...args]
   const pty = spawn(command, commandArgs, {
     cwd,
     env: { ...env, TERM: 'xterm-256color', FORCE_COLOR: '0' },
@@ -107,6 +107,29 @@ afterEach(async () => {
 })
 
 describe('真实终端向导', () => {
+  it('通用入口方向键选择 Blank，不询问或生成 Admin 能力', async () => {
+    const term = await terminal(['blank-project'], cli.replace(/cli\.js$/, 'project-cli.js'))
+    await term.prompt('npm 项目名称')
+    term.write('\r')
+    await term.prompt('项目类型')
+    term.write('\x1B[B\x1B[B\r')
+    await term.prompt('确认创建项目')
+    expect(existsSync(join(term.cwd, 'blank-project'))).toBe(false)
+    term.write('\r')
+    const result = await term.finish()
+    expect(result.exitCode).toBe(0)
+    expect(result.output).not.toContain('可选功能')
+    const manifest = JSON.parse(await readFile(join(term.cwd, 'blank-project/package.json'), 'utf8'))
+    expect(manifest.dependencies).toEqual({ vue: '^3.5.0' })
+  }, 30_000)
+
+  it.each(['blank', 'screen'])('%s Escape 取消不留下部分工程', async (template) => {
+    const term = await terminal(['cancel-project', '--template', template])
+    await term.prompt('npm 项目名称')
+    term.write('\x1B')
+    expect((await term.finish()).output).toContain('已取消')
+    expect(existsSync(join(term.cwd, 'cancel-project'))).toBe(false)
+  }, 20_000)
   it('方向键单选、Space 多选、摘要确认之前不写入文件', async () => {
     const term = await terminal(['admin'])
     await term.prompt('npm 项目名称')

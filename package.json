@@ -21,6 +21,7 @@
     "test": "pnpm test:scripts && pnpm --filter @lumal/icons test && pnpm --filter @lumal/icons build && pnpm --filter @lumal/icons-vue test && pnpm --filter @lumal/icons-vue build && pnpm --filter @lumal/core test && pnpm --filter @lumal/core build && pnpm --filter @lumal/charts test && pnpm --filter @lumal/charts build && pnpm --filter @lumal/datav test && pnpm --filter @lumal/datav build && pnpm --filter @lumal/cockpit test && pnpm --filter @lumal/cockpit build && pnpm --filter @lumal/vben-compat test && pnpm --filter @lumal/vite test && pnpm --filter create-lumal-admin test && pnpm --filter lumal-mock-api test && pnpm --filter lumal-admin test && pnpm --filter lumal-cockpit test",
     "test:scripts": "vitest run --config vitest.config.ts scripts",
     "test:create-consumer": "node scripts/check-create-lumal-admin-consumer.mjs",
+    "test:create-projects": "node scripts/check-project-templates-consumer.mjs",
     "test:datav:visual": "playwright test --config playwright.datav.config.ts",
     "test:e2e": "playwright test",
     "test:e2e:release": "pnpm admin:build && pnpm --filter lumal-mock-api build:test && pnpm test:e2e:release:built",

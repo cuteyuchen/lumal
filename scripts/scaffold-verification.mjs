@@ -17,7 +17,7 @@ async function close(server) {
   await new Promise((done, reject) => server.close(error => error ? reject(error) : done()))
 }
 
-async function serveProduction(directory) {
+export async function serveProduction(directory) {
   const root = resolve(directory, 'dist')
   const server = createServer(async (request, response) => {
     const path = resolve(root, `.${decodeURIComponent(new URL(request.url, 'http://localhost').pathname)}`)

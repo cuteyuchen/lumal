@@ -1,4 +1,4 @@
-import type { CreateLumalAdminProjectOptions, CreateLumalAdminProjectResult } from './types.js'
+import type { CreateLumalAdminProjectOptions, CreateLumalAdminProjectResult, TemplateFile } from './types.js'
 import { lstat, mkdir, open, readdir, rmdir, unlink } from 'node:fs/promises'
 import { dirname, join, parse, resolve } from 'node:path'
 import { resolveOptions } from './presets.js'
@@ -35,11 +35,19 @@ export async function createLumalAdminProject(
   input: CreateLumalAdminProjectOptions,
 ): Promise<CreateLumalAdminProjectResult> {
   const options = resolveOptions(input)
-  const targetDir = resolve(options.targetDir)
+  const files = await composeTemplates(options)
+  return { ...options, ...await writeProjectFiles(options, files) }
+}
+
+/** 所有项目复用同一套目录校验、文件所有权与取消回滚。 */
+export async function writeProjectFiles(
+  input: { targetDir: string, signal?: AbortSignal },
+  files: TemplateFile[],
+): Promise<{ targetDir: string, createdFiles: string[] }> {
+  const targetDir = resolve(input.targetDir)
   await assertTargetDirectory(targetDir)
   input.signal?.throwIfAborted()
   // 先读取、校验全部发布资源，再开始写入。回滚从不递归删除目标目录。
-  const files = await composeTemplates(options)
   const ownedFiles: string[] = []
   const ownedDirectories: string[] = []
   async function ensureDirectory(directory: string): Promise<void> {
@@ -96,5 +104,5 @@ export async function createLumalAdminProject(
       throw new AggregateError([error, ...cleanupErrors], '创建失败，部分文件清理失败，请检查目标目录')
     throw error
   }
-  return { ...options, targetDir, createdFiles: files.map(file => file.path) }
+  return { targetDir, createdFiles: files.map(file => file.path) }
 }

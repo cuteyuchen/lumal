@@ -3,6 +3,7 @@ import { extname } from 'node:path'
 import { format } from 'prettier'
 import { describe, expect, it } from 'vitest'
 import { resolveOptions } from '../src/presets'
+import { composeProjectTemplates, resolveProjectOptions } from '../src/projects'
 import { composeTemplates } from '../src/templates'
 
 const config = {
@@ -15,6 +16,16 @@ const config = {
 }
 
 describe('生成工程的格式契约', () => {
+  it.each(['blank', 'screen'] as const)('%s 输出符合公共格式且无 Admin 规范', async (template) => {
+    const options = resolveProjectOptions({ template, name: 'quality-test', targetDir: 'unused' })
+    if (options.template === 'admin')
+      throw new Error('预期非 Admin 模板')
+    for (const file of await composeProjectTemplates(options)) {
+      if (!['.vue', '.ts', '.mjs', '.json', '.css', '.html', '.md'].includes(extname(file.path)))
+        continue
+      expect(await format(file.content, { ...config, filepath: file.path }), file.path).toBe(file.content)
+    }
+  })
   it.each(['minimal', 'standard', 'vben-compatible'] as const)('%s 初始输出已经格式化且重复格式化无变化', async (preset) => {
     const files = await composeTemplates(resolveOptions({ preset, name: 'quality-test', targetDir: 'unused' }))
     for (const file of files) {

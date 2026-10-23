@@ -6,8 +6,9 @@ import { PassThrough } from 'node:stream'
 import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
 import { cancel, confirm, intro, isCancel, multiselect, note, outro, select, spinner, text } from '@clack/prompts'
-import { assertTargetDirectory, createLumalAdminProject } from './create.js'
-import { apiModes, assertPackageName, availableFeatures, defaultFeatures, featureDefinitions, features, presets, resolveOptions, routerModes } from './presets.js'
+import { assertTargetDirectory } from './create.js'
+import { apiModes, assertPackageName, availableFeatures, defaultFeatures, featureDefinitions, features, presets, routerModes } from './presets.js'
+import { createLumalProject, projectRouterModes, projectTemplates, resolveProjectOptions, screenAuthModes, screenDataModes, screenViewports, screenVisualizations } from './projects.js'
 import { getVersion } from './templates.js'
 
 export function parseCliArgs(args: string[]) {
@@ -17,6 +18,11 @@ export function parseCliArgs(args: string[]) {
     strict: true,
     options: {
       'api-mode': { type: 'string' },
+      'template': { type: 'string' },
+      'auth': { type: 'string' },
+      'data': { type: 'string' },
+      'visualization': { type: 'string' },
+      'viewport': { type: 'string' },
       'features': { type: 'string' },
       'help': { type: 'boolean', short: 'h' },
       'name': { type: 'string' },
@@ -40,8 +46,13 @@ export function parseCliArgs(args: string[]) {
     target: positionals[0],
     name: values.name,
     apiMode: choice('api-mode', values['api-mode'], apiModes),
+    template: choice('template', values.template, projectTemplates),
+    auth: choice('auth', values.auth, screenAuthModes),
+    data: choice('data', values.data, screenDataModes),
+    visualization: choice('visualization', values.visualization, screenVisualizations),
+    viewport: choice('viewport', values.viewport, screenViewports),
     preset: choice('preset', values.preset, presets),
-    routerMode: choice('router-mode', values['router-mode'], routerModes),
+    routerMode: choice('router-mode', values['router-mode'], projectRouterModes),
     features: selected,
     help: values.help,
     version: values.version,
@@ -52,8 +63,13 @@ export function parseCliArgs(args: string[]) {
 const help = `用法：pnpm create lumal-admin [目录] [选项]
 
   --preset minimal|standard|vben-compatible  模板（默认 standard）
+  --template admin|screen|blank             项目类型（旧入口默认 admin）
   --api-mode local|http                     数据源（默认 local）
   --router-mode hash|history                路由（默认 hash）
+  --auth none|local-demo|http               Screen 认证（默认 none）
+  --data none|local|http                    Screen 业务数据（默认 none）
+  --visualization none|charts|datav|cockpit  Screen 可视化（默认 none）
+  --viewport responsive|width|scale|vw       Screen 适配（默认 responsive）
   --features system,examples|none            业务模块（标准预设默认全部）
   --name <npm包名>                           项目名称（默认目录名）
   --no-interactive                           禁用交互，CI/非 TTY 自动禁用
@@ -62,8 +78,10 @@ const help = `用法：pnpm create lumal-admin [目录] [选项]
 
 非空目录拒绝覆盖；HTTP 模式必须自行配置后端。`
 
-export async function main(args = process.argv.slice(2)): Promise<void> {
+export async function main(args = process.argv.slice(2), unified = false): Promise<void> {
   const options = parseCliArgs(args)
+  if (!unified)
+    options.template ??= 'admin'
   if (options.help) {
     console.log(help)
     return
@@ -75,7 +93,7 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
   const interactive = canInteract()
     && options.interactive
   if (interactive) {
-    intro('创建 Lumal Admin')
+    intro(unified ? '创建 Lumal 项目' : '创建 Lumal Admin')
     const input = new PassThrough()
     const previousRawMode = process.stdin.isRaw
     // Clack 每题关闭 readline；保持原始终端为 raw，避免 Windows 在题间启动 cooked read。
@@ -101,54 +119,87 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
         validate: value => validation(() => assertPackageName(value?.trim() || defaultName)),
       }))
       assertPackageName(options.name)
-      options.preset ??= await answer(select({
+      options.template ??= await answer(select({
         input,
-        message: '项目模板',
-        initialValue: 'standard',
+        message: '项目类型',
+        initialValue: 'admin',
         options: [
-          { value: 'minimal', label: 'Minimal', hint: '极简开发基座' },
-          { value: 'standard', label: 'Standard', hint: '完整轻量后台，推荐' },
-          { value: 'vben-compatible', label: 'Vben Compatible', hint: '支持 Vben 5 高频业务 API 迁移' },
+          { value: 'admin', label: 'Admin', hint: '完整管理后台' },
+          { value: 'screen', label: 'Screen', hint: '独立大屏，无后台布局' },
+          { value: 'blank', label: 'Blank', hint: '仅 Vue + TypeScript + Vite' },
         ] as const,
       }))
-      options.apiMode ??= await answer(select({
-        input,
-        message: '数据源模式',
-        initialValue: 'local',
-        options: [
-          { value: 'local', label: 'Local Mock', hint: '开箱即用的本地开发演示数据' },
-          { value: 'http', label: 'HTTP API', hint: '对接真实后端接口' },
-        ] as const,
-      }))
-      options.routerMode ??= await answer(select({
-        input,
-        message: '路由模式',
-        initialValue: 'hash',
-        options: [
-          { value: 'hash', label: 'Hash', hint: '部署简单' },
-          { value: 'history', label: 'History', hint: '服务端需配置 SPA fallback' },
-        ] as const,
-      }))
-      const available = availableFeatures(options.preset)
-      if (options.features === undefined) {
-        options.features = available.length
-          ? await answer(multiselect({
-              input,
-              message: '可选功能（Space 勾选，方向键移动，Enter 确认）',
-              options: available.map(value => ({ value, ...featureDefinitions[value] })),
-              initialValues: defaultFeatures(options.preset),
-              required: false,
-            }))
-          : []
+      if (options.template === 'admin') {
+        options.preset ??= await answer(select({
+          input,
+          message: '项目模板',
+          initialValue: 'standard',
+          options: [
+            { value: 'minimal', label: 'Minimal', hint: '极简开发基座' },
+            { value: 'standard', label: 'Standard', hint: '完整轻量后台，推荐' },
+            { value: 'vben-compatible', label: 'Vben Compatible', hint: '支持 Vben 5 高频业务 API 迁移' },
+          ] as const,
+        }))
+        options.apiMode ??= await answer(select({
+          input,
+          message: '数据源模式',
+          initialValue: 'local',
+          options: [
+            { value: 'local', label: 'Local Mock', hint: '开箱即用的本地开发演示数据' },
+            { value: 'http', label: 'HTTP API', hint: '对接真实后端接口' },
+          ] as const,
+        }))
+        options.routerMode ??= await answer(select({
+          input,
+          message: '路由模式',
+          initialValue: 'hash',
+          options: [
+            { value: 'hash', label: 'Hash', hint: '部署简单' },
+            { value: 'history', label: 'History', hint: '服务端需配置 SPA fallback' },
+          ] as const,
+        }))
+        const available = availableFeatures(options.preset)
+        if (options.features === undefined) {
+          options.features = available.length
+            ? await answer(multiselect({
+                input,
+                message: '可选功能（Space 勾选，方向键移动，Enter 确认）',
+                options: available.map(value => ({ value, ...featureDefinitions[value] })),
+                initialValues: defaultFeatures(options.preset),
+                required: false,
+              }))
+            : []
+        }
       }
-      const resolved = resolveOptions({ ...options, name: options.name, targetDir: options.target })
+      else if (options.template === 'screen') {
+        options.routerMode ??= await answer(select({
+          input,
+          message: 'Screen 路由',
+          initialValue: 'none',
+          options: [
+            { value: 'none', label: 'None', hint: '真正单页，无 Router 依赖' },
+            ...routerModes.map(value => ({ value, label: value === 'hash' ? 'Hash' : 'History' })),
+          ],
+        }))
+      }
+      const resolved = resolveProjectOptions({ ...options, name: options.name, targetDir: options.target })
       note([
         `项目名称：${resolved.name}`,
         `目标目录：${resolve(resolved.targetDir)}`,
-        `模板：${resolved.preset}`,
-        `数据源：${resolved.apiMode}`,
+        `项目类型：${resolved.template}`,
+        ...('preset' in resolved
+          ? [
+              `模板：${resolved.preset}`,
+              `数据源：${resolved.apiMode}`,
+              `功能模块：${resolved.features.join('、') || '无'}`,
+            ]
+          : [
+              `认证：${resolved.auth}${resolved.auth === 'http' ? '（包含认证网络请求）' : ''}`,
+              `业务数据：${resolved.data}`,
+              `可视化：${resolved.visualization}`,
+              `适配：${resolved.viewport}`,
+            ]),
         `路由：${resolved.routerMode}`,
-        `功能模块：${resolved.features.join('、') || '无'}`,
       ].join('\n'), '配置摘要')
       if (!await answer(confirm({ input, message: '确认创建项目？', active: '创建', inactive: '取消' })))
         throw new PromptCancelled()
@@ -174,7 +225,7 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
   progress?.start('正在校验模板并创建文件')
   let result
   try {
-    result = await createLumalAdminProject({ ...options, name: options.name ?? basename(targetDir), targetDir, signal: controller.signal })
+    result = await createLumalProject({ ...options, name: options.name ?? basename(targetDir), targetDir, signal: controller.signal })
     progress?.stop('项目文件创建完成')
   }
   catch (error) {
@@ -184,9 +235,12 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
   finally {
     process.off('SIGINT', abort)
   }
-  console.log(`已创建 ${result.preset} / ${result.apiMode} / ${result.routerMode} 项目：${result.targetDir}`)
+  const summary = 'preset' in result
+    ? `${result.preset} / ${result.apiMode} / ${result.routerMode}`
+    : `${result.template} / ${result.data} / ${result.routerMode}`
+  console.log(`已创建 ${summary} 项目：${result.targetDir}`)
   console.log(`下一步：\n  cd ${JSON.stringify(result.targetDir)}\n  pnpm install\n  pnpm dev`)
-  if (result.apiMode === 'http')
+  if (('apiMode' in result && result.apiMode === 'http') || ('data' in result && (result.data === 'http' || result.auth === 'http')))
     console.log('请先配置 .env.development 中的 VITE_API_BASE_URL，契约见 API-CONTRACT.md。')
   if (interactive)
     outro('创建成功')

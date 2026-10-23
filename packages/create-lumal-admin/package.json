@@ -21,6 +21,7 @@
     }
   },
   "bin": {
+    "create-lumal": "./dist/project-cli.js",
     "create-lumal-admin": "./dist/cli.js"
   },
   "files": [

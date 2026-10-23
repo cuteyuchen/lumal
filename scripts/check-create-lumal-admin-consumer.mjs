@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 import process from 'node:process'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { measureAdminBuild } from './measure-admin-build.mjs'
 import { createScaffoldTestApi, verifyScaffoldBrowsers } from './scaffold-verification.mjs'
 
@@ -34,7 +34,7 @@ function quoteWindowsArg(arg) {
   return /[\s"]/.test(arg) ? `"${arg.replaceAll('"', '\\"')}"` : arg
 }
 
-function runPnpm(args, cwd = rootDir, capture = false, extraEnv = {}) {
+export function runPnpm(args, cwd = rootDir, capture = false, extraEnv = {}) {
   const started = performance.now()
   const useShell = process.platform === 'win32'
   const result = spawnSync(
@@ -65,7 +65,7 @@ function runPnpm(args, cwd = rootDir, capture = false, extraEnv = {}) {
   return { seconds: Number(((performance.now() - started) / 1000).toFixed(3)), stdout: result.stdout }
 }
 
-function toFileSpecifier(fromDir, filePath) {
+export function toFileSpecifier(fromDir, filePath) {
   return `file:${relative(fromDir, filePath).replaceAll('\\', '/')}`
 }
 
@@ -79,7 +79,7 @@ async function ensureBuildArtifacts() {
   }
 }
 
-async function packPackage(packageName, packageDir, tarballDir) {
+export async function packPackage(packageName, packageDir, tarballDir) {
   const before = new Set(await readdir(tarballDir))
   runPnpm([
     '--dir',
@@ -99,7 +99,7 @@ async function packPackage(packageName, packageDir, tarballDir) {
   return join(tarballDir, created[0])
 }
 
-async function readJson(filePath) {
+export async function readJson(filePath) {
   return JSON.parse(await readFile(filePath, 'utf8'))
 }
 
@@ -339,7 +339,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error)
-  process.exit(1)
-})
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error)
+    process.exit(1)
+  })
+}
