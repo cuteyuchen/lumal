@@ -411,16 +411,17 @@ export function createRequestClient(clientOptions: RequestClientOptions = {}): R
       assertCurrentSession()
       const currentToken = await clientOptions.getToken?.()
       assertCurrentSession()
-      // 无刷新机制时，迟到的旧 Token 401 也不能清除已经替换的新凭据。
-      if (!clientOptions.authRefresh && usedToken !== undefined && currentToken !== usedToken) {
-        throw new RequestError('访问凭据已变更，忽略旧请求', { code: 'STALE_SESSION', kind: 'cancelled', originalError: error })
-      }
       const managedAuthorization = usedToken ? `${clientOptions.tokenPrefix ?? 'Bearer'} ${usedToken}` : null
       const replayAllowed = attempt === 0
         && canReplayAfterAuthRefresh((context.init.method ?? 'GET').toUpperCase(), options, context.init)
         // hook 注入外部身份时不使用客户端凭据重放，避免越权或覆盖外部认证。
         && new Headers(context.init.headers).get('Authorization') === managedAuthorization
         && Boolean(clientOptions.authRefresh)
+
+      // 只有安全重放可使用已更新的凭据，旧写请求或退出后的 401 不能影响新会话。
+      if (usedToken !== undefined && currentToken !== usedToken && (!replayAllowed || !currentToken)) {
+        throw new RequestError('访问凭据已变更，忽略旧请求', { code: 'STALE_SESSION', kind: 'cancelled', originalError: error })
+      }
 
       if (replayAllowed) {
         if (usedToken && currentToken && currentToken !== usedToken) {

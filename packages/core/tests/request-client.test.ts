@@ -761,6 +761,33 @@ describe('create request client', () => {
     expect(expired).toHaveBeenCalledTimes(1)
   })
 
+  it.each([true, false])('authRefresh下不可重放的写请求区分凭据切换与当前会话失效（切换=%s）', async (switched) => {
+    let token = 'account-a'
+    let respond!: (response: Response) => void
+    const expired = vi.fn()
+    const responseError = vi.fn()
+    const refresh = vi.fn(async () => {})
+    const client = createRequestClient({
+      fetch: () => new Promise<Response>((resolve) => { respond = resolve }),
+      getToken: () => token,
+      authRefresh: { refresh },
+      onSessionExpired: expired,
+      onResponseError: responseError,
+    })
+    const pending = client.post('/private', { body: { value: 'draft' } }).catch(error => error)
+    await vi.waitFor(() => expect(respond).toBeDefined())
+    if (switched)
+      token = 'account-b'
+    respond(createJsonResponse({}, { status: 401 }))
+    expect(await pending).toMatchObject(switched
+      ? { code: 'STALE_SESSION', kind: 'cancelled' }
+      : { kind: 'session', status: 401 })
+    expect(refresh).not.toHaveBeenCalled()
+    expect(expired).toHaveBeenCalledTimes(switched ? 0 : 1)
+    expect(responseError).toHaveBeenCalledTimes(switched ? 0 : 1)
+    expect(token).toBe(switched ? 'account-b' : 'account-a')
+  })
+
   it('旧刷新失败不能清除新会话或与新请求共享刷新', async () => {
     let scope = 'session-a'
     let rejectRefresh!: (error: Error) => void
