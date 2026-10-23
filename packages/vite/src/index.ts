@@ -21,3 +21,5 @@ export {
 export type {
   ResolveLumalDevtoolsPluginOptions,
 } from './devtools'
+export { createViewportPostcssPlugin, createViewportTransformPlugin } from './viewport-transform'
+export type { ViewportTransformOptions } from './viewport-transform'

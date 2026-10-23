@@ -14,7 +14,7 @@ export default defineConfig({
       fileName: format => `index.${format === 'cjs' ? 'cjs' : 'js'}`,
     },
     rollupOptions: {
-      external: ['node:path'],
+      external: ['node:path', 'node:process', 'picomatch', 'postcss', 'postcss-load-config', 'postcss-value-parser'],
     },
   },
 })

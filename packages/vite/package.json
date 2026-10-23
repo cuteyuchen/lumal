@@ -33,5 +33,14 @@
     "build": "vite build --config vite.config.ts && tsc -p tsconfig.json --emitDeclarationOnly && node ../../scripts/clean-package-dist.mjs dist",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --config ../../vitest.config.ts tests"
+  },
+  "dependencies": {
+    "picomatch": "^4.0.5",
+    "postcss": "^8.5.16",
+    "postcss-load-config": "^6.0.1",
+    "postcss-value-parser": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/picomatch": "^4.0.3"
   }
 }

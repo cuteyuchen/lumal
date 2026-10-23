@@ -73,3 +73,8 @@ HTTP 使用独立脱敏验收服务器，不拦截浏览器 fetch；验证错误
 - 省级原测试未删除、未修改；脱敏夹具独立编写，不含业务接口、行业数据或私有资产。
 - `scripts/lumal-skill.test.ts`、发布安全与包名59项通过；release boundaries通过。
   未在真实消费者部署，也未宣称原项目已升级通过。
+
+定向CSS转换：`@lumal/vite` 10项测试、typecheck通过。真实Vite Dev/Build验证
+SFC+SCSS、外部PostCSS配置保留、后台样式排除和脚本坐标不变；
+另测Windows/Unix/pnpm路径、URL/字符串、字号/自定义属性和重复执行幂等。
+模板内联style/脚本字符串转换明确不提供，动态数值使用viewport响应式工具。

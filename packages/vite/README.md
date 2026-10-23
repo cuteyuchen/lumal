@@ -1,5 +1,34 @@
 # @lumal/vite
 
+## 可选的局部 px → vw
+
+开发分支新增（未发布）：
+
+```ts
+import { createViewportTransformPlugin } from '@lumal/vite'
+
+const viewport = createViewportTransformPlugin({
+  enabled: true,
+  include: ['src/screen/**'],
+  exclude: ['**/map/**'],
+  viewportWidth: 1920,
+  fontSize: false,
+  customProperties: false,
+})
+// 将 viewport 加入已有 Vite plugins。
+```
+
+默认 `enabled=false`，开启必须指定 include。Dev/Build 共用 PostCSS 声明转换，
+保留已有 inline 或文件 PostCSS 配置；SCSS 在预处理后转换，SFC仅转换style。
+默认不转换 node_modules，仅 `dependencies: ['明确的包名']` 可白名单加入。
+默认保留 <=1px、font/font-size 和 CSS 自定义属性；已有vw、URL、var引用、
+引号字符串和普通数字不变，重复执行幂等。
+
+不转换模板内联 style、TS/JS 字符串或坐标；动态数值布局使用响应式 viewport Composable。
+不提供旧插件的全依赖/全脚本扫描开关。不要将本插件与同一画布的 transform 双重缩放，
+也不要让转换范围覆盖 Admin、Element Plus 或地图引擎样式。
+解析依赖仅供 Node 构建工具使用，不进入应用运行时。
+
 Lumal 的轻量 Vite 配置助手，提供组件 resolver、工作区源码/产物 alias 和可选 Devtools 接线。
 
 ```ts

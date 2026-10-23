@@ -132,6 +132,29 @@ Element Plus Dialog 使用 append-to-body；Popper/Select/Tooltip 保持默认 t
 382px侧栏、210px底栏、业务 mapPadding、行业断点和颜色不能硬编码进 Lumal。
 不要为了适配删除地图、配色和业务回归断言；固定尺寸断言应改成可配置策略与边界断言。
 
+## 可选构建转换
+
+Vite插件只处理CSS声明；SFC style和SCSS预处理后的样式与普通CSS共用一条管线：
+
+```ts
+import { createViewportTransformPlugin } from '@lumal/vite'
+
+const viewport = createViewportTransformPlugin({
+  enabled: true,
+  include: ['src/screen/**'],
+  exclude: ['**/map/**'],
+  viewportWidth: 1920,
+  fontSize: false,
+  customProperties: false,
+})
+```
+
+插件加入已有plugins；默认关闭。默认不转换依赖，确需转换时用dependencies精确包名白名单。
+URL、引号字符串、var引用、已有vw、普通数字不会被改写，<=1px默认保留。
+fontSize/customProperties须各自显式启用；不扫描脚本或模板内联style。
+这项限制避免误转地图坐标、接口字符串和动态组件配置，动态布局使用响应式尺寸工具。
+已有PostCSS插件与配置文件保留；配置错误明确失败，不忽略。
+
 ## 隔离验收
 
 `apps/lumal-viewport-lab` 通过公开包名使用视口，使用真实 OpenLayers 矢量图、ECharts Canvas、
