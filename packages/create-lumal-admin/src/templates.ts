@@ -42,6 +42,7 @@ export async function composeTemplates(options: ReturnType<typeof resolveOptions
   const manifest = JSON.parse(files.get('package.json')!) as {
     name: string
     dependencies: Record<string, string>
+    devDependencies: Record<string, string>
   }
   manifest.name = options.name
   for (const name of ['@lumal/core', '@lumal/icons', '@lumal/icons-vue'])
@@ -49,6 +50,7 @@ export async function composeTemplates(options: ReturnType<typeof resolveOptions
   if (options.preset === 'vben-compatible')
     manifest.dependencies['@lumal/vben-compat'] = version
   manifest.dependencies = Object.fromEntries(Object.entries(manifest.dependencies).sort(([left], [right]) => left.localeCompare(right)))
+  manifest.devDependencies = Object.fromEntries(Object.entries(manifest.devDependencies).sort(([left], [right]) => left.localeCompare(right)))
   files.set('package.json', `${JSON.stringify(manifest, null, 2)}\n`)
   files.set('.env.development', 'VITE_API_BASE_URL=\nVITE_API_ADAPTER=standard\n')
   files.set('.env.production.example', 'VITE_API_BASE_URL=https://api.example.com\nVITE_API_ADAPTER=standard\n# Local 演示生产构建默认禁止登录；仅演示站点显式启用。\nVITE_ENABLE_LOCAL_DEMO=false\n')

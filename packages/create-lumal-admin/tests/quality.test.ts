@@ -16,6 +16,24 @@ const config = {
 }
 
 describe('生成工程的格式契约', () => {
+  it.each([
+    ['Admin Minimal', { template: 'admin', preset: 'minimal' }],
+    ['Admin Standard', { template: 'admin', preset: 'standard' }],
+    ['Admin Vben Compatible', { template: 'admin', preset: 'vben-compatible' }],
+    ['Blank', { template: 'blank' }],
+    ['Screen 能力组合', { template: 'screen', auth: 'http', data: 'http', routerMode: 'history', visualization: 'cockpit', viewport: 'contain' }],
+  ] as const)('%s 合并后的运行时和开发依赖均有序', async (_label, input) => {
+    const options = resolveProjectOptions({ ...input, name: 'quality-test', targetDir: 'unused' })
+    const files = options.template === 'admin'
+      ? await composeTemplates(options)
+      : await composeProjectTemplates(options)
+    const manifest = JSON.parse(files.find(file => file.path === 'package.json')!.content)
+    for (const field of ['dependencies', 'devDependencies']) {
+      const names = Object.keys(manifest[field])
+      expect(names, field).toEqual([...names].sort((left, right) => left.localeCompare(right)))
+    }
+  })
+
   it.each(['blank', 'screen'] as const)('%s 输出符合公共格式且无 Admin 规范', async (template) => {
     const options = resolveProjectOptions({ template, name: 'quality-test', targetDir: 'unused' })
     if (options.template === 'admin')

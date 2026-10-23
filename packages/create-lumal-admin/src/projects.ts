@@ -88,6 +88,7 @@ export async function composeProjectTemplates(options: ResolvedScreenOptions): P
   if (options.visualization === 'cockpit')
     manifest.dependencies['element-plus'] = '^2.11.0'
   manifest.dependencies = Object.fromEntries(Object.entries(manifest.dependencies).sort(([a], [b]) => a.localeCompare(b)))
+  manifest.devDependencies = Object.fromEntries(Object.entries(manifest.devDependencies).sort(([a], [b]) => a.localeCompare(b)))
   files.set('package.json', `${JSON.stringify(manifest, null, 2)}\n`)
   if (options.routerMode !== 'none') {
     files.set('src/router.ts', files.get('src/router.ts')!.replaceAll('createWebHashHistory', options.routerMode === 'hash' ? 'createWebHashHistory' : 'createWebHistory'))
