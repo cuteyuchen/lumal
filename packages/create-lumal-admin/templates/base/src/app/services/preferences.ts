@@ -1,6 +1,6 @@
-import type { LumalPreferencesDefaults } from '@lumal/core/theme'
-import { createPreferencesStore } from '@lumal/core/theme'
-import { appConfig } from '../../app.config'
+import type { LumalPreferencesDefaults } from '@lumal/core/theme';
+import { createPreferencesStore } from '@lumal/core/theme';
+import { appConfig } from '../../app.config';
 
 export const adminPreferenceDefaults = {
   app: { dynamicTitle: true, layout: 'sidebar-nav' },
@@ -25,17 +25,17 @@ export const adminPreferenceDefaults = {
   },
   theme: { fontSize: 14 },
   transition: { enable: true, name: 'fade-side' },
-} satisfies LumalPreferencesDefaults
+} satisfies LumalPreferencesDefaults;
 
 const preferencesStore = createPreferencesStore({
   defaults: adminPreferenceDefaults,
   storage: localStorage,
   storageKey: 'lumal-admin:preferences',
-})
+});
 
-export const adminPreferences = preferencesStore.state
-export const adminResolvedThemeMode = preferencesStore.resolvedThemeMode
+export const adminPreferences = preferencesStore.state;
+export const adminResolvedThemeMode = preferencesStore.resolvedThemeMode;
 
 export function patchAdminPreferences(preferences: Parameters<typeof preferencesStore.patch>[0]): void {
-  preferencesStore.patch(preferences)
+  preferencesStore.patch(preferences);
 }

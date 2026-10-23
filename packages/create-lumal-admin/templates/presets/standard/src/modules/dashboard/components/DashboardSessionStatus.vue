@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ElDescriptions, ElDescriptionsItem, ElTag } from 'element-plus'
-import { appConfig } from '../../../app.config'
-import { permissionStore } from '../../../app/services/session'
+import { ElDescriptions, ElDescriptionsItem, ElTag } from 'element-plus';
+import { appConfig } from '../../../app.config';
+import { permissionStore } from '../../../app/services/session';
 
 /***********************真实应用与会话状态*********************/
-const source = appConfig.apiMode === 'local' ? '本地开发演示' : 'HTTP API'
+const source = appConfig.apiMode === 'local' ? '本地开发演示' : 'HTTP API';
 </script>
 
 <template>
@@ -30,6 +30,12 @@ const source = appConfig.apiMode === 'local' ? '本地开发演示' : 'HTTP API'
 </template>
 
 <style scoped>
-.session-status { padding: 24px 0; border-top: 1px solid var(--el-border-color-lighter); }
-.session-status h3 { margin: 0 0 16px; font-size: 16px; }
+.session-status {
+  padding: 24px 0;
+  border-top: 1px solid var(--el-border-color-lighter);
+}
+.session-status h3 {
+  margin: 0 0 16px;
+  font-size: 16px;
+}
 </style>

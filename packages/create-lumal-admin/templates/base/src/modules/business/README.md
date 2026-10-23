@@ -5,17 +5,22 @@
 业务类型与 API 放在同一模块内，不要向系统管理或 Core 添加业务依赖。
 
 ```ts
-import type { AppModule } from '../../../app/module'
+import type { AppModule } from '../../../app/module';
 
 export const menus: AppModule['menus'] = [
-  { path: '/orders', name: 'Orders', component: 'business/orders', meta: { title: '订单', authority: ['orders:list'] } },
-]
+  {
+    path: '/orders',
+    name: 'Orders',
+    component: 'business/orders',
+    meta: { title: '订单', authority: ['orders:list'] },
+  },
+];
 export const views: AppModule['views'] = {
   'business/orders': () => import('./OrderView.vue'),
-}
+};
 export const permissions: AppModule['permissions'] = [
   { id: 'orders:list', label: '订单列表', permission: 'orders:list' },
-]
+];
 ```
 
 后端 `/menus` 必须返回此组件白名单键；HTTP 不会把本地路由悄悄融合到远端菜单中。

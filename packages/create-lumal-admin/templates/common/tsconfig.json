@@ -11,12 +11,9 @@
     "ignoreDeprecations": "6.0",
     "types": ["vite/client", "node"],
     "strict": true,
+    "noEmit": true,
     "isolatedModules": true,
     "skipLibCheck": true
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.vue",
-    "vite.config.ts"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.vue", "tests/**/*.ts", "vite.config.ts", "vitest.config.ts"]
 }

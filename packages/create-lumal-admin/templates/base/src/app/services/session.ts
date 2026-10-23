@@ -1,7 +1,7 @@
-import { createBackend } from './data-source'
-import { createApplicationSession } from './session-runtime'
+import { createBackend } from './data-source';
+import { createApplicationSession } from './session-runtime';
 
-export const application = createApplicationSession(createBackend, localStorage, sessionStorage)
+export const application = createApplicationSession(createBackend, localStorage, sessionStorage);
 export const {
   currentUser,
   initialize,
@@ -11,4 +11,4 @@ export const {
   permissionStore,
   service,
   tabStorageKey: adminTabSnapshotStorageKey,
-} = application
+} = application;

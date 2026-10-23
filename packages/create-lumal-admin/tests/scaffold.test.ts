@@ -31,6 +31,12 @@ describe('模板资源组合', () => {
           const result = await createLumalAdminProject({ name: 'demo-admin', targetDir, preset, apiMode, routerMode })
           expect(result.createdFiles).toEqual(expect.arrayContaining([
             'README.md',
+            '.editorconfig',
+            '.gitattributes',
+            '.prettierignore',
+            'prettier.config.mjs',
+            'AGENTS.md',
+            'docs/DEVELOPMENT.md',
             '.gitignore',
             '.env.example',
             '.env.development',
@@ -46,6 +52,8 @@ describe('模板资源组合', () => {
           ]))
           const manifest = JSON.parse(await fs.readFile(join(targetDir, 'package.json'), 'utf8'))
           expect(manifest.name).toBe('demo-admin')
+          expect(manifest.scripts.check).toBe('pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build')
+          expect(manifest.devDependencies.prettier).toBeDefined()
           expect(Object.keys(manifest.dependencies)).toEqual(Object.keys(manifest.dependencies).sort((left, right) => left.localeCompare(right)))
           expect(manifest.dependencies['@lumal/vben-compat'] !== undefined).toBe(preset === 'vben-compatible')
           for (const heavy of ['@lumal/charts', '@lumal/datav', '@lumal/cockpit', 'vxe-table', 'echarts'])

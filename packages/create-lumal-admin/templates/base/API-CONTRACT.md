@@ -4,33 +4,33 @@
 Local 与 HTTP 使用同一组页面及端点；Core 不包含业务协议。
 系统接口仅在选择 system 时调用，个人中心仅 standard / vben-compatible 启用。
 
-| 方法 | 路径 | 标准 JSON 响应 |
-| --- | --- | --- |
-| POST | `/auth/login`，body `{ username, password }` | `{ accessToken, refreshToken?, expiresAt? }` |
-| POST | `/auth/refresh`，body `{ refreshToken }` | 同上 |
-| GET | `/session/me` | `{ id, username, name }`，均为字符串 |
-| GET | `/session/access` | `{ roles: string[], permissions: string[] }` |
-| GET | `/menus` | `LumalMenuRecord[]` |
-| POST | `/auth/logout` | 204 或 JSON |
-| GET | `/system/users`、`/system/roles` | `{ items: User[] \| Role[], total }` |
-| POST/PUT/DELETE | `/system/users[/:id]`、`/system/roles[/:id]` | 对应模块输入 / 记录；删除 204 或 JSON |
-| PATCH | `/system/users/:id/status` | `{ status }` / `User` |
-| PUT | `/system/users/:id/roles` | `{ roles: string[] }` / `User` |
-| PATCH | `/system/users/batch/status` | `{ ids, status }` / `{ items, updated }` |
-| PUT | `/system/users/batch/roles` | `{ ids, roles, mode: 'append' \| 'replace' }` / `{ items, updated }` |
-| POST | `/system/users/:id/reset-password` | `{ temporaryPassword }` |
-| GET | `/system/roles/options`、`/system/organizations/options` | `{ label, value, disabled?, children? }[]` |
-| GET | `/system/permissions/tree` | `{ id, label, permission?, children? }[]` |
-| GET/PUT | `/system/roles/:code/permissions` | PUT `{ permissions: string[] }`；响应 `string[]` |
-| GET | `/system/menus`、`/system/organizations` | 对应树形记录数组，`children`；机构可带 `userCount` |
-| POST/PUT/DELETE | `/system/menus[/:id]`、`/system/organizations[/:id]` | 对应模块输入 / 记录 |
-| GET | `/system/dictionaries/types`、`/system/dictionaries/items?typeCode=` | 对应记录数组 |
-| POST/PUT/DELETE | `/system/dictionaries/types[/:id]`、`/system/dictionaries/items[/:id]` | 对应模块输入 / 记录 |
-| GET | `/system/dictionaries/options/:code` | `{ label, value, color? }[]` |
-| GET/PUT | `/system/config` | `{ appName, colorPrimary, layout, tabbarEnable, transitionEnable }` |
-| POST | `/system/config/restore` | 恢复默认，响应同上 |
-| GET/PUT | `/profile` | GET `User`；PUT `{ nickname, phone }` / `User` |
-| PUT | `/profile/password` | `{ currentPassword, newPassword }` / 204 或 JSON |
+| 方法            | 路径                                                                   | 标准 JSON 响应                                                       |
+| --------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| POST            | `/auth/login`，body `{ username, password }`                           | `{ accessToken, refreshToken?, expiresAt? }`                         |
+| POST            | `/auth/refresh`，body `{ refreshToken }`                               | 同上                                                                 |
+| GET             | `/session/me`                                                          | `{ id, username, name }`，均为字符串                                 |
+| GET             | `/session/access`                                                      | `{ roles: string[], permissions: string[] }`                         |
+| GET             | `/menus`                                                               | `LumalMenuRecord[]`                                                  |
+| POST            | `/auth/logout`                                                         | 204 或 JSON                                                          |
+| GET             | `/system/users`、`/system/roles`                                       | `{ items: User[] \| Role[], total }`                                 |
+| POST/PUT/DELETE | `/system/users[/:id]`、`/system/roles[/:id]`                           | 对应模块输入 / 记录；删除 204 或 JSON                                |
+| PATCH           | `/system/users/:id/status`                                             | `{ status }` / `User`                                                |
+| PUT             | `/system/users/:id/roles`                                              | `{ roles: string[] }` / `User`                                       |
+| PATCH           | `/system/users/batch/status`                                           | `{ ids, status }` / `{ items, updated }`                             |
+| PUT             | `/system/users/batch/roles`                                            | `{ ids, roles, mode: 'append' \| 'replace' }` / `{ items, updated }` |
+| POST            | `/system/users/:id/reset-password`                                     | `{ temporaryPassword }`                                              |
+| GET             | `/system/roles/options`、`/system/organizations/options`               | `{ label, value, disabled?, children? }[]`                           |
+| GET             | `/system/permissions/tree`                                             | `{ id, label, permission?, children? }[]`                            |
+| GET/PUT         | `/system/roles/:code/permissions`                                      | PUT `{ permissions: string[] }`；响应 `string[]`                     |
+| GET             | `/system/menus`、`/system/organizations`                               | 对应树形记录数组，`children`；机构可带 `userCount`                   |
+| POST/PUT/DELETE | `/system/menus[/:id]`、`/system/organizations[/:id]`                   | 对应模块输入 / 记录                                                  |
+| GET             | `/system/dictionaries/types`、`/system/dictionaries/items?typeCode=`   | 对应记录数组                                                         |
+| POST/PUT/DELETE | `/system/dictionaries/types[/:id]`、`/system/dictionaries/items[/:id]` | 对应模块输入 / 记录                                                  |
+| GET             | `/system/dictionaries/options/:code`                                   | `{ label, value, color? }[]`                                         |
+| GET/PUT         | `/system/config`                                                       | `{ appName, colorPrimary, layout, tabbarEnable, transitionEnable }`  |
+| POST            | `/system/config/restore`                                               | 恢复默认，响应同上                                                   |
+| GET/PUT         | `/profile`                                                             | GET `User`；PUT `{ nickname, phone }` / `User`                       |
+| PUT             | `/profile/password`                                                    | `{ currentPassword, newPassword }` / 204 或 JSON                     |
 
 用户查询支持 `page/pageSize/keyword/organizationId/roles/status`，角色支持
 `page/pageSize/keyword/status`。分页默认第一页，页号和每页条数必须为正整数。
@@ -58,7 +58,7 @@ HTTP 模式必须配置 `VITE_API_BASE_URL`，未配置立即报错，绝不回�
 ## 菜单信任边界
 
 菜单组件使用 `src/app/router/views.ts` 汇集的本地白名单，键必须是自有函数加载器；
-拒绝 constructor、__proto__、prototype 和任意 import URL，递归子菜单同样校验。
+拒绝 constructor、**proto**、prototype 和任意 import URL，递归子菜单同样校验。
 HTTP 菜单替换本地菜单，不静默融合。子路由使用属于父路径的绝对地址；
 目录默认跳到当前身份可访问的首个子页，无子页时隐藏。路由守卫逐层检查父子权限，
 远程 ignoreAccess/requireLogin 不能关闭认证或权限。

@@ -45,6 +45,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Template formatting
+        run: pnpm format:check
+
       - name: Release boundaries
         run: pnpm release:boundaries
 

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ElDescriptions, ElDescriptionsItem } from 'element-plus'
-import { currentUser, permissionStore } from '../../app/services/session'
+import { ElDescriptions, ElDescriptionsItem } from 'element-plus';
+import { currentUser, permissionStore } from '../../app/services/session';
 
 /***********************会话摘要*********************/
-const startedAt = new Date().toLocaleDateString()
+const startedAt = new Date().toLocaleDateString();
 </script>
 
 <template>

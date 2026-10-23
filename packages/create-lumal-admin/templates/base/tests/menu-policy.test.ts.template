@@ -1,56 +1,89 @@
-import { describe, expect, it } from 'vitest'
-import { isInternalLocation, resolveView, safeExternalUrl, validateMenus, withAccessibleRedirects } from '../src/app/menu-policy'
-import { assembleModules, collectPermissions } from '../src/app/module'
+import { describe, expect, it } from 'vitest';
+import {
+  isInternalLocation,
+  resolveView,
+  safeExternalUrl,
+  validateMenus,
+  withAccessibleRedirects,
+} from '../src/app/menu-policy';
+import { assembleModules, collectPermissions } from '../src/app/module';
 
-const views = { 'page': async () => ({}), 'app/iframe': async () => ({}) }
-const page = (path = '/page') => ({ path, name: path, component: 'page', meta: {} })
+const views = { page: async () => ({}), 'app/iframe': async () => ({}) };
+const page = (path = '/page') => ({ path, name: path, component: 'page', meta: {} });
 describe('远程菜单信任边界', () => {
-  it.each(['constructor', '__proto__', 'prototype', 'missing', 'https://evil.invalid/a.js'])('拒绝非白名单组件 %s', (component) => {
-    expect(() => validateMenus([{ ...page(), component }], views)).toThrow('白名单')
-    expect(() => validateMenus([{ path: '/group', name: 'group', children: [{ ...page('/group/page'), component }] }], views)).toThrow('白名单')
-  })
+  it.each(['constructor', '__proto__', 'prototype', 'missing', 'https://evil.invalid/a.js'])(
+    '拒绝非白名单组件 %s',
+    (component) => {
+      expect(() => validateMenus([{ ...page(), component }], views)).toThrow('白名单');
+      expect(() =>
+        validateMenus([{ path: '/group', name: 'group', children: [{ ...page('/group/page'), component }] }], views),
+      ).toThrow('白名单');
+    },
+  );
   it('仅接受自有函数加载器', () => {
-    const inherited = Object.create({ page: async () => ({}) })
-    expect(resolveView(inherited, 'page')).toBeUndefined()
-    expect(resolveView({ page: false } as unknown as typeof views, 'page')).toBeUndefined()
-    expect(resolveView(views, 'page')).toBe(views.page)
-  })
-  it.each(['javascript:alert(1)', 'data:text/html,bad', 'vbscript:x', '//evil.invalid', 'ftp://evil.invalid', 'https://user:pass@evil.invalid', 'https://evil.invalid\\test', ' https://evil.invalid', 'https://evil.invalid/\nfoo'])('拒绝危险外链 %s', (url) => {
-    expect(() => safeExternalUrl(url)).toThrow()
-    expect(() => validateMenus([{ ...page(), meta: { externalLink: url } }], views)).toThrow()
-  })
+    const inherited = Object.create({ page: async () => ({}) });
+    expect(resolveView(inherited, 'page')).toBeUndefined();
+    expect(resolveView({ page: false } as unknown as typeof views, 'page')).toBeUndefined();
+    expect(resolveView(views, 'page')).toBe(views.page);
+  });
+  it.each([
+    'javascript:alert(1)',
+    'data:text/html,bad',
+    'vbscript:x',
+    '//evil.invalid',
+    'ftp://evil.invalid',
+    'https://user:pass@evil.invalid',
+    'https://evil.invalid\\test',
+    ' https://evil.invalid',
+    'https://evil.invalid/\nfoo',
+  ])('拒绝危险外链 %s', (url) => {
+    expect(() => safeExternalUrl(url)).toThrow();
+    expect(() => validateMenus([{ ...page(), meta: { externalLink: url } }], views)).toThrow();
+  });
   it('站内地址、iframe 来源和重定向有独立约束', () => {
-    expect(safeExternalUrl('https://example.com/path')).toBe('https://example.com/path')
-    expect(isInternalLocation('/page?q=1')).toBe(true)
+    expect(safeExternalUrl('https://example.com/path')).toBe('https://example.com/path');
+    expect(isInternalLocation('/page?q=1')).toBe(true);
     for (const path of ['//host', '/a/../b', '/%2fhost', '/a\\b', 'https://example.com'])
-      expect(isInternalLocation(path)).toBe(false)
-    expect(() => validateMenus([{ ...page(), redirect: '//evil.invalid' }], views)).toThrow()
-    expect(() => validateMenus([{ ...page(), meta: { iframeSrc: 'https://evil.invalid' } }], views)).toThrow('iframe')
-  })
+      expect(isInternalLocation(path)).toBe(false);
+    expect(() => validateMenus([{ ...page(), redirect: '//evil.invalid' }], views)).toThrow();
+    expect(() => validateMenus([{ ...page(), meta: { iframeSrc: 'https://evil.invalid' } }], views)).toThrow('iframe');
+  });
   it('拒绝异常权限、重复路由和循环结构，远程 ignoreAccess 不能取消权限', () => {
-    expect(() => validateMenus([{ ...page(), meta: { authority: [7] } }], views)).toThrow()
-    expect(() => validateMenus([page(), page()], views)).toThrow('重复')
-    const node = { path: '/loop', name: 'Loop', children: [] as unknown[] }
-    node.children.push(node)
-    expect(() => validateMenus([node], views)).toThrow('循环')
-    const result = validateMenus([{ ...page(), meta: { authority: ['read'], ignoreAccess: true, requireLogin: false } }], views)
-    expect(result[0]?.meta?.authority).toEqual(['read'])
-    expect(result[0]?.meta).not.toHaveProperty('requireLogin')
-  })
-})
+    expect(() => validateMenus([{ ...page(), meta: { authority: [7] } }], views)).toThrow();
+    expect(() => validateMenus([page(), page()], views)).toThrow('重复');
+    const node = { path: '/loop', name: 'Loop', children: [] as unknown[] };
+    node.children.push(node);
+    expect(() => validateMenus([node], views)).toThrow('循环');
+    const result = validateMenus(
+      [{ ...page(), meta: { authority: ['read'], ignoreAccess: true, requireLogin: false } }],
+      views,
+    );
+    expect(result[0]?.meta?.authority).toEqual(['read']);
+    expect(result[0]?.meta).not.toHaveProperty('requireLogin');
+  });
+});
 describe('模块权限与目录重定向', () => {
   it('递归提取真实操作，不机械生成权限', () => {
-    const permissions = [{ id: 'group', label: '分组', children: [{ id: 'read', label: '读取', permission: 'read' }] }]
-    expect(collectPermissions(permissions)).toEqual(['read'])
-    expect(assembleModules([{ menus: [], views, permissions }]).permissionCodes).toEqual(['read'])
-  })
+    const permissions = [{ id: 'group', label: '分组', children: [{ id: 'read', label: '读取', permission: 'read' }] }];
+    expect(collectPermissions(permissions)).toEqual(['read']);
+    expect(assembleModules([{ menus: [], views, permissions }]).permissionCodes).toEqual(['read']);
+  });
   it('父目录跳到首个有权限的子页，无可访问子页时隐藏', () => {
-    const menus = [{ path: '/group', name: 'Group', children: [
-      { ...page('/group/a'), meta: { authority: ['a'] } },
-      { ...page('/group/b'), meta: { authority: ['b'] } },
-    ] }]
-    expect(withAccessibleRedirects(menus, { roles: [], permissions: ['b'] })[0]?.redirect).toBe('/group/b')
-    expect(withAccessibleRedirects(menus, { roles: [], permissions: [] })[0]?.meta?.hideInMenu).toBe(true)
-    expect(withAccessibleRedirects([{ ...menus[0]!, meta: { authority: ['parent'] } }], { roles: [], permissions: ['b'] })[0]?.redirect).toBe('/403')
-  })
-})
+    const menus = [
+      {
+        path: '/group',
+        name: 'Group',
+        children: [
+          { ...page('/group/a'), meta: { authority: ['a'] } },
+          { ...page('/group/b'), meta: { authority: ['b'] } },
+        ],
+      },
+    ];
+    expect(withAccessibleRedirects(menus, { roles: [], permissions: ['b'] })[0]?.redirect).toBe('/group/b');
+    expect(withAccessibleRedirects(menus, { roles: [], permissions: [] })[0]?.meta?.hideInMenu).toBe(true);
+    expect(
+      withAccessibleRedirects([{ ...menus[0]!, meta: { authority: ['parent'] } }], { roles: [], permissions: ['b'] })[0]
+        ?.redirect,
+    ).toBe('/403');
+  });
+});

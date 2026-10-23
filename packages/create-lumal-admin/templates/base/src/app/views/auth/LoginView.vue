@@ -1,49 +1,47 @@
 <script setup lang="ts">
-import type { FormInstance } from 'element-plus'
-import { ElButton, ElForm, ElFormItem, ElInput } from 'element-plus'
-import { reactive, shallowRef, useTemplateRef } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { isInternalLocation } from '../../menu-policy'
-import { routeError } from '../../router'
-import { demoAccount } from '../../services/data-source'
-import { application, login } from '../../services/session'
+import type { FormInstance } from 'element-plus';
+import { ElButton, ElForm, ElFormItem, ElInput } from 'element-plus';
+import { reactive, shallowRef, useTemplateRef } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { isInternalLocation } from '../../menu-policy';
+import { routeError } from '../../router';
+import { demoAccount } from '../../services/data-source';
+import { application, login } from '../../services/session';
 
 /***********************登录状态*********************/
-const route = useRoute()
-const router = useRouter()
-const formRef = useTemplateRef<FormInstance>('formRef')
-const loading = shallowRef(false)
-const errorMessage = shallowRef('')
-const form = reactive({ username: demoAccount?.username ?? '', password: demoAccount?.password ?? '' })
+const route = useRoute();
+const router = useRouter();
+const formRef = useTemplateRef<FormInstance>('formRef');
+const loading = shallowRef(false);
+const errorMessage = shallowRef('');
+const form = reactive({ username: demoAccount?.username ?? '', password: demoAccount?.password ?? '' });
 
 /***********************登录提交*********************/
 function resolveRedirect(): string {
-  const redirect = Array.isArray(route.query.redirect) ? route.query.redirect[0] : route.query.redirect
-  return redirect && isInternalLocation(redirect) && !redirect.startsWith('/login') ? redirect : '/dashboard'
+  const redirect = Array.isArray(route.query.redirect) ? route.query.redirect[0] : route.query.redirect;
+  return redirect && isInternalLocation(redirect) && !redirect.startsWith('/login') ? redirect : '/dashboard';
 }
 
 async function handleSubmit(): Promise<void> {
   if (loading.value) {
-    return
+    return;
   }
 
-  loading.value = true
-  errorMessage.value = ''
+  loading.value = true;
+  errorMessage.value = '';
 
   try {
-    const valid = await formRef.value?.validate()
+    const valid = await formRef.value?.validate();
     if (valid === false) {
-      return
+      return;
     }
 
-    await login(form)
-    await router.replace(resolveRedirect())
-  }
-  catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '登录失败'
-  }
-  finally {
-    loading.value = false
+    await login(form);
+    await router.replace(resolveRedirect());
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '登录失败';
+  } finally {
+    loading.value = false;
   }
 }
 </script>
@@ -51,9 +49,7 @@ async function handleSubmit(): Promise<void> {
 <template>
   <main class="lumal-admin-login">
     <section class="lumal-admin-login__panel">
-      <div class="lumal-admin-login__brand" aria-hidden="true">
-        L
-      </div>
+      <div class="lumal-admin-login__brand" aria-hidden="true">L</div>
       <h1>Lumal Admin</h1>
       <p>轻量后台基座</p>
 
@@ -67,9 +63,7 @@ async function handleSubmit(): Promise<void> {
         <p v-if="errorMessage" class="lumal-admin-login__error" role="alert">
           {{ errorMessage }}
         </p>
-        <ElButton native-type="submit" type="primary" :loading="loading">
-          登录
-        </ElButton>
+        <ElButton native-type="submit" type="primary" :loading="loading"> 登录 </ElButton>
       </ElForm>
 
       <p v-if="routeError || application.error.value" role="alert">

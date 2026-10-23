@@ -278,9 +278,11 @@ async function main() {
           )
 
           const install = runPnpm(['install', '--frozen-lockfile=false', '--prefer-offline'], projectDir)
+          runPnpm(['install', '--frozen-lockfile', '--prefer-offline'], projectDir)
           runPnpm(['typecheck'], projectDir)
           runPnpm(['test'], projectDir)
           runPnpm(['lint'], projectDir)
+          runPnpm(['format:check'], projectDir)
           const build = runPnpm(['exec', 'vite', 'build'], projectDir, false, {
             VITE_API_BASE_URL: `${api.url}/${preset}`,
             // 只为本轮生产浏览器演示显式启用，生成项目的默认环境仍禁用。
@@ -316,9 +318,11 @@ async function main() {
       }
       await writeFile(path, `${JSON.stringify(manifest, null, 2)}\n`)
       runPnpm(['install', '--frozen-lockfile=false', '--prefer-offline'], projectDir)
+      runPnpm(['install', '--frozen-lockfile', '--prefer-offline'], projectDir)
       runPnpm(['typecheck'], projectDir)
       runPnpm(['test'], projectDir)
       runPnpm(['lint'], projectDir)
+      runPnpm(['format:check'], projectDir)
       const build = runPnpm(['exec', 'vite', 'build'], projectDir, false, { VITE_ENABLE_LOCAL_DEMO: 'true' })
       optionalFeatures.push({ preset, features, buildSeconds: build.seconds, ...await measureAdminBuild(projectDir) })
     }
