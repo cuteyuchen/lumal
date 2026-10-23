@@ -7,7 +7,7 @@ import process from 'node:process'
 import { chromium, expect } from '@playwright/test'
 import { packPackage, readJson, runPnpm, toFileSpecifier } from './check-create-lumal-admin-consumer.mjs'
 import { measureAdminBuild } from './measure-admin-build.mjs'
-import { serveProduction } from './scaffold-verification.mjs'
+import { createScaffoldTestApi, serveProduction } from './scaffold-verification.mjs'
 
 const root = resolve(import.meta.dirname, '..')
 const reportPath = join(root, 'output/release/project-templates-report.json')
@@ -16,6 +16,11 @@ const cases = [
   { name: 'screen-static', args: ['--template', 'screen'] },
   { name: 'screen-hash', args: ['--template', 'screen', '--router-mode', 'hash'] },
   { name: 'screen-history', args: ['--template', 'screen', '--router-mode', 'history'] },
+  { name: 'screen-local', args: ['--template', 'screen', '--data', 'local'] },
+  { name: 'screen-http', args: ['--template', 'screen', '--data', 'http'], http: true },
+  { name: 'screen-demo-auth', args: ['--template', 'screen', '--auth', 'local-demo', '--data', 'local'], auth: 'local-demo' },
+  { name: 'screen-auth-only', args: ['--template', 'screen', '--auth', 'http'], auth: 'http', http: true },
+  { name: 'screen-auth-http', args: ['--template', 'screen', '--auth', 'http', '--data', 'http', '--router-mode', 'history'], auth: 'http', http: true, protectedData: true },
 ]
 
 async function sourceHash(directory) {
@@ -29,7 +34,8 @@ async function sourceHash(directory) {
   return hash.digest('hex')
 }
 
-async function verifyBrowser(projectDir, name, screenshots) {
+async function verifyBrowser(projectDir, scenario, screenshots, api) {
+  const { name } = scenario
   const preview = await serveProduction(projectDir)
   const browser = await chromium.launch()
   try {
@@ -38,6 +44,38 @@ async function verifyBrowser(projectDir, name, screenshots) {
     page.on('pageerror', error => errors.push(error.message))
     await page.goto(preview.url)
     await expect(page.locator('main')).toBeVisible()
+    if (scenario.auth === 'local-demo') {
+      await expect(page.getByRole('button', { name: '登录', exact: true })).toBeDisabled()
+      await expect(page.getByRole('alert')).toContainText('生产环境禁止')
+    }
+    if (scenario.auth === 'http') {
+      await page.getByLabel('用户名', { exact: true }).fill('admin')
+      await page.getByLabel('密码', { exact: true }).fill('incorrect')
+      await page.getByRole('button', { name: '登录', exact: true }).click()
+      await expect(page.getByRole('alert')).toBeVisible()
+      await expect(page.getByRole('button', { name: '退出登录' })).toHaveCount(0)
+      await page.getByLabel('密码', { exact: true }).fill('integration-pass')
+      await page.getByRole('button', { name: '登录', exact: true }).click()
+      await expect(page.getByRole('button', { name: '退出登录' })).toBeVisible()
+      await page.reload()
+      await expect(page.getByRole('button', { name: '退出登录' })).toBeVisible()
+    }
+    if (scenario.http && (!scenario.auth || scenario.protectedData)) {
+      await expect(page.locator('dd').first()).toHaveText('128')
+      api.state.failList = true
+      await page.getByRole('button', { name: '刷新数据' }).click()
+      await expect(page.getByRole('alert')).toBeVisible()
+      api.state.failList = false
+      await page.getByRole('button', { name: '刷新数据' }).click()
+      await expect(page.getByRole('alert')).toHaveCount(0)
+    }
+    if (scenario.protectedData) {
+      const refreshCount = api.state.refreshes
+      api.expireAccess()
+      await page.getByRole('button', { name: '刷新数据' }).click()
+      await expect.poll(() => api.state.refreshes).toBeGreaterThan(refreshCount)
+      await expect(page.getByRole('alert')).toHaveCount(0)
+    }
     const sizes = [[1366, 768], [1920, 1080], [2560, 1440], [1440, 900], [390, 844]]
     for (const [width, height] of sizes) {
       await page.setViewportSize({ width, height })
@@ -47,6 +85,16 @@ async function verifyBrowser(projectDir, name, screenshots) {
       await page.screenshot({ path: join(screenshots, `${name}-${width}x${height}.png`), fullPage: true })
     }
     expect(errors).toEqual([])
+    if (scenario.auth === 'http') {
+      if (scenario.protectedData) {
+        api.revokeSessions()
+        await page.getByRole('button', { name: '刷新数据' }).click()
+      }
+      else {
+        await page.getByRole('button', { name: '退出登录' }).click()
+      }
+      await expect(page.getByRole('button', { name: '登录', exact: true })).toBeVisible()
+    }
     return { status: 'passed', viewports: sizes, pageErrors: errors }
   }
   finally {
@@ -61,6 +109,7 @@ async function main() {
   const runner = join(temporary, 'runner')
   const screenshots = join(root, 'output/playwright/project-templates')
   const report = { environment: { node: process.version, platform: process.platform }, temporary, results: [] }
+  const api = await createScaffoldTestApi()
   try {
     await mkdir(tarballDir)
     await mkdir(runner)
@@ -77,7 +126,11 @@ async function main() {
     await writeFile(join(runner, 'package.json'), '{"private":true}\n')
     runPnpm(['add', toFileSpecifier(runner, tarballs['create-lumal-admin'])], runner)
     const cli = join(runner, 'node_modules/create-lumal-admin/dist/project-cli.js')
-    for (const scenario of cases) {
+    const selected = process.env.LUMAL_PROJECT_CASES?.split(',')
+    if (selected?.some(name => !cases.some(scenario => scenario.name === name)))
+      throw new Error('LUMAL_PROJECT_CASES 包含未知场景')
+    for (const scenario of cases.filter(scenario => !selected || selected.includes(scenario.name))) {
+      api.reset('screen-private')
       const projectDir = join(temporary, scenario.name)
       const generated = spawnSync(process.execPath, [cli, projectDir, '--no-interactive', ...scenario.args], { encoding: 'utf8', timeout: 15_000 })
       if (generated.status !== 0)
@@ -91,6 +144,10 @@ async function main() {
           manifest.dependencies[name] = toFileSpecifier(projectDir, tarballs[name])
       }
       await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+      if (scenario.http)
+        await writeFile(join(projectDir, '.env.development'), `VITE_API_BASE_URL=${api.url}/${scenario.auth === 'http' ? 'screen-private' : 'screen-public'}\n`)
+      if (scenario.http)
+        await writeFile(join(projectDir, '.env.production'), `VITE_API_BASE_URL=${api.url}/${scenario.auth === 'http' ? 'screen-private' : 'screen-public'}\n`)
       const install = runPnpm(['install', '--frozen-lockfile=false', '--prefer-offline'], projectDir)
       runPnpm(['install', '--frozen-lockfile', '--prefer-offline'], projectDir)
       const check = runPnpm(['check'], projectDir)
@@ -107,7 +164,7 @@ async function main() {
         installSeconds: install.seconds,
         checkSeconds: check.seconds,
         ...await measureAdminBuild(projectDir),
-        browser: await verifyBrowser(projectDir, scenario.name, screenshots),
+        browser: await verifyBrowser(projectDir, scenario, screenshots, api),
         status: 'passed',
       })
       await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`)
@@ -119,6 +176,7 @@ async function main() {
     throw error
   }
   finally {
+    await api.close()
     if (process.env.KEEP_LUMAL_CONSUMER_TEMP === '1')
       console.log(`保留临时目录：${temporary}`)
     else

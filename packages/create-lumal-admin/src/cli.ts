@@ -172,6 +172,26 @@ export async function main(args = process.argv.slice(2), unified = false): Promi
         }
       }
       else if (options.template === 'screen') {
+        options.auth ??= await answer(select({
+          input,
+          message: 'Screen 认证',
+          initialValue: 'none',
+          options: [
+            { value: 'none', label: 'None', hint: '访客访问' },
+            { value: 'local-demo', label: 'Local Demo', hint: '仅开发演示，生产禁用' },
+            { value: 'http', label: 'HTTP', hint: '包含登录与刷新网络请求，与业务数据独立' },
+          ] as const,
+        }))
+        options.data ??= options.apiMode ?? await answer(select({
+          input,
+          message: 'Screen 业务数据',
+          initialValue: 'none',
+          options: [
+            { value: 'none', label: 'None', hint: '纯静态页面' },
+            { value: 'local', label: 'Local', hint: '显式本地示例' },
+            { value: 'http', label: 'HTTP', hint: '真实接口，失败不回退' },
+          ] as const,
+        }))
         options.routerMode ??= await answer(select({
           input,
           message: 'Screen 路由',

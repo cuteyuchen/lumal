@@ -30,6 +30,25 @@ Blank 不依赖 Core，因为它没有使用 Core 的能力。工程规范和测
 Screen 的 `--router-mode none` 是真正单页，选择 hash/history 才安装 Vue Router。
 History 部署需要服务器提供 SPA fallback。
 
+## Screen 能力
+
+```sh
+node packages/create-lumal-admin/dist/project-cli.js static-screen --template screen --no-interactive
+node packages/create-lumal-admin/dist/project-cli.js data-screen --template screen --data http --no-interactive
+node packages/create-lumal-admin/dist/project-cli.js internal-screen --template screen --auth http --data http --router-mode history --no-interactive
+node packages/create-lumal-admin/dist/project-cli.js demo-screen --template screen --auth local-demo --data local --no-interactive
+```
+
+`--auth none|local-demo|http` 与 `--data none|local|http` 独立。
+HTTP 认证即使搭配 `--data none` 也会发起登录/刷新网络请求。
+没有网络能力的项目不生成 HTTP 配置、接口地址或无用请求文件。
+Local Demo 只在开发允许 `demo / demo`，生产禁用，不能借演示账号绕过后端失败。
+
+认证门禁保留当前路径，通过内容切换保护页面，不强制安装 Router。
+会话服务复用 `@lumal/core/auth`，HTTP 复用 `@lumal/core/request`，不引入 Admin UI。
+HTTP 契约、超时、Token 存储和后端字段映射位于生成的 `API-CONTRACT.md` 与 `src/services`。
+这只是应用接入层，不声称真实业务后端已经可用。
+
 模板采用 `common + vue + blank/screen` 或 `base + common + Admin 功能层` 组合。
 Blank/Screen 从不叠加 Admin base，不依靠先生成再删除业务文件来精简。
 

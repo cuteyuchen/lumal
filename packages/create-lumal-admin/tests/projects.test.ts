@@ -68,4 +68,22 @@ describe('通用项目生成器', () => {
     expect(parseCliArgs(['demo', '--template', 'screen', '--data', 'http', '--auth', 'http'])).toMatchObject({ template: 'screen', data: 'http', auth: 'http' })
     expect(() => parseCliArgs(['--template', 'unknown'])).toThrow()
   })
+
+  it.each(['none', 'local-demo', 'http'] as const)('screen %s 认证与数据独立组合', async (auth) => {
+    for (const data of ['none', 'local', 'http'] as const) {
+      const targetDir = await mkdtemp(join(tmpdir(), 'lumal-screen-capability-'))
+      temporary.push(targetDir)
+      const result = await createLumalProject({ template: 'screen', name: 'capability', targetDir, auth, data })
+      const paths = result.createdFiles
+      expect(paths.includes('src/services/session.ts')).toBe(auth !== 'none')
+      expect(paths.includes('src/services/metrics.ts')).toBe(data !== 'none')
+      expect(paths.includes('src/services/http.ts')).toBe(auth === 'http' || data === 'http')
+      expect(paths.includes('API-CONTRACT.md')).toBe(auth === 'http' || data === 'http')
+      const manifest = JSON.parse(await readFile(join(targetDir, 'package.json'), 'utf8'))
+      expect(Boolean(manifest.dependencies['@lumal/core'])).toBe(auth !== 'none' || data === 'http')
+      for (const name of ['element-plus', 'pinia', 'vue-router', '@lumal/vben-compat', '@lumal/cockpit'])
+        expect(manifest.dependencies).not.toHaveProperty(name)
+      expect(paths.some(path => path.includes('/modules/') || path.includes('/app/'))).toBe(false)
+    }
+  })
 })

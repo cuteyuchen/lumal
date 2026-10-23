@@ -1,7 +1,7 @@
 import type { CreateLumalAdminProjectOptions, CreateLumalProjectOptions, CreateLumalProjectResult, ResolvedScreenOptions, TemplateFile } from './types.js'
 import { createLumalAdminProject, writeProjectFiles } from './create.js'
 import { assertPackageName, resolveOptions } from './presets.js'
-import { readTemplateLayers } from './templates.js'
+import { getVersion, readTemplateLayers } from './templates.js'
 
 export const projectTemplates = ['admin', 'screen', 'blank'] as const
 export const screenAuthModes = ['none', 'local-demo', 'http'] as const
@@ -52,19 +52,35 @@ export function resolveProjectOptions(input: CreateLumalProjectOptions) {
 }
 
 export async function composeProjectTemplates(options: ResolvedScreenOptions): Promise<TemplateFile[]> {
-  if (options.auth !== 'none' || options.data !== 'none' || options.visualization !== 'none' || options.viewport !== 'responsive')
+  if (options.visualization !== 'none' || options.viewport !== 'responsive')
     throw new Error('此能力尚未启用')
   const layers = ['common', 'vue', options.template]
   if (options.routerMode !== 'none')
     layers.push('screen-router')
+  if (options.data !== 'none')
+    layers.push('screen-data', `screen-data-${options.data}`)
+  if (options.auth !== 'none')
+    layers.push('screen-auth', `screen-auth-${options.auth}`)
+  const http = options.auth === 'http' || options.data === 'http'
+  if (http)
+    layers.push('screen-http')
+  if (options.data === 'http' && options.auth !== 'none')
+    layers.push('screen-request-auth')
   const files = await readTemplateLayers(layers)
   const manifest = JSON.parse(files.get('package.json')!)
   manifest.name = options.name
   if (options.routerMode !== 'none')
     manifest.dependencies['vue-router'] = '^4.5.0'
+  if (options.auth !== 'none' || options.data === 'http')
+    manifest.dependencies['@lumal/core'] = await getVersion()
+  manifest.dependencies = Object.fromEntries(Object.entries(manifest.dependencies).sort(([a], [b]) => a.localeCompare(b)))
   files.set('package.json', `${JSON.stringify(manifest, null, 2)}\n`)
   if (options.routerMode !== 'none') {
     files.set('src/router.ts', files.get('src/router.ts')!.replaceAll('createWebHashHistory', options.routerMode === 'hash' ? 'createWebHashHistory' : 'createWebHistory'))
+  }
+  if (http) {
+    files.set('.env.development', 'VITE_API_BASE_URL=\n')
+    files.set('.env.production.example', 'VITE_API_BASE_URL=https://api.example.com\n')
   }
   const conventions = options.template === 'blank'
     ? '## Blank\n\n默认只安装 Vue 运行时，不引入 Router、Pinia、Element Plus 或 Lumal Core。按业务需要逐项接入，不预建后台结构。'

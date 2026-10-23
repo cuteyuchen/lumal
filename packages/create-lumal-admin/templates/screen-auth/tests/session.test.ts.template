@@ -1,0 +1,54 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { authenticate, refreshAuth } from '../src/services/auth-adapter';
+import {
+  authenticated,
+  getSessionSignal,
+  getSessionToken,
+  refreshSession,
+  signIn,
+  signOut,
+} from '../src/services/session';
+
+vi.mock('../src/services/auth-adapter', () => ({
+  authEnabled: true,
+  authenticate: vi.fn(),
+  refreshAuth: vi.fn(),
+}));
+afterEach(() => {
+  signOut();
+  vi.resetAllMocks();
+  vi.useRealTimers();
+});
+
+describe('独立 Screen 会话', () => {
+  it('登录、刷新、退出并取消旧请求', async () => {
+    vi.mocked(authenticate).mockResolvedValue({ accessToken: 'fixture', refreshToken: 'refresh' });
+    vi.mocked(refreshAuth).mockResolvedValue({ accessToken: 'renewed' });
+    await signIn('test', 'secret');
+    const previous = getSessionSignal();
+    await refreshSession();
+    expect(getSessionToken()).toBe('renewed');
+    signOut();
+    expect(previous.aborted).toBe(true);
+    expect(authenticated.value).toBe(false);
+  });
+  it('迟到登录不能恢复已退出的身份', async () => {
+    let finish!: (data: { accessToken: string }) => void;
+    vi.mocked(authenticate).mockImplementation(() => new Promise((resolve) => (finish = resolve)));
+    const pending = signIn('old', 'secret');
+    signOut();
+    finish({ accessToken: 'late' });
+    await expect(pending).rejects.toThrow('会话已切换');
+    expect(getSessionToken()).toBeUndefined();
+  });
+  it('登录失败不回退，过期清除凭据', async () => {
+    vi.mocked(authenticate).mockRejectedValueOnce(new Error('401'));
+    await expect(signIn('wrong', 'wrong')).rejects.toThrow('401');
+    expect(authenticated.value).toBe(false);
+    vi.useFakeTimers();
+    vi.mocked(authenticate).mockResolvedValue({ accessToken: 'short', expiresAt: Date.now() + 100 });
+    await signIn('user', 'secret');
+    vi.advanceTimersByTime(101);
+    expect(authenticated.value).toBe(false);
+  });
+});

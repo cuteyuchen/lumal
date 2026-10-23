@@ -1,0 +1,17 @@
+import { describe, expect, it, vi } from 'vitest';
+import { authenticate } from '../src/services/auth-adapter';
+import { publicRequest } from '../src/services/http';
+
+vi.mock('../src/services/http', () => ({ publicRequest: { post: vi.fn() } }));
+describe('接口登录契约', () => {
+  it('验证响应，401 不回退演示', async () => {
+    vi.mocked(publicRequest.post).mockResolvedValueOnce({ accessToken: 'fixture' });
+    await expect(authenticate('user', 'secret', new AbortController().signal)).resolves.toEqual({
+      accessToken: 'fixture',
+    });
+    vi.mocked(publicRequest.post).mockRejectedValueOnce(new Error('Unauthorized'));
+    await expect(authenticate('user', 'bad', new AbortController().signal)).rejects.toThrow('Unauthorized');
+    vi.mocked(publicRequest.post).mockResolvedValueOnce({ code: 403 });
+    await expect(authenticate('user', 'bad', new AbortController().signal)).rejects.toThrow();
+  });
+});

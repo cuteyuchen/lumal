@@ -20,7 +20,7 @@
 | 0 | 现有 Admin、PTY、Local/HTTP、生产浏览器与布局回归 | Windows 终端通过；12 组消费者及生产浏览器通过；布局35项通过；Linux 待 CI |
 | 1 | 公共工程层、ESLint/Prettier、AI 约定与统一 check | 已实现，54 项生成器测试及 Standard/HTTP 独立 check 通过 |
 | 2 | Blank、静态 Screen、旧 CLI 兼容 | 已实现；72 项生成器测试、4 组独立消费者及五种视口生产浏览器通过 |
-| 3 | Screen 可选请求与认证 | 待实施 |
+| 3 | Screen 可选请求与认证 | 已实现；9 种能力组合生成测试，HTTP/Local 质量与生产认证流程通过 |
 | 4 | 缩放复用、独立视口入口、定向 px 转换 | 待实施 |
 | 5–8 | 混合路由、请求/CRUD 契约、真实消费者兼容 | 已开始只读审计 |
 | 9 | 增量模块与 OpenAPI 收益审查 | 待审查 |
@@ -51,3 +51,9 @@ GitHub REST API 已确认远端 master 仍为 `a938f1af6f8980adf000e96d3231f0d54
 
 消费者测试均以打包后的公开入口安装，不用源码 alias；报告中的临时目录在执行结束后清理。
 Linux PTY 未在本机执行，不能用 Windows PTY 结果替代。
+
+阶段 3：`next-screen-services-tests.log` 为78项生成器测试；
+`next-screen-services-consumer.log` 为新增认证消费者完整 check。
+HTTP 使用独立脱敏验收服务器，不拦截浏览器 fetch；验证错误凭据、
+登录持久化、受保护指标、刷新、刷新失败退出及生产 Local Demo 禁用。
+最终全量消费者报告仍需在全部公共包重建后重新生成，不能用阶段快照代替。

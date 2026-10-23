@@ -1,0 +1,9 @@
+import { describe, expect, it } from 'vitest';
+import { loadMetrics } from '../src/services/metrics';
+
+describe('本地指标', () => {
+  it('返回明确的示例且尊重取消', async () => {
+    expect(await loadMetrics()).toHaveLength(3);
+    await expect(loadMetrics(AbortSignal.abort())).rejects.toBeDefined();
+  });
+});

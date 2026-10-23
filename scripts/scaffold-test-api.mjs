@@ -120,11 +120,16 @@ export async function createScaffoldTestApi() {
         const username = refreshes.get(input.refreshToken)
         return username ? send(issue(username)) : send({ message: '刷新失败' }, 401)
       }
+      if (path === '/screen/metrics' && preset === 'screen-public') {
+        return state.failList ? send({ message: '测试网络失败' }, 503) : send([{ label: '任务', value: 128 }])
+      }
       const token = request.headers.authorization?.replace('Bearer ', '')
       const username = sessions.get(token)
       const current = db.users.find(row => row.username === username && row.status === 'enabled')
       if (!current)
         return send({ message: '会话已过期' }, 401)
+      if (path === '/screen/metrics')
+        return state.failList ? send({ message: '测试网络失败' }, 503) : send([{ label: '任务', value: 128 }])
       const roles = db.roles.filter(role => current.roles.includes(role.code) && role.status === 'enabled')
       const access = { roles: roles.map(role => role.code), permissions: [...new Set(roles.flatMap(role => role.permissions))] }
       function requirePermission(permission) {
@@ -303,6 +308,13 @@ export async function createScaffoldTestApi() {
   return {
     url: `http://127.0.0.1:${server.address().port}`,
     state,
+    expireAccess() {
+      sessions.clear()
+    },
+    revokeSessions() {
+      sessions.clear()
+      refreshes.clear()
+    },
     reset(preset) {
       databases.delete(preset)
       sessions.clear()

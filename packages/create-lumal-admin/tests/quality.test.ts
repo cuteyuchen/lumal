@@ -36,4 +36,17 @@ describe('生成工程的格式契约', () => {
       expect(await format(formatted, { ...config, filepath: file.path }), file.path).toBe(formatted)
     }
   })
+  it.each([
+    { auth: 'local-demo', data: 'local' },
+    { auth: 'http', data: 'none' },
+    { auth: 'http', data: 'http' },
+  ] as const)('screen 能力层 %j 初始格式一致', async (capabilities) => {
+    const options = resolveProjectOptions({ template: 'screen', ...capabilities, name: 'quality-test', targetDir: 'unused' })
+    if (options.template === 'admin')
+      throw new Error('预期 Screen')
+    for (const file of await composeProjectTemplates(options)) {
+      if (['.vue', '.ts', '.mjs', '.json', '.css', '.html', '.md'].includes(extname(file.path)))
+        expect(await format(file.content, { ...config, filepath: file.path }), file.path).toBe(file.content)
+    }
+  })
 })

@@ -1,0 +1,18 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.resetModules();
+});
+describe('本地 Demo 安全边界', () => {
+  it('开发显式认证，错误凭据不成功', async () => {
+    const { authenticate } = await import('../src/services/auth-adapter');
+    await expect(authenticate('demo', 'demo', new AbortController().signal)).resolves.toHaveProperty('accessToken');
+    await expect(authenticate('bad', 'bad', new AbortController().signal)).rejects.toThrow('演示凭据');
+  });
+  it('生产禁用，即使知道演示凭据', async () => {
+    vi.stubEnv('DEV', false);
+    const { authenticate } = await import('../src/services/auth-adapter');
+    await expect(authenticate('demo', 'demo', new AbortController().signal)).rejects.toThrow('生产环境禁止');
+  });
+});
