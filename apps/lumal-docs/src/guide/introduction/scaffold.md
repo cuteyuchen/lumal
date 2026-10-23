@@ -26,6 +26,8 @@ pnpm create lumal-admin@0.0.5-beta my-admin-v5 --preset vben-compatible --featur
 `--features system,examples` 选择业务层，或 `--features none` 禁用；
 minimal 不接受业务模块。
 
+工作区新版向导使用方向键单选、Space 多选，并在配置摘要确认后写入项目；
+Escape / Ctrl+C 可取消。这些改动尚未发布，使用本地 tarball 验证，不将已发布版本视为新版。
 TTY 会询问项目目录、npm 名称及未显式指定的选项；CI、非 TTY 和 `--no-interactive`
 不等待输入，默认 `standard/local/hash`。目录与 npm 名称不同时使用 `--name`；
 `--help` 与 `--version` 不写入项目。无 `--force`，非空目录、文件或符号链接目标均拒绝覆盖；
@@ -45,7 +47,7 @@ Core 与图标依赖精确使用同版 `0.0.5-beta`，不依赖浮动标签。�
 必须配置符合 `API-CONTRACT.md` 的真实后端；未配置不会回退演示认证。
 Local 的演示账号仅用于开发，生产默认禁用。
 
-HTTP 的协议适配位于应用 `src/services/http-adapter.ts`，不会把公司业务码写进 Core。
+HTTP 的协议适配位于应用 `src/app/services/http-adapter.ts`，不会把公司业务码写进 Core。
 `standard` adapter 直接消费标准 JSON；接入仓库 Mock API 才显式选择 `lumal-mock`。
 首次深层链接等待会话与菜单初始化后重新匹配，GET 401 共享刷新并最多重放一次，
 写请求默认不重放。生产配置参考 `.env.production.example`；
@@ -53,6 +55,16 @@ History 部署需要将非文件页面回退到 `index.html`，不能回退 API 
 
 兼容预设只增加 `@lumal/vben-compat`，页面显式导入 `/v5`；
 不默认安装 VXE、图表、驾驶舱、富文本或国际化。
+
+## 业务扩展
+
+`src/app` 管理运行基础，`src/shared` 放稳定复用能力，`src/modules` 按业务划分。
+系统管理、开发示例和 Vben 迁移拥有独立父路由；系统页不再共用万能实体组件。
+新增业务放在 `src/modules/business/<名称>/module.ts`，导出 `AppModule` 的菜单、懒加载页面白名单与权限树，
+无需同时修改中心路由和侧边栏。标准预设还包括工作台和个人中心。
+
+用户、角色授权、菜单树、机构树、字典分类/项和配置分别通过模块强类型 API 工作。
+HTTP 必须实现生成契约中的真实端点；个人中心不会在请求失败时提示密码已修改。
 
 ## 本地调试脚手架本身
 

@@ -22,6 +22,8 @@ npm 等价命令：
 npm create lumal-admin@0.0.5-beta my-admin -- --api-mode http
 ```
 
+工作区新版使用 Clack 方向键单选、Space 多选、Enter 确认，摘要确认前不写文件；
+Escape / Ctrl+C 取消。此升级尚未发布，应使用本地 tarball，不将 `0.0.5-beta` npm 包视为已含新向导。
 TTY 提问目录、名称、预设、数据源、路由和可选模块；非 TTY/CI 自动禁用交互。
 默认 `standard/local/hash`，省略目录时为 `lumal-admin`。显式指定的参数不会再次提问。
 自动化命令可加 `--no-interactive`，用 `--name` 指定与目录不同的 npm 包名；
@@ -44,7 +46,8 @@ pnpm dev
 - `@lumal/core/minimal` 启动、公开包导入和必要 SCSS/CSS。
 - 三预设均有动态路由、权限、认证、403/404、布局、标签缓存、主题偏好和应用服务；minimal 的标签与缓存默认关闭，可在偏好中启用。
 - minimal 不含管理模块与 Schema 示例；standard 默认包含 system/examples，可用 `--features` 选择单个或 `none`。
-- system 提供用户、角色授权、菜单、机构、字典类型/项和配置 CRUD，业务代码不进入 Core。
+- system 拥有真实父路由和用户、角色授权、菜单、机构、字典类型/项及配置独立页面，业务代码不进入 Core。
+- standard 还包含轻量工作台与个人中心，密码变更必须由真实服务确认。
 - vben-compatible 在 standard 上增加 `/v5` 和真实 Form/Grid/Dialog CRUD/权限迁移页面，读 [迁移参考](vben-compat.md)。
 - HTTP 真实请求登录/刷新/用户/权限/菜单/退出，无配置明确失败，不回退 Local。
 - Local 账号是开发演示，生产默认禁用；HTTP 无演示凭据。API 契约、环境配置、Lint 和测试均随项目生成。
@@ -55,11 +58,20 @@ pnpm dev
 ## 接入真实后端
 
 - 按生成项目 `API-CONTRACT.md` 配置 `VITE_API_BASE_URL`；`VITE_API_ADAPTER` 默认为 `standard`，只有显式接入 Lumal Mock API 时才选择 `lumal-mock`。
-- `src/services/contracts.ts` 是应用服务接口；Local/HTTP 的 `data-source.ts` 实现同一接口，`http-adapter.ts` 负责业务包装、Token、用户、权限、菜单和分页字段转换。
+- `src/app/services/contracts.ts` 是应用服务接口；Local/HTTP 的 `data-source.ts` 实现同一接口，`http-adapter.ts` 负责业务包装、Token、用户、权限、菜单和分页字段转换。
+- `src/modules/system/<子模块>/api.ts` 提供强类型业务 API；Local 与 HTTP 共享专用端点。角色资料与授权是两个操作，不宣称事务原子性；授权成功后刷新失败明确提示并只重试刷新。
 - 登录后必须等待用户、角色权限和菜单初始化，再注册动态路由并重新匹配首次深层链接；已有 Token 也不能跳过初始化。
 - 退出、重新登录或刷新失败统一清理会话、权限、菜单、动态路由、缓存与标签。请求携带会话 AbortSignal，并在写入新 Token 或用户状态前验证会话仍有效。
 - GET 401 单飞刷新并最多重放一次，写请求默认不重放；刷新接口使用独立公共客户端，避免递归刷新。`createApplicationSession` 是生成应用的实现，不是 Core 的公开 API。
 - `.env.production.example` 说明生产配置；`VITE_*` 会进入客户端产物，不能放密钥。History 部署应回退非文件页面到 `index.html`，不能将 API 回退到 HTML。
+
+## 模块注册
+
+运行基础位于 `src/app`，共享能力位于 `src/shared`；模块位于 `src/modules`。
+新增 `modules/business/<业务>/module.ts`，导出 `AppModule` 的 `menus/views/permissions`，
+扫描器自动装配元数据。页面白名单使用动态 import；不要任意拼接后端组件路径。
+system/examples/vben-migration 各有父路由和独立目录，未选择的可选模块不生成。
+菜单路径必须为所属父路由下的绝对路径，目录重定向按当前可访问子项计算。
 
 ## 编程 API 与维护
 
@@ -71,7 +83,7 @@ pnpm dev
 
 - 模板使用公开入口，不能导入仓库源码或 `workspace:` 依赖。
 - 生成时读取随 tarball 发布的 package.json，基础三包和可选兼容包精确同版。
-- 真实资源在 `templates/base/modes/features/vben-compatible` 组合，不向巨型字符串回退。
+- 真实资源在 `templates/base/presets/modes/features/vben-compatible` 组合，不向巨型字符串回退。
 - `pnpm test:create-consumer` 验证真实 CLI、12 种独立组合、真实 HTTP 与生产 Chromium。
 - 改动标签、退出、Token 刷新等接线时，同时核对已有消费者和模板测试。
 

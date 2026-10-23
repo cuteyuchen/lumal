@@ -14,7 +14,11 @@ pnpm create lumal-admin@0.0.5-beta my-admin
 pnpm create lumal-admin@0.0.5-beta my-admin-http --api-mode http
 ```
 
-在 TTY 中依次选择目录、npm 名称、预设、数据源、路由和业务模块。默认
+本文模块化向导描述工作区开发能力，尚未发布，不会覆盖已发布的 `0.0.5-beta`。
+验证新能力应使用本地构建或 tarball。
+
+在 TTY 中依次选择目录、npm 名称、预设、数据源、路由和业务模块。单选使用上下方向键和
+Enter，多选使用 Space，最后展示摘要并确认，确认前不写文件。Ctrl+C / Escape 取消不残留文件。默认
 `standard / local / hash`。CI、非 TTY 或 `--no-interactive` 均使用确定性默认值，不等待输入。
 
 ```bash
@@ -57,6 +61,9 @@ pnpm preview
 - 主题切换、布局与标签偏好持久化、全局设置抽屉。
 - 统一应用服务、真实 HTTP 认证与显式后端 adapter。
 - Element Plus、Vue 和 Lumal 公共能力的明确 vendor 分包配置。
+- `src/app` 基础设施、`modules` 独立业务、`shared` 共享能力；每个 module.ts 注册菜单、懒加载器与真实权限。
+- 系统管理父路由及七个独立页面；用户批量/角色分配、独立授权树、菜单和机构树、字典关联、配置表单。
+- standard 工作台和个人中心；examples 与 vben-migration 各有独立目录和父菜单。
 
 脚手架生成的项目只通过 `@lumal/core`、`@lumal/icons`、`@lumal/icons-vue` 等公开包入口消费能力，不依赖 monorepo 内部源码路径。
 
@@ -91,7 +98,7 @@ History 部署需要服务器回退 `index.html`，不应把 API 请求回退到
 ## 维护与验收
 
 `src/cli.ts` 负责参数和交互，`create.ts` 负责安全写入，`templates.ts` 组合
-`templates/base`、`modes`、`features` 和 `vben-compatible` 真实资源。
+`templates/base`、`modes`、`features`、`presets/standard` 和 `vben-compatible` 真实资源。
 资源随 npm tarball 发布，不依赖工作区源码。
 
 仓库运行 `pnpm build` 后执行 `pnpm test:create-consumer`：真实 tarball CLI、
