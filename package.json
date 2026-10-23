@@ -47,7 +47,7 @@
     "release:version": "node scripts/set-release-version.mjs",
     "release:verify": "node scripts/check-release-version.mjs",
     "release:workflows": "node scripts/check-release-workflows.mjs",
-    "release:check": "pnpm lint && pnpm release:workflows && pnpm release:boundaries && pnpm test && pnpm typecheck && pnpm build && pnpm test:create-consumer && pnpm admin:build && pnpm compat:build && pnpm release:artifacts && pnpm --filter lumal-mock-api build:test && pnpm test:e2e:release:built && pnpm pack:dry-run"
+    "release:check": "pnpm lint && pnpm format:check && pnpm release:workflows && pnpm release:boundaries && pnpm test && pnpm typecheck && pnpm build && pnpm test:create-consumer && pnpm test:create-projects && pnpm test:viewport && pnpm admin:build && pnpm compat:build && pnpm release:artifacts && pnpm --filter lumal-mock-api build:test && pnpm test:e2e:release:built && pnpm pack:dry-run"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^8.2.0",

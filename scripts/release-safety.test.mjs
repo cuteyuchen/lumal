@@ -94,6 +94,28 @@ describe('release dependency graph', () => {
       'test:e2e:release:built': 'playwright test --grep smoke',
     })).toThrow('不能只跑 smoke')
   })
+
+  it.each(['format:check', 'test:create-projects', 'test:viewport'])('发布脚本不能遗漏 %s', (command) => {
+    expect(() => verifyReleaseWorkflows(readWorkflows(), {
+      ...scripts,
+      'release:check': scripts['release:check'].split(' && ').filter(step => step !== `pnpm ${command}`).join(' && '),
+    })).toThrow(`${command} 必须在 release:check 中`)
+  })
+
+  it.each([
+    ['ci.yml', 'check', 'format:check'],
+    ['release-gate.yml', 'windows-check', 'format:check'],
+    ['build-validation.yml', 'validate', 'test:create-projects'],
+    ['build-validation.yml', 'validate', 'test:viewport'],
+  ])('%s 不能移除或容错 %s/%s', (file, jobName, command) => {
+    const workflows = readWorkflows()
+    const job = workflows[file].jobs[jobName]
+    const step = job.steps.find(step => step.run === `pnpm ${command}`)
+    step['continue-on-error'] = true
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow()
+    job.steps = job.steps.filter(step => step.run !== `pnpm ${command}`)
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow()
+  })
 })
 
 describe('release version and registry preflight', () => {

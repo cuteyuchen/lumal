@@ -103,6 +103,16 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      - name: Upload consumer evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-consumer-evidence-${{ github.sha }}
+          path: |
+            output/release/
+            output/playwright/
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Upload validated application distributions
         uses: actions/upload-artifact@v4
         with:
@@ -136,6 +146,9 @@ jobs:
 
       - name: Lint
         run: pnpm lint
+
+      - name: Template formatting
+        run: pnpm format:check
 
       - name: Test
         run: pnpm test
