@@ -3,7 +3,7 @@ import * as fs from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { parseCliArgs } from '../src/cli'
+import { main, parseCliArgs } from '../src/cli'
 import { createLumalAdminProject } from '../src/scaffold'
 
 vi.mock('node:fs/promises', async (original) => {
@@ -186,6 +186,20 @@ describe('安全创建与恢复', () => {
 })
 
 describe('cLI 参数', () => {
+  it.each([false, true])('帮助准确区分项目路由枚举与默认值（通用入口=%s）', async (unified) => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    try {
+      await main(['--help'], unified)
+      const output = log.mock.calls.flat().join('\n')
+      expect(output).toContain('--router-mode none|hash|history')
+      expect(output).toContain('Admin 默认 hash；Screen/Blank 默认 none')
+      expect(output).toContain('Admin 仅 hash|history；Blank 仅 none')
+    }
+    finally {
+      log.mockRestore()
+    }
+  })
+
   it('保留无交互选项及可组合特性', () => {
     expect(parseCliArgs(['my-admin', '--preset', 'standard', '--api-mode', 'http', '--router-mode', 'history', '--features', 'system', '--no-interactive']))
       .toMatchObject({ target: 'my-admin', preset: 'standard', apiMode: 'http', routerMode: 'history', features: ['system'], interactive: false })

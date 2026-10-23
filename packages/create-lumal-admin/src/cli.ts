@@ -65,7 +65,8 @@ const help = `用法：pnpm create lumal-admin [目录] [选项]
   --preset minimal|standard|vben-compatible  模板（默认 standard）
   --template admin|screen|blank             项目类型（旧入口默认 admin）
   --api-mode local|http                     数据源（默认 local）
-  --router-mode hash|history                路由（默认 hash）
+  --router-mode none|hash|history           路由（Admin 默认 hash；Screen/Blank 默认 none）
+                                           Admin 仅 hash|history；Blank 仅 none
   --auth none|local-demo|http               Screen 认证（默认 none）
   --data none|local|http                    Screen 业务数据（默认 none）
   --visualization none|charts|datav|cockpit  Screen 可视化（默认 none）
