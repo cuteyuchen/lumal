@@ -17,6 +17,9 @@ import {
   LumalWaterLevelPond,
 } from '../../src'
 
+/***********************固定对照数据*********************/
+const borderVariants = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] as const
+const decorationVariants = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const
 const digitalConfig = {
   animationFrame: 0,
   content: '{nt} 台',
@@ -64,7 +67,7 @@ const chartsConfig = {
       { name: '丙', value: 40 },
     ],
     outsideLabel: { show: false },
-    type: 'pie',
+    type: 'pie' as const,
   }],
 }
 const flylineConfig = {
@@ -119,11 +122,11 @@ const scrollRankingConfig = {
 
 <template>
   <main class="fidelity-grid">
-    <div v-for="variant in 13" :key="`border-${variant}`" class="fidelity-item" :data-component="`borderBox${variant}`">
+    <div v-for="variant in borderVariants" :key="`border-${variant}`" class="fidelity-item" :data-component="`borderBox${variant}`">
       <LumalBorderBox :variant="variant" background="transparent" />
     </div>
     <div
-      v-for="variant in 12"
+      v-for="variant in decorationVariants"
       :key="`decoration-${variant}`"
       class="fidelity-item fidelity-item--decoration"
       :data-component="`decoration${variant}`"

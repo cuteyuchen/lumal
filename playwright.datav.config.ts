@@ -1,4 +1,3 @@
-import process from 'node:process'
 import { defineConfig, devices } from '@playwright/test'
 
 const datavUrl = 'http://127.0.0.1:4176'
@@ -7,6 +6,7 @@ export default defineConfig({
   expect: {
     timeout: 8_000,
   },
+  forbidOnly: true,
   fullyParallel: false,
   outputDir: '.playwright-results/datav',
   projects: [
@@ -21,7 +21,7 @@ export default defineConfig({
     },
   ],
   reporter: [['list']],
-  retries: process.env.CI ? 1 : 0,
+  retries: 0,
   testDir: 'packages/datav/tests/visual',
   timeout: 45_000,
   webServer: {
