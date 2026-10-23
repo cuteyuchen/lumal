@@ -153,11 +153,38 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Upload Windows terminal evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-terminal-windows-${{ github.sha }}
+          path: output/release/cli-terminal/
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Typecheck
         run: pnpm typecheck
 
       - name: Build
         run: pnpm build
+
+      - name: Typecheck visual fixtures
+        run: pnpm exec vue-tsc --noEmit -p packages/datav/tests/visual/tsconfig.json
+
+      - name: Install Chromium
+        run: pnpm exec playwright install chromium
+
+      - name: Repeat DataV visual regressions
+        run: pnpm test:datav:visual --repeat-each=3
+
+      - name: Upload Windows visual diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: datav-visual-windows-release-${{ github.sha }}
+          path: .playwright-results/datav/
+          if-no-files-found: ignore
+          retention-days: 7
 
   site-build:
     name: Static site builds

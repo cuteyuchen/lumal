@@ -43,8 +43,9 @@ export function verifyReleaseWorkflows(workflows, scripts) {
     assert.ok(job && !job.if && !job['continue-on-error'], `${gate} 不得跳过或容错`)
     assert.ok(!JSON.stringify(job).includes('secrets.'), `${gate} 不得接触发布 Secrets`)
     assert.ok(job.steps.every(step => !step['continue-on-error']), `${gate} 步骤不得容错`)
+    // 诊断附件可在失败时或始终上传，实际校验步骤仍不得条件跳过。
     assert.ok(job.steps.every(step => !step.if
-      || (step.if === 'failure()' && step.uses === 'actions/upload-artifact@v4')
+      || (['failure()', 'always()'].includes(step.if) && step.uses === 'actions/upload-artifact@v4')
       || (gate === 'version-check' && step.run === 'pnpm release:verify --require-tag'
         && step.if === sideEffectsCondition)), `${gate} 校验步骤不得跳过`)
   }
@@ -62,6 +63,27 @@ export function verifyReleaseWorkflows(workflows, scripts) {
       assert.ok(workflows[file].jobs[jobName].steps.some(step =>
         step.run === `pnpm ${command}` && !step.if && !step['continue-on-error']), `${file} 必须执行 ${command}`)
     }
+  }
+  for (const [file, jobName] of [
+    ['build-validation.yml', 'datav-visual'],
+    ['release-gate.yml', 'windows-check'],
+  ]) {
+    const job = workflows[file].jobs[jobName]
+    assert.ok(job && job['runs-on'] === 'windows-latest' && !job.if && !job['continue-on-error'], `${file} 必须执行 Windows DataV 视觉门禁`)
+    const steps = job.steps
+    const install = steps.findIndex(step => step.run === 'pnpm exec playwright install chromium'
+      && !step.if && !step['continue-on-error'])
+    const visual = steps.findIndex(step => step.run === 'pnpm test:datav:visual --repeat-each=3'
+      && !step.if && !step['continue-on-error'])
+    assert.ok(install >= 0 && visual > install, `${file} DataV 视觉门禁必须在 Chromium 安装后连续运行且不得容错`)
+    assert.ok(steps.some(step => step.run === 'pnpm exec vue-tsc --noEmit -p packages/datav/tests/visual/tsconfig.json'
+      && !step.if && !step['continue-on-error']), `${file} 必须检查 DataV 视觉夹具类型`)
+  }
+  for (const [file, jobName] of [['ci.yml', 'check'], ['release-gate.yml', 'windows-check']]) {
+    assert.ok(workflows[file].jobs[jobName].steps.some(step => step.uses === 'actions/upload-artifact@v4'
+      && step.if === 'always()' && !step['continue-on-error']
+      && step.with?.path === 'output/release/cli-terminal/'
+      && step.with?.['if-no-files-found'] === 'error'), `${file} 必须保留 CLI 终端实跑证据`)
   }
   assert.ok(scripts['release:check'].includes('pnpm --filter lumal-mock-api build:test'), '生产 E2E 必须构建独立 Mock Node 产物')
   assert.equal(scripts['test:e2e:release:built'], 'playwright test --config playwright.release.config.ts', '生产 E2E 必须使用专用配置且不能只跑 smoke')

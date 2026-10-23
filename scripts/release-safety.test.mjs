@@ -116,6 +116,36 @@ describe('release dependency graph', () => {
     job.steps = job.steps.filter(step => step.run !== `pnpm ${command}`)
     expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow()
   })
+
+  it.each([
+    ['build-validation.yml', 'datav-visual'],
+    ['release-gate.yml', 'windows-check'],
+  ])('%s 不能遗漏或容错 DataV 视觉回归', (file, jobName) => {
+    const workflows = readWorkflows()
+    const job = workflows[file].jobs[jobName]
+    const step = job.steps.find(step => step.run === 'pnpm test:datav:visual --repeat-each=3')
+    step['continue-on-error'] = true
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow()
+    delete step['continue-on-error']
+    job.steps = job.steps.filter(item => item !== step)
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('DataV')
+  })
+
+  it.each([
+    ['ci.yml', 'check'],
+    ['release-gate.yml', 'windows-check'],
+  ])('%s 终端实跑证据必须始终上传，不能仅保留主测试日志', (file, jobName) => {
+    const workflows = readWorkflows()
+    const job = workflows[file].jobs[jobName]
+    const step = job.steps.find(item => item.with?.path === 'output/release/cli-terminal/')
+    step.if = 'success()'
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow()
+    step.if = 'always()'
+    step.with['if-no-files-found'] = 'ignore'
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('终端实跑证据')
+    job.steps = job.steps.filter(item => item !== step)
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('终端实跑证据')
+  })
 })
 
 describe('release version and registry preflight', () => {

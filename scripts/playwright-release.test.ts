@@ -3,9 +3,17 @@ import { fileURLToPath } from 'node:url'
 import { loadConfigFromFile } from 'vite'
 import { describe, expect, it } from 'vitest'
 import development from '../playwright.config'
+import datav from '../playwright.datav.config'
 import release from '../playwright.release.config'
 
 describe('production browser acceptance configuration', () => {
+  it('dataV 视觉门禁固定单 worker，禁止 only 与重试掩盖不稳定', () => {
+    expect(datav.forbidOnly).toBe(true)
+    expect(datav.retries).toBe(0)
+    expect(datav.workers).toBe(1)
+    expect(datav.testDir).toBe('packages/datav/tests/visual')
+  })
+
   it('复用完整用例，服务只启动 Admin dist 与独立 Mock Node 产物', () => {
     expect(release.testDir).toBe(development.testDir)
     expect(release.grep).toBeUndefined()
