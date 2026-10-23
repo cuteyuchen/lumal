@@ -1,6 +1,15 @@
 import { expect, test } from './fixtures'
 import { expectNoPageOverflow, loginAsAdmin, openPreferences, openTopMenu } from './helpers'
 
+const layoutTransitionSelector = [
+  '.lumal-layout-header-enter-active',
+  '.lumal-layout-header-leave-active',
+  '.lumal-layout-breadcrumb-enter-active',
+  '.lumal-layout-breadcrumb-leave-active',
+  '.lumal-layout-sidebar-enter-active',
+  '.lumal-layout-sidebar-leave-active',
+].join(',')
+
 test('设置、标签页和移动布局可以完整操作并持久化', async ({ page }) => {
   await loginAsAdmin(page)
   await openTopMenu(page, '功能示例')
@@ -69,6 +78,8 @@ test('三种布局在 375、768、1024、1440px 下保持导航可用且无页�
       await page.goto('/#/examples/detail')
       await expect(page).toHaveURL(/#\/examples\/detail$/)
       await expect(page.locator('.lumal-layout')).toHaveAttribute('data-layout', layout.value)
+      // 离场节点在过渡结束前仍合法存在，唯一节点断言应检查稳定布局。
+      await expect(page.locator(layoutTransitionSelector)).toHaveCount(0)
       await expectNoPageOverflow(page)
 
       const breadcrumb = page.getByRole('navigation', { name: '面包屑' })
@@ -153,14 +164,7 @@ for (const layout of [
     const content = page.locator('.lumal-content')
     const header = page.locator('.lumal-header')
     const sidebar = page.locator('.lumal-layout__desktop-sidebar')
-    const transitions = shell.locator([
-      '.lumal-layout-header-enter-active',
-      '.lumal-layout-header-leave-active',
-      '.lumal-layout-breadcrumb-enter-active',
-      '.lumal-layout-breadcrumb-leave-active',
-      '.lumal-layout-sidebar-enter-active',
-      '.lumal-layout-sidebar-leave-active',
-    ].join(','))
+    const transitions = shell.locator(layoutTransitionSelector)
     await expect(shell).toHaveAttribute('data-layout', layout.value)
     await expect(transitions).toHaveCount(0)
     await draft.fill('Schema')
@@ -262,12 +266,15 @@ test('侧栏折叠后仍显示已注册的菜单图标', async ({ page }) => {
 })
 
 test('混合导航会根据一级菜单子级动态显示和隐藏侧栏', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
   await loginAsAdmin(page)
   const sidebar = page.locator('.lumal-layout__desktop-sidebar')
 
   await expect(sidebar).toHaveCount(0)
   await openTopMenu(page, '系统管理')
   await expect(sidebar).toBeVisible()
+  // 等待 appear 完成，避免把尚未展开的宽度误作离场动画的基线。
+  await expect(page.locator(layoutTransitionSelector)).toHaveCount(0)
   await expect(sidebar).toHaveCSS('transition-duration', /.+/)
 
   const sampledWidths = await page.locator('.lumal-header__navigation')
