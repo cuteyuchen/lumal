@@ -7,7 +7,7 @@ export const projectTemplates = ['admin', 'screen', 'blank'] as const
 export const screenAuthModes = ['none', 'local-demo', 'http'] as const
 export const screenDataModes = ['none', 'local', 'http'] as const
 export const screenVisualizations = ['none', 'charts', 'datav', 'cockpit'] as const
-export const screenViewports = ['responsive', 'width', 'scale', 'vw'] as const
+export const screenViewports = ['disabled', 'responsive', 'width', 'contain', 'scale', 'vw'] as const
 export const projectRouterModes = ['none', 'hash', 'history'] as const
 
 export function resolveProjectOptions(input: CreateLumalProjectOptions) {
@@ -45,16 +45,15 @@ export function resolveProjectOptions(input: CreateLumalProjectOptions) {
     throw new Error('Screen 能力组合无效')
   }
   if (template === 'blank' && (options.auth !== 'none' || options.data !== 'none' || options.routerMode !== 'none'
-    || options.visualization !== 'none' || options.viewport !== 'responsive')) {
+    || options.visualization !== 'none' || (options.viewport !== 'responsive' && options.viewport !== 'disabled'))) {
     throw new Error('Blank 不包含认证、数据、路由或可视化能力，请选择 Screen')
   }
   return options
 }
 
 export async function composeProjectTemplates(options: ResolvedScreenOptions): Promise<TemplateFile[]> {
-  if (options.visualization !== 'none' || options.viewport !== 'responsive')
-    throw new Error('此能力尚未启用')
   const layers = ['common', 'vue', options.template]
+  const viewport = options.viewport !== 'responsive' && options.viewport !== 'disabled'
   if (options.routerMode !== 'none')
     layers.push('screen-router')
   if (options.data !== 'none')
@@ -66,13 +65,28 @@ export async function composeProjectTemplates(options: ResolvedScreenOptions): P
     layers.push('screen-http')
   if (options.data === 'http' && options.auth !== 'none')
     layers.push('screen-request-auth')
+  if (options.visualization !== 'none')
+    layers.push(`screen-visualization-${options.visualization}`)
+  if (viewport)
+    layers.push('screen-viewport')
   const files = await readTemplateLayers(layers)
   const manifest = JSON.parse(files.get('package.json')!)
+  const version = await getVersion()
   manifest.name = options.name
   if (options.routerMode !== 'none')
     manifest.dependencies['vue-router'] = '^4.5.0'
   if (options.auth !== 'none' || options.data === 'http')
-    manifest.dependencies['@lumal/core'] = await getVersion()
+    manifest.dependencies['@lumal/core'] = version
+  if (viewport)
+    manifest.dependencies['@lumal/viewport'] = version
+  if (options.visualization !== 'none')
+    manifest.dependencies[`@lumal/${options.visualization}`] = version
+  if (options.visualization === 'charts') {
+    manifest.dependencies.echarts = '^6.0.0'
+    manifest.dependencies['vue-echarts'] = '^8.0.0'
+  }
+  if (options.visualization === 'cockpit')
+    manifest.dependencies['element-plus'] = '^2.11.0'
   manifest.dependencies = Object.fromEntries(Object.entries(manifest.dependencies).sort(([a], [b]) => a.localeCompare(b)))
   files.set('package.json', `${JSON.stringify(manifest, null, 2)}\n`)
   if (options.routerMode !== 'none') {
@@ -81,6 +95,20 @@ export async function composeProjectTemplates(options: ResolvedScreenOptions): P
   if (http) {
     files.set('.env.development', 'VITE_API_BASE_URL=\n')
     files.set('.env.production.example', 'VITE_API_BASE_URL=https://api.example.com\n')
+  }
+  const screenPath = 'src/screen/ScreenView.vue'
+  if (files.has(screenPath)) {
+    files.set(screenPath, files.get(screenPath)!
+      .replace('// SCREEN_VISUALIZATION_IMPORT\n', options.visualization === 'none' ? '' : 'import ScreenVisualization from \'./components/ScreenVisualization.vue\';\n')
+      .replace('    <!-- SCREEN_VISUALIZATION -->\n', options.visualization === 'none' ? '' : '    <ScreenVisualization />\n'))
+  }
+  if (viewport) {
+    const entryPath = 'src/screen/ScreenEntry.vue'
+    files.set(entryPath, files.get(entryPath)!
+      .replace('import ScreenView from \'./ScreenView.vue\';', 'import ScreenView from \'./ScreenView.vue\';\nimport ScreenViewport from \'./ScreenViewport.vue\';')
+      .replace('    <ScreenView />', '    <ScreenViewport>\n      <ScreenView />\n    </ScreenViewport>'))
+    files.set('src/screen/ScreenViewport.vue', files.get('src/screen/ScreenViewport.vue')!
+      .replace('/* VIEWPORT_MODE */ \'contain\'', `'${options.viewport === 'scale' ? 'contain' : options.viewport}'`))
   }
   const conventions = options.template === 'blank'
     ? '## Blank\n\n默认只安装 Vue 运行时，不引入 Router、Pinia、Element Plus 或 Lumal Core。按业务需要逐项接入，不预建后台结构。'

@@ -3,6 +3,7 @@ import type { ScreenMetric } from '../services/metrics-types';
 import { onBeforeUnmount, onMounted, shallowRef } from 'vue';
 import { loadMetrics } from '../services/metrics';
 import ScreenMetrics from './components/ScreenMetrics.vue';
+// SCREEN_VISUALIZATION_IMPORT
 
 /***********************指标加载*********************/
 const metrics = shallowRef<ScreenMetric[]>([]);
@@ -39,13 +40,19 @@ onBeforeUnmount(() => controller?.abort());
     <p v-if="error" role="alert">{{ error }}</p>
     <p v-else-if="loading" role="status">加载中</p>
     <ScreenMetrics :metrics="metrics" />
+    <!-- SCREEN_VISUALIZATION -->
   </main>
 </template>
 
 <style scoped>
 .screen-view {
-  min-height: 100dvh;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
   padding: 32px;
+  font-size: max(14px, var(--lumal-viewport-min-font-size, 14px));
 }
 .screen-view__header {
   display: flex;
@@ -57,6 +64,6 @@ onBeforeUnmount(() => controller?.abort());
 }
 .screen-view__header h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: max(28px, var(--lumal-viewport-min-font-size, 14px));
 }
 </style>

@@ -22,20 +22,27 @@ async function login(username: string, password: string) {
 </script>
 
 <template>
-  <template v-if="authenticated">
+  <div v-if="authenticated" class="screen-entry">
     <div class="screen-session">
       <span v-if="authDemo">Local Demo</span>
       <button type="button" @click="signOut">退出登录</button>
     </div>
     <ScreenView />
-  </template>
+  </div>
   <main v-else>
     <ScreenLoginForm :loading="loading" :error="error" :enabled="authEnabled" :demo="authDemo" @submit="login" />
   </main>
 </template>
 
 <style scoped>
+.screen-entry {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  min-height: 0;
+}
 .screen-session {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: flex-end;

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ScreenMetrics from './components/ScreenMetrics.vue';
+// SCREEN_VISUALIZATION_IMPORT
 
 /***********************静态演示数据*********************/
 const metrics = [
@@ -16,13 +17,19 @@ const metrics = [
       <span>静态示例</span>
     </header>
     <ScreenMetrics :metrics="metrics" />
+    <!-- SCREEN_VISUALIZATION -->
   </main>
 </template>
 
 <style scoped>
 .screen-view {
-  min-height: 100dvh;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
   padding: 32px;
+  font-size: max(14px, var(--lumal-viewport-min-font-size, 14px));
 }
 
 .screen-view__header {
@@ -36,6 +43,6 @@ const metrics = [
 
 .screen-view__header h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: max(28px, var(--lumal-viewport-min-font-size, 14px));
 }
 </style>

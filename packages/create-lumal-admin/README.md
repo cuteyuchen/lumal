@@ -1,6 +1,29 @@
 # create-lumal-admin
 
-`create-lumal-admin` 是 Lumal 的轻量后台基座脚手架，用于生成通过公开包入口消费 `@lumal/core`、`@lumal/icons` 和 `@lumal/icons-vue` 的 Vue 应用。
+`create-lumal-admin` 保留轻量后台入口，同时提供通用 `create-lumal` 二进制，可生成 Admin、Screen 或 Blank。
+新增能力尚未发布；不能把 `pnpm create lumal` 当成已发布命令。当前以本包 tarball 安装后运行
+`create-lumal <目录> --template screen`，或使用原有 `create-lumal-admin` 命令。
+
+## 项目类型与可选能力
+
+```bash
+create-lumal my-blank --template blank --no-interactive
+create-lumal my-screen --template screen --no-interactive
+create-lumal my-api-screen --template screen --auth http --data http --router-mode history --no-interactive
+create-lumal my-datav --template screen --visualization datav --viewport contain --no-interactive
+```
+
+Blank 只安装 Vue 运行时。Screen 默认没有 Router、认证、API、Admin 或可视化依赖，
+`--auth none|local-demo|http`、`--data none|local|http`、`--router-mode none|hash|history`
+分别控制认证、业务数据和路由；HTTP 认证本身需要网络，不受业务数据模式影响。
+`--visualization none|charts|datav|cockpit` 只加入所选可视化，Cockpit 使用 runtime/external，
+不加载 Designer；DataV 数字/边框不安装 ECharts。
+
+`--viewport disabled|responsive|contain|width|vw` 默认 responsive，无额外视口包。
+contain 按设计宽高完整等比缩放，width 可能纵向滚动，vw 提供实际容器单位、不全局转换CSS。
+历史实验参数 scale 是 contain 别名。设计尺寸在生成的 ScreenViewport 中显式配置，
+登录栏独立占位，不能把整屏高度误当内容高度。详见仓库 `docs/screen-viewport-guide.md`。
+所有项目生成相同语义的 lint、format:check、typecheck、test、build 和 check。
 
 ## 使用
 

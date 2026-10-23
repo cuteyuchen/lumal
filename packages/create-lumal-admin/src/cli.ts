@@ -69,7 +69,7 @@ const help = `用法：pnpm create lumal-admin [目录] [选项]
   --auth none|local-demo|http               Screen 认证（默认 none）
   --data none|local|http                    Screen 业务数据（默认 none）
   --visualization none|charts|datav|cockpit  Screen 可视化（默认 none）
-  --viewport responsive|width|scale|vw       Screen 适配（默认 responsive）
+  --viewport disabled|responsive|contain|width|vw  Screen 适配（scale 为 contain 别名）
   --features system,examples|none            业务模块（标准预设默认全部）
   --name <npm包名>                           项目名称（默认目录名）
   --no-interactive                           禁用交互，CI/非 TTY 自动禁用
@@ -200,6 +200,29 @@ export async function main(args = process.argv.slice(2), unified = false): Promi
             { value: 'none', label: 'None', hint: '真正单页，无 Router 依赖' },
             ...routerModes.map(value => ({ value, label: value === 'hash' ? 'Hash' : 'History' })),
           ],
+        }))
+        options.visualization ??= await answer(select({
+          input,
+          message: 'Screen 可视化',
+          initialValue: 'none',
+          options: [
+            { value: 'none', label: 'None', hint: '不安装图表或编排依赖' },
+            { value: 'charts', label: 'Charts', hint: '按需注册 ECharts 引擎' },
+            { value: 'datav', label: 'DataV', hint: '数字与边框独立组件，无 Cockpit' },
+            { value: 'cockpit', label: 'Cockpit', hint: '仅 runtime，复杂编排时选择' },
+          ] as const,
+        }))
+        options.viewport ??= await answer(select({
+          input,
+          message: 'Screen 适配',
+          initialValue: 'responsive',
+          options: [
+            { value: 'responsive', label: 'Responsive', hint: '普通响应式，无额外视口包' },
+            { value: 'contain', label: 'Contain', hint: '完整等比缩放，可能留白' },
+            { value: 'width', label: 'Width', hint: '按宽缩放，可能纵向滚动' },
+            { value: 'vw', label: 'Container units', hint: '局部容器尺寸变量，不全局转换 CSS' },
+            { value: 'disabled', label: 'Disabled', hint: '不生成适配代码' },
+          ] as const,
         }))
       }
       const resolved = resolveProjectOptions({ ...options, name: options.name, targetDir: options.target })

@@ -21,6 +21,11 @@ const cases = [
   { name: 'screen-demo-auth', args: ['--template', 'screen', '--auth', 'local-demo', '--data', 'local'], auth: 'local-demo' },
   { name: 'screen-auth-only', args: ['--template', 'screen', '--auth', 'http'], auth: 'http', http: true },
   { name: 'screen-auth-http', args: ['--template', 'screen', '--auth', 'http', '--data', 'http', '--router-mode', 'history'], auth: 'http', http: true, protectedData: true },
+  { name: 'screen-charts', args: ['--template', 'screen', '--visualization', 'charts'], visualization: 'charts' },
+  { name: 'screen-datav', args: ['--template', 'screen', '--visualization', 'datav', '--viewport', 'contain'], visualization: 'datav', viewport: 'contain' },
+  { name: 'screen-cockpit', args: ['--template', 'screen', '--visualization', 'cockpit', '--viewport', 'contain'], visualization: 'cockpit', viewport: 'contain' },
+  { name: 'screen-width', args: ['--template', 'screen', '--viewport', 'width'], viewport: 'width' },
+  { name: 'screen-units', args: ['--template', 'screen', '--viewport', 'vw'], viewport: 'vw' },
 ]
 
 async function sourceHash(directory) {
@@ -43,7 +48,14 @@ async function verifyBrowser(projectDir, scenario, screenshots, api) {
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
     await page.goto(preview.url)
-    await expect(page.locator('main')).toBeVisible()
+    const mainElement = page.locator('main').first()
+    await expect(mainElement).toBeVisible()
+    if (scenario.visualization === 'charts')
+      await expect(page.locator('.lumal-chart canvas')).toBeVisible()
+    if (scenario.visualization === 'datav')
+      await expect(page.locator('.lumal-digital-flop')).toBeVisible()
+    if (scenario.visualization === 'cockpit')
+      await expect(page.locator('.screen-cockpit')).toContainText('128')
     if (scenario.auth === 'local-demo') {
       await expect(page.getByRole('button', { name: '登录', exact: true })).toBeDisabled()
       await expect(page.getByRole('alert')).toContainText('生产环境禁止')
@@ -79,7 +91,15 @@ async function verifyBrowser(projectDir, scenario, screenshots, api) {
     const sizes = [[1366, 768], [1920, 1080], [2560, 1440], [1440, 900], [390, 844]]
     for (const [width, height] of sizes) {
       await page.setViewportSize({ width, height })
-      const main = await page.locator('main').boundingBox()
+      await expect.poll(async () => {
+        const box = await mainElement.boundingBox()
+        const container = scenario.viewport ? await page.locator(`[data-viewport-mode="${scenario.viewport}"]`).first().boundingBox() : null
+        const expectedWidth = scenario.viewport === 'contain' && container
+          ? Math.min(container.width / 1920, container.height / 1080) * 1920
+          : width
+        return Boolean(box && Math.abs(box.width - expectedWidth) < 2)
+      }).toBe(true)
+      const main = await mainElement.boundingBox()
       if (!main || main.width > width + 1 || main.x < -1)
         throw new Error(`${name} ${width}x${height} 页面溢出`)
       await page.screenshot({ path: join(screenshots, `${name}-${width}x${height}.png`), fullPage: true })

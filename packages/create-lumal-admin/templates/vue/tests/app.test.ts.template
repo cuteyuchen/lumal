@@ -5,6 +5,6 @@ import App from '../src/App.vue';
 
 describe('应用入口', () => {
   it('可以渲染首个页面', async () => {
-    expect(await renderToString(createSSRApp(App))).toContain('<main');
+    expect(await renderToString(createSSRApp(App))).toMatch(/<main|data-viewport-mode/);
   });
 });

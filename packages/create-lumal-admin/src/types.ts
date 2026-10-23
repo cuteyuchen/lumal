@@ -33,7 +33,7 @@ export type ProjectTemplate = 'admin' | 'blank' | 'screen'
 export type ScreenAuth = 'none' | 'local-demo' | 'http'
 export type ScreenData = 'none' | 'local' | 'http'
 export type ScreenVisualization = 'none' | 'charts' | 'datav' | 'cockpit'
-export type ScreenViewport = 'responsive' | 'width' | 'scale' | 'vw'
+export type ScreenViewport = 'disabled' | 'responsive' | 'width' | 'contain' | 'scale' | 'vw'
 export type ProjectRouterMode = RouterMode | 'none'
 
 export interface CreateLumalProjectOptions {
