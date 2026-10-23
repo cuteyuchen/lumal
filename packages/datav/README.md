@@ -56,6 +56,10 @@ import '@lumal/datav/style.css'
 
 两套引擎按当前模式动态加载，实例在加载完成后创建；切换模式或卸载会使旧加载失效。`LumalActiveRingChart` 使用 ECharts 模式，不应视为无引擎组件。其他纯 SVG/数字/列表子入口不引入图表引擎；需要实例的方法应在实例创建后调用。
 
+开发分支在首次 `setOption` 前绑定 `events` 和 `@rendered/@finished`，静态图表也能收到首帧通知。
+不要等 `onMounted` 后才注册首帧监听。容器使用明确高度或 `minmax(0, 1fr)` 网格内容行；
+单独给父级 `min-height`，再让图表占 `height: 100%`，可能形成尺寸反馈循环。
+
 ## 两套 API
 
 DataV 原生配置可以直接迁移：
