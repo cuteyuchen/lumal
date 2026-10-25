@@ -20,8 +20,8 @@
 ## npm 安装
 
 下列命令对应 `0.0.6-beta`，显式指定预发布版本，不依赖 npm 的 `latest` 标签。
-这是当前候选 API 基线，不代表发布已完成；实际可用性以 registry 和发布工作流为准。
-发布核验前按 [项目模板](/reference/project-template-guide) 构建并验证候选 tarball。
+本版十包已发布并完成 registry 与同次发布产物核验，详见 [发布记录](/reference/npm-release-0.0.6-beta)。
+开发未发布源码时，按 [项目模板](/reference/project-template-guide) 构建并验证本地 tarball，不能以旧包代替新增能力。
 
 ```bash
 pnpm add @lumal/core@0.0.6-beta @lumal/icons@0.0.6-beta @lumal/icons-vue@0.0.6-beta vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
@@ -78,7 +78,7 @@ pnpm add @lumal/core@file:../lumal/packages/core
 
 ## Peer 依赖摘要
 
-以下范围与当前候选包的 `peerDependencies` 一致；按实际使用的入口安装，不必为了纯服务入口安装全部 UI peer。
+以下范围与本版包的 `peerDependencies` 一致；按实际使用的入口安装，不必为了纯服务入口安装全部 UI peer。
 
 | 依赖 | 兼容范围 | 使用场景 |
 | --- | --- | --- |

@@ -11,10 +11,11 @@ pnpm changeset:status
 
 ## 准备 Beta
 
-本轮沿用 `0.0.x-beta` 版本序列，候选为 `0.0.6-beta`：
+本轮沿用 `0.0.x-beta` 版本序列，`0.0.6-beta` 已发布并完成核验，见 [发布记录](/reference/npm-release-0.0.6-beta)。
+下一次准备时，`NEXT_VERSION` 必须是尚未发布的统一版本，不可重发 `0.0.6-beta`：
 
 ```bash
-pnpm release:version 0.0.6-beta
+pnpm release:version NEXT_VERSION
 pnpm install --lockfile-only --ignore-scripts
 pnpm install --frozen-lockfile --ignore-scripts
 ```
@@ -40,6 +41,6 @@ pnpm release:check
 
 构建、类型检查和包消费验收保持串行，避免同时清理 `dist`。版本准备可只做代码验收，但必须注明 E2E 未验证；真实发布仍必须通过包含完整生产 E2E 的 `release:check`，不能用历史审计结果代替。
 
-npm 发布统一由 `release-gate.yml` 编排：维护者授权后推送 `v0.0.6-beta` tag，或手动选择匹配版本的 tag 并关闭 `dry_run`；全部门禁成功后才发包。部署还须独立授权并启用开关，发包授权不等于部署授权。分支手动运行默认 `dry_run=true`，不会发包。`release-npm.yml` 仅保留复用入口；本地版本准备不会触发真实发布。
+npm 发布统一由 `release-gate.yml` 编排：本版已通过 `v0.0.6-beta` tag 完成发布，不能重跑同版本发布链。后续版本须经维护者授权，使用新版本的匹配 tag；全部门禁成功后才发包。部署还须独立授权并启用开关，发包授权不等于部署授权。分支手动运行默认 `dry_run=true`，不会发包。`release-npm.yml` 仅保留复用入口；本地版本准备不会触发真实发布。
 
 清单见 [发布检查清单](/reference/release-checklist)，版本变化见 [更新日志](/reference/changelog)。

@@ -4,7 +4,9 @@
 
 ## 版本准备
 
-公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。历史九包 `0.0.3-beta`、`0.0.4-beta`、`0.0.5-beta` 均已发布，完整门禁、registry 与实际 tarball 核验见 [发布记录](./npm-release-0.0.5-beta.md)。本轮新增 `@lumal/viewport`，当前发布清单为十包，候选为 `0.0.6-beta`。这些历史版本不能用于新的全量发布；部分可见也不得重发。每次正式发布前仍须逐包查询 registry，任一已有版本或网络异常都应中断。
+公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。历史九包 `0.0.3-beta`、`0.0.4-beta`、`0.0.5-beta` 均已发布，完整门禁、registry 与实际 tarball 核验见 [历史发布记录](./npm-release-0.0.5-beta.md)。
+本轮新增 `@lumal/viewport`，十包 `0.0.6-beta` 已发布并完成 registry 与同次发布产物核验，见 [本版发布记录](./npm-release-0.0.6-beta.md)。
+已发布版本不能用于新的全量发布；部分可见也不得重发。下一次正式发布前仍须逐包查询 registry，任一已有版本或网络异常都应中断。
 
 ```bash
 pnpm release:version NEXT_VERSION

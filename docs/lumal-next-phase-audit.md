@@ -7,6 +7,14 @@
 同一候选 SHA 的 Ubuntu、Linux PTY、Windows 三轮视觉、静态站点和全部预算演练已通过。
 历史“尚无远端 CI / PR”不再是当前阻塞。正式发布和 registry 核验状态以
 [本版执行记录](./npm-release-0.0.6-beta.md) 为准，不以演练成功代替发布成功。
+正式 tag `v0.0.6-beta` 指向 `827fa8b864318a4940b2abfec311ac5eb1cbb1e4`；
+同次 Release Gate `40171196908` 的四项门禁与十包发布已成功，部署跳过。
+十包 registry 版本、beta、tarball 完整性和同 run 的 696 个 dist 文件字节均已核验，
+既有九包 latest 保持不变，新增 viewport 首次发布后的 latest 为 `0.0.6-beta`。
+发布后六类纯 registry 消费者的正常安装、独立 frozen 复装、完整 check 与格式幂等均通过，
+依赖、体积和报告哈希见执行记录；不将模板验证等同于真实业务后端联通。
+当前文档、安装示例和仓库 / 本机 Skill 已同步本版；85 项文档 / Skill / 发布安全契约、
+两份 Skill validator、15 份分发文件哈希对照及文档生产构建均通过。
 本版完整本地 `corepack pnpm release:check` 也已退出 0，含 1,051 项主链测试、
 全部生成消费者、视口检查、31 项生产 E2E 和十包 pack dry-run。
 省级也已完成本版隔离复验，仍为无新增失败、原业务门禁非全绿，见

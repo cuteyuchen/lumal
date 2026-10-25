@@ -1,8 +1,8 @@
 # 升级与迁移指南
 
-本文对应 `0.0.6-beta` 候选。manifest 的版本号不表示这些修改已发布到 npm，
-发布核验前使用候选 tarball，不能通过历史同版本号取得本轮功能。
-公共包发布仍须通过完整门禁；发布授权不代表部署授权，也不授权修改真实业务仓库。
+本文对应已发布的 `0.0.6-beta`；正式标签门禁、registry 与同次发布产物核验见
+[本版发布记录](./npm-release-0.0.6-beta.md)。安装时显式选择目标版本，未发布源码使用精确候选 tarball 验证。
+公共包发布不代表业务升级通过，也不授权部署或修改真实业务仓库。
 实际兼容证据与未执行事项见[真实消费者矩阵](./real-consumer-compatibility.md)；
 历史 `0.0.5-beta` 发布与旧验收记录继续保留，不覆盖为本轮结果。
 
@@ -19,18 +19,18 @@
 省级项目有实际启用的 pnpm patch，不应把“源码修复完成”当作“可立即删除业务补丁”。
 建议仅在独立临时副本执行以下步骤，原项目保持只读：
 
-1. 保留原 package.json、pnpm 配置、lockfile、patch 和原质量门禁结果，确认候选基于的提交。
-2. 在 Lumal 构建并 pack **当前提交** 的公开包，记录每个 tarball 的 SHA256；
-   Core、Icons、Charts、Vite 和新增 Viewport 的内部依赖必须来自同一候选，不混用源码 alias。
-3. 在副本用精确 tarball/overrides 替换原有 `@lumal/*`，不盲目升级所有 Vue/Vite/TypeScript 生态依赖。
+1. 保留原 package.json、pnpm 配置、lockfile、patch 和原质量门禁结果，记录目标版本与来源。
+2. 已发布版本使用精确的 `0.0.6-beta` registry 包；验证未发布源码时，构建并 pack **精确提交** 的公开包，记录每个 tarball 的 SHA256。
+   Core、Icons、Charts、Vite 和新增 Viewport 的内部依赖必须来自同一版本或同一候选，不混用源码 alias。
+3. 在副本用精确版本或 tarball/overrides 替换原有 `@lumal/*`，不盲目升级所有 Vue/Vite/TypeScript 生态依赖。
    检查实际 `pnpm why`、peer 和 lockfile，避免传递依赖回落到 registry 的历史版本。
 4. 只在副本移除旧 `@lumal/core@0.0.4-beta` 的 patchedDependencies 绑定；
    候选 tarball 不是旧压缩 chunk，不能把旧 patch 强打上去。不要先删除原项目补丁文件。
-5. 首次候选安装正常生成新 lockfile，然后独立执行 `pnpm install --frozen-lockfile`；
+5. 首次升级安装正常生成新 lockfile，然后独立执行 `pnpm install --frozen-lockfile`；
    不能要求不存在或已失配的锁文件首次 frozen 安装成功。
 6. 使用**真实项目自己的命令**执行 lint、typecheck、test:run、build。
    两个业务项目当前的 `format` 是 ESLint fix，不假定已存在新模板的 format:check/check 脚本。
-7. 验证下列行为，保留失败/通过日志和生产截图。只有候选无 patch 的业务回归通过，
+7. 验证下列行为，保留失败/通过日志和生产截图。只有目标版本无 patch 的业务回归通过，
    才在单独业务升级 PR 中删除旧 patch、更新依赖与 lockfile。
 8. 回滚时在副本或经业务仓库授权的升级 PR 中恢复精确依赖与对应 lockfile；
    不对原业务工作树执行 reset 或覆盖用户修改。
@@ -146,8 +146,8 @@ KeepAlive 是否保留地图由应用决定：希望切后台再回来保持地�
 | 生成的 lockfile                                         | 首次安装产生，随业务版本审查；之后 frozen 安装复现           |
 
 CLI 旧 `create-lumal-admin` 命令和旧参数保留，新项目类型与可选能力见
-[项目模板指南](./project-template-guide.md)。通用 `create-lumal` 内部 bin 不等于 npm 名称已经可用，
-发布前另行核对 registry 与包名方案。本轮没有宣布占用、发布或改动旧 npm 入口。
+[项目模板指南](./project-template-guide.md)。通用 `create-lumal` bin 由已发布的 `create-lumal-admin@0.0.6-beta` 分发，
+独立 `create-lumal` npm 包仍未发布，也没有删除或更名旧入口。后续新增 npm 名称时须另行核对 registry 与发布权限。
 
 ## P2 审查
 

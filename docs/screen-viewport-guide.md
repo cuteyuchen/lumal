@@ -1,7 +1,7 @@
 # 屏幕与工作区适配
 
-本文面向 `0.0.6-beta` 的通用视口 API。发布核验完成前使用候选 tarball，
-registry 实际可用性以对应版本逐包核验为准，历史包不包含这些新增能力。
+本文面向已发布的 `0.0.6-beta` 通用视口 API，正式标签与逐包核验见
+[本版发布记录](./npm-release-0.0.6-beta.md)。开发未发布源码时使用本地 tarball，不用历史包代替新增能力验收。
 `@lumal/viewport` 仅以 Vue 为 peer；不依赖 Core、Element Plus、地图、图表或 Cockpit。
 独立包让普通 Vue/Blank/Screen 能使用同一算法，DataV/Cockpit 也无需反向依赖后台。
 复制三份算法或放进 Core 会分别增加维护成本或后台依赖；因此选择单独的小包。

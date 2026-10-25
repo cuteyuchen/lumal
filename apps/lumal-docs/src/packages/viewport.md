@@ -13,8 +13,8 @@
 
 ## 安装
 
-本文面向 `0.0.6-beta` 候选 API。下列命令以 registry 存在对应版本为前提，
-发布核验前使用候选 tarball，见 [安装说明](/guide/essentials/installation)。
+本文面向已发布的 `0.0.6-beta` API，下列命令显式选择本版。
+逐包核验见 [发布记录](/reference/npm-release-0.0.6-beta)，未发布源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
 pnpm add @lumal/viewport@0.0.6-beta vue@^3.5

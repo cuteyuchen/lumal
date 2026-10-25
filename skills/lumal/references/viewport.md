@@ -1,7 +1,7 @@
 # 通用视口适配
 
-`@lumal/viewport` 从 `0.0.6-beta` 提供以下 API；候选发布核验前使用本地 tarball，
-不能用历史 registry 包验证这些新增能力。
+`@lumal/viewport` 从已发布的 `0.0.6-beta` 提供以下 API；接入时核对 registry 与实际安装声明。
+验证未发布源码时使用本地 tarball，不能用历史 registry 包代替新增能力。
 仅 Vue peer，不依赖 Core/UI/图表。尺寸优先来自实际容器而不是 window。
 
 - `computeViewportScale`：纯算法，contain/width；可选 minScale/maxScale。

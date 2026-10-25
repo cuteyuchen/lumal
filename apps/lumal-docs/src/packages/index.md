@@ -2,9 +2,9 @@
 
 Lumal 按职责拆包。应用只消费 **公开 `exports` 入口** 与样式路径，不要依赖 `packages/*/src` 或测试内部文件。
 
-本组文档对应 `0.0.6-beta` 的十包候选 API，不用文档版本号证明 npm 发布完成。
-下列精确版本命令以 registry 存在对应版本为前提，候选发布核验前使用本地 tarball，
-状态与本地接入方式见 [安装说明](/guide/essentials/installation)。
+本组文档对应 `0.0.6-beta` 的十包公开 API，该版已发布并完成 registry 与同次发布产物核验，
+见 [本版发布记录](/reference/npm-release-0.0.6-beta)。
+下列命令显式选择本版；未发布源码的 tarball 接入方式见 [安装说明](/guide/essentials/installation)。
 
 ## 选型建议
 

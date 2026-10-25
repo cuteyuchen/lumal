@@ -2,10 +2,11 @@
 
 ## 0.0.6-beta (2026-10-25)
 
-本版统一准备十个公共包，新增 `@lumal/viewport`。当前为发布候选，
-真实发包须经过版本一致性、Ubuntu、Windows 和文档构建门禁；
-是否已发布以 [本版执行记录](./npm-release-0.0.6-beta.md) 和 npm registry 为准。
-使用 `beta` dist-tag，不改动既有九包的 `latest`，不自动部署生产。
+本版十个公共包已于 2026-10-25 发布，新增 `@lumal/viewport`。
+正式标签的版本一致性、Ubuntu、Windows 和文档构建门禁，以及 registry 与同次发布产物核验均已通过，
+具体来源和证据见 [本版执行记录](./npm-release-0.0.6-beta.md)。
+十包 `beta` 指向本版，既有九包的 `latest` 保持 `0.0.1-beta`；
+新增 `@lumal/viewport` 首次发布后的 `latest` 为 `0.0.6-beta`，本轮未部署生产。
 
 ### 工程与项目类型
 
@@ -44,7 +45,7 @@
 
 源码阶段的专项证据见 [脚手架重构验收](./scaffold-refactor-2026-10-23.md)、
 [下一阶段报告](./lumal-next-phase-audit.md) 和 [视口隔离报告](./screen-viewport-verification.md)。
-这些历史结果不替代本版发布候选的实际门禁；真实消费者原有失败、业务后台和部署边界继续保留。
+这些历史结果不替代本版正式标签的实际门禁；真实消费者原有失败、业务后台和部署边界继续保留。
 
 ## 0.0.5-beta (2026-10-21)
 
