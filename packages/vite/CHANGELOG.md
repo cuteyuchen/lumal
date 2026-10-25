@@ -1,5 +1,14 @@
 # @lumal/vite
 
+## 0.0.6-beta (2026-10-25)
+
+### Minor Changes
+
+- 新增默认关闭的 createViewportTransformPlugin / createViewportPostcssPlugin，显式限定 CSS 转换范围。
+- Dev/Build 使用同一转换逻辑，默认排除依赖；支持显式依赖白名单、字体和自定义属性策略。
+- 保护 Windows/pnpm 路径、SFC/SCSS/CSS 来源边界，不转换脚本普通数字、内联 style 或 URL。
+- 工作区 alias 增加 @lumal/viewport；公共包版本同步为 0.0.6-beta。
+
 ## 0.0.5-beta (2026-10-20)
 
 ### Patch Changes

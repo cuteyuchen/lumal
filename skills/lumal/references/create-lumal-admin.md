@@ -4,11 +4,11 @@
 
 创建 Admin、独立 Screen 或 Blank 项目时使用。已有 Vue 应用应增量接入公开包，不在原目录运行脚手架来覆盖项目。
 
-## 开发分支的新项目类型
+## 项目类型与通用入口
 
-新增能力未发布，不由下面历史npm命令取得。现有包内增加 `create-lumal` bin 和
+`0.0.6-beta` 在现有包内提供 `create-lumal` bin 和
 `createLumalProject` API，旧 `create-lumal-admin` bin/API/defaults不变。
-本地构建后可执行：
+发布核验完成前使用本地构建或候选 tarball。本地构建后可执行：
 
 ```bash
 node packages/create-lumal-admin/dist/project-cli.js blank-app --template blank --no-interactive
@@ -34,24 +34,26 @@ DataV数字/边框不安装ECharts。`--viewport disabled|responsive|contain|wid
 
 ## 命令与版本选择
 
-环境基线：Node.js 22.12+、pnpm 10.33.0。下列命令对应 `0.0.5-beta` 的公开 API，
+环境基线：Node.js 22.12+、pnpm 10.33.0。下列命令对应 `0.0.6-beta` 的公开 API，
 不代表 npm 最新版本；接入前核对 registry 与实际安装的声明。
 开发未发布源码时使用真实 tarball 验证，不用旧 CLI 的 `beta/latest` 标签代替新版能力。
 
 ```bash
-pnpm create lumal-admin@0.0.5-beta my-admin
-pnpm create lumal-admin@0.0.5-beta my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
-pnpm create lumal-admin@0.0.5-beta my-admin-v5 --preset vben-compatible
+pnpm create lumal-admin@0.0.6-beta my-admin
+pnpm create lumal-admin@0.0.6-beta my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
+pnpm create lumal-admin@0.0.6-beta my-admin-v5 --preset vben-compatible
+pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-screen --template screen
+pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-blank --template blank
 ```
 
 npm 等价命令：
 
 ```bash
-npm create lumal-admin@0.0.5-beta my-admin -- --api-mode http
+npm create lumal-admin@0.0.6-beta my-admin -- --api-mode http
 ```
 
-工作区新版使用 Clack 方向键单选、Space 多选、Enter 确认，摘要确认前不写文件；
-Escape / Ctrl+C 取消。此升级尚未发布，应使用本地 tarball，不将 `0.0.5-beta` npm 包视为已含新向导。
+CLI 使用 Clack 方向键单选、Space 多选、Enter 确认，摘要确认前不写文件；
+Escape / Ctrl+C 取消。目标版本不可用时使用本地 tarball，不用历史发布包代替候选验收。
 TTY 提问目录、名称、预设、数据源、路由和可选模块；非 TTY/CI 自动禁用交互。
 默认 `standard/local/hash`，省略目录时为 `lumal-admin`。显式指定的参数不会再次提问。
 自动化命令可加 `--no-interactive`，用 `--name` 指定与目录不同的 npm 包名；
@@ -68,7 +70,7 @@ pnpm dev
 - 先确认目标目录不存在或为空。不要删除非空目录来强行让创建成功。
 - 不支持 `--force`；文件、符号链接和含链接的祖先路径会被拒绝。写入失败只清理本次拥有的文件及空目录，不递归删除用户目录。
 
-## 生成范围
+## Admin 生成范围
 
 - Vue + TypeScript + Vite + Element Plus。
 - `@lumal/core/minimal` 启动、公开包导入和必要 SCSS/CSS。
@@ -83,7 +85,7 @@ pnpm dev
 
 模板生成后业务接口、权限模型和存储策略属于应用；不要把 Demo 的 Mock 凭据、菜单或公司状态码写进公共包。
 
-## 接入真实后端
+## Admin 接入真实后端
 
 - 按生成项目 `API-CONTRACT.md` 配置 `VITE_API_BASE_URL`；`VITE_API_ADAPTER` 默认为 `standard`，只有显式接入 Lumal Mock API 时才选择 `lumal-mock`。
 - `src/app/services/contracts.ts` 是应用服务接口；Local/HTTP 的 `data-source.ts` 实现同一接口，`http-adapter.ts` 负责业务包装、Token、用户、权限、菜单和分页字段转换。

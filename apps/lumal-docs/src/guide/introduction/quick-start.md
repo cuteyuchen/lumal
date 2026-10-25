@@ -69,13 +69,16 @@ pnpm --filter lumal-datav-guide dev
 
 ## 创建业务项目
 
-以下命令显式选择 `0.0.5-beta`，不依赖 npm 的 `latest`。
-开发尚未发布的源码时使用本地 tarball，见 [安装说明](/guide/essentials/installation)。
+以下命令显式选择 `0.0.6-beta`，不依赖 npm 的 `latest`。
+候选发布核验前使用本地 tarball，见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm create lumal-admin@0.0.5-beta my-admin
+pnpm create lumal-admin@0.0.6-beta my-admin
 # HTTP API 模式
-pnpm create lumal-admin@0.0.5-beta my-admin-http --api-mode http
+pnpm create lumal-admin@0.0.6-beta my-admin-http --api-mode http
+# 独立 Screen 或 Blank 使用同一包分发的通用 binary。
+pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-screen --template screen
+pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-blank --template blank
 
 cd my-admin
 pnpm install

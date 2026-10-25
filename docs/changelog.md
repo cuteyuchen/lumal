@@ -1,6 +1,33 @@
 # 更新日志
 
-## Unreleased (2026-10-23)
+## 0.0.6-beta (2026-10-25)
+
+本版统一准备十个公共包，新增 `@lumal/viewport`。当前为发布候选，
+真实发包须经过版本一致性、Ubuntu、Windows 和文档构建门禁；
+是否已发布以 [本版执行记录](./npm-release-0.0.6-beta.md) 和 npm registry 为准。
+使用 `beta` dist-tag，不改动既有九包的 `latest`，不自动部署生产。
+
+### 工程与项目类型
+
+- 通用 `create-lumal` binary 由 `create-lumal-admin@0.0.6-beta` 提供，
+  保留旧命令；支持 Admin、独立 Screen 和仅依赖 Vue 的 Blank。
+- Screen 登录、请求、路由、可视化和视口策略按需组合；HTTP 失败不回退演示，
+  Local Demo 认证在生产禁用，不默认生成后台菜单或系统管理。
+- 所有模板统一 ESLint/Prettier/TypeScript、LF、测试与 `check`、分层 `AGENTS.md`
+  和开发规范；首次安装后再 frozen 复装验证，不虚构初始锁文件。
+
+### 视口与公共能力
+
+- 新增轻量 `@lumal/viewport`，仅 Vue peer，支持应用默认、页面和容器三级适配。
+  响应式、完整等比、按宽度和容器尺寸单位独立于作用范围，不默认变换 DOM 根或地图。
+- DataV/Cockpit 共享算法与尺寸生命周期，保留已有缩放函数和 Cockpit `external`。
+  Vite 增加默认关闭、来源范围受控的 CSS 视口转换，Dev/Build 行为一致。
+- Core 隔离会话切换、迟到 401、刷新/取消和写请求竞态；
+  修复无 field 序号、跨页序号、选中导出及派生表单/字典过滤。
+- DataV 修复静态首帧图表事件；视觉夹具固定尺寸与动画时点，
+  保留原阈值并增加异步引擎、非空 Canvas 和跨加载一致性验证。
+
+### Admin 与兼容
 
 - CLI 使用 Clack 的方向键单选、Space 多选、默认值、参数预填和创建前摘要确认；
   CI、管道及不支持交互的终端自动使用非交互模式，取消与失败保留文件所有权回滚。
@@ -15,9 +42,9 @@
 - Core 主题移除上游删除的空样式入口，修复 Element Plus 2.14.7 下独立安装构建。
 - 补齐真实 PTY、tarball、可选模块、生产导航及系统业务测试，并提供同锁文件基线比较脚本。
 
-本轮尚未选择下一 Beta 版本，九包仍为 `0.0.5-beta`；上述为未发布源码能力，
-不能使用 registry 的旧版 CLI 验证。专项结果见
-[脚手架重构验收](./scaffold-refactor-2026-10-23.md)。
+源码阶段的专项证据见 [脚手架重构验收](./scaffold-refactor-2026-10-23.md)、
+[下一阶段报告](./lumal-next-phase-audit.md) 和 [视口隔离报告](./screen-viewport-verification.md)。
+这些历史结果不替代本版发布候选的实际门禁；真实消费者原有失败、业务后台和部署边界继续保留。
 
 ## 0.0.5-beta (2026-10-21)
 

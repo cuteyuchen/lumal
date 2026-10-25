@@ -2,7 +2,7 @@
 
 ## 可选的局部 px → vw
 
-开发分支新增（未发布）：
+以下 API 属于 `0.0.6-beta`，实际版本可用性以 registry 为准；发布核验前使用候选 tarball：
 
 ```ts
 import { createViewportTransformPlugin } from '@lumal/vite'

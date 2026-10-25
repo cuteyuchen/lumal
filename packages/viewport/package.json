@@ -1,11 +1,13 @@
 {
   "name": "@lumal/viewport",
   "type": "module",
-  "version": "0.0.5-beta",
+  "version": "0.0.6-beta",
   "description": "Lightweight Vue viewport measurement and canvas scaling without UI or chart dependencies.",
   "license": "MIT",
   "sideEffects": false,
-  "publishConfig": { "access": "public" },
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -16,11 +18,17 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/src/index.d.ts",
-  "files": ["CHANGELOG.md", "README.md", "dist"],
+  "files": [
+    "CHANGELOG.md",
+    "README.md",
+    "dist"
+  ],
   "scripts": {
     "build": "vite build --config vite.config.ts && vue-tsc -p tsconfig.json --emitDeclarationOnly --outDir dist && node ../../scripts/clean-package-dist.mjs dist",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",
     "test": "vitest run --config ../../vitest.config.ts tests"
   },
-  "peerDependencies": { "vue": "^3.5.0" }
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  }
 }

@@ -2,6 +2,8 @@
 
 Lumal 后台核心包，提供应用安装器、布局、路由菜单辅助、权限、请求、主题和基础组件。
 
+本文 API 基线为 `0.0.6-beta`，实际版本可用性以 registry 为准。
+
 ```ts
 import { createLumalAdmin } from '@lumal/core'
 import { LumalCrudTable, LumalSchemaForm } from '@lumal/core/components'
@@ -24,9 +26,9 @@ await createLumalAdmin({ rootComponent: App }).mount('#app')
 
 详细说明见仓库文档 `docs/core-api.md`。
 
-## 开发分支修复
+## 0.0.6-beta 修复
 
-以下变更尚未发布，不通过重新安装历史同版本取得：
+以下变更属于本版，不能通过重新安装历史同版本包取得；发布核验前使用候选 tarball：
 
 - 序号列 `{ type: 'index', label: '序号' }` 不要求业务 field，支持跨页/选中行导出，不派生 CRUD 表单。
 - 清理缓存、切换 scope 或替换客户端凭据后，旧写请求401/刷新失败不触发新会话退出；刷新与过期通知按会话隔离。

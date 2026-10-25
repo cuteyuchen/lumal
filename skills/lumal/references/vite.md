@@ -48,7 +48,7 @@ export default defineConfig({
 
 `resolveLumalDevtoolsPlugin({ enabled, factory })` 只在开启时调用 factory，Devtools 实现由应用安装并提供。关闭时返回 `undefined`，按 Vite 插件列表用法处理。
 
-开发分支新增 `createViewportTransformPlugin`，默认关闭；必须显式 enabled/include，
+`0.0.6-beta` 提供 `createViewportTransformPlugin`，默认关闭；必须显式 enabled/include，
 例如 `include: ['src/screen/**']`。Dev/Build共用PostCSS，不扫描JS数字/字符串或模板内联style。
 默认不处理node_modules、font/font-size和自定义属性；依赖只通过精确包名白名单加入。
 保留已有PostCSS配置；不转换URL和已有vw；不要与同一画布transform叠加。

@@ -13,6 +13,7 @@ const markdownFiles = readdirSync(skillRoot, { recursive: true })
 const packages = new Map(readdirSync(join(root, 'packages')).map((directory) => {
   const manifest = JSON.parse(readFileSync(join(root, 'packages', directory, 'package.json'), 'utf8')) as {
     name: string
+    version: string
     exports: Record<string, unknown>
   }
   return [manifest.name, manifest] as const
@@ -23,10 +24,32 @@ describe('lumal Skill 分发契约', () => {
     const entry = readFileSync(join(skillRoot, 'SKILL.md'), 'utf8')
     const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---/.exec(entry)
     expect(frontmatter).not.toBeNull()
-    const metadata = parseYaml(frontmatter![1]) as { name: unknown, description: unknown }
+    const metadata = parseYaml(frontmatter![1]) as {
+      name: unknown
+      description: unknown
+      metadata?: Record<string, unknown>
+    }
     expect(metadata.name).toBe('lumal')
     expect(metadata.description).toBeTypeOf('string')
     expect(String(metadata.description).trim().length).toBeGreaterThan(0)
+    expect(metadata.metadata?.['api-version']).toBe(packages.get('@lumal/core')!.version)
+  })
+
+  it('当前 README 与 Skill 的安装命令使用同一候选版本，不回落历史 CLI', () => {
+    const files = [
+      join(root, 'README.md'),
+      ...Array.from(packages.values(), pkg => join(root, 'packages', pkg.name.replace('@lumal/', ''), 'README.md')),
+      ...markdownFiles.map(file => join(skillRoot, file)),
+    ]
+    const version = packages.get('@lumal/core')!.version
+    for (const file of files) {
+      const content = readFileSync(file, 'utf8')
+      // 只约束可执行安装示例，历史升级说明中的旧版本保留。
+      for (const block of content.matchAll(/```(?:bash|sh|shell|powershell)\r?\n([\s\S]*?)\r?\n```/g)) {
+        for (const match of block[1].matchAll(/(?:@lumal\/[\w-]+|create-lumal-admin|lumal-admin)@(\d+\.\d+\.\d+(?:-[\w.-]+)?)/g))
+          expect(match[1], file).toBe(version)
+      }
+    }
   })
 
   it.each(markdownFiles)('%s 的相对链接可随整个 Skill 独立分发', (file) => {

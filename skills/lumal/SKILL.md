@@ -1,6 +1,8 @@
 ---
 name: lumal
 description: 使用 Lumal（@lumal/*、create-lumal-admin）构建或维护 Vue 后台、图表与 DataV 大屏、驾驶舱、图标和 Vite 集成，或迁移 Vben 代码时使用。指导包选型、公开入口、最小接入和常见误区。不用于未使用 Lumal 的普通 Vue 问题。
+metadata:
+  api-version: '0.0.6-beta'
 ---
 
 # Lumal
@@ -11,19 +13,19 @@ description: 使用 Lumal（@lumal/*、create-lumal-admin）构建或维护 Vue 
 
 1. 区分消费项目与 Lumal 仓库维护：消费项目只使用 npm 包的公开入口，不依赖 `packages/*/src` 或工作区 alias。
 2. 检查已有依赖、锁文件、入口代码与样式。复用现有 Router、Pinia、Element Plus 和请求适配，不重复创建。
-3. 本 Skill 以 `0.0.5-beta` 的公开 API 为基准，不将此版本视为 npm 最新版本。版本不一致时，以实际安装包的 `package.json.exports`、声明文件和源码为准，不猜测导出。
+3. 本 Skill 以 `0.0.6-beta` 的公开 API 为基准，不将此版本视为 npm 最新版本或已完成发布的证明。候选发布核验前使用本地 tarball；版本不一致时，以实际安装包的 `package.json.exports`、声明文件和源码为准，不猜测导出。
 4. 只读取下表与任务有关的参考；跨包任务再组合读取。
 
 ## 包选型
 
 | 需求 | 选择 | 按需读取 |
 | --- | --- | --- |
-| 新建 Admin / Screen / Blank 项目 | `create-lumal-admin`（通用bin在开发分支） | [脚手架](references/create-lumal-admin.md) |
+| 新建 Admin / Screen / Blank 项目 | `create-lumal-admin`（含通用 `create-lumal` bin） | [脚手架](references/create-lumal-admin.md) |
 | 已有 Vue 应用接入、页面、Schema 表单/表格、CRUD | `@lumal/core` | [启动与组件](references/core.md) |
 | 菜单、动态路由、权限、布局、标签缓存 | `@lumal/core` 对应子入口 | [路由与布局](references/core-routing.md) |
 | 请求、登录会话、字典、主题和偏好 | `@lumal/core` 对应子入口 | [服务能力](references/core-services.md) |
 | 后台 ECharts 图表、查询/图表/表格切换面板 | `@lumal/charts` | [图表](references/charts.md) |
-| 纯 Vue / Screen / Admin 工作区尺寸与三级适配 | 开发分支 `@lumal/viewport` | [视口](references/viewport.md) |
+| 纯 Vue / Screen / Admin 工作区尺寸与三级适配 | `@lumal/viewport` | [视口](references/viewport.md) |
 | 大屏边框、装饰、数字、飞线、滚动榜单、DataV 配置 | `@lumal/datav` | [DataV](references/datav.md) |
 | 驾驶舱左右区域编排、模块注册、多布局、可视化设计 | `@lumal/cockpit` | [驾驶舱](references/cockpit.md) |
 | 不依赖 Vue 的图标注册、SVG 处理、Data URI、可选状态形变 | `@lumal/icons`、`@lumal/icons/morph` | [图标内核](references/icons.md) |

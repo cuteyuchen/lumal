@@ -13,6 +13,7 @@ Lumal 按职责拆包，兼容层不能反向污染核心包。
 - 启动阶段的菜单适配使用 `/v5/router` 纯数据入口，无需 UI peer，不静态加载 Form/Grid。
 - `@lumal/core` 不能依赖 `@lumal/vben-compat`。
 - `@lumal/charts` 独立可选包，不依赖 `@lumal/core`；`@lumal/core` 也不能依赖 `@lumal/charts`。
+- `@lumal/viewport` 只有 Vue peer，不依赖 Core、Element Plus、图表或地图；DataV/Cockpit 可以共享其纯算法与尺寸监听，不能反向定义通用适配策略。
 - `@lumal/datav` 独立驾驶舱可视化组件包，不依赖 `@lumal/core`、`@lumal/charts` 或 `@lumal/cockpit`；上述包也不能反向依赖 `@lumal/datav`。DataV `config` 兼容模式允许依赖 `@jiaminghi/charts`。
 - `@lumal/cockpit` 可选驾驶舱编排包，可以依赖 `@lumal/core`；`@lumal/core` 不能反向依赖 `@lumal/cockpit`。
 - `@lumal/cockpit` 不能依赖 `@lumal/charts`，也不能依赖 ECharts、OpenLayers、Cesium、Mapbox、Leaflet 等可视化或地图运行时。
@@ -56,6 +57,6 @@ pnpm release:boundaries
 pnpm release:artifacts
 ```
 
-该脚本检查九个发布包和 Admin 的必要产物、明确 vendor 分包，以及 Admin 单个 JavaScript 块不超过 500 KB。`@lumal/icons` 需产出独立的 `morph.js` / `morph.cjs` 和类型声明；`@lumal/icons-vue` 需产出 ESM、CJS 和 `icons-vue.css`；`@lumal/cockpit` 需产出 ESM、CJS、`cockpit.css` 以及独立的 `runtime`、`designer` 入口；`@lumal/datav` 需产出 ESM、CJS 和 `datav.css`。消费者体积检查同时约束静态图标不能加载 Morphicons，不调整现有预算。
+该脚本检查十个发布包和 Admin 的必要产物、明确 vendor 分包，以及 Admin 单个 JavaScript 块不超过 500 KB。`@lumal/icons` 需产出独立的 `morph.js` / `morph.cjs` 和类型声明；`@lumal/icons-vue` 需产出 ESM、CJS 和 `icons-vue.css`；`@lumal/cockpit` 需产出 ESM、CJS、`cockpit.css` 以及独立的 `runtime`、`designer` 入口；`@lumal/datav` 需产出 ESM、CJS 和 `datav.css`；`@lumal/viewport` 需产出无 UI 依赖的 ESM/CJS 和公开声明。消费者体积检查同时约束静态图标不能加载 Morphicons，不调整现有预算。
 
 当前 Windows 开发环境直接执行项目声明的 pnpm 10.33.0；不要使用可能切换到其他 pnpm 版本的包装命令。

@@ -1,5 +1,7 @@
 # @lumal/viewport
 
+本文 API 基线为 `0.0.6-beta`，实际版本可用性以 registry 为准。
+
 仅依赖 Vue peer，不依赖 Core、Element Plus、ECharts、DataV 或 Cockpit。
 独立包使纯 Screen 无需为了尺寸适配安装任何后台或图表框架，
 同时共享 DataV 与 Cockpit 的算法和监听生命周期。

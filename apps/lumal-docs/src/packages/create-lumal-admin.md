@@ -1,6 +1,6 @@
 # create-lumal-admin
 
-轻量后台基座脚手架，生成通过公开包入口消费 Lumal 的 Vue 3 应用。
+轻量 Vue 项目脚手架，生成 Admin、独立 Screen 或 Blank，通过公开包入口按需消费 Lumal。
 
 | 项 | 值 |
 | --- | --- |
@@ -8,19 +8,25 @@
 | 本地路径 | `packages/create-lumal-admin` |
 | 在线文档 | https://lumal.cuteyuchen.top/packages/create-lumal-admin |
 | npm 地址 | `https://www.npmjs.com/package/create-lumal-admin` |
-| CLI | `create-lumal-admin` |
+| CLI | `create-lumal-admin`、通用 `create-lumal` binary |
 
 ## 使用
 
-当前包版本为 `0.0.5-beta`，环境要求 Node.js `>=22.12.0`、pnpm `10.33.0`。
-本次模块化向导与独立业务页属于下一版开发内容，尚未发布；验证这些改动请使用本地 tarball。
-以下精确版本命令用于已发布版本，不代表该版本包含工作区未发布的新功能。
+本文面向 `0.0.6-beta`，环境要求 Node.js `>=22.12.0`、pnpm `10.33.0`。
+以下命令以 registry 存在对应版本为前提；候选发布核验前使用本地 tarball。
 
 ```bash
-pnpm create lumal-admin@0.0.5-beta my-admin
-pnpm create lumal-admin@0.0.5-beta my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
-pnpm create lumal-admin@0.0.5-beta my-admin-v5 --preset vben-compatible
+pnpm create lumal-admin@0.0.6-beta my-admin
+pnpm create lumal-admin@0.0.6-beta my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
+pnpm create lumal-admin@0.0.6-beta my-admin-v5 --preset vben-compatible
+pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-screen --template screen
+pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-blank --template blank
 ```
+
+Blank 默认仅依赖 Vue；Screen 默认无认证、API、Router 或管理布局。
+认证、数据、路由、可视化和适配独立选择，详见 [项目模板](/reference/project-template-guide)。
+通用 binary 由现有包分发，不代表独立 `create-lumal` npm 包已发布。
+下表及管理业务结构专指 Admin。
 
 | 选项 | 说明 |
 | --- | --- |
@@ -33,7 +39,7 @@ pnpm create lumal-admin@0.0.5-beta my-admin-v5 --preset vben-compatible
 | `--features system,examples\|none` | standard 的可选模块，可只保留其中一个 |
 | `--name`、`--help`、`--version` | npm 名称、帮助、版本 |
 
-工作区新版 TTY 向导使用上下方向键单选、Space 多选、Enter 确认，默认
+TTY 向导使用上下方向键单选、Space 多选、Enter 确认，Admin 默认
 `standard/local/hash`。指定参数会跳过相应问题；`--features none` 明确关闭可选模块。
 配置摘要确认前不写文件，Escape / Ctrl+C 可取消。CI、非 TTY、`TERM=dumb` 和
 `--no-interactive` 不等待输入。非法参数或 npm 名称失败，非空目录与符号链接目标拒绝覆盖。
@@ -44,7 +50,7 @@ pnpm install
 pnpm dev
 ```
 
-## 生成内容
+## Admin 生成内容
 
 - Vue 3 + TypeScript + Vite + Element Plus
 - `@lumal/core/minimal` 启动 + 主题与样式，UI 组件局部导入
@@ -92,7 +98,7 @@ node packages/create-lumal-admin/dist/cli.js my-admin
 
 - 生成项目只依赖公开包入口，不 alias 到 monorepo 源码
 - 业务协议写在应用层 `API-CONTRACT.md` / adapter，不进入 `@lumal/core`
-- Core 与图标包使用和脚手架相同的精确版本 `0.0.5-beta`，生成时读取 tarball 自身版本
+- Core 与图标包使用和脚手架相同的精确版本 `0.0.6-beta`，生成时读取 tarball 自身版本
 - 用户切换重建布局壳，登录前清理旧会话与标签快照；轻入口不意味着模板没有 Element Plus
 
 维护验收：先 `pnpm build`，再 `pnpm test:create-consumer`，验证实际 tarball 的

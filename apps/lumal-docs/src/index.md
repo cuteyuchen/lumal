@@ -1,12 +1,12 @@
 ---
 layout: home
 title: Lumal
-titleTemplate: 轻量 Vue Admin 基础设施
+titleTemplate: 轻量 Vue 项目基础设施
 
 hero:
   name: Lumal
-  text: 轻量 Vue Admin 基础设施
-  tagline: 开箱可用的布局权限、Schema 表单表格、图标图表、DataV 与驾驶舱编排 · 业务协议留在应用层
+  text: 轻量 Vue 项目基础设施
+  tagline: Admin、Screen 与 Blank 按需起步 · 公共能力集中维护，业务协议留在应用层
   image:
     src: /logo.svg
     alt: Lumal
@@ -32,7 +32,7 @@ features:
     linkText: 了解 Lumal
   - icon: 📦
     title: 按职责拆包
-    details: core / icons / charts / datav / cockpit / vite 等独立包，按需安装，边界清晰，可发布 npm。
+    details: core / viewport / icons / charts / datav / cockpit / vite 等独立包，按需安装，边界清晰。
     link: /packages/
     linkText: 包使用
   - icon: 🎨
@@ -62,22 +62,23 @@ features:
     linkText: '@lumal/vite'
   - icon: 🧱
     title: 脚手架
-    details: create-lumal-admin 一键生成通过公开包入口消费的后台基座。
+    details: 同一脚手架生成 Admin、独立 Screen 或仅 Vue 的 Blank，统一工程规范与质量检查。
     link: /packages/create-lumal-admin
     linkText: create-lumal-admin
 ---
 
 ## 快速安装
 
-`0.0.5-beta` 的正式门禁、九包发布命令和三种真实 npm 脚手架消费者已通过。
-九包 registry、实际 tarball 与公开入口均已核验，详见 [发布记录](/reference/npm-release-0.0.5-beta)。
-下列脚手架与 Core 安装命令已验证，保持 Lumal 包同版，不依赖 `latest`。
-功能与性能边界见 [升级验收](/reference/upgrade-verification)。
+当前文档 API 基线为 `0.0.6-beta`，十包保持同版，不依赖 `latest`。
+下列命令以 registry 存在对应版本为前提，候选发布核验前使用本地 tarball。
+实际发布状态见 [本轮记录](/reference/npm-release-0.0.6-beta)，
+功能与性能边界见 [下一阶段验收](/reference/lumal-next-phase-audit)。
+上一版九包的已核验发布事实保留在 [历史记录](/reference/npm-release-0.0.5-beta)。
 
 ::: code-group
 
 ```bash [pnpm]
-pnpm add @lumal/core@0.0.5-beta @lumal/icons@0.0.5-beta @lumal/icons-vue@0.0.5-beta vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
+pnpm add @lumal/core@0.0.6-beta @lumal/icons@0.0.6-beta @lumal/icons-vue@0.0.6-beta vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
 ```
 
 ```bash [本地 monorepo]
@@ -88,7 +89,7 @@ pnpm add @lumal/core@file:../lumal/packages/core
 ```
 
 ```bash [脚手架]
-pnpm create lumal-admin@0.0.5-beta my-admin
+pnpm create lumal-admin@0.0.6-beta my-admin
 cd my-admin && pnpm install && pnpm dev
 ```
 
@@ -112,6 +113,7 @@ cd my-admin && pnpm install && pnpm dev
 | `@lumal/icons` | [/packages/icons](/packages/icons) | `packages/icons` | `https://www.npmjs.com/package/@lumal/icons` |
 | `@lumal/icons-vue` | [/packages/icons-vue](/packages/icons-vue) | `packages/icons-vue` | `https://www.npmjs.com/package/@lumal/icons-vue` |
 | `@lumal/charts` | [/packages/charts](/packages/charts) | `packages/charts` | `https://www.npmjs.com/package/@lumal/charts` |
+| `@lumal/viewport` | [/packages/viewport](/packages/viewport) | `packages/viewport` | `https://www.npmjs.com/package/@lumal/viewport` |
 | `@lumal/datav` | [/packages/datav](/packages/datav) | `packages/datav` | `https://www.npmjs.com/package/@lumal/datav` |
 | `@lumal/cockpit` | [/packages/cockpit](/packages/cockpit) | `packages/cockpit` | `https://www.npmjs.com/package/@lumal/cockpit` |
 | `@lumal/vite` | [/packages/vite](/packages/vite) | `packages/vite` | `https://www.npmjs.com/package/@lumal/vite` |

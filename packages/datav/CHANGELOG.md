@@ -1,5 +1,14 @@
 # @lumal/datav
 
+## 0.0.6-beta (2026-10-25)
+
+### Patch Changes
+
+- 全屏容器与 Cockpit 复用轻量 @lumal/viewport 缩放算法和尺寸生命周期，保留原公开契约。
+- ECharts peer 改为可选，无引擎组件不强制安装图表运行时。
+- 在首次 setOption 前绑定图表事件，保证静态首帧 rendered/finished 通知。
+- 固定视觉夹具的尺寸和动画时点，增加跨加载一致性与三轮视觉门禁，不放宽原快照阈值。
+
 ## 0.0.5-beta (2026-10-20)
 
 ### Patch Changes

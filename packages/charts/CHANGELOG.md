@@ -1,5 +1,11 @@
 # @lumal/charts
 
+## 0.0.6-beta (2026-10-25)
+
+### Patch Changes
+
+- 与十包 fixed-group 同步为 0.0.6-beta；保持 ECharts / vue-echarts peer 和现有公开 API。
+
 ## 0.0.5-beta (2026-10-20)
 
 ### Patch Changes

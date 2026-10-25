@@ -156,6 +156,19 @@ describe('release version and registry preflight', () => {
     expect(() => verifyWorkspaceRelease(root, '99.0.0-no-release')).toThrow('不一致')
   })
 
+  it('当前版本位于十包和统一 CHANGELOG 的首个发布条目', () => {
+    const release = verifyWorkspaceRelease()
+    const files = [
+      'docs/changelog.md',
+      ...release.packages.map(pkg => `${pkg.dir}/CHANGELOG.md`),
+    ]
+    for (const file of files) {
+      const content = readFileSync(join(root, file), 'utf8')
+      const firstVersion = /^## (\d+\.\d+\.\d+(?:-[\da-z.-]+)?) \(/im.exec(content)?.[1]
+      expect(firstVersion, file).toBe(release.version)
+    }
+  })
+
   it('拒绝内部依赖与 lockfile 不一致', () => {
     const fixture = mkdtempSync(join(tmpdir(), 'lumal-release-'))
     try {

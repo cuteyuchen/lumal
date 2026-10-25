@@ -1,16 +1,16 @@
 # create-lumal-admin
 
 `create-lumal-admin` 保留轻量后台入口，同时提供通用 `create-lumal` 二进制，可生成 Admin、Screen 或 Blank。
-新增能力尚未发布；不能把 `pnpm create lumal` 当成已发布命令。当前以本包 tarball 安装后运行
-`create-lumal <目录> --template screen`，或使用原有 `create-lumal-admin` 命令。
+本文面向 `0.0.6-beta`，实际版本可用性以 registry 为准；发布核验前使用本包候选 tarball。
+通用 binary 由本包分发，没有新增独立 `create-lumal` npm 包，不能把 `pnpm create lumal` 当成已发布命令。
 
 ## 项目类型与可选能力
 
 ```bash
-create-lumal my-blank --template blank --no-interactive
-create-lumal my-screen --template screen --no-interactive
-create-lumal my-api-screen --template screen --auth http --data http --router-mode history --no-interactive
-create-lumal my-datav --template screen --visualization datav --viewport contain --no-interactive
+pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-blank --template blank --no-interactive
+pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-screen --template screen --no-interactive
+pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-api-screen --template screen --auth http --data http --router-mode history --no-interactive
+pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-datav --template screen --visualization datav --viewport contain --no-interactive
 ```
 
 Blank 只安装 Vue 运行时。Screen 默认没有 Router、认证、API、Admin 或可视化依赖，
@@ -27,27 +27,26 @@ contain 按设计宽高完整等比缩放，width 可能纵向滚动，vw 提供
 
 ## 使用
 
-环境要求：Node.js `>=22.12.0`、pnpm `10.33.0`。以下命令面向 `0.0.5-beta`，
+环境要求：Node.js `>=22.12.0`、pnpm `10.33.0`。以下命令面向 `0.0.6-beta`，
 显式指定版本，不依赖 npm 的 `latest`。源码开发时以真实 tarball 验证独立消费者，
 不使用旧版 CLI 代替新版模板能力。
 在线文档：https://lumal.cuteyuchen.top/packages/create-lumal-admin。
 
 ```bash
-pnpm create lumal-admin@0.0.5-beta my-admin
-pnpm create lumal-admin@0.0.5-beta my-admin-http --api-mode http
+pnpm create lumal-admin@0.0.6-beta my-admin
+pnpm create lumal-admin@0.0.6-beta my-admin-http --api-mode http
 ```
 
-本文模块化向导描述工作区开发能力，尚未发布，不会覆盖已发布的 `0.0.5-beta`。
-验证新能力应使用本地构建或 tarball。
+本版模块化向导不会覆盖历史发布版本，不能用旧 CLI 代替本地构建或候选 tarball 验收。
 
 在 TTY 中依次选择目录、npm 名称、预设、数据源、路由和业务模块。单选使用上下方向键和
 Enter，多选使用 Space，最后展示摘要并确认，确认前不写文件。Ctrl+C / Escape 取消不残留文件。默认
 `standard / local / hash`。CI、非 TTY 或 `--no-interactive` 均使用确定性默认值，不等待输入。
 
 ```bash
-pnpm create lumal-admin@0.0.5-beta my-admin --preset standard --api-mode http --router-mode history --no-interactive
-pnpm create lumal-admin@0.0.5-beta my-admin-v5 --preset vben-compatible
-pnpm create lumal-admin@0.0.5-beta my-minimal --preset minimal
+pnpm create lumal-admin@0.0.6-beta my-admin --preset standard --api-mode http --router-mode history --no-interactive
+pnpm create lumal-admin@0.0.6-beta my-admin-v5 --preset vben-compatible
+pnpm create lumal-admin@0.0.6-beta my-minimal --preset minimal
 ```
 
 | 参数 | 取值 |
@@ -72,7 +71,7 @@ pnpm build
 pnpm preview
 ```
 
-## 生成内容
+## Admin 生成内容
 
 - Vue 3 + TypeScript + Vite。
 - Element Plus 作为 UI 基础。

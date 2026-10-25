@@ -2,6 +2,8 @@
 
 Lumal 通用驾驶舱 v3 编排框架。包负责布局配置、左右模块运行时、Designer、组件注册和消息总线；消费应用负责中心内容、业务模块、导航、主题皮肤、权限和持久化。
 
+本文 API 基线为 `0.0.6-beta`，实际版本可用性以 registry 为准；v3 是配置模型，不是 npm 版本。
+
 ## v3 模型
 
 - `CockpitConfig` 只包含 `layouts` 和 `activeLayoutId`，不包含分类、页面或中央组件配置。

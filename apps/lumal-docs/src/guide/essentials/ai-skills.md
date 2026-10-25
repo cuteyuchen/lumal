@@ -10,13 +10,14 @@ Lumal 提供一个总 Skill，帮助 AI 根据需求选择包，并按公开 API
 | --- | --- |
 | `@lumal/core` | 轻入口、Schema 显隐与校验、动态路由、标签缓存、请求刷新和会话隔离、字典、主题 |
 | `@lumal/charts` | ECharts 注册、图表面板、尺寸适配和事件边界 |
+| `@lumal/viewport` | 应用默认、页面和容器适配、响应式尺寸、地图/图表与 Teleport 边界 |
 | `@lumal/datav` | 独立组件入口、DataV config 与 ECharts option、动画和异步引擎 |
 | `@lumal/cockpit` | v3 配置、模块注册、runtime/designer 隔离、中心插槽、缩放与保存 |
 | `@lumal/icons` | 图标注册、SVG 工具、Data URI 和静态清单插件 |
 | `@lumal/icons-vue` | 图标组件、选择器与响应式注册表 |
-| `@lumal/vite` | resolver、工作区 alias 与可选 Devtools |
+| `@lumal/vite` | resolver、工作区 alias、可选 Devtools 与定向 CSS 视口转换 |
 | `@lumal/vben-compat` | Vben 5.7.0 固定基准、`/v5` 组件元组与 legacy 注册元组、轻量路由入口、支持子集 |
-| `create-lumal-admin` | 三预设、Local/HTTP、Hash/History、可选模块、非交互创建与真实后端接线 |
+| `create-lumal-admin` | Admin / Screen / Blank、三预设、按需认证与数据、非交互创建与真实后端接线 |
 
 ## 安装与调用
 
@@ -29,6 +30,7 @@ Codex 的仓库级位置为消费项目中的 `.agents/skills/lumal/`，个人�
 ```text
 使用 $lumal，为这个已有 Vue 项目接入一个带查询和分页的项目列表。
 使用 $lumal，创建 standard、HTTP 和 History 模式的后台，按 API 契约接入现有后端。
+使用 $lumal，创建无 API 和认证的纯静态 Screen，选择按实际内容容器适配。
 使用 $lumal，选择最轻量的方式展示数字翻牌和滚动榜单。
 使用 $lumal，给已有驾驶舱增加设计器，保持只读页面不加载编辑能力。
 使用 $lumal，把这份 Vben 5.7.0 Grid 页面迁移到 /v5 入口，并列出需要改写的部分。
@@ -39,7 +41,7 @@ Skill 的描述也包含 Lumal 包名及适用场景，支持隐式发现的工�
 ## 使用边界
 
 - Skill 按需求加载分包参考，不要求 AI 每次读取所有包。
-- 示例基线为 `0.0.5-beta` 的公开 API，不代表 npm 的最新版本；AI 应先核对实际安装包和 registry。目标版本不可用时不能悄悄换用旧 CLI，源码验收使用本地 tarball。
+- 示例与 `metadata.api-version` 基线为 `0.0.6-beta`，不代表 npm 的最新版本或已发布证明；AI 应先核对实际安装包和 registry。目标版本不可用时不能悄悄换用旧 CLI，候选验收使用本地 tarball。
 - Skill 不代替具体业务接口契约、安全审查或测试，也不赋予 AI 自动发布权限。
 - 普通包消费者不需要 Lumal 仓库源码 alias；只使用请求或图标工具时，不应被引导安装整套后台。
 - HTTP 未配置时必须明确失败，不回退演示登录；Vben 5 使用 `/v5`，根及 `/legacy` 保留旧 Lumal 行为，不能混用两种元组。

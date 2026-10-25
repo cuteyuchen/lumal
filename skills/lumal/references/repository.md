@@ -4,7 +4,7 @@
 
 ## 定位与事实来源
 
-- 公共包为 `packages/*/package.json` 中非 private 的包；开发分支新增 viewport，尚未发布。不要根据遗留目录名推断另一个 npm 包。
+- 公共包为 `packages/*/package.json` 中非 private 的包，`0.0.6-beta` 共十包，包含新增 viewport。manifest 不证明 npm 发布完成，实际状态须查询 registry。不要根据遗留目录名推断另一个 npm 包。
 - `package.json.exports` 决定允许的导入路径，`src` 的公开入口与类型决定 API。包内实现文件不是消费方 API。
 - 有 `.codegraph/` 时先尝试 CodeGraph；工具不可用再使用 `rg` 与直接阅读源码。不要把本机工具缺失记录成所有用户必须遵守的限制。
 - `apps/*` 是消费者与验收入口。包不得反向依赖 apps、业务接口、演示数据或私有项目。

@@ -8,14 +8,16 @@ Lumal 使用 pnpm workspace 组织包和示例应用。`packages/*` 按最终发
 - `packages/icons-vue`：Vue 图标组件和响应式适配层，依赖 `@lumal/icons`、`morphicons@2.0.0`，Vue 与 Iconify Vue 保持 peer；复用通用形变转换并动态加载官方 Vue 绑定。
 - `packages/core`：后台核心包，可以依赖 `@lumal/icons` 与 `@lumal/icons-vue`。
 - `packages/charts`：可选图表包，独立承载 ECharts 面板能力。
-- `packages/datav`：独立驾驶舱可视化组件包，提供 15 个导出组件，含边框/装饰变体共 38 种形态，以 DataV 2.10.0（MIT）为基准重构；`vue` 和 `echarts` 为 peer dependency，`config` 使用 `@jiaminghi/charts` 专用运行时；不依赖 `@lumal/core`。
+- `packages/viewport`：仅 Vue peer 的通用尺寸与适配包，提供应用默认、页面和容器策略，不依赖后台、地图或图表。
+- `packages/datav`：独立驾驶舱可视化组件包，提供 15 个导出组件，含边框/装饰变体共 38 种形态，以 DataV 2.10.0（MIT）为基准重构；`vue` 是必需 peer、`echarts` 是可选 peer，`config` 使用 `@jiaminghi/charts` 专用运行时；不依赖 `@lumal/core`。
 - `packages/cockpit`：可选驾驶舱编排包，提供布局运行时、组件注册、编排设计器和通用消息总线，可以依赖 `@lumal/core`；不内置地图引擎、业务模块或行业术语。
 - `packages/vben-compat`：迁移兼容包，可以依赖 `@lumal/core`。
 - `packages/vite`：无强制运行时依赖的 Vite resolver、alias 和 Devtools 助手。
-- `packages/create-lumal-admin`：可发布脚手架包，生成最小 Lumal Admin 应用。
+- `packages/create-lumal-admin`：可发布脚手架包，按需生成 Admin、独立 Screen 或仅 Vue 的 Blank。
 - `apps/lumal-admin`：Lumal 原生写法示例应用，验证 layout、router、permission、theme、dictionary、CRUD 和 request 的组合方式，并通过外链引用独立驾驶舱应用。
 - `apps/lumal-cockpit`：独立驾驶舱示例应用，证明 `@lumal/cockpit` 能脱离 Admin 单独构建运行，不依赖 `apps/lumal-admin` 源码。
 - `apps/lumal-datav-guide`：`@lumal/datav` 的组件文档站，仿 DataV guide 结构提供全部 15 个组件的实时预览、config 与现代 props 用法及属性表，可静态托管并以外链形式嵌入 Admin。
+- `apps/lumal-viewport-lab`：脱敏的地图、Canvas、Element Plus 与真实浏览器缩放验收夹具，不是业务系统副本。
 - `apps/vben-compat-demo`：Vben 兼容写法示例应用。
 
 ## 依赖方向
@@ -30,14 +32,18 @@ Lumal 使用 pnpm workspace 组织包和示例应用。`packages/*` 按最终发
 @lumal/vben-compat  ←  apps/vben-compat-demo
 
 @lumal/charts  ←  apps/lumal-admin
+@lumal/viewport ← @lumal/datav, @lumal/cockpit, 普通 Vue / Screen
 @lumal/datav   ←  apps/lumal-admin, apps/lumal-cockpit, apps/lumal-datav-guide
 @lumal/vite    →  Vite 配置与构建辅助
-create-lumal-admin  →  生成消费 @lumal/core / @lumal/icons / @lumal/icons-vue 的应用
+create-lumal-admin  →  按项目能力消费公开包，Blank 默认仅 Vue
 ```
 
 `@lumal/cockpit` 依赖 `@lumal/core`，但 `@lumal/core` 不能反向依赖 `@lumal/cockpit`；`@lumal/cockpit` 不依赖 `@lumal/charts`、`@lumal/datav` 或任何地图/图表运行时。
 
 `@lumal/datav` 是独立可视化组件包，不依赖 `@lumal/core` 或 `@lumal/cockpit`；`@jiaminghi/charts` 仅服务于 DataV `config` 兼容模式，驾驶舱和 Admin 只在应用层按需消费其组件，`@lumal/datav` 也不能反向依赖上述 Lumal 包。
+
+`@lumal/datav` 与 `@lumal/cockpit` 共享 `@lumal/viewport` 的纯缩放算法和尺寸监听。
+通用视口不反向依赖这些组件包，也不全局改变 Admin 字号；作用范围与缩放策略分开配置。
 
 `@lumal/core` 不能依赖 `@lumal/vben-compat`。Vben 兼容能力只能作为迁移层存在，不能反向定义 core 的设计。
 
