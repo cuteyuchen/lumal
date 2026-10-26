@@ -100,6 +100,7 @@ jobs:
           path: |
             .playwright-results/
             playwright-report/
+          include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7
 
@@ -183,6 +184,7 @@ jobs:
         with:
           name: datav-visual-windows-release-${{ github.sha }}
           path: .playwright-results/datav/
+          include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7
 

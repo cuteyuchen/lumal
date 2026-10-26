@@ -8,9 +8,10 @@ GitHub PR 测试使用合并引用 `fa71750a161b8d7ae70a58f0d008e49185c17b93`，
 [Build Validation](https://github.com/cuteyuchen/lumal/actions/runs/40264662712) 均已完成并通过；
 下文另列外部 Vercel Preview 的失败，不将它隐去。
 这些是 `5779229` 的阶段性证据。后续复跑暴露了 Windows 累计截图超时和刷新用例的模拟时钟竞态，
-失败证据与逐次修复保留在下文。最近完成的 `73fde9f` 主 CI、Ubuntu Demo、Windows DataV 和消费者通过，
-但 Windows 首条综合浏览器用例仍耗尽总预算，不能以历史通过替代本轮结果。
-本次继续拆分默认动画与地图交互职责，本地九项通过；后续跨平台结果通过 PR 当前提交的检查和附件记录。
+失败证据与逐次修复保留在下文。`7bae8f2` 的 Cockpit 九项生产 E2E 已在 Ubuntu、Windows 均通过；
+该轮 Ubuntu 完整 Demo、主 CI、Windows DataV 和消费者通过，但 Windows Admin 出现跨动画帧测量失败，
+不能以历史通过替代该轮结果。收尾补丁修复 Admin 字号策略控件，并改为同帧测量布局；
+最后提交的跨平台结果由 [PR 当前检查及附件](https://github.com/cuteyuchen/lumal/pull/8/checks) 记录。
 
 ## 构建基线
 
@@ -200,6 +201,79 @@ E2E 严格类型、97 项契约、针对性 ESLint 与严格文档构建通过�
 只读审查另纠正两处旧文档：`CockpitConfig` 必须提供 `schemaVersion` / `id` / `title` / `layouts`，
 `activeLayoutId` 可选；没有新增或修改该公开类型。
 
+第九轮 `7bae8f2`：主 CI `40279289939` 全部通过，包含 1106 项单元、lint、format、类型、构建和 Linux PTY。
+Build Validation `40279289936` 的 Ubuntu Job `121428762484` 完整通过：Cockpit 九项、Admin 34 项、
+严格文档构建及原预算通过。Windows Job `121428762387` 的 frozen install、两种完整 Cockpit 构建、
+26 项应用单元、E2E 类型和 Cockpit 九项均通过，但 Admin 为 33 通过 / 1 失败；
+其后文档与预算被跳过。Windows DataV 和独立消费者 Job `121428762491` 通过。
+证据为 `ci-main-7bae8f2.log`、`ci-ubuntu-demo-7bae8f2.log`、`ci-windows-demo-7bae8f2.log`、
+`ci-7bae8f2-windows/`、`ci-consumer-7bae8f2.log` 及 `ci-7bae8f2-consumer/`。
+
+Windows Admin trace 显示，刷新后正在执行 220ms 侧栏展开及 280ms 页面侧滑。
+两次 `boundingBox` 调用分别跨越 123347.8–123396.0ms、123397.2–123439.7ms，
+期间工作区宽度为 1209 → 1110 → 1052 → 991px，缩放比例始终为 1。
+串行采样得到标题 x=505.82、Widget right=510.49，但失败截图的最终布局并未遮挡。
+因此改为同一次浏览器同步回调读取两个矩形，再轮询严格 `title.left - widget.right > 0`；
+没有放宽间隔、增加超时、禁用布局动画或调整业务样式。
+
+同轮消费者 JSON 还核对了 12 种 Admin preset/API/router 组合、8 项 CLI、4 组可选模块构建，
+以及 14 种 Blank/Screen 项目（每种五个尺寸，共 70 组），安装、check 与生产浏览器均通过。
+Viewport 的 Dev/Prod 共 40 组真实浏览器缩放核对 `actualZoom`、DPR 和逻辑视口；
+1280×720 在 125% 下实际为 1024×576 / DPR 1.25，在 150% 下为 853×480 / DPR 1.5。
+另有 8 组局部适配、2 组生命周期检查通过，地图实例、中心、zoom、点击和监听稳定性保持，
+页面 / Console / 运行时错误记录为空。这些是隔离消费者夹具，不是两个业务系统的生产验收。
+
+## Admin 收尾回归
+
+复核发现示例最小字号控件实际无效：`ViewportCanvas` 把下限硬编码为 12，
+而不是读取传入策略。旧产物上新增 E2E 准确失败（设置 20px 后仍得到 12px），
+新增组件测试也在旧源码准确失败（scale=0.5 时预期 CSS 40px，实际 24px）。
+修复使用公开 `useViewportPolicy`，继承全局下限并响应局部覆盖及恢复；
+来源为全局或路由时，设计宽、高和最小字号输入与模式输入一致禁用，避免无效操作。
+组件测试只验证策略到样式的转换，不代替浏览器字号、弹窗和布局验收。
+失败证据保存在 `admin-viewport-font-baseline.log`、`admin-viewport-font-baseline-evidence/`；
+修复后的类型、针对性 ESLint、组件测试通过，Admin 生产构建及原预算通过。
+
+本地完整 Admin 首次复测为 33 通过 / 1 失败；新增三个示例测试全部通过，
+失败是既有移动表格用例在数据到达前采样：108208ms 时行高和操作高度均为 0，
+列表请求于 107918ms 发出、约 387ms 后完成。已将原有“更多按钮可见”断言移至采样前，
+保留 32px 按钮、52px 行高、84px 操作列、五档溢出和弹窗交互的全部标准。
+证据为 `admin-final-font-e2e.log` 和 `admin-mobile-actions-baseline-evidence/`；
+这不是公共表格行为修改，也没有通过删断言消除失败。
+
+CI 证据上传显式启用受限路径内的隐藏文件，确保 `.playwright-results/` 原始 JSON 和 trace
+不会因默认隐藏过滤而丢失；四项工作流配置回归保护该约束。历史 Windows trace 本次仍可从 HTML
+报告附件中取回，但不能据此声称原始结果目录已经上传。
+
+## 全屏浮层回归
+
+只读复核还发现全屏组合缺陷：Demo 只把 Cockpit 内部根节点全屏，body Teleport 的视口弹窗
+及兄弟 Designer 不属于该全屏树。新增独立生产浏览器用例在旧产物准确失败，
+`fullscreenElement.contains(dialog)` 为 false，日志 `cockpit-fullscreen-overlay-baseline.log`，
+截图和 trace 保存在 `cockpit-fullscreen-overlay-baseline-evidence/`。
+修复仅在应用层将全屏宿主改为 `document.documentElement`，不修改公共 `enterFullscreen()`、
+不增加 CSS 缩放或改变地图实例。回归覆盖全屏中的视口确认按钮点击、关闭、设计器修改后取消、
+不写入存储及退出全屏；保留原三种模式和所有九项生产用例，现在共十项。
+接入指南、应用 README 与仓库/安装 Skill 同步说明全屏宿主和缩放宿主的区别；
+公共包版本维持 `0.0.6-beta`，不把 Demo 修复误记成已发布补丁。
+
+收尾补丁的本地结果（Windows / Node 24.14.1 / pnpm 10.33.0）：
+
+| 验证 | 实际命令 | 结果与证据 |
+| --- | --- | --- |
+| Admin 单元及类型 | `pnpm --filter lumal-admin test`，构建内 `vue-tsc` | 186 项通过，`admin-viewport-font-unit.log`、`admin-viewport-font-build.log` |
+| Admin 完整生产浏览器 | `pnpm test:e2e:release:built` | 修正数据就绪时序后 34 项通过，2.0 分钟，`admin-final-data-ready-e2e.log` |
+| Cockpit 单元 | `pnpm --filter lumal-cockpit test` | 26 项通过，`cockpit-final-overlay-unit.log` |
+| Cockpit 类型与构建 | `pnpm --filter lumal-cockpit build:app`、`pnpm typecheck:e2e:cockpit` | 通过，复制 389 项资源，`cockpit-fullscreen-overlay-build.log`、`cockpit-fullscreen-overlay-e2e-types.log` |
+| Cockpit 完整生产浏览器 | `pnpm test:e2e:cockpit:built` | 10 项通过，2.3 分钟，全屏组合 11.9 秒，`cockpit-fullscreen-overlay-e2e.log` |
+| 文档 / Skill / 发布安全 / 测试配置 | Vitest 四个既有 scripts 文件 | 101 项通过，`demo-final-overlay-contracts.log` |
+| 严格文档构建 / 链接 | `pnpm docs:build`，保留 `ignoreDeadLinks=false` | 通过，`demo-final-overlay-docs.log` |
+| 发布边界 / 产物 / 原预算 | `pnpm release:boundaries`、`node scripts/check-release-artifacts.mjs`、`pnpm release:budgets` | 通过，`demo-final-overlay-{boundaries,artifacts,budgets}.log` |
+| Skill 分发副本 | 两份 `quick_validate.py` 与 SHA256 对比 | 均通过，Cockpit reference 完全一致，未覆盖本机元数据 |
+
+这些本地结果不替代最后提交的双平台 CI。Vite / Viewport 正在由并行任务修改；
+本轮独立补丁不包含这些未完成改动，不提前使用新 API，待完成后再进行公共包联合验收。
+
 ## 包体与依赖
 
 通过 `measureApplication()` 测量入口 HTML 与静态 import 闭包，动态 chunk 不全计入首屏。
@@ -207,8 +281,8 @@ E2E 严格类型、97 项契约、针对性 ESLint 与严格文档构建通过�
 
 | 站点 | 基线 JS / CSS | 本分支 JS / CSS | 原预算 JS / CSS |
 | --- | --- | --- | --- |
-| Admin | 313019 / 42591 | 332877 / 42797 | 335000 / 50000 |
-| Cockpit | 703778 / 71192 | 687523 / 71265 | 800000 / 80000 |
+| Admin | 313019 / 42591 | 332878 / 42797 | 335000 / 50000 |
+| Cockpit | 703778 / 71192 | 687529 / 71267 | 800000 / 80000 |
 
 最终功能提交的远程产物也通过同一预算；两平台使用各自构建信息，gzip 允许自然字节差异：
 
@@ -273,6 +347,8 @@ Build Validation 新增双平台 demo-production Job：frozen install、两种�
 `b4c60cd`（Cesium 恢复）、`c47cbe0`（Admin 示例）、`dc181db`（图表初始化与嵌入布局）、
 `81659cc`（文档 / Skill）、`f5a07ba`（双平台门禁）、`82e371f`（软件渲染验收隔离）。
 后续提交：`9e9e086`（真实缩放边界和平台配置审计）、`5779229`（分离截图与像素断言预算）。
+收尾提交：`44b9c02`（Admin 策略字号与同帧/数据就绪测量）、
+`107b1e0`（应用级全屏宿主、浮层真实交互、文档与 Skill）。
 Draft PR：[cuteyuchen/lumal#8](https://github.com/cuteyuchen/lumal/pull/8)，未合并。
 
 十包文档与实际示例的逐项清单见 [公共包覆盖表](./public-package-coverage.md)，

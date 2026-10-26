@@ -31,6 +31,18 @@ describe('release dependency graph', () => {
     expect(() => verifyReleaseWorkflows(noTypes, scripts)).toThrow('typecheck:e2e:cockpit')
   })
 
+  it.each([
+    ['build-validation.yml', 'demo-production'],
+    ['build-validation.yml', 'datav-visual'],
+    ['release-gate.yml', 'release-check'],
+    ['release-gate.yml', 'windows-check'],
+  ])('%s/%s 显式上传隐藏结果目录，保留原始 JSON 与 trace', (file, jobName) => {
+    const job = readWorkflows()[file].jobs[jobName]
+    const upload = job.steps.find(step => step.uses?.startsWith('actions/upload-artifact@')
+      && step.with?.path?.includes('.playwright-results/'))
+    expect(upload?.with['include-hidden-files']).toBe(true)
+  })
+
   it('消费者生产浏览器校验之前必须准备 Chromium', () => {
     const current = readWorkflows()
     expect(current['build-validation.yml'].jobs.validate.steps.some(step =>
