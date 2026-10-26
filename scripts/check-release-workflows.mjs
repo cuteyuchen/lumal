@@ -52,6 +52,12 @@ export function verifyReleaseWorkflows(workflows, scripts) {
   assert.ok(release.jobs['site-build'].needs.includes('release-check'), '站点必须使用生产 E2E 验证后的 Admin 产物')
   assert.ok(release.jobs['release-check'].steps.some(step => step.run === 'pnpm release:check'))
   assert.ok(release.jobs['site-build'].steps.some(step => step.run === 'pnpm release:budgets --require-all'))
+  const demo = workflows['build-validation.yml'].jobs['demo-production']
+  assert.deepEqual(demo.strategy.matrix.os, ['ubuntu-latest', 'windows-latest'], 'Demo 必须覆盖 Ubuntu / Windows')
+  assert.ok(!demo.if && !demo['continue-on-error'], 'Demo 生产门禁不可跳过')
+  for (const command of ['pnpm cockpit:build', 'pnpm --filter lumal-cockpit build', 'pnpm test:e2e:cockpit:built', 'pnpm --filter lumal-admin build', 'pnpm test:e2e:release:built', 'pnpm docs:build', 'pnpm release:budgets'])
+    assert.ok(demo.steps.some(step => step.run === command && !step.if && !step['continue-on-error']), `Demo 缺少 ${command}`)
+  assert.ok(release.jobs['site-build'].steps.some(step => step.run === 'pnpm test:e2e:cockpit:built'), '发布站点必须实跑 Cockpit 生产浏览器')
   for (const command of ['lint', 'format:check', 'release:workflows', 'release:boundaries', 'test', 'typecheck', 'build', 'test:create-consumer', 'test:create-projects', 'test:viewport', 'admin:build', 'compat:build', 'release:artifacts', 'test:e2e:release:built', 'pack:dry-run'])
     assert.ok(scripts['release:check'].split(' && ').includes(`pnpm ${command}`), `${command} 必须在 release:check 中`)
   for (const [file, jobName, commands] of [

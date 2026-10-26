@@ -27,6 +27,8 @@
     "test:e2e": "playwright test",
     "test:e2e:release": "pnpm admin:build && pnpm --filter lumal-mock-api build:test && pnpm test:e2e:release:built",
     "test:e2e:release:built": "playwright test --config playwright.release.config.ts",
+    "test:e2e:cockpit": "pnpm cockpit:build && pnpm test:e2e:cockpit:built",
+    "test:e2e:cockpit:built": "playwright test --config playwright.cockpit.config.ts",
     "lint": "eslint .",
     "format": "node scripts/format-project-templates.mjs --write",
     "format:check": "node scripts/format-project-templates.mjs",

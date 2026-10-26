@@ -17,6 +17,16 @@ describe('release dependency graph', () => {
     expect(() => verifyReleaseWorkflows(readWorkflows(), scripts)).not.toThrow()
   })
 
+  it('普通 PR 必须包含两平台完整 Cockpit 构建和生产浏览器，不能只构建公共包', () => {
+    const workflows = readWorkflows()
+    const job = workflows['build-validation.yml'].jobs['demo-production']
+    job.strategy.matrix.os = ['ubuntu-latest']
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('Windows')
+    job.strategy.matrix.os = ['ubuntu-latest', 'windows-latest']
+    job.steps = job.steps.filter(step => step.run !== 'pnpm test:e2e:cockpit:built')
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('cockpit')
+  })
+
   it('消费者生产浏览器校验之前必须准备 Chromium', () => {
     const current = readWorkflows()
     expect(current['build-validation.yml'].jobs.validate.steps.some(step =>
