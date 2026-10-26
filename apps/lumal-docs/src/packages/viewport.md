@@ -13,8 +13,8 @@
 
 ## 安装
 
-本文面向 `0.0.7-beta` 候选契约，下列命令显式选择本版，不代表 registry 已发布。
-历史逐包核验见 [0.0.6-beta 记录](/reference/npm-release-0.0.6-beta)，候选源码接入见 [安装说明](/guide/essentials/installation)。
+本文面向已发布并核验的 `0.0.7-beta`，下列命令显式选择本版。
+逐包核验见 [本版记录](/reference/npm-release-0.0.7-beta)，未发布源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
 pnpm add @lumal/viewport@0.0.7-beta vue@^3.5

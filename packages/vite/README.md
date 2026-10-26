@@ -2,8 +2,8 @@
 
 ## 可选的局部 px → vw
 
-`0.0.6-beta` 已提供来源受控的 CSS 转换。以下精细控制和 Vue 行内样式功能属于
-**`0.0.7-beta` 候选契约**，发布核验前使用本地构建的 tarball 验证，不用已发布的旧包代替：
+`0.0.6-beta` 已提供来源受控的 CSS 转换。以下精细控制和 Vue 行内样式功能自
+已发布并核验的 **`0.0.7-beta`** 提供。开发未发布源码时使用精确提交的 tarball，不用旧包代替：
 
 ```ts
 import { createViewportTransformPlugin } from '@lumal/vite'
@@ -148,5 +148,5 @@ const resolver = createLumalComponentResolver({ importStyle: true })
 ### 仓库验证
 
 运行 `pnpm --filter @lumal/vite test` 和 `pnpm test:vite-consumer`：
-后者构建并打包候选包，在独立 Vue 项目中验证类型、SSR、SCSS、Source Map、
+后者构建并打包当前源码，在独立 Vue 项目中验证类型、SSR、SCSS、Source Map、
 Dev/Build 和运行时协作，不依赖工作区源码 alias，不启动浏览器。

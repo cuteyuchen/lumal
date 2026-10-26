@@ -20,9 +20,9 @@ pnpm add @lumal/datav@0.0.7-beta vue@^3.5
 pnpm add echarts@^6
 ```
 
-当前 `0.0.7-beta` 候选契约继续将 ECharts 保持为可选 peer，
+已发布的 `0.0.7-beta` 继续将 ECharts 保持为可选 peer，
 只用数字、边框和列表时无需安装；ECharts 图表模式与 `LumalActiveRingChart` 仍需引擎。
-候选发布核验前使用本地 tarball，不用历史发布包替代新增能力验收。
+开发未发布源码时使用精确 tarball，不用历史发布包替代新增能力验收。
 
 ## 公开入口
 

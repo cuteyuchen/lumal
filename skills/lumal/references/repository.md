@@ -4,7 +4,7 @@
 
 ## 定位与事实来源
 
-- 公共包为 `packages/*/package.json` 中非 private 的包，`0.0.7-beta` 候选维持自 `0.0.6-beta` 起的十包集合，包含 viewport。manifest 不证明 npm 发布完成，实际状态须查询 registry。不要根据遗留目录名推断另一个 npm 包。
+- 公共包为 `packages/*/package.json` 中非 private 的包，已发布的 `0.0.7-beta` 维持自 `0.0.6-beta` 起的十包集合，包含 viewport。manifest 不证明 npm 发布完成，实际状态须查询 registry。不要根据遗留目录名推断另一个 npm 包。
 - `package.json.exports` 决定允许的导入路径，`src` 的公开入口与类型决定 API。包内实现文件不是消费方 API。
 - 有 `.codegraph/` 时先尝试 CodeGraph；工具不可用再使用 `rg` 与直接阅读源码。不要把本机工具缺失记录成所有用户必须遵守的限制。
 - `apps/*` 是消费者与验收入口。包不得反向依赖 apps、业务接口、演示数据或私有项目。
@@ -44,6 +44,13 @@ Admin 使用 `pnpm test:e2e:release`。普通公共包 build 不证明 Demo 可�
 参考 `docs/public-package-coverage.md` 核对十包文档，生产站点必须单独核对部署提交。
 
 修改脚手架时在构建后执行 `pnpm test:create-consumer`。只有确需验证路由、焦点、画布等浏览器行为时再选择相关 Playwright 用例，不因文档或类型改动默认启动全部应用。
+
+修改 Vite 视口转换或 Screen 共享设计配置时，执行 `pnpm test:vite-consumer`。
+它串行重建并打包当前 Viewport / Vite，在独立 Vue 项目中验证 ESM/CJS、类型、SSR、
+CSS/SCSS、模板、来源边界及 Dev/Build 产物，不启动浏览器。
+`output/release/vite-viewport-report.json` 不能代替真实布局或缩放证据；
+涉及已有 Demo 的联合验收需从同一提交重建，再运行其生产 E2E 与原体积预算，
+不能用旧 dist 或历史 CI 通过代替当前结果。此检查属于 PR / Release Gate 的非浏览器消费者门禁。
 
 ## Skill 更新规则
 

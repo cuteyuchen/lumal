@@ -1,7 +1,7 @@
 # 通用视口适配
 
-本文按 `0.0.7-beta` 候选契约记录；以下运行时 API 自已发布的 `0.0.6-beta` 提供。
-接入时核对 registry 与实际安装声明，候选发布核验前使用本地 tarball，不能用历史包代替新增能力。
+本文按已发布的 `0.0.7-beta` 记录；以下运行时 API 自 `0.0.6-beta` 提供。
+接入时核对 registry 与实际安装声明，开发未发布源码时使用精确提交的 tarball，不能用历史包代替新增能力。
 仅 Vue peer，不依赖 Core/UI/图表。尺寸优先来自实际容器而不是 window。
 
 - `computeViewportScale`：纯算法，contain/width；可选 minScale/maxScale。
@@ -21,7 +21,7 @@ Teleport到body的UI独立于设计画布。Cockpit放入缩放容器时必须�
 
 ## 与构建转换协作
 
-`0.0.7-beta` 候选的Screen视口模板把 `viewportDesign/viewportPolicy` 集中到项目根
+`0.0.7-beta` 的Screen视口模板把 `viewportDesign/viewportPolicy` 集中到项目根
 `viewport.config.ts`。这是不导入Vue/Vite的普通项目配置，不是新公共API，
 也不默认安装或启用 `@lumal/vite`。
 运行时policy展开同一designWidth/designHeight，Vite用
@@ -39,3 +39,9 @@ Admin 的 `examples/ViewportView.vue` 演示默认/路由/容器策略，`viewpo
 是可复制的组件；路由策略在应用可信映射中补入，后端菜单 DTO 不一定保留扩展 meta。
 独立 Cockpit 的 ViewportLab 与主驾驶舱隔离，不能将实验包装器再套在自缩放的 Cockpit 外。
 `computeViewportFontSize` 需显式用于目标文字，不会自动改变整个后台字号。
+
+Admin Demo 的工作区三模式是发包后的应用接线，不是新的公共布局 API；
+只适配内容区，默认 responsive，contain/width 使用1280×720、minScale=.75、minFontSize=12。
+示例为继承正文与Element Plus变量显式补偿字号，`--lumal-workspace-min-font-size`
+仅保护接入的自有小字，不改写第三方固定字体。自管理视口示例和非Teleport的CRUD编辑页
+通过应用可信meta覆盖为responsive；复制时保留单层缩放、缓存与浮层边界，不照搬业务权限。

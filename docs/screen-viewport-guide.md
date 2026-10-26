@@ -1,8 +1,8 @@
 # 屏幕与工作区适配
 
-本文的运行时 API 面向已发布的 `0.0.6-beta`，正式标签与逐包核验见
-[本版发布记录](./npm-release-0.0.6-beta.md)。开发未发布源码时使用本地 tarball，不用历史包代替新增能力验收。
-下文的属性名单、最小尺寸保护、Vue 行内样式及原子化 CSS 保护属于下一版未发布源码。
+本文面向已发布的 `0.0.7-beta`，正式标签、逐包与 registry 消费者核验见
+[本版发布记录](./npm-release-0.0.7-beta.md)。开发未发布源码时使用本地 tarball，不用历史包代替新增能力验收。
+运行时 API 自 `0.0.6-beta` 提供；下文属性名单、最小尺寸保护、Vue 行内样式及原子化 CSS 保护自 `0.0.7-beta` 提供。
 `@lumal/viewport` 仅以 Vue 为 peer；不依赖 Core、Element Plus、地图、图表或 Cockpit。
 独立包让普通 Vue/Blank/Screen 能使用同一算法，DataV/Cockpit 也无需反向依赖后台。
 复制三份算法或放进 Core 会分别增加维护成本或后台依赖；因此选择单独的小包。
@@ -87,6 +87,25 @@ const route = useRoute()
 鉴权与菜单继续由 Core 管理，适配元信息不授予任何访问权限。
 KeepAlive 停用时断开观察器和待执行帧；激活重新测量，不重建页面实例。
 组件只写自己的行内变量，切路由不会残留全局样式。
+
+### Admin Demo 的工作区三模式
+
+发包后的 Admin Demo 以应用层包装器组合 `responsive / contain / width`，不是 Core 新增布局 API。
+仅内容工作区参与适配，Header、Tabbar、侧栏、全局字号和 body Teleport 弹层保持原布局。
+默认 responsive；设计工作区为 `1280 × 720`，`minScale: 0.75`、`minFontSize: 12`，
+偏好与路由的显式覆盖由应用管理。缩放达到下限时允许局部滚动，不承诺任意小窗口完整容纳。
+
+包装器为设计画布内显式接入的主题字号 token 和继承正文补偿字号；
+固定像素、`rem`、自绘 Canvas 和应用自己的字体规则不会被自动保护，
+需要页面显式接入：公共包装器可使用 `--lumal-viewport-min-font-size`，
+本 Demo 工作区使用 `--lumal-workspace-min-font-size`，也可直接调用 `computeViewportFontSize`。
+Demo 的六个路由覆盖为 responsive：`examples/viewport`、`examples/datav`、
+`examples/cockpit`、`examples/crud-table`、`system/user`、`system/role`。
+前三者拥有自己的缩放责任，后三者保留现有 CRUD 编辑器的定位上下文，避免非 Teleport 弹层被画布约束。
+这些覆盖通过可信应用映射写入 `meta.workspaceViewport: 'self-managed'`，不影响路由授权。
+业务地图与图表页也应按自身引擎需求显式覆盖，不让缩放改变坐标系统。
+稳定的 RouterView/KeepAlive 插槽不得随模式切换重新挂载。
+这些应用层改动不包含在已发布的 npm tarball 中，实际验证结果单独记录，不能从包发布推断通过。
 
 ## 容器与独立 Screen 示例
 

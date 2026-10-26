@@ -19,9 +19,11 @@
 
 ## npm 安装
 
-下列命令对应 `0.0.7-beta` 候选契约，显式指定预发布版本，不依赖 npm 的 `latest` 标签。
-历史 `0.0.6-beta` 十包发布核验见 [发布记录](/reference/npm-release-0.0.6-beta)，不能证明当前候选已经发布。
-当前候选完成 registry 核验前，按 [项目模板](/reference/project-template-guide) 构建并验证本地 tarball，不能以旧包代替新增能力。
+下列命令对应已发布并核验的 `0.0.7-beta`，显式指定预发布版本，不依赖 npm 的 `latest` 标签。
+十包正式门禁、registry、同次产物和六类 registry 消费者结果见 [本版发布记录](/reference/npm-release-0.0.7-beta)。
+发布核验时十包 `beta` 指向 `0.0.7-beta`，既有九包 `latest` 保持 `0.0.1-beta`，
+Viewport 的 `latest` 保持 `0.0.6-beta`；
+接入时仍需核对实际完整版本。开发未发布源码时，按 [项目模板](/reference/project-template-guide) 构建并验证精确 tarball。
 
 ```bash
 pnpm add @lumal/core@0.0.7-beta @lumal/icons@0.0.7-beta @lumal/icons-vue@0.0.7-beta vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
@@ -37,7 +39,7 @@ Pinia 是可选 peer；使用 `createPinia()` 时另装 `pinia@^3.0.3`，框架�
 
 只使用 `@lumal/core/minimal` 或 request 等纯服务子入口时，只需安装 Core 和 Vue，无需 Element Plus；消费 UI、图标或 Router 子入口时再安装对应 peer。
 
-当前候选继续提供 Blank/Screen 模板与仅 Vue peer 的 `@lumal/viewport`，
+当前版本继续提供 Blank/Screen 模板与仅 Vue peer 的 `@lumal/viewport`，
 DataV 的 ECharts peer 为可选；仅 ECharts 图表模式与 `LumalActiveRingChart`
 需要另装 `echarts@^6`。纯数字/边框不需要图表引擎，Blank 默认仅安装 Vue。
 按需依赖见[项目模板](/reference/project-template-guide)及[屏幕适配](/reference/screen-viewport-guide)。

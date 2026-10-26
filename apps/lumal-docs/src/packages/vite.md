@@ -70,8 +70,8 @@ export default {
 `0.0.6-beta` 提供默认关闭的 `createViewportTransformPlugin` 和低层
 `createViewportPostcssPlugin`。启用时显式指定 `include: ['src/screen/**']`，
 Dev/Build 共用 CSS 声明转换，不扫描脚本或业务坐标。
-下列精细控制、Vue 行内样式和原子化 CSS 保护属于 **`0.0.7-beta` 候选契约**，
-发布核验前需用本地构建的 tarball 验证，不能直接用已发布 `0.0.6-beta` 验收新增选项。
+下列精细控制、Vue 行内样式和原子化 CSS 保护自已发布的 **`0.0.7-beta`** 提供，
+不能用历史 `0.0.6-beta` 验收新增选项；未发布源码仍用精确提交的 tarball 验证。
 默认不转换 node_modules、字号/行高、最小尺寸及自定义属性；依赖只通过精确包名白名单加入。
 保留已有 PostCSS 配置和来源边界，无法可靠定位预处理声明时跳过并警告。
 配置与限制见 [屏幕适配](/reference/screen-viewport-guide)，不要覆盖 Admin、

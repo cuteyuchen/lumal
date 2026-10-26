@@ -45,6 +45,7 @@ export function nav(): DefaultTheme.NavItem[] {
         { text: '开发路线图', link: '/reference/development-roadmap' },
         { text: '发布检查清单', link: '/reference/release-checklist' },
         { text: '更新日志', link: '/reference/changelog' },
+        { text: '0.0.7-beta 发布记录', link: '/reference/npm-release-0.0.7-beta' },
         { text: '0.0.6-beta 发布记录', link: '/reference/npm-release-0.0.6-beta' },
         { text: 'GitHub', link: siteLinks.github },
       ],

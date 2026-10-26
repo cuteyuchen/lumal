@@ -13,7 +13,7 @@ metadata:
 
 1. 区分消费项目与 Lumal 仓库维护：消费项目只使用 npm 包的公开入口，不依赖 `packages/*/src` 或工作区 alias。
 2. 检查已有依赖、锁文件、入口代码与样式。复用现有 Router、Pinia、Element Plus 和请求适配，不重复创建。
-3. 本 Skill 以 `0.0.7-beta` 候选契约为基准，不代表 registry 已发布或它一直是 npm 最新版本。接入时核对 registry 与实际安装包；发布核验前使用本地 tarball 验证。版本不一致时，以实际安装包的 `package.json.exports`、声明文件和源码为准，不猜测导出。
+3. 本 Skill 以已发布并核验的 `0.0.7-beta` 公开 API 为基准，不保证它一直是 npm 最新版本。接入时核对 registry 与实际安装包；开发未发布源码时使用精确提交的本地 tarball 验证。版本不一致时，以实际安装包的 `package.json.exports`、声明文件和源码为准，不猜测导出。
 4. 只读取下表与任务有关的参考；跨包任务再组合读取。
 
 ## 包选型

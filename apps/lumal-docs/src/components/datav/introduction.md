@@ -2,7 +2,7 @@
 
 来自 `@lumal/datav`。支持 DataV `config` 与现代 props；优先级：显式 props > config > 默认。
 
-本页对应 `0.0.7-beta` 候选契约，下列命令显式选择本版；发布核验前使用候选 tarball。
+本页对应已发布并核验的 `0.0.7-beta`，下列命令显式选择本版；开发未发布源码时使用精确 tarball。
 包核验与源码接入方式见 [安装说明](/guide/essentials/installation)：
 
 ```bash

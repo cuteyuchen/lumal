@@ -1,7 +1,8 @@
 # Demo 与业务接入
 
-公开 API 基于已发布的 `0.0.6-beta`。本次新增的 Demo 页面和 Designer 修复属于工作分支，
-不是已经发布或部署的新版；Designer 补丁通过 Changeset 留待正式 Release Gate。
+公开 API 基于已发布并核验的 `0.0.7-beta`，包含 Designer 名称输入修复，
+见 [本版发布记录](./npm-release-0.0.7-beta.md)。Demo 页面和文档部署是独立步骤；
+本轮 npm 发布未部署生产，不能把包版本当成线上示例已更新的证明。
 
 ## 选型与运行
 
@@ -19,7 +20,7 @@
 例如创建有登录和请求的 Screen：
 
 ```sh
-pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal internal-screen --template screen --auth http --data http --router-mode history
+pnpm --package=create-lumal-admin@0.0.7-beta dlx create-lumal internal-screen --template screen --auth http --data http --router-mode history
 cd internal-screen
 pnpm install
 pnpm check
@@ -32,9 +33,9 @@ pnpm dev
 ## 只有 Vue + Viewport 的静态屏幕
 
 ```sh
-pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal static-screen --template blank
+pnpm --package=create-lumal-admin@0.0.7-beta dlx create-lumal static-screen --template blank
 cd static-screen
-pnpm add @lumal/viewport@0.0.6-beta
+pnpm add @lumal/viewport@0.0.7-beta
 ```
 
 `main.ts` 仅安装应用默认，不变换 html/body：
@@ -92,6 +93,12 @@ responsive 不缩放内容。可读字号下限需要消费页面显式使用 `c
 系统管理不包画布或传 `policy=false`。本分支 `ViewportView.vue` 演示
 `useViewportPolicy`、`resolveViewportPolicy`、`useElementSize` 和 `useViewportScale`：
 composable 只测量，DOM transform 由 `LumalViewport` 唯一执行。
+
+Admin Demo 的工作区模式切换是发包后的应用示例，不改变 Core 默认布局：
+可选择 responsive、contain、width，只缩放实际内容区。设计尺寸 `1280 × 720`，
+比例下限 `.75`、目标物理字号下限 `12px`；文字保护仅适用于显式接入 token 和继承正文，
+固定像素、rem、Canvas 字体仍由页面处理。自管理页面显式 responsive，防止双重缩放；
+完整边界见 [工作区三模式](./screen-viewport-guide.md#admin-demo-的工作区三模式)。
 
 Admin 的后端菜单 DTO 不透传任意扩展 meta。`src/api/menu.ts` 在规范化后按可信组件标识
 为 Viewport 页面补入 `meta.viewport`，不新增路由或放宽权限；其他页面没有此覆盖。

@@ -4,8 +4,8 @@ Lumal 可选图表包，基于 ECharts 与 vue-echarts 封装轻量图表组件�
 
 ## 安装
 
-下列命令对应 `0.0.7-beta` 候选契约，以 registry 存在对应版本为前提。
-发布核验前使用候选 tarball，也可从源码构建后 file 接入；不从本文推断浮动标签。
+下列命令对应已发布并核验的 `0.0.7-beta`，显式选择版本，不依赖浮动标签。
+开发未发布源码时使用精确提交的 tarball，也可从源码构建后 file 接入。
 
 ```bash
 pnpm add @lumal/charts@0.0.7-beta echarts@^6 vue-echarts@^8 vue

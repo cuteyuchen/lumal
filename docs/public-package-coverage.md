@@ -1,6 +1,7 @@
 # 十包文档与示例覆盖
 
-版本基准：`0.0.6-beta`；工作分支包含未发布的 Cockpit Designer 名称补丁。
+版本基准：已发布并核验的 `0.0.7-beta`，包含 Cockpit Designer 名称补丁、
+Vite 精细视口转换控制与 Vue 行内样式，以及 Screen 共享设计配置模板。
 本表是维护清单，不表示每个导出都经过浏览器测试或所有示例已部署。
 
 | 公共包 | 公开能力组 | 文档入口 | 可运行证据 / 示例 |
@@ -12,9 +13,16 @@
 | `@lumal/cockpit` | Runtime、registry、消息、配置、Designer | [Cockpit](/packages/cockpit)、[Runtime](/components/cockpit/runtime)、[Designer](/components/cockpit/designer) | 独立 Demo 四中心、Admin 轻量嵌入、Designer 单元和生产 E2E |
 | `@lumal/icons` | 注册、SVG、URI、可选 morph | [Icons](/packages/icons) | Admin 图标页；动画独立入口，静态内核边界测试 |
 | `@lumal/icons-vue` | 图标组件、选择器、响应式注册 | [Icons Vue](/packages/icons-vue) | Admin 图标页、应用真实图标按钮 |
-| `@lumal/vite` | Resolver、workspace aliases、Devtools、定向 viewport 转换 | [Vite](/packages/vite) | 构建配置、插件消费者与 CSS 转换测试，不伪装运行时组件 |
+| `@lumal/vite` | Resolver、workspace aliases、Devtools、定向 CSS / Vue 行内 viewport 转换 | [Vite](/packages/vite) | `packages/vite/tests/viewport-*.test.ts`、`pnpm test:vite-consumer` 独立 tarball 消费；非浏览器验证 |
 | `@lumal/vben-compat` | `/v5` 与 `/legacy` 适配 | [兼容层](/packages/vben-compat) | vben-compat-demo、独立消费者；不是 Vben 全量兼容 |
-| `create-lumal-admin` | Admin / Screen / Blank、通用 bin、工程质量 | [脚手架](/packages/create-lumal-admin)、[模板](/reference/project-template-guide) | 模板消费者、CLI PTY / 取消回滚；不存在独立 create-lumal npm 包 |
+| `create-lumal-admin` | Admin / Screen / Blank、通用 bin、工程质量、Screen 共享设计配置 | [脚手架](/packages/create-lumal-admin)、[模板](/reference/project-template-guide) | 模板消费者、CLI PTY / 取消回滚；共享配置不默认启用构建转换；不存在独立 create-lumal npm 包 |
+
+`pnpm test:vite-consumer` 重建并打包当前 Viewport / Vite，在独立 Vue 项目中验证
+ESM/CJS、类型、SSR、CSS/SCSS、模板、来源边界及 Dev/Build 产物一致性，报告写入
+`output/release/vite-viewport-report.json`。它不启动浏览器，不能替代 Admin/Cockpit 生产 E2E
+或真实浏览器缩放检查；联合验收必须记录各自命令、提交和结果，不能沿用旧提交的通过状态。
+本版正式发布及六类 registry 消费者结果见 [发布记录](./npm-release-0.0.7-beta.md)；
+发包后修改的 Admin 工作区三模式另行验证，不混入标签源码的通过证据。
 
 ## 新 API 的检查规则
 

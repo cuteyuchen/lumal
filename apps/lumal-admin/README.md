@@ -1,6 +1,6 @@
 # lumal-admin
 
-Lumal 中后台管理台示例应用，基于 `@lumal/* 0.0.6-beta` 公开 API 搭建，演示登录鉴权、动态菜单、权限指令、SchemaForm/CrudTable、主题定制，以及局部视口、DataV 和 Cockpit Runtime 集成。
+Lumal 中后台管理台示例应用，基于已发布的 `@lumal/* 0.0.7-beta` 公开 API 搭建，演示登录鉴权、动态菜单、权限指令、SchemaForm/CrudTable、主题定制，以及局部视口、DataV 和 Cockpit Runtime 集成。
 
 ## 技术栈
 
@@ -103,6 +103,24 @@ pnpm test:e2e:release:built apps/lumal-admin/e2e/visualization-examples.spec.ts
 
 完整接入说明见 [Demo 与业务接入](../../docs/demo-integration-guide.md)。
 新增示例属于本工作分支，未部署前不能使用线上地址验证本地改动。
+
+## 工作区三模式
+
+发包后的应用示例在顶栏切换 responsive、contain、width，默认 responsive。
+只适配内容区，Header、Tabbar、侧栏和 body Teleport 弹层不缩放。
+设计工作区为 `1280 × 720`，最小比例 `.75`、目标物理字号下限 `12px`；
+窗口不足时局部滚动，模式偏好保存在应用本地，不修改 Core 默认值或根字号。
+
+`examples/viewport`、`examples/datav`、`examples/cockpit` 使用自己的适配；
+`examples/crud-table`、`system/user`、`system/role` 保留 CRUD 编辑器原有定位上下文。
+这六页通过可信 `meta.workspaceViewport: 'self-managed'` 映射保持 responsive，
+不绕过菜单或访问权限。切换器提示本页独立布局。
+
+继承正文和 Element Plus 字号变量显式应用 `computeViewportFontSize`；
+Demo 自有小字可使用 `--lumal-workspace-min-font-size`。
+该 token 不会重写任意第三方固定像素、rem 或 Canvas 字体，页面仍需自行接入。
+工作区包装器保持同一 RouterView/KeepAlive 插槽；行为与生产验证需单独记录，
+不因 npm 已发布而自动视为通过。
 
 ## 关于页面与版本确认
 

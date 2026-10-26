@@ -8,8 +8,9 @@
 - 修复 Designer 名称输入与保存草稿，行内样式选择器支持属性存在、静态值和祖先排除。
 - 十包统一版本和内部依赖；新增 Vite tarball 消费者、双平台 Cockpit 完整构建及生产 E2E 门禁。
 
-本条为发布候选契约，实际发布须由正式标签的 Release Gate 与 registry 逐包结果确认。
-本次仅请求 npm 发布，不部署生产；Admin 新增三模式工作区仍在隔离的后续开发中，不包含在候选源码。
+十个公共包已通过正式标签的 Release Gate，并完成 registry、同次发布产物与六类 registry 消费者核验，
+见 [本版发布记录](./npm-release-0.0.7-beta.md)。十包 `beta` 指向本版，既有 `latest` 未改动。
+本次仅发布 npm，不部署生产；Admin 三模式工作区属于发包后的应用层修改，不包含在本版 npm tarball。
 
 ## 0.0.6-beta (2026-10-25)
 

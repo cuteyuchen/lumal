@@ -73,7 +73,7 @@ const activeLayoutId = shallowRef(config.value.activeLayoutId)
 - Designer 编辑草稿，不直接调用后端或写 localStorage。由应用校验权限、持久化成功后替换正式配置。
 - 使用 `prepareCockpitConfig/normalizeCockpitConfig/validateCockpitConfig` 与迁移工具接收旧配置；不要手动假装旧结构已是 v3。
 - 拖拽缩减包含模块的行列会被阻止，替换已占用槽需确认。新增能力不要绕开这些数据保护。
-- `0.0.7-beta` 候选修复了布局名称输入被还原的缺陷；发布核验前使用候选 tarball，不承诺历史 npm `0.0.6-beta` 已含修复。区分源码、tarball 与 registry。
+- `0.0.7-beta` 已修复并发布布局名称输入被还原的补丁；历史 npm `0.0.6-beta` 不含该修复。区分源码、tarball、registry 和示例站点部署。
 
 ## 缩放、消息和主题
 

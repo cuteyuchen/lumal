@@ -1,6 +1,6 @@
 # lumal-cockpit
 
-独立驾驶舱应用，基于 `@lumal/* 0.0.6-beta` 演示运行时与设计器，并集成 Cesium、OpenLayers、ECharts GEO。应用不进入公共包 tarball；完整生产构建和生产浏览器纳入普通 PR 与 Release Gate。
+独立驾驶舱应用，基于已发布的 `@lumal/* 0.0.7-beta` 演示运行时与设计器，并集成 Cesium、OpenLayers、ECharts GEO。应用不进入公共包 tarball；完整生产构建和生产浏览器纳入普通 PR 与 Release Gate。
 
 ## 技术栈
 
@@ -82,4 +82,5 @@ src/
 Viewport 实验与主画布隔离；测试的五种窗口尺寸不等同于真实浏览器缩放验证。
 
 完整安装、Cesium 资源与源码 alias / dist 边界见 [接入指南](../../docs/demo-integration-guide.md)。
-本轮 Designer 名称输入修复留有 Changeset，尚未发布；示例未部署前，线上域名不代表当前分支。
+Designer 名称输入修复已随 `0.0.7-beta` 发布并完成 registry 核验，
+见 [本版发布记录](../../docs/npm-release-0.0.7-beta.md)；示例未部署前，线上域名不代表当前分支。

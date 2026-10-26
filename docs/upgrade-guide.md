@@ -1,10 +1,10 @@
 # 升级与迁移指南
 
-本文对应已发布的 `0.0.6-beta`；正式标签门禁、registry 与同次发布产物核验见
-[本版发布记录](./npm-release-0.0.6-beta.md)。安装时显式选择目标版本，未发布源码使用精确候选 tarball 验证。
+本文对应已发布的 `0.0.7-beta`；正式标签门禁、registry、同次发布产物与消费者核验见
+[本版发布记录](./npm-release-0.0.7-beta.md)。安装时显式选择目标版本，未发布源码使用精确候选 tarball 验证。
 公共包发布不代表业务升级通过，也不授权部署或修改真实业务仓库。
 实际兼容证据与未执行事项见[真实消费者矩阵](./real-consumer-compatibility.md)；
-历史 `0.0.5-beta` 发布与旧验收记录继续保留，不覆盖为本轮结果。
+历史 `0.0.6-beta`、`0.0.5-beta` 发布与旧验收记录继续保留，不覆盖为本轮结果。
 
 ## 升级原则
 
@@ -20,7 +20,7 @@
 建议仅在独立临时副本执行以下步骤，原项目保持只读：
 
 1. 保留原 package.json、pnpm 配置、lockfile、patch 和原质量门禁结果，记录目标版本与来源。
-2. 已发布版本使用精确的 `0.0.6-beta` registry 包；验证未发布源码时，构建并 pack **精确提交** 的公开包，记录每个 tarball 的 SHA256。
+2. 已发布版本使用精确的 `0.0.7-beta` registry 包；验证未发布源码时，构建并 pack **精确提交** 的公开包，记录每个 tarball 的 SHA256。
    Core、Icons、Charts、Vite 和新增 Viewport 的内部依赖必须来自同一版本或同一候选，不混用源码 alias。
 3. 在副本用精确版本或 tarball/overrides 替换原有 `@lumal/*`，不盲目升级所有 Vue/Vite/TypeScript 生态依赖。
    检查实际 `pnpm why`、peer 和 lockfile，避免传递依赖回落到 registry 的历史版本。
@@ -105,7 +105,7 @@ Parser 只在显式接入时解包。系统成功200与某业务接口成功0/20
 | 旧 default/standard Axios 请求客户端                    | `createRequestClient`、公开 Parser、`parsePageResult`                                     | 需替换接线：Fetch RequestInit/AbortSignal 与 Axios config/interceptor 不同     |
 | `useDict`/`installDict`/`createDictFetcherWithFallback` | `useDictionary`/`installDictionary`/`createDictionaryFetcherWithFallback`                 | 需适配返回形态、options字段和显式 fallback；不可给认证接口加演示兜底           |
 | 旧 viewport `pxToVw`/`scalePx`                          | `@lumal/viewport` 的 `useElementSize`/`useViewportScale` 或容器 CSS 变量                  | 按内容容器迁移；数值计算用 computed 建立响应式依赖，不能机械改函数名           |
-| 旧 Vite `createViewportTransformPlugin`                 | `@lumal/vite` 同名可选插件                                                                | 名称相同但参数/范围不同；仅定向CSS，不扫描脚本、模板内联 style，默认不转依赖   |
+| 旧 Vite `createViewportTransformPlugin`                 | `@lumal/vite` 同名可选插件                                                                | 名称相同但参数/范围不同；定向CSS，可独立开启Vue行内样式，不扫描脚本，默认不转依赖 |
 | `GrFrameworkResolver`                                   | `createLumalComponentResolver`，来自 `@lumal/vite`                                        | 改组件名和解析入口；通过独立构建验证，没有虚构 `/resolver` 子入口              |
 | 行业上下文字段、权限码、地图、AI与复杂业务弹窗          | 应用自己的 API/Store/组件                                                                 | 留业务层；不纳入公共框架兼容承诺                                               |
 
@@ -146,8 +146,17 @@ KeepAlive 是否保留地图由应用决定：希望切后台再回来保持地�
 | 生成的 lockfile                                         | 首次安装产生，随业务版本审查；之后 frozen 安装复现           |
 
 CLI 旧 `create-lumal-admin` 命令和旧参数保留，新项目类型与可选能力见
-[项目模板指南](./project-template-guide.md)。通用 `create-lumal` bin 由已发布的 `create-lumal-admin@0.0.6-beta` 分发，
+[项目模板指南](./project-template-guide.md)。通用 `create-lumal` bin 由已发布的 `create-lumal-admin@0.0.7-beta` 分发，
 独立 `create-lumal` npm 包仍未发布，也没有删除或更名旧入口。后续新增 npm 名称时须另行核对 registry 与发布权限。
+
+### 从 0.0.6-beta 升级到本版
+
+保持十包内部依赖同版，显式安装 `0.0.7-beta`，不依赖仍指向历史版本的 `latest`。
+Viewport 运行时公开 API 未改变。Vite 默认继续关闭转换，但启用时额外保护行高、最小尺寸和已有适配表达式；
+旧项目若确需转换最小尺寸，显式设置 `minSize: true` 后验证布局，不要扩大整个文件范围。
+`inlineStyles: true` 才处理可静态分析的 Vue style，业务脚本、动态表达式和地图坐标保持原样。
+Screen 共享 `viewport.config.ts` 是生成代码改进，已有项目按需手工合并；依赖升级不会覆盖业务文件。
+Cockpit Designer 名称输入修复已随本版发布，不需要消费方复制内部组件。
 
 ## P2 审查
 

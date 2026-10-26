@@ -15,7 +15,7 @@ Lumal 提供一个总 Skill，帮助 AI 根据需求选择包，并按公开 API
 | `@lumal/cockpit` | v3 配置、模块注册、runtime/designer 隔离、中心插槽、缩放与保存 |
 | `@lumal/icons` | 图标注册、SVG 工具、Data URI 和静态清单插件 |
 | `@lumal/icons-vue` | 图标组件、选择器与响应式注册表 |
-| `@lumal/vite` | resolver、工作区 alias、可选 Devtools 与定向 CSS 视口转换 |
+| `@lumal/vite` | resolver、工作区 alias、可选 Devtools、定向 CSS 与可选 Vue 行内视口转换 |
 | `@lumal/vben-compat` | Vben 5.7.0 固定基准、`/v5` 组件元组与 legacy 注册元组、轻量路由入口、支持子集 |
 | `create-lumal-admin` | Admin / Screen / Blank、三预设、按需认证与数据、非交互创建与真实后端接线 |
 
@@ -41,7 +41,7 @@ Skill 的描述也包含 Lumal 包名及适用场景，支持隐式发现的工�
 ## 使用边界
 
 - Skill 按需求加载分包参考，不要求 AI 每次读取所有包。
-- 示例与 `metadata.api-version` 基线为 `0.0.7-beta` 候选契约，不代表 npm 的最新版本或已发布证明；AI 应先核对实际安装包和 registry。目标版本不可用时不能悄悄换用旧 CLI，候选验收使用本地 tarball。
+- 示例与 `metadata.api-version` 基线为已发布并核验的 `0.0.7-beta`，不保证一直是 npm 最新版本；AI 应先核对实际安装包和 registry。开发未发布源码时使用精确 tarball，不能悄悄换用旧 CLI 验收新增能力。
 - Skill 不代替具体业务接口契约、安全审查或测试，也不赋予 AI 自动发布权限。
 - 普通包消费者不需要 Lumal 仓库源码 alias；只使用请求或图标工具时，不应被引导安装整套后台。
 - HTTP 未配置时必须明确失败，不回退演示登录；Vben 5 使用 `/v5`，根及 `/legacy` 保留旧 Lumal 行为，不能混用两种元组。

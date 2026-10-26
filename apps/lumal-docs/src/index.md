@@ -69,10 +69,10 @@ features:
 
 ## 快速安装
 
-当前文档 API 基线为 `0.0.7-beta` 候选契约，十包保持同版，不依赖 `latest`。
-下列命令以 registry 存在对应版本为前提，候选发布核验前使用本地 tarball。
-历史十包发布事实见 [0.0.6-beta 记录](/reference/npm-release-0.0.6-beta)，当前候选不据此宣称已发布，
-功能与性能边界见 [下一阶段验收](/reference/lumal-next-phase-audit)。
+当前文档 API 基线为已发布并核验的 `0.0.7-beta`，十包保持同版，不依赖 `latest`。
+正式门禁、registry、同次发布产物和六类 registry 消费者结果见 [本版发布记录](/reference/npm-release-0.0.7-beta)。
+开发未发布源码时使用精确提交的本地 tarball；功能与性能边界见 [下一阶段验收](/reference/lumal-next-phase-audit)。
+历史十包发布事实保留在 [0.0.6-beta 记录](/reference/npm-release-0.0.6-beta)。
 上一版九包的已核验发布事实保留在 [历史记录](/reference/npm-release-0.0.5-beta)。
 
 ::: code-group

@@ -88,6 +88,27 @@ describe('published documentation links', () => {
     }
   })
 
+  it.each([
+    'docs/README.md',
+    'docs/project-template-guide.md',
+    'docs/screen-viewport-guide.md',
+    'docs/upgrade-guide.md',
+    'docs/demo-integration-guide.md',
+    'docs/icons.md',
+    'docs/datav-examples.md',
+    'docs/public-package-coverage.md',
+    'apps/lumal-admin/README.md',
+    'apps/lumal-cockpit/README.md',
+  ])('%s 的当前指南与可执行安装示例使用同一发布版本', (file) => {
+    const content = readFileSync(join(root, file), 'utf8')
+    expect(content, file).toContain(version)
+    // 仅扫描当前指南的命令块，历史发布记录与正文中的迁移版本不应被改写。
+    for (const block of content.matchAll(/```(?:bash|sh|shell|powershell)\r?\n([\s\S]*?)\r?\n```/g)) {
+      for (const match of block[1].matchAll(/(?:@lumal\/[\w-]+|create-lumal-admin|lumal-admin)@(\S+)/g))
+        expect(match[1], file).toBe(version)
+    }
+  })
+
   it('安装页的 peer 兼容范围与公开包声明一致', () => {
     const content = readFileSync(join(root, 'apps/lumal-docs/src/guide/essentials/installation.md'), 'utf8')
     for (const directory of readdirSync(join(root, 'packages'))) {
