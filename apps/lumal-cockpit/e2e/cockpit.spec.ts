@@ -146,11 +146,13 @@ test('布局持久化、设计器取消、名称尺寸保存与刷新恢复', as
 
 test('暂停、恢复定时刷新与立即刷新', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.clock.install()
+  await page.clock.install({ time: new Date('2026-10-26T00:00:00Z') })
   await page.goto('/')
   // 刷新验证不依赖地图动画；仍通过真实按钮与 Widget 状态观察公开刷新行为。
   await page.getByRole('tab', { name: '独立场景', exact: true }).click()
   await expect(page.locator('.standalone-center')).toBeVisible()
+  // install 仍会随真实时间前进；页面就绪后暂停，避免慢机器错过 280ms 加载态。
+  await page.clock.pauseAt(new Date('2026-10-26T01:00:00Z'))
   await page.getByRole('button', { name: '自动刷新开', exact: true }).click()
   await expect(page.getByRole('button', { name: '自动刷新关', exact: true })).toHaveAttribute('aria-pressed', 'false')
   await page.clock.fastForward(60_000)

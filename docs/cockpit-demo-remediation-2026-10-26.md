@@ -8,7 +8,8 @@ GitHub PR 测试使用合并引用 `fa71750a161b8d7ae70a58f0d008e49185c17b93`，
 [Build Validation](https://github.com/cuteyuchen/lumal/actions/runs/40264662712) 均已完成并通过；
 下文另列外部 Vercel Preview 的失败，不将它隐去。
 这些是 `5779229` 的阶段性证据。后续 `5ec6b86` 复跑在 Windows 出现累计截图超时，
-不是最新提交全部通过；八项用例与 Node 像素分析的后续结果通过 PR 检查和附件逐次记录。
+不是最新提交全部通过；`eb42cb4` 随后的 Windows 复测暴露了刷新用例的模拟时钟竞态，
+已保留失败证据并修复。后续结果通过 PR 检查和附件逐次记录。
 
 ## 构建基线
 
@@ -125,6 +126,22 @@ Build Validation `40266544074` 中 Ubuntu、Windows DataV 视觉及消费者 / �
 本地八项完整通过，2.0 分钟，三次取样为 402 / 201 / 337 色，
 Node 分析耗时分别为 75.0 / 64.4 / 69.3 毫秒；这不是应用运行时的性能数据。
 后续跨平台复测见 PR 检查及附件，不以本地结果或第三轮记录替代。
+
+第五轮 `eb42cb4`：主 CI `40268916844` 通过，单元共 1104 项；
+Build Validation `40268916942` 中 Ubuntu Cockpit 八项、Admin 34 项、文档和原预算通过，
+Windows 两种完整构建和 24 项应用单测通过，Cockpit 为 7 通过 / 1 失败。
+正常 Cesium 和中断恢复的真实像素用例都通过；失败仅发生在立即刷新的加载态断言，
+因此后续 Windows Admin / 文档 / 预算步骤仍被跳过，不能标为本轮通过。
+日志和 trace 保存在 `ci-eb42cb4-windows.log`、`ci-eb42cb4-windows/trace-refresh/`。
+trace 中点击后有真实加载态，但读取断言时已消失：`clock.install()` 并不暂停时间，
+280ms 演示延迟仍会在浏览器通信和 DOM 快照期间结束。
+修复为页面就绪后 `pauseAt()`，之后仅通过 `fastForward()` 推进；不修改应用加载时长、
+不增加测试超时或重试、不删除加载态断言。后续跨平台结果仍以当前提交的 PR 检查为准。
+修复后本地刷新用例连续五次通过（31.7 秒），完整八项生产 E2E 通过（1.7 分钟），
+97 项契约、ESLint、严格文档构建通过；日志 `cockpit-refresh-paused-clock.log`、
+`cockpit-e2e-paused-clock.log`、`demo-docs-paused-clock.log`。
+第五轮独立消费者、项目模板、既有真实 zoom 和 Windows DataV 视觉也已完成通过，
+不以这些结果抵消 Windows Demo Job 的失败。
 
 ## 包体与依赖
 
