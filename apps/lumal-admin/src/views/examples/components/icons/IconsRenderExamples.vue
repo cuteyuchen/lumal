@@ -242,7 +242,7 @@ async function copyExample(code: string, label: string): Promise<void> {
 .icons-render-examples__caption-label code,
 .icons-render-examples__code,
 .icons-render-examples__feedback {
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
 }
 
 .icons-render-examples__copy {

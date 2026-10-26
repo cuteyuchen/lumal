@@ -147,7 +147,7 @@ async function copyIconName(): Promise<void> {
 
 .icons-picker-examples__feedback {
   min-height: 20px;
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
 }
 
 @media (max-width: 800px) {

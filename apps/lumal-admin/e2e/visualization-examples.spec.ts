@@ -50,8 +50,8 @@ test('Viewport 路由、策略覆盖、最小字号、浮层与离开后的样�
   await expect(page.getByRole('columnheader', { name: '用户名', exact: true })).toBeVisible()
   expect(await page.locator('html').evaluate(element => getComputedStyle(element).fontSize)).toBe(rootFontSize)
   expect(await page.locator('html').evaluate(element => getComputedStyle(element).getPropertyValue('--lumal-viewport-scale'))).toBe('')
-  expect(await page.getByRole('columnheader', { name: '用户名', exact: true })
-    .evaluate(element => element.closest('[data-viewport-mode]'))).toBeNull()
+  await expect(page.getByTestId('admin-workspace-viewport')).toHaveAttribute('data-viewport-mode', 'responsive')
+  await expect(page.locator('.admin-workspace-viewport__stage')).toHaveCSS('transform', 'none')
   await expectNoPageOverflow(page)
 })
 
