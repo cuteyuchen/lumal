@@ -480,3 +480,34 @@ JSON 原始报告为 `output/playwright/cockpit-report.json`，另复制归档�
 本机耗时不是 Windows CI 的性能改善证明。没有更改 90 秒总预算、20 秒断言、
 零重试、原有 E2E 契约或体积上限；远端 PR 和最终 master 仍须按精确提交分别验收。
 本次仅修改 Demo、测试和说明，已发布的十个 `0.0.7-beta` 包无需重发。
+
+## 恢复用例的就绪观测
+
+PR #11 的精确 head `fae221b` 已通过 CI `40365068947`、CodeQL `40365068881`
+和 Build Validation `40365068859`；两平台分别为 Cockpit 11、Admin 38 项通过，
+没有跳过、意外失败、flaky 或重试。2026-10-27 01:25:15（北京时间）以 merge commit
+`3c94603dd2f723e424dfc72579c409df44309205` 合入 master，不能把 PR 的通过状态冒充合并后结果。
+
+合并后 CI `40368446008` 为 131 files / 1,210 tests 通过，CodeQL `40368446303` 通过；
+Build Validation `40368446281` 的 Ubuntu、Windows DataV 和独立消费者通过，
+但 Windows job `121732389168` 在「Cesium 中断重试、真实像素与退出清理」超过 90 秒。
+该轮 context 创建仅 10.42ms，中央 768×512 截图耗时 16.82 秒；
+退出点击从第 87.808 秒跨至 90.961 秒，全部业务断言最终成功。
+198 个静态请求全部 HTTP 200；无法从这些证据将内部 capture、编码或协议耗时进一步归因为 CPU 或 GPU。
+完整原始报告、时间线和哈希保留在 `F:/lumal-release-validation/master-3c94603-gates`。
+
+后续仅调整测试的独立只读观测：旧 ECharts 释放和首次初始化完成并行等待；
+重试后仍先等待 `aria-busy=false`，再并行检查可见画布与无错误。
+不能把后三项全部并行，否则可见性和无错误可能在初始化中短暂通过，
+随后 `busy=false` 却来自失败分支。保留原断言、同页中断与重新加载、
+恢复实例的真实像素和退出清理，不拆分此生命周期链，不更改场景、截图范围、超时或重试。
+运行时、公共包、依赖、版本和体积上限均未修改。
+
+Windows x64 / Node 24.14.1 / pnpm 10.33.0 的本机验证：
+`pnpm cockpit:build`（含类型检查与 389 项资源复制）、
+`pnpm typecheck:e2e:cockpit`、定向 ESLint 和完整生产浏览器 11 项通过。
+实际命令为
+`pnpm test:e2e:cockpit:built --output F:/lumal-release-validation/cockpit-readiness-local-20261027/artifacts`；
+本机恢复用例约 11 秒，不宣称这是 Windows CI 的性能改善。
+原始 JSON 为 `output/playwright/cockpit-report.json`，另归档至上述隔离目录的同级 `report.json`。
+新 PR 与最终 master 仍须按各自精确提交分别验收，不重跑旧失败 run 碰运气。

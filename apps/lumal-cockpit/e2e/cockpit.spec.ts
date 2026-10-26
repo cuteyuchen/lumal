@@ -146,15 +146,21 @@ test('Cesium 中断重试、真实像素与退出清理', async ({ page }) => {
   })
   await page.goto('/')
   await page.getByRole('tab', { name: 'Cesium', exact: true }).click()
-  await expect(page.locator('.echarts-geo-center')).toHaveCount(0)
-  await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
+  // 旧引擎释放与初始化完成独立观测；两项都完成后才进入故障注入。
+  await Promise.all([
+    expect(page.locator('.echarts-geo-center')).toHaveCount(0),
+    expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false'),
+  ])
   await expect(page.locator('.cesium-widget canvas')).toBeVisible()
   await page.locator('.cesium-widget canvas').dispatchEvent('webglcontextlost')
   await expect(page.locator('.cesium-center [role="alert"]')).toContainText('Cesium 渲染中断')
   await page.getByRole('button', { name: '重新加载', exact: true }).click()
   await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
-  await expect(page.locator('.cesium-widget canvas')).toBeVisible()
-  await expect(page.locator('.cesium-center [role="alert"]')).toHaveCount(0)
+  // 保留 ready 屏障，避免把初始化中的短暂无错误状态当作恢复成功。
+  await Promise.all([
+    expect(page.locator('.cesium-widget canvas')).toBeVisible(),
+    expect(page.locator('.cesium-center [role="alert"]')).toHaveCount(0),
+  ])
   // 全幅与 resize 由独立用例验证；恢复采样中央真实地图，不用 Widget 颜色证明重绘成功。
   const image = await captureCanvas(page.locator('.cesium-widget canvas'), true)
   await page.getByRole('tab', { name: '独立场景', exact: true }).click()
