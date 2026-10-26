@@ -206,6 +206,42 @@ test('三种既有视口与全屏退出', async ({ page }) => {
   await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(false)
 })
 
+test('全屏浮层的视口实验点击热区与设计器取消', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  await page.getByRole('tab', { name: '独立场景', exact: true }).click()
+  await expect(page.locator('.standalone-center')).toBeVisible()
+  const layoutTitle = (await page.locator('.standalone-app__layouts [aria-current="page"]').textContent())!.trim()
+  const storedConfig = await page.evaluate(() => localStorage.getItem('lumal-cockpit:config'))
+
+  await page.getByRole('button', { name: '进入全屏', exact: true }).click()
+  await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(true)
+  await page.getByRole('button', { name: '打开视口实验', exact: true }).click()
+  const viewportDialog = page.getByRole('dialog', { name: '视口实验', exact: true })
+  await expect(viewportDialog).toBeVisible()
+  // body Teleport 和兄弟浮层必须属于同一个全屏树，正常点击不能依赖 force 绕过遮挡。
+  await expect.poll(() => viewportDialog.evaluate(element => Boolean(document.fullscreenElement?.contains(element)))).toBe(true)
+  await viewportDialog.getByRole('button', { name: '确认节点 · 0', exact: true }).click()
+  await expect(viewportDialog.getByRole('button', { name: '确认节点 · 1', exact: true })).toBeVisible()
+  await viewportDialog.locator('.el-dialog__headerbtn').click()
+  await expect(viewportDialog).toBeHidden()
+  await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(true)
+
+  await page.getByRole('button', { name: '打开配置器', exact: true }).click()
+  const designer = page.getByRole('dialog', { name: '驾驶舱配置', exact: true })
+  await expect(designer).toBeVisible()
+  await expect.poll(() => designer.evaluate(element => Boolean(document.fullscreenElement?.contains(element)))).toBe(true)
+  await designer.getByRole('textbox', { name: '当前布局名称', exact: true }).fill('全屏未保存草稿')
+  await designer.getByRole('button', { name: '取消', exact: true }).click()
+  await expect(designer).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '全屏未保存草稿', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: layoutTitle, exact: true })).toHaveAttribute('aria-current', 'page')
+  expect(await page.evaluate(() => localStorage.getItem('lumal-cockpit:config'))).toBe(storedConfig)
+
+  await page.getByRole('button', { name: '退出全屏', exact: true }).click()
+  await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(false)
+})
+
 test('隔离 Viewport 实验的模式、尺寸、点击热区与窗口 resize', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')

@@ -77,10 +77,11 @@ function syncFullscreenState(): void {
 
 async function toggleFullscreen(): Promise<void> {
   try {
+    // body Teleport 与兄弟 Designer 需处于同一应用全屏范围，不能只全屏内部画布。
     if (document.fullscreenElement)
-      await cockpitRef.value?.exitFullscreen()
+      await document.exitFullscreen()
     else
-      await cockpitRef.value?.enterFullscreen()
+      await document.documentElement.requestFullscreen()
     syncFullscreenState()
   }
   catch {

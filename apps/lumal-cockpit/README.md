@@ -33,6 +33,7 @@ pnpm dev
 - 顶部「视口实验」在真实视口 Dialog 内运行，演示 `@lumal/viewport` 的 contain / width / responsive、
   实际容器尺寸和点击热区。它不包裹主驾驶舱，不会造成双重缩放。
 - 主驾驶舱保留 scale / vwvh / DataV 全屏容器三种用法；容器模式内部为 `external`。
+- Demo 对整个文档请求全屏，确保 body Teleport 弹窗和兄弟 Designer 仍可交互；缩放仍由原画布负责。
 - 中心支持 ECharts、OpenLayers、Cesium 与独立 SVG 场景。窗口 resize 不重建地图。
 - Cesium 的初始化、渲染或 WebGL 上下文错误显示可重试状态，并释放旧实例及监听器。
 - 本地配置无法读取时显示恢复提示，保留原始存档；只有显式恢复或保存时覆盖。

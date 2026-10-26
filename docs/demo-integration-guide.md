@@ -140,6 +140,11 @@ const LumalCockpitDesigner = defineAsyncComponent(async () =>
 保存失败要保留草稿并展示 `saveError`；消费方负责权限、持久化和损坏存档的显式恢复。
 不要为只读 Runtime 同步导入 Designer 或整个地图中心。
 
+全屏范围与缩放范围也是两回事。`LumalCockpit.enterFullscreen()` 针对组件内部根节点；
+Teleport 到 body 的弹窗及外部 Designer 不会因此进入该全屏树。独立 Demo 由应用对
+`document.documentElement` 请求全屏，使弹窗、Tooltip 和兄弟 Designer 保持可见、可点击，
+但没有把整个页面再做 CSS 缩放。其他应用可选择将浮层挂载到全屏宿主，或打开编辑界面前退出全屏。
+
 ## Cesium 构建与部署
 
 Cesium 是独立 Demo 的应用依赖，不是 `@lumal/cockpit` 的运行时要求。

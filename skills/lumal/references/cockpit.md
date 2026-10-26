@@ -79,6 +79,7 @@ const activeLayoutId = shallowRef(config.value.activeLayoutId)
 
 - `scale`：内部按 1920×1080 等比缩放；`vwvh`：视口单位适配；`external`：父容器承担缩放，Cockpit 不再自缩放。
 - 与 `LumalFullScreenContainer` 组合时使用 `external`，避免双重缩放和点击偏移。
+- `enterFullscreen()` 只全屏组件根节点；body Teleport 和外部 Designer 不在其中。应用需选择包含浮层的全屏宿主，或打开浮层前退出全屏，不用第二次 CSS 缩放修复可见性。
 - 用 `useCockpitContext` 获取当前实例的 `messages/mode/instanceId`；不要为每个模块创建一个互不相通的全局消息总线。
 - 设计区内已放置模块共享 `mode: 'design'` 的总线，模块库预览保持隔离。
 - 自定义 `cardComponent` 应遵循 `CockpitCardProps`、activeTabId 更新事件和公开插槽，而不是复制运行时内部组件。
