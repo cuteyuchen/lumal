@@ -359,6 +359,15 @@ trace 中 Cesium Tab 已选中，但惰性 Center JS 的 HTTP 200 请求耗时 2
 `007-master-windows-e2ac131-job-121662410063.log` 与 artifact `12664570185`。
 后续修复须在保持原超时、重试和体积预算的条件下独立验收。
 
+后续 Demo 整改将 `SceneCenter` 的 `Suspense` 设为立即 fallback：
+切换惰性引擎时显示已有加载态，同时卸载旧画布；不修改公共包或增加运行时依赖。
+两项受控异步回归分别验证等待时释放旧图表，以及切回同步地图后迟到组件不得重新挂载。
+旧实现定向红测为 3 passed / 1 failed；修复后本机应用单测 6 files / 28 tests、
+生产 E2E 11 项通过（约 2.1 分钟），包含三项 Cesium 旧画布释放断言。
+`build:app`（含 vue-tsc）、浏览器测试类型检查、定向 ESLint 与严格文档构建通过。
+这证明本机行为契约，不单凭释放旧画布宣称 Windows 冷加载必然缩短至 20 秒以内；
+后续 PR 与 master 的远端结果须按其精确提交分别检查。
+
 ### 生产部署
 
 以下五项为既有 Git 集成从精确 master SHA `e2ac131` 构建，

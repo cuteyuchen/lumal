@@ -107,6 +107,7 @@ test('Cesium 资源与原实例 resize', async ({ page }) => {
   })
   await page.goto('/')
   await page.getByRole('tab', { name: 'Cesium', exact: true }).click()
+  await expect(page.locator('.echarts-geo-center')).toHaveCount(0)
   await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
   await expect(page.locator('.cesium-widget canvas')).toBeVisible()
   await expect(page.locator('.cesium-center [role="alert"]')).toHaveCount(0)
@@ -125,6 +126,7 @@ test('Cesium 全幅真实像素与退出清理', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   await page.getByRole('tab', { name: 'Cesium', exact: true }).click()
+  await expect(page.locator('.echarts-geo-center')).toHaveCount(0)
   await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
   await expect(page.locator('.cesium-center [role="alert"]')).toHaveCount(0)
   // 保留默认设计尺寸的全幅采样，但不让软件 GPU 与同步 PNG 解码争用 CPU。
@@ -144,6 +146,7 @@ test('Cesium 中断重试、真实像素与退出清理', async ({ page }) => {
   })
   await page.goto('/')
   await page.getByRole('tab', { name: 'Cesium', exact: true }).click()
+  await expect(page.locator('.echarts-geo-center')).toHaveCount(0)
   await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
   await expect(page.locator('.cesium-widget canvas')).toBeVisible()
   await page.locator('.cesium-widget canvas').dispatchEvent('webglcontextlost')
