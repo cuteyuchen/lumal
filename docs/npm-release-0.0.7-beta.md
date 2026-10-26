@@ -255,3 +255,62 @@ Admin JS 距原预算仅余 659 B，后续示例仍须保持动态加载边界�
 
 后置提交尚需其自身的远端 PR 门禁；正式 tag 的 Ubuntu/Windows 成功不替代该检查。
 当前记录不代表线上 Demo 或文档已切换到后置提交，未执行生产部署。
+
+## PR 收尾与部署恢复
+
+PR [#9](https://github.com/cuteyuchen/lumal/pull/9) 完整包含旧 PR #8 的历史，
+合并前仍须通过当前提交的门禁，不能沿用正式 tag 或旧 head 的成功记录。
+
+### Windows Cesium 取证拆分
+
+后置 head `0b9c8e8` 的 CI `40311683158` 成功；Build Validation `40311683164`
+的 Ubuntu、消费者和 Windows DataV 成功，但 Windows Demo Job `121534158932`
+在 Cesium 用例耗尽 90 秒总预算。失败日志与 artifact `12645676662` 的 trace 显示：
+Context 创建 16.144 秒、全幅截图 31.387 秒、同步 PNG 分析 20.615 秒。
+After Hooks 已开始后才执行 resize，最后断言仅运行 512ms 即清理，
+不能用此时残留的 `data-scale="1.000"` 证明正常 resize 失败。
+原全幅图为 1886×962、616,550 bytes、290 种颜色，不是空白画布。
+
+保留全部资源、Workers、全幅像素、原实例 resize、几何、截图和释放断言，
+将全幅像素与 resize 拆成独立用例，并在退出 Cesium 后分析已经捕获的 PNG。
+未修改 90 秒总预算、20 秒断言预算、0 次重试或应用运行时代码。
+套件从 10 项变为 11 项；正式 tag 的 10 项仍是该 tag 的真实历史结果。
+
+Windows x64 / Node 24.14.1 / pnpm 10.33.0 本地复验：
+
+| 验证项 | 实际命令 | 结果 / `output/release/` 日志 |
+| --- | --- | --- |
+| 完整构建 | `pnpm cockpit:build` | 退出 0，类型及 Vite 构建、389 项 Cesium 资源通过；`007-pr9-cockpit-build-split.log` |
+| 浏览器类型 | `pnpm typecheck:e2e:cockpit` | 退出 0；`007-pr9-cockpit-e2e-typecheck-split.log` |
+| 应用单元 | `pnpm --filter lumal-cockpit test` | 6 files / 26 tests；`007-pr9-cockpit-tests-split.log` |
+| 生产浏览器 | `pnpm test:e2e:cockpit:built` | 11 passed / 124.528 秒，无跳过、意外失败、flaky 或重试；`007-pr9-cockpit-e2e-split.log` |
+
+完整浏览器报告保留为 `output/release/007-pr9-cockpit-e2e-split-report.json`，
+2,499,065 bytes，SHA256 为
+`b0914baa53080202335dacae95028e5c47f06eb7a8755d12b0c2c36081e999a9`。
+Cesium resize / 全幅像素 / 中断恢复分别耗时 13.632 / 14.309 / 14.970 秒；
+本机全幅仍检出 290 色，解码分析 59.9ms。不能将本机耗时冒充 Windows CI 复测结果。
+新提交的 Ubuntu / Windows 与 Vercel Preview 仍须实际通过后才合并。
+
+### 云端构建与生产 API
+
+Cockpit 失败 Preview `dpl_5UEqEc3GBd9EW5KT9suQrTATZYp4` 的实时日志为：
+公共包构建成功，随后 `No projects matched the filters in "/vercel/path0"`，
+最终 `STATIC_BUILD_NO_OUT_DIR`，应用本身没有构建。平台历史遗留了改名前的
+filter 和输出目录，不是本次 Vite / Cesium 构建错误。
+已定向将该项目 Build Command 设为 `pnpm cockpit:build`、
+Output Directory 设为 `apps/lumal-cockpit/dist`，其余项目和设置保持不变。
+须以新 Preview 的构建日志及 READY 验证生效，不以设置更新成功替代构建验收。
+
+Admin 当前生产构建使用公开变量
+`VITE_API_BASE_URL=https://lumal-mock-api.vercel.app/api`；
+同域 `/api/status` 实测 404，公开 Mock 的 `/api/status` 与允许 Admin Origin 的 CORS 实测正常。
+普通 CI 使用 `/api` 的静态产物不能直接覆盖线上。
+部署时必须保留生产 API 配置，并将 Mock API 同步到包含新菜单种子的提交。
+这些均为公开 Demo 接线，不涉及两个真实业务项目。
+
+2026-10-26 的 PR 六项目 Preview 证明平台 Git 集成仍开启；
+不能声称它已受 Actions Release Gate 自动约束。
+本次维护者已明确授权验收后合并及更新文档和 Demo，
+仅在当前 PR 全部门禁通过后进行定向站点恢复，并逐站记录提交、READY、alias 与 HTTP 结果。
+不重跑已发布版本的 npm 链，不移动 `v0.0.7-beta`，不把历史部署快照当作本次线上证据。

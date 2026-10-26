@@ -43,6 +43,10 @@ pnpm release:budgets
 Admin 使用 `pnpm test:e2e:release`。普通公共包 build 不证明 Demo 可运行。
 参考 `docs/public-package-coverage.md` 核对十包文档，生产站点必须单独核对部署提交。
 
+站点恢复不重发已发布包或移动 tag。平台 Git 自动部署与 Actions 门禁是独立配置，不能假定已关闭；
+单独授权后仍须核对精确提交的门禁、生产 API 构建配置和每站实际部署。
+Admin 的开发代理不随静态产物上线，远程菜单变化须同步应用侧 Mock/API；详见仓库 `deploy/README.md`。
+
 修改脚手架时在构建后执行 `pnpm test:create-consumer`。只有确需验证路由、焦点、画布等浏览器行为时再选择相关 Playwright 用例，不因文档或类型改动默认启动全部应用。
 
 修改 Vite 视口转换或 Screen 共享设计配置时，执行 `pnpm test:vite-consumer`。
