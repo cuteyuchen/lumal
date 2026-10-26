@@ -346,4 +346,59 @@ describe('驾驶舱中央地图', () => {
     expect(wrapper.emitted('select')?.at(-1)).toEqual([region.id])
     wrapper.unmount()
   })
+
+  it('减少动画时使用静态节点，保留地图数据、选择和动态偏好切换', async () => {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(960)
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(540)
+
+    const wrapper = mount(EchartsGeoCenter, {
+      attachTo: document.body,
+      props: {
+        selectedIds: [],
+        focusedId: '',
+        theme: 'dark',
+        reducedMotion: true,
+      },
+    })
+    try {
+      await nextTick()
+      const chart = wrapper.getComponent({ name: 'VChartStub' })
+      const readOption = () => chart.props('option') as {
+        animation: boolean
+        series: Array<{
+          name: string
+          type: string
+          effect?: { show?: boolean }
+          rippleEffect?: { number?: number }
+          data?: Array<{ id: string, value: number[] }>
+        }>
+      }
+      const option = readOption()
+      const nodes = option.series.find(series => series.name === '业务节点')
+      expect(option.animation).toBe(false)
+      expect(option.series.find(series => series.name === '实时飞线')?.effect?.show).toBe(false)
+      // 缩小波纹不等于停用循环绘制；保留节点渲染器并显式禁用全部波纹。
+      expect(nodes?.type).toBe('effectScatter')
+      expect(nodes?.rippleEffect?.number).toBe(0)
+      expect(nodes?.data).toEqual(expect.arrayContaining(demoScene.points.map(point => expect.objectContaining({
+        id: point.id,
+        value: [...point.coordinate, point.value],
+      }))))
+
+      const point = demoScene.points[0]
+      chart.vm.$emit('click', { data: { id: point.id } })
+      await nextTick()
+      expect(wrapper.emitted('select')?.at(-1)).toEqual([point.id])
+
+      await wrapper.setProps({ reducedMotion: false })
+      expect(readOption().series.find(series => series.name === '业务节点')?.rippleEffect?.number).toBe(3)
+      expect(readOption().series.find(series => series.name === '实时飞线')?.effect?.show).toBe(true)
+
+      await wrapper.setProps({ reducedMotion: true })
+      expect(readOption().series.find(series => series.name === '业务节点')?.rippleEffect?.number).toBe(0)
+    }
+    finally {
+      wrapper.unmount()
+    }
+  })
 })

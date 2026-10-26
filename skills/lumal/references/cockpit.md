@@ -97,4 +97,9 @@ Admin 的 `examples/CockpitView.vue` 是最小 Runtime + Widget，外层 Viewpor
 Cesium 为 Demo 应用依赖，部署须包含整个 `cesiumStatic`，不能仅上传 JS/CSS。
 资源失败应显示重试，普通 resize 不重建地图；npm 发布不代表 Demo 域名已更新。
 
+接入减少动态效果偏好时，同时检查地图和图表引擎自身的循环，不能只停 CSS 或全局 `animation`。
+例如 ECharts `effectScatter` 的 `rippleEffect.scale=1` 仍循环改变透明度；
+`rippleEffect.number=0` 才禁用波纹，恢复偏好时可还原默认的三圈。
+这是应用中心组件的图表选项，不是 Cockpit 配置字段，也不需要修改公共包。
+
 仓库核对位置：`packages/cockpit/src/types`、`config`、`registry`、`runtime`、`designer`、`messaging` 及其测试。

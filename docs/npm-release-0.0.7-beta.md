@@ -441,3 +441,42 @@ Cockpit 分别为 687,530 / 71,268 B 与 687,537 / 71,265 B，
 
 两个真实业务项目保持只读；未宣称业务 Dashboard、商业地图或真实后端已验收。
 十包版本与 `v0.0.7-beta` 保持不变，站点、文档和 Skill 后置修改不改写已发布 tarball。
+
+## 后续 Windows 总预算回归
+
+PR #10 合并后的 `master@d1221c6d47c314963a0244f236a3dc2395b36db9` 独立触发门禁。
+主 CI `40358336542` 的 131 files / 1,209 tests 与 CodeQL `40358336695` 通过，
+不能据此将 Build Validation `40358336507` 的 Windows 失败记为通过。
+Windows job `121696713258` 为 Cockpit 10 passed / 1 timedOut，
+失败用例是「独立场景交互与 OpenLayers 原实例 resize 和释放」，不是此前的 Cesium 用例。
+总测试预算仍为 90 秒；本次三个 Cesium 用例均通过。
+
+trace 显示该用例 context 创建占 20.02 秒；独立场景交互、OpenLayers 初始化、
+1366×768 resize、原实例连接和点击均通过。切回 ECharts 后的 DOM 快照已包含新画布、
+不再包含 `.ol-viewport`；随后 count=0 断言耗时 29.30 秒但最终成功，
+下一条画布断言到达时已进入测试超时清理。不能把这段调度延迟描述为 OL 卸载 29 秒，
+也不能在没有 CPU profile 的情况下将总超时全部归因为某个渲染函数。
+原始 report、trace 和日志保存在 `master-d1221c6-windows`、
+`master-d1221c6-gates/windows-job-121696713258.log`，没有重跑原失败 run。
+
+源码审计另外确认了 Demo 的真实减少动画缺陷：ECharts 6.1.0 的 `effectScatter`
+不由全局 `animation:false` 关闭波纹；仅设置 `rippleEffect.scale=1` 仍循环改变透明度。
+应用现显式使用 `rippleEffect.number=0`，恢复普通偏好时还原默认三圈。
+地图数据、选择、默认飞线和普通动画保留；不增加渲染器、依赖或公共 API。
+真实 ECharts 内存引擎验证了 `3→0→3→0` 的合并更新会移除并恢复循环 clip，
+但该证据不代替浏览器或 Windows CI 性能验证。
+
+本机 Windows / Node 24.14.1 / pnpm 10.33.0 的实际验证：
+
+| 验证 | 实际命令 | 结果 |
+| --- | --- | --- |
+| 回归红测 | `pnpm --filter lumal-cockpit exec vitest run tests/center.test.ts --testNamePattern 减少动画` | 旧实现期望波纹数量 0、实际 undefined，失败 |
+| 应用单测 | `pnpm --filter lumal-cockpit test` | 6 files / 29 tests 通过，含偏好切换和选择契约 |
+| 类型与构建 | `pnpm --filter lumal-cockpit build:app` | 输入检查、vue-tsc、Vite 和 389 项资源复制通过 |
+| 生产浏览器 | `pnpm test:e2e:cockpit:built --output F:/lumal-release-validation/cockpit-motion-local-20261027/artifacts` | 原有 11 项全部通过，约 1.7 分钟；OL 用例 14.4 秒 |
+
+JSON 原始报告为 `output/playwright/cockpit-report.json`，另复制归档至上述隔离目录的
+同级 `report.json`；两份 SHA256 一致，未为归档重跑测试。
+本机耗时不是 Windows CI 的性能改善证明。没有更改 90 秒总预算、20 秒断言、
+零重试、原有 E2E 契约或体积上限；远端 PR 和最终 master 仍须按精确提交分别验收。
+本次仅修改 Demo、测试和说明，已发布的十个 `0.0.7-beta` 包无需重发。
