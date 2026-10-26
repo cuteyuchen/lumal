@@ -50,8 +50,12 @@ const config: CockpitConfig = {
             <template #left="{ layout, region }">
               <LumalCockpitRegion side="left" :layout-id="layout.id" :region="region" />
             </template>
-            <template #center>
-              <div class="embedded-center">
+            <template #right>
+              <span aria-hidden="true" />
+            </template>
+            <template #center="{ layout }">
+              <!-- 中心是全幅底层；应用自己为覆盖其上的左侧区域预留空间。 -->
+              <div class="embedded-center" :style="{ paddingLeft: `${layout.left.width + 32}px` }">
                 <h2>区域运行态势</h2><div v-for="(value, index) in [72, 96, 83]" :key="value">
                   <span>{{ ['北区', '东区', '南区'][index] }}</span><meter :value="value" min="0" max="100" />
                 </div>
@@ -69,7 +73,25 @@ const config: CockpitConfig = {
 select { padding: 6px; background: var(--el-bg-color); color: var(--el-text-color-primary); border: 1px solid var(--el-border-color); }
 .embedded-stage { height: 540px; }
 .embedded-stage :deep(.lumal-cockpit) { position: absolute; inset: 0; }
-.embedded-center { display: grid; gap: 24px; padding: 80px 40px; color: var(--lumal-cockpit-text-primary); }
+.embedded-stage :deep([data-cockpit-theme='dark']) {
+  --lumal-cockpit-bg: #12232a;
+  --lumal-cockpit-panel-bg: #1a343e;
+  --lumal-cockpit-text: #eaf6f8;
+  --lumal-cockpit-text-secondary: #b2ced5;
+  --lumal-cockpit-title-text: #eaf6f8;
+  --lumal-cockpit-success: #75d7b5;
+  --lumal-cockpit-border: #36525c;
+}
+.embedded-stage :deep([data-cockpit-theme='light']) {
+  --lumal-cockpit-bg: #f3f7f9;
+  --lumal-cockpit-panel-bg: #fff;
+  --lumal-cockpit-text: #253b43;
+  --lumal-cockpit-text-secondary: #48636d;
+  --lumal-cockpit-title-text: #253b43;
+  --lumal-cockpit-success: #237558;
+  --lumal-cockpit-border: #ccdce2;
+}
+.embedded-center { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 24px; height: 100%; padding: 32px; color: var(--lumal-cockpit-text); }
 .embedded-center > div { display: grid; grid-template-columns: 50px 1fr; gap: 16px; }
 meter { width: 100%; height: 20px; }
 </style>

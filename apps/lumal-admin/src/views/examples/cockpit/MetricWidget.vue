@@ -16,7 +16,7 @@ const confirmed = ref(0)
 </template>
 
 <style scoped>
-.metric-widget { display: grid; gap: 20px; padding: 20px; color: var(--lumal-cockpit-text-primary); }
-strong { color: #64d6b0; font-size: calc(var(--lumal-font-size-base, 14px) + 18px); }
-button { padding: 8px; border: 1px solid #64d6b0; border-radius: 4px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.metric-widget { display: grid; gap: 20px; padding: 20px; color: var(--lumal-cockpit-text); }
+strong { color: var(--lumal-cockpit-success); font-size: calc(var(--lumal-font-size-base, 14px) + 18px); }
+button { padding: 8px; border: 1px solid var(--lumal-cockpit-success); border-radius: 4px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
 </style>

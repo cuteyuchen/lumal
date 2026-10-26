@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { LumalPage } from '@lumal/core/components'
-import { LumalBorderBox, LumalDecoration, LumalDigitalFlop, LumalFullScreenContainer, LumalScrollRankingBoard } from '@lumal/datav'
+import LumalBorderBox from '@lumal/datav/border-box'
+import LumalDecoration from '@lumal/datav/decoration'
+import LumalDigitalFlop from '@lumal/datav/digital-flop'
+import LumalFullScreenContainer from '@lumal/datav/full-screen-container'
+import LumalScrollRankingBoard from '@lumal/datav/scroll-ranking-board'
 import { ElButton, ElSwitch } from 'element-plus'
 import { ref } from 'vue'
 import '@lumal/datav/style.css'

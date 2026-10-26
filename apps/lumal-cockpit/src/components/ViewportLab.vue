@@ -81,5 +81,6 @@ strong { font-size: 32px; color: #f1cc78; }
 .viewport-lab__bars { display: flex; flex: 1; align-items: end; justify-content: space-around; gap: 12px; min-height: 40px; }
 i { flex: 1; max-width: 70px; background: #69bca5; }
 button { align-self: start; cursor: pointer; }
+.viewport-lab__canvas button { min-height: 44px; border-color: #82d5b1; background: #173e42; color: #eaf6f8; }
 @media (max-width: 600px) { header span { display: none; } }
 </style>
