@@ -8,6 +8,18 @@ interface CanvasBounds {
   height: number
 }
 
+// 与元素截图的整数包围规则一致，避免 page clip 向下取整丢失外缘像素。
+export function canvasFullClip(bounds: CanvasBounds): CanvasBounds {
+  const x = Math.floor(bounds.x + 1e-3)
+  const y = Math.floor(bounds.y + 1e-3)
+  return {
+    x,
+    y,
+    width: Math.ceil(bounds.x + bounds.width - 1e-3) - x,
+    height: Math.ceil(bounds.y + bounds.height - 1e-3) - y,
+  }
+}
+
 // 恢复采样只截中央地图，既排除两侧 Widget，也避免重复解码整幅软件 GPU 截图。
 export function canvasSampleClip(bounds: CanvasBounds): CanvasBounds {
   const width = Math.min(768, bounds.width)

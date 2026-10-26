@@ -480,3 +480,69 @@ JSON 原始报告为 `output/playwright/cockpit-report.json`，另复制归档�
 本机耗时不是 Windows CI 的性能改善证明。没有更改 90 秒总预算、20 秒断言、
 零重试、原有 E2E 契约或体积上限；远端 PR 和最终 master 仍须按精确提交分别验收。
 本次仅修改 Demo、测试和说明，已发布的十个 `0.0.7-beta` 包无需重发。
+
+## 恢复用例的就绪观测
+
+PR #11 的精确 head `fae221b` 已通过 CI `40365068947`、CodeQL `40365068881`
+和 Build Validation `40365068859`；两平台分别为 Cockpit 11、Admin 38 项通过，
+没有跳过、意外失败、flaky 或重试。2026-10-27 01:25:15（北京时间）以 merge commit
+`3c94603dd2f723e424dfc72579c409df44309205` 合入 master，不能把 PR 的通过状态冒充合并后结果。
+
+合并后 CI `40368446008` 为 131 files / 1,210 tests 通过，CodeQL `40368446303` 通过；
+Build Validation `40368446281` 的 Ubuntu、Windows DataV 和独立消费者通过，
+但 Windows job `121732389168` 在「Cesium 中断重试、真实像素与退出清理」超过 90 秒。
+该轮 context 创建仅 10.42ms，中央 768×512 截图耗时 16.82 秒；
+退出点击从第 87.808 秒跨至 90.961 秒，全部业务断言最终成功。
+198 个静态请求全部 HTTP 200；无法从这些证据将内部 capture、编码或协议耗时进一步归因为 CPU 或 GPU。
+完整原始报告、时间线和哈希保留在 `F:/lumal-release-validation/master-3c94603-gates`。
+
+后续仅调整测试的独立只读观测：旧 ECharts 释放和首次初始化完成并行等待；
+重试后仍先等待 `aria-busy=false`，再并行检查可见画布与无错误。
+不能把后三项全部并行，否则可见性和无错误可能在初始化中短暂通过，
+随后 `busy=false` 却来自失败分支。保留原断言、同页中断与重新加载、
+恢复实例的真实像素和退出清理，不拆分此生命周期链，不更改场景、截图范围、超时或重试。
+运行时、公共包、依赖、版本和体积上限均未修改。
+
+Windows x64 / Node 24.14.1 / pnpm 10.33.0 的本机验证：
+`pnpm cockpit:build`（含类型检查与 389 项资源复制）、
+`pnpm typecheck:e2e:cockpit`、定向 ESLint 和完整生产浏览器 11 项通过。
+实际命令为
+`pnpm test:e2e:cockpit:built --output F:/lumal-release-validation/cockpit-readiness-local-20261027/artifacts`；
+本机恢复用例约 11 秒，不宣称这是 Windows CI 的性能改善。
+原始 JSON 为 `output/playwright/cockpit-report.json`，另归档至上述隔离目录的同级 `report.json`。
+新 PR 与最终 master 仍须按各自精确提交分别验收，不重跑旧失败 run 碰运气。
+
+### 全幅截图的等价几何读取
+
+PR #12 的 head `aeda855` 在实际 merge checkout `bdd67b2` 完成 CI 和 CodeQL，
+Build Validation `40374533766` 的 Ubuntu、消费者和 Windows DataV 通过，
+但 Windows job `121753867942` 的「Cesium 全幅真实像素与退出清理」总超时，
+10 项通过、1 项 timedOut；中断重试用例本轮为 53.695 秒通过。该失败不作通过或重跑。
+
+本轮 context 创建为 13.560 秒；`locator.screenshot` 共 50.986 秒，
+其中关联的 `waitForSelector(state=attached)` 为 24.254 秒。
+Trace 没有完整的 ElementHandle 截图内部日志，不能把整段时间归因于 GPU、编码或滚动。
+原图为 1886×962，颜色数 290，PNG 分析为 200.5 毫秒；
+附件完成至退出点击之间的约 3.21 秒调度空隙不是 PNG 分析。
+原始数据与时间线保存在 `F:/lumal-release-validation/pr12-aeda855-gates`。
+
+后续保持可见性断言，通过公开 `Locator.evaluateAll` 读取唯一、连接中画布的边界，
+沿用原元素截图的整数包围规则（含小数边界回归单测），
+明确验证整个边界在原视口内，再用 `page.screenshot` 的完整 clip 取图。
+不再为截图建立 ElementHandle、滚动和等待稳定；恢复用例仍使用原有中央采样。
+补充全幅尺寸注解，保留设计尺寸、真实像素门槛、同实例退出、全部诊断、超时与零重试。
+这只是等价截图路径的候选优化，仍需新提交的完整生产浏览器和双平台门禁验证，
+不能根据本地耗时预先宣称 Windows CI 改善。
+
+本机 Windows x64 / Node 24.14.1 / pnpm 10.33.0 已执行
+`pnpm cockpit:build`、`pnpm typecheck:e2e:cockpit`、`pnpm lint`、
+`pnpm --filter lumal-cockpit test`（6 files / 31 tests）、`pnpm docs:build`、
+`pnpm format:check`、`pnpm release:budgets` 与 `pnpm test:scripts`（9 files / 132 tests），均通过。
+完整生产浏览器命令为
+`pnpm test:e2e:cockpit:built --output F:/lumal-release-validation/cockpit-fullclip-local-20261027/artifacts`：
+11 passed，0 skipped / unexpected / flaky / retries，报告错误为空，总耗时 102,047.587 毫秒。
+全幅为 1886×962、201 种采样颜色，恢复采样为 768×512、99 种颜色。
+原始报告归档为该目录同级 `report.json`，
+SHA256 为 `1d496ef521d5b2306dbb1a4051b99ba100670be5aef9df6501580b289cb23ac9`。
+Admin JS / CSS gzip 为 334,341 / 43,032 B，Cockpit 为 687,540 / 71,268 B，
+原预算未改。这些仅为本机结果，不替代后续精确提交的 PR 与 master 门禁。
