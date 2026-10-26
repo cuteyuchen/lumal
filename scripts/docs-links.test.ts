@@ -19,6 +19,21 @@ afterEach(() => {
 })
 
 describe('published documentation links', () => {
+  it.each([
+    ['docs:build', 'lumal-docs'],
+    ['admin:build', 'lumal-admin'],
+    ['cockpit:build', 'lumal-cockpit'],
+    ['datav-guide:build', 'lumal-datav-guide'],
+    ['compat:build', 'vben-compat-demo'],
+  ])('部署表 %s 引用实际根脚本与应用产物，而非过期的 package filter', (script, directory) => {
+    const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
+    const application = JSON.parse(readFileSync(join(root, 'apps', directory, 'package.json'), 'utf8'))
+    const guide = readFileSync(join(root, 'deploy/README.md'), 'utf8')
+    expect(manifest.scripts[script]).toBeTypeOf('string')
+    expect(application.scripts.build).toBeTypeOf('string')
+    expect(guide).toContain(`| \`pnpm ${script}\` | \`apps/${directory}/dist\` |`)
+  })
+
   it.each(siteTargets)('%s 默认使用已绑定的自定义域名', async (key, variable, url) => {
     vi.stubEnv(variable, '')
     const { siteLinks } = await import('../apps/lumal-docs/src/.vitepress/config/links')
@@ -73,6 +88,27 @@ describe('published documentation links', () => {
     }
   })
 
+  it.each([
+    'docs/README.md',
+    'docs/project-template-guide.md',
+    'docs/screen-viewport-guide.md',
+    'docs/upgrade-guide.md',
+    'docs/demo-integration-guide.md',
+    'docs/icons.md',
+    'docs/datav-examples.md',
+    'docs/public-package-coverage.md',
+    'apps/lumal-admin/README.md',
+    'apps/lumal-cockpit/README.md',
+  ])('%s 的当前指南与可执行安装示例使用同一发布版本', (file) => {
+    const content = readFileSync(join(root, file), 'utf8')
+    expect(content, file).toContain(version)
+    // 仅扫描当前指南的命令块，历史发布记录与正文中的迁移版本不应被改写。
+    for (const block of content.matchAll(/```(?:bash|sh|shell|powershell)\r?\n([\s\S]*?)\r?\n```/g)) {
+      for (const match of block[1].matchAll(/(?:@lumal\/[\w-]+|create-lumal-admin|lumal-admin)@(\S+)/g))
+        expect(match[1], file).toBe(version)
+    }
+  })
+
   it('安装页的 peer 兼容范围与公开包声明一致', () => {
     const content = readFileSync(join(root, 'apps/lumal-docs/src/guide/essentials/installation.md'), 'utf8')
     for (const directory of readdirSync(join(root, 'packages'))) {
@@ -80,6 +116,19 @@ describe('published documentation links', () => {
       for (const [peer, range] of Object.entries(pkg.peerDependencies ?? {}))
         expect(content, `${pkg.name}: ${peer}`).toContain(`| \`${peer}\` | \`${range}\` |`)
     }
+  })
+
+  it('十包覆盖表逐一关联实际公共包，运行时文档包含 external', () => {
+    const content = readFileSync(join(root, 'docs/public-package-coverage.md'), 'utf8')
+    const rows = [...content.matchAll(/^\| `([^`]+)` \|/gm)].map(match => match[1])
+    const packages = readdirSync(join(root, 'packages')).map(directory =>
+      JSON.parse(readFileSync(join(root, 'packages', directory, 'package.json'), 'utf8'))).filter(pkg => !pkg.private).map(pkg => pkg.name)
+    expect(rows.toSorted()).toEqual(packages.toSorted())
+    expect(new Set(rows).size).toBe(rows.length)
+    const runtime = readFileSync(join(root, 'apps/lumal-docs/src/components/cockpit/runtime.md'), 'utf8')
+    expect(runtime).toContain('external')
+    expect(readFileSync(join(root, 'apps/lumal-docs/src/.vitepress/config.ts'), 'utf8'))
+      .toContain('ignoreDeadLinks: false')
   })
 
   it('当前文档与应用入口不再引用旧站、平台默认域名或占位仓库', () => {

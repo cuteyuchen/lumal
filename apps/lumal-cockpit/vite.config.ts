@@ -24,7 +24,7 @@ function createCesiumCopyTarget(directory: typeof cesiumDirectories[number]): Ta
 
 /***********************独立驾驶舱应用配置*********************/
 // 独立应用自行决定第三方依赖的分包与静态资源策略，不进入 @lumal/cockpit 发布检查。
-export default defineConfig(({ command }) => ({
+export default defineConfig(({ command, isPreview }) => ({
   define: {
     CESIUM_BASE_URL: JSON.stringify(`./${cesiumBaseUrl}/`),
   },
@@ -44,6 +44,7 @@ export default defineConfig(({ command }) => ({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          id = normalizePath(id)
           if (id.includes('node_modules/vue') || id.includes('/@vue/'))
             return 'vendor-vue'
           if (id.includes('node_modules/element-plus'))
@@ -62,9 +63,9 @@ export default defineConfig(({ command }) => ({
         find: '@',
         replacement: fileURLToPath(new URL('./src', import.meta.url)),
       },
-      ...(command === 'serve'
+      ...(command === 'serve' && !isPreview
         ? createLumalAliases({
-            packages: ['charts', 'cockpit', 'core', 'datav', 'icons', 'icons-vue'],
+            packages: ['viewport', 'charts', 'cockpit', 'core', 'datav', 'icons', 'icons-vue'],
             workspaceRoot,
           })
         : []),

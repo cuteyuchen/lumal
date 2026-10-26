@@ -1,0 +1,106 @@
+import { expect, test } from './fixtures'
+import { expectNoPageOverflow, loginAs, loginAsAdmin } from './helpers'
+
+/***********************懒加载示例与真实布局验收*********************/
+test('Viewport 路由、策略覆盖、最小字号、浮层与离开后的样式恢复', async ({ page }) => {
+  await loginAsAdmin(page)
+  const rootFontSize = await page.locator('html').evaluate(element => getComputedStyle(element).fontSize)
+  await page.goto('/#/examples/viewport')
+  await expect(page.getByTestId('viewport-metrics')).toContainText('contain')
+  await page.getByLabel('模拟尺寸', { exact: true }).selectOption('narrow')
+  await expect(page.getByTestId('viewport-metrics')).toContainText('scale 0.500')
+  await page.getByRole('button', { name: '确认 · 0', exact: true }).click()
+  await expect(page.getByRole('button', { name: '确认 · 1', exact: true })).toBeVisible()
+  const physicalFont = () => page.getByTestId('viewport-font').evaluate((element) => {
+    const viewport = element.closest('[data-viewport-mode]') as HTMLElement
+    return Number.parseFloat(getComputedStyle(element).fontSize) * Number(getComputedStyle(viewport).getPropertyValue('--lumal-viewport-scale'))
+  })
+  expect(await physicalFont()).toBeGreaterThanOrEqual(12)
+  await page.getByLabel('最小字号', { exact: true }).fill('20')
+  await expect.poll(physicalFont).toBeCloseTo(20, 1)
+  await page.getByLabel('最小字号', { exact: true }).fill('12')
+  await expect.poll(physicalFont).toBeCloseTo(12, 1)
+  await page.getByRole('button', { name: '容器信息', exact: true }).click()
+  await expect(page.getByRole('dialog', { name: '容器信息' })).toBeInViewport()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog', { name: '容器信息' })).toBeHidden()
+  for (const mode of ['width', 'responsive', 'disabled', 'contain']) {
+    await page.getByLabel('适配模式', { exact: true }).selectOption(mode)
+    await expect(page.locator('.viewport-host [data-viewport-mode]')).toHaveAttribute('data-viewport-mode', mode)
+  }
+  await page.getByLabel('策略来源', { exact: true }).selectOption('global')
+  await expect(page.getByTestId('viewport-metrics')).toContainText('responsive')
+  for (const label of ['设计宽', '设计高', '最小字号']) {
+    await expect(page.getByLabel(label, { exact: true })).toBeDisabled()
+  }
+  await page.getByLabel('策略来源', { exact: true }).selectOption('route')
+  await expect(page.getByTestId('viewport-metrics')).toContainText('contain')
+  for (const label of ['设计宽', '设计高', '最小字号']) {
+    await expect(page.getByLabel(label, { exact: true })).toBeDisabled()
+  }
+  await page.getByLabel('策略来源', { exact: true }).selectOption('container')
+  for (const label of ['设计宽', '设计高', '最小字号']) {
+    await expect(page.getByLabel(label, { exact: true })).toBeEnabled()
+  }
+  await page.reload()
+  await expect(page.getByTestId('viewport-metrics')).toBeVisible()
+  await page.screenshot({ path: 'output/playwright/admin-viewport.png', animations: 'disabled' })
+  await page.goto('/#/system/user')
+  await expect(page.getByRole('button', { name: '新增用户', exact: true })).toBeVisible()
+  await expect(page.getByRole('columnheader', { name: '用户名', exact: true })).toBeVisible()
+  expect(await page.locator('html').evaluate(element => getComputedStyle(element).fontSize)).toBe(rootFontSize)
+  expect(await page.locator('html').evaluate(element => getComputedStyle(element).getPropertyValue('--lumal-viewport-scale'))).toBe('')
+  await expect(page.getByTestId('admin-workspace-viewport')).toHaveAttribute('data-viewport-mode', 'responsive')
+  await expect(page.locator('.admin-workspace-viewport__stage')).toHaveCSS('transform', 'none')
+  await expectNoPageOverflow(page)
+})
+
+test('DataV 组件可交互，Cockpit 实际嵌入且不加载地图或 Designer', async ({ page }) => {
+  await loginAsAdmin(page)
+  const requests: string[] = []
+  page.on('request', request => requests.push(request.url()))
+  await page.goto('/#/examples/datav')
+  await expect(page.locator('.datav-border')).toBeVisible()
+  await expect(page.locator('.datav-number')).toHaveAttribute('aria-label', '128')
+  await page.getByRole('button', { name: '更新指标', exact: true }).click()
+  await expect(page.locator('.datav-number')).toHaveAttribute('aria-label', '144')
+  await expect(page.getByRole('list', { name: '示例区域排行' })).toBeVisible()
+  await page.reload()
+  await expect(page.locator('.datav-number')).toBeVisible()
+  await page.goto('/#/examples/cockpit')
+  await expect(page.locator('.embedded-stage .lumal-cockpit')).toHaveAttribute('data-viewport-mode', 'external')
+  await page.getByRole('button', { name: '确认告警 · 0' }).click()
+  await expect(page.getByRole('button', { name: '确认告警 · 1' })).toBeVisible()
+  const runtime = page.locator('.embedded-stage .lumal-cockpit')
+  const darkBackground = await runtime.evaluate(element => getComputedStyle(element).backgroundColor)
+  await page.getByLabel('嵌入驾驶舱主题').selectOption('light')
+  await expect(runtime).toHaveAttribute('data-cockpit-theme', 'light')
+  expect(await runtime.evaluate(element => getComputedStyle(element).backgroundColor)).not.toBe(darkBackground)
+  await page.screenshot({ path: 'output/playwright/admin-cockpit-runtime-light.png', animations: 'disabled' })
+  await page.reload()
+  await expect(page.locator('.metric-widget')).toBeVisible()
+  // 侧栏恢复会改变工作区宽度；同一同步任务读取两个边界，避免跨动画帧比较。
+  await expect.poll(() => page.locator('.embedded-stage').evaluate((element) => {
+    const title = element.querySelector<HTMLElement>('.embedded-center h2')!.getBoundingClientRect()
+    const widget = element.querySelector<HTMLElement>('.metric-widget')!.getBoundingClientRect()
+    return title.left - widget.right
+  }), { message: '中心标题应在左侧 Widget 右边，且不存在遮挡' }).toBeGreaterThan(0)
+  await page.screenshot({ path: 'output/playwright/admin-cockpit-runtime.png', animations: 'disabled' })
+  expect(requests.filter(url => /cesium|openlayers|designer|\/@vite\/|\/src\//i.test(url))).toEqual([])
+  await expectNoPageOverflow(page)
+})
+
+test('首页不加载可视化示例，guest 无 Cockpit 权限', async ({ browserDiagnostics, page }) => {
+  browserDiagnostics.expectHttpError('/api/system/users?page=1&pageSize=5', 403)
+  browserDiagnostics.expectHttpError('/api/system/roles?page=1&pageSize=1', 403)
+  browserDiagnostics.expectHttpError('/api/system/menus', 403)
+  browserDiagnostics.expectHttpError('/api/system/dictionaries/types', 403)
+  const initialRequests: string[] = []
+  page.on('request', request => initialRequests.push(request.url()))
+  await loginAs(page, 'guest')
+  expect(initialRequests.filter(url => /vendor-lumal-(?:datav|cockpit)|cesium|designer/i.test(url))).toEqual([])
+  await page.goto('/#/examples/overview')
+  await expect(page.getByRole('heading', { name: 'Cockpit Runtime', exact: true })).toHaveCount(0)
+  await page.goto('/#/examples/cockpit')
+  await expect(page).toHaveURL(/#\/403$/)
+})

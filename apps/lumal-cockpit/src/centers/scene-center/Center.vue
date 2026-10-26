@@ -15,17 +15,20 @@ const props = defineProps<{ context: CockpitCenterContext }>()
 const context = props.context
 const OpenLayersCenter = defineAsyncComponent(() => import('../openlayers-center/Center.vue'))
 const CesiumCenter = defineAsyncComponent(() => import('../cesium-center/Center.vue'))
+const StandaloneCenter = defineAsyncComponent(() => import('../standalone-center/Center.vue'))
 
 const engines: Array<{ id: CenterEngine, label: string }> = [
   { id: 'echarts', label: 'ECharts' },
   { id: 'openlayers', label: 'OpenLayers' },
   { id: 'cesium', label: 'Cesium' },
+  { id: 'standalone', label: '独立场景' },
 ]
 
 const renderers: Record<CenterEngine, Component> = {
   echarts: EchartsGeoCenter,
   openlayers: OpenLayersCenter,
   cesium: CesiumCenter,
+  standalone: StandaloneCenter,
 }
 
 const activeEngine = ref<CenterEngine>('echarts')
@@ -142,6 +145,7 @@ onBeforeUnmount(() => {
     <Suspense>
       <component
         :is="activeRenderer"
+        v-bind="activeEngine === 'standalone' ? { context } : {}"
         :selected-ids="selectedIds"
         :focused-id="focusedId"
         :filter-status="filterStatus"
@@ -368,7 +372,7 @@ onBeforeUnmount(() => {
   left: 50%;
   z-index: 10;
   display: grid;
-  grid-template-columns: repeat(3, 108px);
+  grid-template-columns: repeat(4, 96px);
   min-height: 42px;
   padding: 4px;
   border: 1px solid color-mix(in srgb, var(--lumal-cockpit-border), transparent 12%);
@@ -469,8 +473,8 @@ onBeforeUnmount(() => {
 
 @media (max-width: 900px) {
   .scene-center__engine-switch {
-    grid-template-columns: repeat(3, minmax(88px, 1fr));
-    width: min(340px, calc(100% - 32px));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: min(400px, calc(100% - 32px));
   }
 
   .scene-center__status {

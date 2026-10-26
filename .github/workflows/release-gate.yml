@@ -100,6 +100,7 @@ jobs:
           path: |
             .playwright-results/
             playwright-report/
+          include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7
 
@@ -168,6 +169,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Validate scoped viewport tarball consumer
+        run: pnpm test:vite-consumer
+
       - name: Typecheck visual fixtures
         run: pnpm exec vue-tsc --noEmit -p packages/datav/tests/visual/tsconfig.json
 
@@ -183,6 +187,7 @@ jobs:
         with:
           name: datav-visual-windows-release-${{ github.sha }}
           path: .playwright-results/datav/
+          include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7
 
@@ -225,11 +230,29 @@ jobs:
       - name: Build Cockpit through package script
         run: pnpm --filter lumal-cockpit build:app
 
+      - name: Typecheck Cockpit browser tests
+        run: pnpm typecheck:e2e:cockpit
+
+      - name: Install Chromium for Cockpit
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Validate Cockpit production browser
+        run: pnpm test:e2e:cockpit:built
+
       - name: Build DataV guide through package script
         run: pnpm --filter lumal-datav-guide build:app
 
       - name: Check all consumer budgets
         run: pnpm release:budgets --require-all
+
+      - name: Upload Cockpit browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cockpit-browser-${{ github.sha }}
+          path: output/playwright/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload validated static sites
         uses: actions/upload-artifact@v4

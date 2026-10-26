@@ -158,6 +158,9 @@ describe('lumal admin router', () => {
             path: '/examples/icons',
             title: '图标',
           },
+          { children: [], icon: 'lumal:monitor', path: '/examples/viewport', title: 'Viewport' },
+          { children: [], icon: 'app:chart', path: '/examples/datav', title: 'DataV' },
+          { children: [], icon: 'lumal:monitor', path: '/examples/cockpit', title: 'Cockpit Runtime' },
         ],
         icon: 'app:examples',
         path: '/examples',
@@ -242,11 +245,48 @@ describe('lumal admin router', () => {
 
     expect(menus.map(menu => menu.path)).toEqual(['/dashboard', '/examples', '/resources', '/about'])
     expect(examplesMenu?.children.map(menu => menu.path)).not.toContain('/examples/dictionary')
+    expect(examplesMenu?.children.map(menu => menu.path)).not.toContain('/examples/cockpit')
     expect(examplesMenu?.children.map(menu => menu.path)).toEqual(expect.arrayContaining([
       '/examples/overview',
       '/examples/theme-settings',
       '/examples/services',
     ]))
+  })
+
+  it.each([
+    '/examples/viewport',
+    '/examples/datav',
+    '/examples/cockpit',
+    '/examples/crud-table',
+    '/system/user',
+    '/system/role',
+  ])('自管理视口页面 %s 可恢复深层路由并保留豁免', async (path) => {
+    await login('admin')
+    const router = createAdminRouter(createMemoryHistory())
+    await router.push(`${path}?source=refresh`)
+    await router.isReady()
+    expect(router.currentRoute.value.fullPath).toBe(`${path}?source=refresh`)
+    expect(router.currentRoute.value.meta.workspaceViewport).toBe('self-managed')
+    expect(router.currentRoute.value.meta.viewport).toEqual(path === '/examples/viewport'
+      ? { mode: 'contain', designWidth: 960, designHeight: 540 }
+      : undefined)
+  })
+
+  it.each(['/dashboard', '/examples/overview', '/system/menu', '/system/dict-item'])('普通页面 %s 不会被隐式豁免', async (path) => {
+    await login('admin')
+    const router = createAdminRouter(createMemoryHistory())
+    await router.push(path)
+    await router.isReady()
+    expect(router.currentRoute.value.path).toBe(path)
+    expect(router.currentRoute.value.meta.workspaceViewport).toBeUndefined()
+  })
+
+  it('guest 不因基础示例权限获得 Cockpit 访问权', async () => {
+    await login('guest')
+    const router = createAdminRouter(createMemoryHistory())
+    await router.push('/examples/cockpit')
+    await router.isReady()
+    expect(router.currentRoute.value.path).toBe('/403')
   })
 
   it.each(['/dashboard', '/about'])('未登录访问 %s 会跳转到登录页并携带 redirect', async (path) => {

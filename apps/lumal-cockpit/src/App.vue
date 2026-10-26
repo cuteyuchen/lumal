@@ -1,24 +1,28 @@
 <script setup lang="ts">
 import type { CockpitConfig, CockpitDesignerSavePayload, CockpitViewportMode } from '@lumal/cockpit'
-import { LumalCockpitDesigner } from '@lumal/cockpit/designer'
 import { LumalCockpit, LumalCockpitRegion } from '@lumal/cockpit/runtime'
 import { LumalFullScreenContainer } from '@lumal/datav'
 import { LumalIcon } from '@lumal/icons-vue'
-import { ElButton, ElTooltip } from 'element-plus'
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
+import { ElButton, ElDialog, ElTooltip } from 'element-plus'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from 'vue'
 import designerTitleImage from './assets/cockpit-designer/dialog-header-bg.png'
 import SceneCenter from './centers/scene-center/Center.vue'
 import CockpitCard from './components/CockpitCard.vue'
 import RegionCollapse from './components/RegionCollapse.vue'
 import { standaloneCockpitRegistry } from './registry'
-import { loadStandaloneConfig, saveStandaloneConfig } from './services/config'
+import { loadStandaloneState, resetStandaloneConfig, saveStandaloneConfig } from './services/config'
 
 /***********************独立驾驶舱根组件*********************/
 
 // 本应用是纯暗色科技感大屏，不提供主题切换
 const THEME_MODE = 'dark' as const
 
-const config = shallowRef<CockpitConfig>(loadStandaloneConfig())
+const initialState = loadStandaloneState()
+const config = shallowRef<CockpitConfig>(initialState.config)
+const notice = ref(initialState.warning)
+const viewportLabVisible = ref(false)
+const ViewportLab = defineAsyncComponent(() => import('./components/ViewportLab.vue'))
+const LumalCockpitDesigner = defineAsyncComponent(async () => (await import('@lumal/cockpit/designer')).LumalCockpitDesigner)
 const designerVisible = ref(false)
 const saving = ref(false)
 const saveError = ref<string>('')
@@ -26,10 +30,11 @@ const saveError = ref<string>('')
 // 三种大屏适配 UI 模式：scale 等比缩放 / vwvh 视口铺满 / container 由 @lumal/datav 全屏容器缩放
 type ViewportUiMode = 'scale' | 'vwvh' | 'container'
 
-const activeLayoutId = ref<string | undefined>()
+const activeLayoutId = ref<string | undefined>(config.value.activeLayoutId)
 const fullscreenActive = ref(false)
 const viewportMode = ref<ViewportUiMode>('scale')
-const cockpitRef = ref<InstanceType<typeof LumalCockpit> | null>(null)
+const cockpitRef = useTemplateRef<InstanceType<typeof LumalCockpit>>('cockpitRef')
+const autoRefreshEnabled = ref(true)
 
 // 基准设计尺寸，供全屏容器与画布共用
 const baseWidth = 1920
@@ -71,13 +76,40 @@ function syncFullscreenState(): void {
 }
 
 async function toggleFullscreen(): Promise<void> {
-  if (document.fullscreenElement) {
-    await cockpitRef.value?.exitFullscreen()
+  try {
+    // body Teleport 与兄弟 Designer 需处于同一应用全屏范围，不能只全屏内部画布。
+    if (document.fullscreenElement)
+      await document.exitFullscreen()
+    else
+      await document.documentElement.requestFullscreen()
+    syncFullscreenState()
   }
-  else {
-    await cockpitRef.value?.enterFullscreen()
+  catch {
+    notice.value = '浏览器未允许全屏，请通过浏览器权限设置重试。'
   }
-  syncFullscreenState()
+}
+
+/***********************配置持久化与明确恢复反馈*********************/
+watch(activeLayoutId, (id) => {
+  if (!id || config.value.activeLayoutId === id)
+    return
+  try {
+    config.value = saveStandaloneConfig({ ...config.value, activeLayoutId: id })
+  }
+  catch {
+    notice.value = '布局已切换，但本地存储不可用，刷新后可能无法恢复。'
+  }
+})
+
+function restoreDefaults(): void {
+  try {
+    config.value = resetStandaloneConfig()
+    activeLayoutId.value = config.value.activeLayoutId
+    notice.value = ''
+  }
+  catch {
+    notice.value = '无法保存默认配置，请检查浏览器存储权限。'
+  }
 }
 
 function handleSave(payload: CockpitDesignerSavePayload): void {
@@ -85,6 +117,8 @@ function handleSave(payload: CockpitDesignerSavePayload): void {
   saveError.value = ''
   try {
     config.value = saveStandaloneConfig(payload.config)
+    activeLayoutId.value = payload.layout.id
+    notice.value = ''
     designerVisible.value = false
   }
   catch (error) {
@@ -116,7 +150,9 @@ onBeforeUnmount(() => {
       <LumalCockpit
         ref="cockpitRef"
         v-model:active-layout-id="activeLayoutId"
+        v-model:auto-refresh-enabled="autoRefreshEnabled"
         auto-refresh
+        :auto-refresh-interval-ms="60000"
         :card-component="CockpitCard"
         :config="config"
         :registry="standaloneCockpitRegistry"
@@ -148,6 +184,19 @@ onBeforeUnmount(() => {
         <template #header-actions>
           <div class="standalone-app__actions">
             <span class="standalone-app__live"><i />实时在线</span>
+            <ElTooltip content="视口实验">
+              <ElButton circle aria-label="打开视口实验" @click="viewportLabVisible = true">
+                <LumalIcon name="lumal:monitor" :size="18" />
+              </ElButton>
+            </ElTooltip>
+            <ElTooltip content="立即刷新模块">
+              <ElButton circle aria-label="立即刷新模块" @click="cockpitRef?.refreshNow()">
+                <LumalIcon name="lumal:refresh" :size="18" />
+              </ElButton>
+            </ElTooltip>
+            <ElButton :aria-pressed="autoRefreshEnabled" @click="autoRefreshEnabled = !autoRefreshEnabled">
+              {{ autoRefreshEnabled ? '自动刷新开' : '自动刷新关' }}
+            </ElButton>
             <ElTooltip :content="fullscreenActive ? '退出全屏' : '进入全屏'">
               <ElButton circle data-action="cockpit-fullscreen" :aria-label="fullscreenActive ? '退出全屏' : '进入全屏'" @click="toggleFullscreen">
                 <LumalIcon :name="fullscreenActive ? 'lumal:fullscreen-exit' : 'lumal:fullscreen'" :size="18" />
@@ -180,6 +229,20 @@ onBeforeUnmount(() => {
         </template>
       </LumalCockpit>
     </component>
+
+    <div v-if="notice" class="standalone-app__notice" role="alert">
+      {{ notice }}
+      <ElButton @click="restoreDefaults">
+        恢复默认配置
+      </ElButton>
+      <ElButton aria-label="关闭配置提示" @click="notice = ''">
+        关闭
+      </ElButton>
+    </div>
+    <!-- Dialog 位于缩放树之外，浮层坐标始终以真实视口为准。 -->
+    <ElDialog v-model="viewportLabVisible" title="视口实验" width="min(1100px, 94vw)" destroy-on-close append-to-body>
+      <ViewportLab v-if="viewportLabVisible" />
+    </ElDialog>
 
     <div
       v-if="designerVisible"
@@ -234,6 +297,20 @@ onBeforeUnmount(() => {
   position: fixed;
   inset: 0;
   z-index: 2050;
+}
+
+.standalone-app__notice {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  z-index: 2100;
+  max-width: calc(100% - 32px);
+  padding: 12px;
+  border: 1px solid #e5bf68;
+  border-radius: 4px;
+  background: #152832;
+  color: #fff3cf;
+  transform: translateX(-50%);
 }
 
 .standalone-app__designer-close {
@@ -373,6 +450,12 @@ onBeforeUnmount(() => {
   min-height: 40px;
   border-radius: 10px;
   box-shadow: none;
+}
+
+.standalone-app__actions :deep(.el-button:not(.is-circle)) {
+  width: auto;
+  font-size: 12px;
+  padding-inline: 10px;
 }
 
 .standalone-app__actions button:focus-visible {

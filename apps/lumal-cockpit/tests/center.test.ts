@@ -180,11 +180,14 @@ describe('驾驶舱中央地图', () => {
     })
     await nextTick()
 
-    expect(wrapper.findAll('[role="tab"]')).toHaveLength(3)
+    expect(wrapper.findAll('[role="tab"]')).toHaveLength(4)
     await wrapper.get('button[data-center-engine="echarts"]').trigger('keydown', { key: 'End' })
     await flushPromises()
+    await vi.waitFor(() => expect(wrapper.find('.standalone-center').exists()).toBe(true))
+    await wrapper.get('button[data-center-engine="standalone"]').trigger('keydown', { key: 'ArrowLeft' })
+    await flushPromises()
     expect(wrapper.get('.scene-center').attributes('data-center-engine')).toBe('cesium')
-    expect(document.activeElement).toBe(wrapper.get('button[data-center-engine="cesium"]').element)
+    await vi.waitFor(() => expect(document.activeElement).toBe(wrapper.get('button[data-center-engine="cesium"]').element))
     expect(wrapper.get('.scene-center__status strong').text()).toBe('新疆')
 
     const cesium = wrapper.getComponent({ name: 'CesiumCenterStub' })
@@ -202,7 +205,8 @@ describe('驾驶舱中央地图', () => {
     await wrapper.get('button[data-center-engine="cesium"]').trigger('click')
     await flushPromises()
     expect(wrapper.getComponent({ name: 'CesiumCenterStub' }).props('selectedIds')).toEqual(['p-beijing'])
-    expect(readyCount).toBe(1)
+    // 独立场景也发布自己的 ready；切回原地图不重复发布编排器 ready。
+    expect(readyCount).toBe(2)
     wrapper.unmount()
   })
 

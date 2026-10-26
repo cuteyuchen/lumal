@@ -17,6 +17,32 @@ describe('release dependency graph', () => {
     expect(() => verifyReleaseWorkflows(readWorkflows(), scripts)).not.toThrow()
   })
 
+  it('普通 PR 必须包含两平台完整 Cockpit 构建和生产浏览器，不能只构建公共包', () => {
+    const workflows = readWorkflows()
+    const job = workflows['build-validation.yml'].jobs['demo-production']
+    job.strategy.matrix.os = ['ubuntu-latest']
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('Windows')
+    job.strategy.matrix.os = ['ubuntu-latest', 'windows-latest']
+    job.steps = job.steps.filter(step => step.run !== 'pnpm test:e2e:cockpit:built')
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('cockpit')
+    const noTypes = readWorkflows()
+    const untyped = noTypes['build-validation.yml'].jobs['demo-production']
+    untyped.steps = untyped.steps.filter(step => step.run !== 'pnpm typecheck:e2e:cockpit')
+    expect(() => verifyReleaseWorkflows(noTypes, scripts)).toThrow('typecheck:e2e:cockpit')
+  })
+
+  it.each([
+    ['build-validation.yml', 'demo-production'],
+    ['build-validation.yml', 'datav-visual'],
+    ['release-gate.yml', 'release-check'],
+    ['release-gate.yml', 'windows-check'],
+  ])('%s/%s 显式上传隐藏结果目录，保留原始 JSON 与 trace', (file, jobName) => {
+    const job = readWorkflows()[file].jobs[jobName]
+    const upload = job.steps.find(step => step.uses?.startsWith('actions/upload-artifact@')
+      && step.with?.path?.includes('.playwright-results/'))
+    expect(upload?.with['include-hidden-files']).toBe(true)
+  })
+
   it('消费者生产浏览器校验之前必须准备 Chromium', () => {
     const current = readWorkflows()
     expect(current['build-validation.yml'].jobs.validate.steps.some(step =>
@@ -95,7 +121,7 @@ describe('release dependency graph', () => {
     })).toThrow('不能只跑 smoke')
   })
 
-  it.each(['format:check', 'test:create-projects', 'test:viewport'])('发布脚本不能遗漏 %s', (command) => {
+  it.each(['format:check', 'test:vite-consumer', 'test:create-projects', 'test:viewport'])('发布脚本不能遗漏 %s', (command) => {
     expect(() => verifyReleaseWorkflows(readWorkflows(), {
       ...scripts,
       'release:check': scripts['release:check'].split(' && ').filter(step => step !== `pnpm ${command}`).join(' && '),
@@ -105,6 +131,8 @@ describe('release dependency graph', () => {
   it.each([
     ['ci.yml', 'check', 'format:check'],
     ['release-gate.yml', 'windows-check', 'format:check'],
+    ['release-gate.yml', 'windows-check', 'test:vite-consumer'],
+    ['build-validation.yml', 'demo-production', 'test:vite-consumer'],
     ['build-validation.yml', 'validate', 'test:create-projects'],
     ['build-validation.yml', 'validate', 'test:viewport'],
   ])('%s 不能移除或容错 %s/%s', (file, jobName, command) => {

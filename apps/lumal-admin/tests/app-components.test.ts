@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import { defineComponent } from 'vue'
+import { routeLocationKey } from 'vue-router'
 import AppHeaderActions from '../src/components/app/AppHeaderActions.vue'
 import AppSettingsDrawer from '../src/components/app/AppSettingsDrawer.vue'
 import { createAdminPreferences } from '../src/services/preferences'
@@ -88,6 +89,9 @@ function mountHeaderActions() {
       directives: {
         authority: () => {},
       },
+      provide: {
+        [routeLocationKey]: { meta: {} },
+      },
       stubs: {
         ...elementPlusStubs,
         ElDropdown: DropdownStub,
@@ -135,7 +139,8 @@ describe('app header actions', () => {
   it('移动端账户菜单会传送到 body 并复用现有导航事件', () => {
     const openSpy = vi.spyOn(window, 'open').mockReturnValue(null)
     const wrapper = mountHeaderActions()
-    const dropdown = wrapper.findComponent(DropdownStub)
+    const dropdown = wrapper.findAllComponents(DropdownStub)
+      .find(component => component.props('popperClass') === 'lumal-admin-header-actions__mobile-dropdown')!
     const trigger = wrapper.find('[data-action="open-mobile-account-menu"]')
 
     expect(dropdown.props('placement')).toBe('bottom-end')
@@ -162,7 +167,7 @@ describe('app header actions', () => {
     openSpy.mockRestore()
   })
 
-  it('移动端仅显示两个 36px 入口且桌面动作保持原尺寸', async () => {
+  it('移动端保留主题、工作区适配和账户入口，桌面动作保持原尺寸', async () => {
     const source = await readFile(join(process.cwd(), 'src/components/app/AppHeaderActions.vue'), 'utf8')
     const mobileStart = source.indexOf('@media (max-width: 768px)')
     const mobileStyles = source.slice(mobileStart)
@@ -173,6 +178,7 @@ describe('app header actions', () => {
     expect(mobileStyles).toMatch(/\.lumal-admin-header-actions__mobile-menu\s*\{\s*display:\s*inline-flex;/)
     expect(mobileStyles).toMatch(/:deep\(\.el-button\)\s*\{\s*width:\s*36px;\s*height:\s*36px;/)
     expect(source).toMatch(/\.lumal-admin-header-actions__mobile-trigger\s*\{[\s\S]*?width:\s*36px;[\s\S]*?height:\s*36px;/)
+    expect(mountHeaderActions().find('[aria-label="工作区适配"]').exists()).toBe(true)
   })
 })
 

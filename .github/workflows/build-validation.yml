@@ -1,7 +1,7 @@
 name: Build Validation
 
 # 与 ci.yml 分工：ci.yml 负责 lint/test/typecheck/build，
-# 这里补消费者脚手架和 DataV 视觉校验；三个站点的构建移到 tag 触发的 release-gate.yml。
+# 这里补消费者脚手架、DataV 视觉和跨平台 Demo 生产验收；不接触发布或部署凭据。
 on:
   push:
     branches:
@@ -18,6 +18,64 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  demo-production:
+    name: Demo production / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Record environment
+        run: node --version && pnpm --version
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate scoped viewport tarball consumer
+        run: pnpm test:vite-consumer
+      - name: Build complete Cockpit from clean checkout
+        run: pnpm cockpit:build
+      - name: Validate package build entry
+        run: pnpm --filter lumal-cockpit build
+      - name: Cockpit application tests
+        run: pnpm --filter lumal-cockpit test
+      - name: Typecheck Cockpit browser tests
+        run: pnpm typecheck:e2e:cockpit
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Cockpit production browser
+        run: pnpm test:e2e:cockpit:built
+      - name: Build Admin
+        run: pnpm --filter lumal-admin build
+      - name: Build isolated Mock API
+        run: pnpm --filter lumal-mock-api build:test
+      - name: Admin production browser
+        run: pnpm test:e2e:release:built
+      - name: Build documentation and validate links
+        run: pnpm docs:build
+      - name: Enforce unchanged consumer budgets
+        run: pnpm release:budgets
+      - name: Upload production evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-production-${{ matrix.os }}-${{ github.sha }}
+          path: |
+            output/playwright/
+            .playwright-results/
+            playwright-report/
+            apps/lumal-admin/dist/index.html
+            apps/lumal-cockpit/dist/index.html
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
   datav-visual:
     name: Windows DataV visual regression
     runs-on: windows-latest
@@ -53,6 +111,7 @@ jobs:
         with:
           name: datav-visual-windows-${{ github.sha }}
           path: .playwright-results/datav/
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
 

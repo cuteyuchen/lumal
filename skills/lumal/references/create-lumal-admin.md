@@ -6,9 +6,9 @@
 
 ## 项目类型与通用入口
 
-`0.0.6-beta` 在现有包内提供 `create-lumal` bin 和
+自 `0.0.6-beta` 起在现有包内提供 `create-lumal` bin 和
 `createLumalProject` API，旧 `create-lumal-admin` bin/API/defaults不变。
-该版已发布；验证未发布源码时使用本地构建和真实 tarball。本地构建后可执行：
+当前按已发布并核验的 `0.0.7-beta` 接入；开发未发布源码时使用本地构建和精确 tarball。本地构建后可执行：
 
 ```bash
 node packages/create-lumal-admin/dist/project-cli.js blank-app --template blank --no-interactive
@@ -27,6 +27,10 @@ DataV数字/边框不安装ECharts。`--viewport disabled|responsive|contain|wid
 与项目类型独立，非默认适配使用 [视口](viewport.md)；Admin不接受Screen专属参数。
 非Admin不能叠Admin base，不能靠先生成再删除无用文件实现轻量。
 
+`0.0.7-beta` 的Screen视口模板将设计尺寸和运行时策略集中到根 `viewport.config.ts`，
+供运行时包装器和按需接入的 `@lumal/vite` 共享；不会默认安装构建插件或双重缩放。
+历史 `0.0.6-beta` CLI不包含这项模板调整，依赖升级也不会自动改写已有项目文件。
+
 新项目均生成独立ESLint/Prettier/EditorConfig、AI规范和统一check。
 首次install生成lockfile，再frozen复装；完成前运行 `pnpm check`。
 `pnpm test:create-projects`覆盖14组独立消费者；旧Admin矩阵继续保留。
@@ -34,26 +38,26 @@ DataV数字/边框不安装ECharts。`--viewport disabled|responsive|contain|wid
 
 ## 命令与版本选择
 
-环境基线：Node.js 22.12+、pnpm 10.33.0。下列命令对应 `0.0.6-beta` 的公开 API，
-不代表 npm 最新版本；接入前核对 registry 与实际安装的声明。
+环境基线：Node.js 22.12+、pnpm 10.33.0。下列命令对应已发布的 `0.0.7-beta`，
+不保证一直是 npm 最新版本；接入前核对 registry 与实际安装的声明。
 开发未发布源码时使用真实 tarball 验证，不用旧 CLI 的 `beta/latest` 标签代替新版能力。
 
 ```bash
-pnpm create lumal-admin@0.0.6-beta my-admin
-pnpm create lumal-admin@0.0.6-beta my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
-pnpm create lumal-admin@0.0.6-beta my-admin-v5 --preset vben-compatible
-pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-screen --template screen
-pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-blank --template blank
+pnpm create lumal-admin@0.0.7-beta my-admin
+pnpm create lumal-admin@0.0.7-beta my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
+pnpm create lumal-admin@0.0.7-beta my-admin-v5 --preset vben-compatible
+pnpm --package=create-lumal-admin@0.0.7-beta dlx create-lumal my-screen --template screen
+pnpm --package=create-lumal-admin@0.0.7-beta dlx create-lumal my-blank --template blank
 ```
 
 npm 等价命令：
 
 ```bash
-npm create lumal-admin@0.0.6-beta my-admin -- --api-mode http
+npm create lumal-admin@0.0.7-beta my-admin -- --api-mode http
 ```
 
 CLI 使用 Clack 方向键单选、Space 多选、Enter 确认，摘要确认前不写文件；
-Escape / Ctrl+C 取消。目标版本不可用时使用本地 tarball，不用历史发布包代替候选验收。
+Escape / Ctrl+C 取消。开发未发布版本时使用本地 tarball，不用历史发布包代替新增能力验收。
 TTY 提问目录、名称、预设、数据源、路由和可选模块；非 TTY/CI 自动禁用交互。
 默认 `standard/local/hash`，省略目录时为 `lumal-admin`。显式指定的参数不会再次提问。
 自动化命令可加 `--no-interactive`，用 `--name` 指定与目录不同的 npm 包名；

@@ -2,7 +2,7 @@
 name: lumal
 description: 使用 Lumal（@lumal/*、create-lumal-admin）构建或维护 Vue 后台、图表与 DataV 大屏、驾驶舱、图标和 Vite 集成，或迁移 Vben 代码时使用。指导包选型、公开入口、最小接入和常见误区。不用于未使用 Lumal 的普通 Vue 问题。
 metadata:
-  api-version: '0.0.6-beta'
+  api-version: '0.0.7-beta'
 ---
 
 # Lumal
@@ -13,7 +13,7 @@ metadata:
 
 1. 区分消费项目与 Lumal 仓库维护：消费项目只使用 npm 包的公开入口，不依赖 `packages/*/src` 或工作区 alias。
 2. 检查已有依赖、锁文件、入口代码与样式。复用现有 Router、Pinia、Element Plus 和请求适配，不重复创建。
-3. 本 Skill 以已发布的 `0.0.6-beta` 公开 API 为基准，不保证它一直是 npm 最新版本。接入时核对 registry 与实际安装包；未发布源码使用本地 tarball 验证。版本不一致时，以实际安装包的 `package.json.exports`、声明文件和源码为准，不猜测导出。
+3. 本 Skill 以已发布并核验的 `0.0.7-beta` 公开 API 为基准，不保证它一直是 npm 最新版本。接入时核对 registry 与实际安装包；开发未发布源码时使用精确提交的本地 tarball 验证。版本不一致时，以实际安装包的 `package.json.exports`、声明文件和源码为准，不猜测导出。
 4. 只读取下表与任务有关的参考；跨包任务再组合读取。
 
 ## 包选型
@@ -30,7 +30,7 @@ metadata:
 | 驾驶舱左右区域编排、模块注册、多布局、可视化设计 | `@lumal/cockpit` | [驾驶舱](references/cockpit.md) |
 | 不依赖 Vue 的图标注册、SVG 处理、Data URI、可选状态形变 | `@lumal/icons`、`@lumal/icons/morph` | [图标内核](references/icons.md) |
 | Vue 图标组件、选择器、响应式图标注册表 | `@lumal/icons-vue` | [Vue 图标](references/icons-vue.md) |
-| Vite resolver、Lumal 仓库源码 alias、可选 Devtools | `@lumal/vite` | [构建辅助](references/vite.md) |
+| 受控 CSS/行内样式视口转换、Vite resolver、源码 alias、可选 Devtools | `@lumal/vite` | [构建辅助](references/vite.md) |
 | 迁移 Vben 5 页面或旧 Lumal 适配代码 | `@lumal/vben-compat/v5` 或 `/legacy` | [Vben 迁移](references/vben-compat.md) |
 | 修改包源码、公共 API、脚手架模板、发布边界 | 对应包及受影响消费者 | [仓库维护](references/repository.md)，再读相应分包参考 |
 

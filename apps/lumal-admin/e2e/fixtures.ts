@@ -21,6 +21,7 @@ interface ExpectedHttpError {
 
 interface BrowserDiagnostics {
   expectHttpError: (path: string, status: number, count?: number) => void
+  allowConsoleWarning: (text: string) => void
 }
 
 interface BrowserDiagnosticsFixtures {
@@ -51,17 +52,21 @@ export const test = base.extend<BrowserDiagnosticsFixtures>({
     const diagnostics: BrowserDiagnostic[] = []
     const sourceRequests: string[] = []
     const expectedHttpErrors: ExpectedHttpError[] = []
+    const allowedWarnings = new Set<string>()
 
     function recordConsole(message: ConsoleMessage): void {
-      if (message.type() !== 'warning' && message.type() !== 'error') {
+      const type = message.type()
+      if (type !== 'warning' && type !== 'error') {
         return
       }
 
       const text = message.text().trim()
+      if (type === 'warning' && allowedWarnings.has(text))
+        return
       if (!ignoredBrowserDiagnostics.has(text)) {
         const location = message.location()
         diagnostics.push({
-          kind: `console.${message.type()}`,
+          kind: `console.${type}`,
           source: location.url || undefined,
           text,
         })
@@ -86,6 +91,9 @@ export const test = base.extend<BrowserDiagnosticsFixtures>({
     await use({
       expectHttpError(path, status, count = 1) {
         expectedHttpErrors.push({ count, path, status })
+      },
+      allowConsoleWarning(text) {
+        allowedWarnings.add(text)
       },
     })
 

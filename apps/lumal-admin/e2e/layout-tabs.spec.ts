@@ -322,11 +322,17 @@ test('宽屏普通页面保持自然高度且卡片内容从顶部排列', async
 
   await page.goto('/#/examples/overview')
   const overviewPage = page.locator('.lumal-admin-example > .lumal-page')
+  await expect(overviewPage.locator('.overview-card')).toHaveCount(13)
+  const fullOverviewBox = await overviewPage.boundingBox()
+  // 示例数量增加后允许自然增长；筛选成短内容时仍须收缩，不被路由容器强制拉满。
+  await page.getByPlaceholder('搜索能力或公开入口').fill('Viewport')
+  await expect(overviewPage.locator('.overview-card')).toHaveCount(1)
   const overviewBox = await overviewPage.boundingBox()
   const overviewRouterBox = await routerView.boundingBox()
   expect(overviewBox).not.toBeNull()
   expect(overviewRouterBox).not.toBeNull()
   expect(overviewBox!.height).toBeLessThan(overviewRouterBox!.height - 80)
+  expect(overviewBox!.height).toBeLessThan(fullOverviewBox!.height)
   await expectNoPageOverflow(page)
 
   await page.goto('/#/system/user')

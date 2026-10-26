@@ -2,11 +2,25 @@
 import { fileURLToPath } from 'node:url'
 import { loadConfigFromFile } from 'vite'
 import { describe, expect, it } from 'vitest'
+import cockpit from '../playwright.cockpit.config'
 import development from '../playwright.config'
 import datav from '../playwright.datav.config'
 import release from '../playwright.release.config'
 
 describe('production browser acceptance configuration', () => {
+  it('cockpit 保留全部生产用例、零重试及 DOM/网络 trace，不以超时增长掩盖失败', () => {
+    expect(cockpit.testDir).toBe('apps/lumal-cockpit/e2e')
+    expect(cockpit.forbidOnly).toBe(true)
+    expect(cockpit.grep).toBeUndefined()
+    expect(cockpit.retries).toBe(0)
+    expect(cockpit.workers).toBe(1)
+    expect(cockpit.timeout).toBe(90_000)
+    expect(cockpit.use).toMatchObject({
+      screenshot: 'only-on-failure',
+      trace: { mode: 'retain-on-failure', screenshots: false, snapshots: true, sources: true },
+    })
+  })
+
   it('dataV 视觉门禁固定单 worker，禁止 only 与重试掩盖不稳定', () => {
     expect(datav.forbidOnly).toBe(true)
     expect(datav.retries).toBe(0)

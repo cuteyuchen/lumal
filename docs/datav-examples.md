@@ -6,11 +6,11 @@
 
 ## 安装与注册
 
-以下命令显式选择 `0.0.6-beta`；实际可用性以 registry 为准，
-候选发布核验前使用本地 tarball。只使用数字、边框和列表时无需图表引擎。
+以下命令显式选择已发布的 `0.0.7-beta`，不依赖浮动标签；
+开发未发布源码时使用精确提交的本地 tarball。只使用数字、边框和列表时无需图表引擎。
 
 ```bash
-pnpm add @lumal/datav@0.0.6-beta vue@^3.5
+pnpm add @lumal/datav@0.0.7-beta vue@^3.5
 # 仅使用 ECharts 模式或 LumalActiveRingChart 时安装。
 pnpm add echarts@^6
 ```
@@ -352,4 +352,4 @@ pnpm --filter lumal-datav-guide build     # 产出静态站点到 apps/lumal-dat
 
 ## 组件与 DataV 2.10.0 映射
 
-完整的 38 个 DataV 组件到 15 个 `Lumal*` 组件的映射表，见 [`packages/datav/README.md`](../packages/datav/README.md)。DataV 仅作为 MIT 许可下的重构基准，版权声明见 [`packages/datav/THIRD_PARTY_NOTICES.md`](../packages/datav/THIRD_PARTY_NOTICES.md)。
+完整的 38 个 DataV 组件到 15 个 `Lumal*` 组件的映射表，见 [DataV 包说明](https://github.com/cuteyuchen/lumal/blob/master/packages/datav/README.md)。DataV 仅作为 MIT 许可下的重构基准，版权声明见 [第三方声明](https://github.com/cuteyuchen/lumal/blob/master/packages/datav/THIRD_PARTY_NOTICES.md)。

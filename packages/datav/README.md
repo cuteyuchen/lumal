@@ -4,11 +4,11 @@
 
 ## 安装
 
-下列命令面向 `0.0.6-beta`，以 registry 存在对应版本为前提；
-发布核验前使用本地构建或候选 tarball，不根据本文推断 npm 的当前 dist-tag。
+下列命令面向已发布并核验的 `0.0.7-beta`，显式选择版本，不根据本文推断浮动 dist-tag；
+开发未发布源码时使用本地构建或精确提交的 tarball。
 
 ```bash
-pnpm add @lumal/datav@0.0.6-beta vue@^3.5
+pnpm add @lumal/datav@0.0.7-beta vue@^3.5
 # 仅使用 ECharts 模式或 LumalActiveRingChart 时安装。
 pnpm add echarts@^6
 ```

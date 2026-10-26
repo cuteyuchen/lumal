@@ -5,7 +5,9 @@
 ## 版本准备
 
 公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。历史九包 `0.0.3-beta`、`0.0.4-beta`、`0.0.5-beta` 均已发布，完整门禁、registry 与实际 tarball 核验见 [历史发布记录](./npm-release-0.0.5-beta.md)。
-本轮新增 `@lumal/viewport`，十包 `0.0.6-beta` 已发布并完成 registry 与同次发布产物核验，见 [本版发布记录](./npm-release-0.0.6-beta.md)。
+`@lumal/viewport` 自 `0.0.6-beta` 加入十包集合；该版已发布并完成 registry 与同次发布产物核验，见 [历史发布记录](./npm-release-0.0.6-beta.md)。
+`0.0.7-beta` 已完成正式门禁、registry、同次发布产物及六类 registry 消费者核验，
+见 [本版发布记录](./npm-release-0.0.7-beta.md)。正式 npm 发布时未启用生产部署；后置站点恢复单独记录。
 已发布版本不能用于新的全量发布；部分可见也不得重发。下一次正式发布前仍须逐包查询 registry，任一已有版本或网络异常都应中断。
 
 ```bash
@@ -20,7 +22,7 @@ pnpm release:verify
 - 将 pending Changeset 汇总进每个公共包 CHANGELOG，确认完整后移除已消费记录；本轮不运行标准 `changeset:version`，避免把 beta 序列变为稳定版 `0.1.0`。
 - 更新 `docs/changelog.md`、路线图基线、文档导航、安装命令和脚手架说明；历史版本与验收证据保留。
 - 保留脚手架源码的三个版本占位符；`pnpm build` 时按脚手架 package.json 注入精确版本，再用 `pnpm test:create-consumer` 验证 tarball 的 minimal/request、local、HTTP 三种消费路径。
-- 以空 Changeset 注明变更已手工汇总（本轮为 `prepared-0-0-6-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。
+- 以空 Changeset 注明变更已手工汇总（本轮为 `prepared-0-0-7-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。历史 `prepared-0-0-6-beta.md` 保留原发布语境。
 
 唯一发布入口是 `release-gate.yml`：`v*` tag 或手动运行。手动运行默认 `dry_run=true`，只执行校验；分支上不能以 `dry_run=false` 发包。真实运行必须选择版本相符且指向当前 HEAD 的 tag。含预发布后缀的 tag 使用 `beta`，稳定版使用 `latest`。
 
@@ -34,7 +36,8 @@ pnpm release:verify
 tag / workflow_dispatch (默认 dry_run=true)
   version-check：全部公共包 / lockfile / tag / YAML / 发布图
     ├─ release-check (Ubuntu)：完整 release:check
-    │    lint / format → 单测 → 类型 → 公共包构建 → Admin及14类tarball消费者
+    │    lint / format → 单测 → 类型 → 公共包构建 → Vite/Viewport独立tarball消费者
+    │    → Admin及14类模板tarball消费者
     │    → 三级视口 / Dev与Build真实浏览器zoom
     │    → Admin / Compat → 产物与预算 → Mock Node 构建
     │    → 完整生产 Chromium E2E → 全部公共包 pack dry-run
@@ -56,7 +59,8 @@ tag / workflow_dispatch (默认 dry_run=true)
 
 普通 CI 继续运行 lint/单测/类型/构建/边界，增加发布图与 actionlint；Build Validation 保留独立脚手架消费者校验。`deployment-artifacts.yml` 仅构建产物，不访问云部署。
 
-当前版本的 `release:check` 不允许遗漏 `format:check`、`test:create-projects` 或 `test:viewport`，
+当前版本的 `release:check` 不允许遗漏 `format:check`、`test:vite-consumer`、
+`test:create-projects` 或 `test:viewport`；普通 PR 的 Build Validation 同样必须执行独立 tarball 消费检查，
 Windows校验同样检查模板格式；`release-safety.test.mjs` 用移除/容错变体保护这些门禁。
 Ubuntu的生成器单测包含原有Linux PTY交互，不能以Windows执行替代其实际结果。
 新模板、Screen可选能力及真实缩放的报告/截图随消费者artifact上传，不需要发布权限。
@@ -68,6 +72,11 @@ CI 的 Linux PTY 与发布门禁的 Windows PTY 输出始终单独上传 `output
 视觉夹具验证异步实例、非空 Canvas、固定 SMIL 时点、内容边界及跨加载截图一致性。
 
 校验作业没有发布 Secrets。只有门禁成功后的作业才能访问所需凭据；npm 使用 `npm-release` Environment，部署使用 `production` Environment。维护者应在 Settings → Environments 配置审批人和 tag 限制，同时关闭 Vercel 的独立 Git 自动生产部署，避免仓库外的平台旁路。2026-10-20 已将 Docs 项目的 Ignored Build Step 设为 `exit 0`，跳过 Git 构建但保留显式 prebuilt 部署；另外四个项目仍需逐个核对，不能据此认定整个账户已关闭自动部署。
+
+2026-10-26 的六项目 PR Preview 确认 Git 集成仍在运行，不能用上述历史配置声称平台已受门禁控制。
+站点落后于已发布包时，应先取得单独部署授权，验证精确提交的 PR 门禁，再定向恢复；
+不重发既有 npm 版本、不移动 tag。实际 Git / prebuilt 路径、环境配置、READY、alias 与资源核验
+必须分别记录，见 [本次恢复](./npm-release-0.0.7-beta.md#pr-收尾与部署恢复)。
 
 ## 中断与恢复
 
@@ -128,6 +137,7 @@ pnpm release:boundaries
 pnpm test
 pnpm typecheck
 pnpm build
+pnpm test:vite-consumer
 pnpm test:create-consumer
 pnpm test:create-projects
 pnpm test:viewport
@@ -145,6 +155,13 @@ pnpm release:workflows
 ```
 
 只做代码验收时可以单独执行非浏览器命令，但必须注明“E2E 未验证”；不得据此声明完整 `release:check` 通过。
+
+`pnpm test:vite-consumer` 从当前源码重建 Viewport / Vite 并打包，在独立 Vue 项目中先安装生成锁文件，
+再 frozen 复装，验证 ESM/CJS、类型、SSR、CSS/SCSS、Vue 行内样式、来源边界、Source Map、
+幂等性及 Dev/Build 产物一致性。它不启动浏览器，结果写入 `output/release/vite-viewport-report.json`；
+不能据此声称地图点击、浮层位置、Canvas 或真实浏览器缩放已通过。
+修改这两个包或共享设计模板后，应使用同一提交重新构建受影响的 Admin/Cockpit，
+分别执行既有生产 E2E、视口消费者与原体积预算，保留未执行、失败和环境阻塞，不以历史产物替代联合验收。
 
 ## 发包 dry-run
 
@@ -224,6 +241,10 @@ pnpm --filter create-lumal-admin pack --dry-run
 `check-release-env.mjs` 在首次 npm/平台动作前列出缺失名称，绝不输出值。非空检查不等于令牌有效或拥有权限；不在本地执行生产凭据探测。
 
 Vercel 五个静态目录来自同 run 的校验 artifact，文档使用 `apps/lumal-docs/dist`。`prepare-vercel-output.mjs` 封装为各自 `.vercel/output/config.json`（version 3）和 `static/`，再以 `vercel pull` 链接项目、`deploy --prebuilt --prod` 上传，不在凭据作业重新构建，也不依赖平台从仓库根目录自动寻找 `dist`。CLI 固定为 `64.5.0`，认证用环境变量。
+
+Admin 的生产 API 地址属于构建时配置：当前线上使用独立 Mock 服务，没有同域 `/api` 代理。
+普通 CI 默认 `/api` 的 artifact 不能直接作为生产恢复产物；必须先以相同生产配置构建和验证。
+菜单或权限种子变更还须同步 Mock API 部署，五个静态站点 READY 不代表 Mock 已更新。
 
 文档矩阵额外传 `--clean-urls`，为非首页 HTML 生成 Build Output API `overrides`，使 `/guide/essentials/installation` 等链接定位到实际 `.html` 文件；目录首页仍由文件系统处理。未知路径返回文档 `404.html` 并保留 HTTP 404，不改为 SPA 首页兜底；其余四站点不启用该模式。可在本机只打包、不上传：`node scripts/prepare-vercel-output.mjs apps/lumal-docs/dist output/deploy/docs --clean-urls`。
 

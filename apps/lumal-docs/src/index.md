@@ -69,16 +69,16 @@ features:
 
 ## 快速安装
 
-当前文档 API 基线为 `0.0.6-beta`，十包保持同版，不依赖 `latest`。
-下列命令以 registry 存在对应版本为前提，候选发布核验前使用本地 tarball。
-实际发布状态见 [本轮记录](/reference/npm-release-0.0.6-beta)，
-功能与性能边界见 [下一阶段验收](/reference/lumal-next-phase-audit)。
+当前文档 API 基线为已发布并核验的 `0.0.7-beta`，十包保持同版，不依赖 `latest`。
+正式门禁、registry、同次发布产物和六类 registry 消费者结果见 [本版发布记录](/reference/npm-release-0.0.7-beta)。
+开发未发布源码时使用精确提交的本地 tarball；功能与性能边界见 [下一阶段验收](/reference/lumal-next-phase-audit)。
+历史十包发布事实保留在 [0.0.6-beta 记录](/reference/npm-release-0.0.6-beta)。
 上一版九包的已核验发布事实保留在 [历史记录](/reference/npm-release-0.0.5-beta)。
 
 ::: code-group
 
 ```bash [pnpm]
-pnpm add @lumal/core@0.0.6-beta @lumal/icons@0.0.6-beta @lumal/icons-vue@0.0.6-beta vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
+pnpm add @lumal/core@0.0.7-beta @lumal/icons@0.0.7-beta @lumal/icons-vue@0.0.7-beta vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
 ```
 
 ```bash [本地 monorepo]
@@ -89,7 +89,7 @@ pnpm add @lumal/core@file:../lumal/packages/core
 ```
 
 ```bash [脚手架]
-pnpm create lumal-admin@0.0.6-beta my-admin
+pnpm create lumal-admin@0.0.7-beta my-admin
 cd my-admin && pnpm install && pnpm dev
 ```
 

@@ -5,18 +5,18 @@
 
 ## 命令
 
-下列命令对应 `0.0.6-beta`，要求 Node.js `>=22.12.0`、pnpm `10.33.0`。
+下列命令对应已发布并核验的 `0.0.7-beta`，要求 Node.js `>=22.12.0`、pnpm `10.33.0`。
 显式选择版本而不依赖 `latest`；尚未发布的源码需先构建 tarball，
 见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm create lumal-admin@0.0.6-beta my-admin
-pnpm create lumal-admin@0.0.6-beta my-admin --api-mode local   # 默认
-pnpm create lumal-admin@0.0.6-beta my-admin-http --api-mode http
-pnpm create lumal-admin@0.0.6-beta my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
-pnpm create lumal-admin@0.0.6-beta my-admin-v5 --preset vben-compatible --features none
-pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-screen --template screen
-pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-blank --template blank
+pnpm create lumal-admin@0.0.7-beta my-admin
+pnpm create lumal-admin@0.0.7-beta my-admin --api-mode local   # 默认
+pnpm create lumal-admin@0.0.7-beta my-admin-http --api-mode http
+pnpm create lumal-admin@0.0.7-beta my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
+pnpm create lumal-admin@0.0.7-beta my-admin-v5 --preset vben-compatible --features none
+pnpm --package=create-lumal-admin@0.0.7-beta dlx create-lumal my-screen --template screen
+pnpm --package=create-lumal-admin@0.0.7-beta dlx create-lumal my-blank --template blank
 ```
 
 通用 `create-lumal` binary 随现有包分发，不表示独立 `create-lumal` npm 包已发布。
@@ -34,7 +34,7 @@ Screen 的认证、请求、路由、可视化和适配选项见 [项目模板](
 minimal 不接受业务模块。
 
 向导使用方向键单选、Space 多选，并在配置摘要确认后写入项目；
-Escape / Ctrl+C 可取消。候选发布核验前使用本地 tarball，不用历史发布包代替新能力。
+Escape / Ctrl+C 可取消。开发未发布源码时使用精确 tarball，不用历史发布包代替新能力。
 TTY 会询问项目目录、npm 名称及未显式指定的选项；CI、非 TTY 和 `--no-interactive`
 不等待输入，默认 `standard/local/hash`。目录与 npm 名称不同时使用 `--name`；
 `--help` 与 `--version` 不写入项目。无 `--force`，非空目录、文件或符号链接目标均拒绝覆盖；
@@ -49,7 +49,7 @@ TTY 会询问项目目录、npm 名称及未显式指定的选项；CI、非 TTY
 - 主题与布局偏好、设置抽屉
 - 明确 vendor 分包配置
 
-Core 与图标依赖精确使用同版 `0.0.6-beta`，不依赖浮动标签。模板按用户隔离布局状态，
+Core 与图标依赖精确使用同版 `0.0.7-beta`，不依赖浮动标签。模板按用户隔离布局状态，
 登录前清理旧快照。HTTP 模式已接通登录、刷新、用户、权限、菜单、退出和 CRUD，
 必须配置符合 `API-CONTRACT.md` 的真实后端；未配置不会回退演示认证。
 Local 的演示账号仅用于开发，生产默认禁用。

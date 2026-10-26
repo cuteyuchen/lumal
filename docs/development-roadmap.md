@@ -4,9 +4,9 @@
 
 ## 当前基线
 
-- 日期：2026-10-25。
-- 工作区版本：`0.0.6-beta`（十个公共包已发布并完成 registry 与同次发布产物核验；私有示例应用仍为 `0.0.0`）。本轮新增三种项目形态、工程规范、通用视口和消费者修复，最新已执行结果见 [下一阶段验收](./lumal-next-phase-audit.md)；正式标签及逐包证据见 [本版发布记录](./npm-release-0.0.6-beta.md)，不将发包成功扩展为真实业务验收或生产部署。
-- 当前分支：`codex/lumal-project-types-and-quality`；本轮实际开发基线 `29e474e`。上一版正式标签源提交 `53395dc`，`0.0.5-beta` 的九包发布事实保留在 [历史记录](./npm-release-0.0.5-beta.md)。
+- 日期：2026-10-26。
+- 工作区版本：已发布的 `0.0.7-beta`（十个公共包保持同版，私有示例应用仍为 `0.0.0`）。本版纳入 Vite 精细视口转换、共享设计模板和 Cockpit Designer 名称修复；正式门禁、registry、同次产物及六类 registry 消费者结果见 [本版发布记录](./npm-release-0.0.7-beta.md)。此前三种项目形态、工程规范、通用视口和消费者修复的结果见 [下一阶段验收](./lumal-next-phase-audit.md)；历史十包发布见 [0.0.6-beta 记录](./npm-release-0.0.6-beta.md)。本次未部署生产，不将发包成功扩展为真实业务或线上验收。
+- 当前分支：`codex/release-0.0.7-beta`，正式标签源提交为 `5d190e2`，基于 `aeace54` 的隔离发布工作树完成发布。文档、Skill 和 Admin 工作区三模式在发包后收尾，不改写标签或已发布 tarball。Demo 整改基线为 `3f9e184`，记录见 [整改验收](./cockpit-demo-remediation-2026-10-26.md)；此前项目类型阶段使用 `codex/lumal-project-types-and-quality` / `29e474e`，`0.0.5-beta` 九包及正式标签源提交 `53395dc` 的事实保留在 [历史记录](./npm-release-0.0.5-beta.md)。
 - 前一阶段提交记录（历史基线，不代表本轮工作区已提交）：
   - `671f739 perf: 落地 admin/core/cockpit 整体性能与正确性优化`
   - `4d7a0e8 feat(components): 增强飞线图组件与文档，优化可访问性与交互体验`

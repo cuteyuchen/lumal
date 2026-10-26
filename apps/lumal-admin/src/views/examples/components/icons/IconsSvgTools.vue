@@ -223,7 +223,7 @@ async function copyOutput(value: string, label: string): Promise<void> {
 
 .icons-svg-tools__swatch code {
   color: var(--el-text-color-regular);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
 }
 
 .icons-svg-tools__preview {
@@ -303,7 +303,7 @@ async function copyOutput(value: string, label: string): Promise<void> {
   color: var(--el-text-color-primary);
   background: var(--el-fill-color-blank);
   font-family: monospace;
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
   line-height: 1.6;
   overflow-wrap: anywhere;
   resize: vertical;
@@ -319,7 +319,7 @@ async function copyOutput(value: string, label: string): Promise<void> {
   min-height: 20px;
   margin: 0;
   color: var(--el-text-color-secondary);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
 }
 
 @media (max-width: 768px) {

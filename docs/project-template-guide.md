@@ -1,19 +1,19 @@
 # 项目模板
 
-本文面向已发布的 `0.0.6-beta`，扩展现有 `create-lumal-admin`，不新增独立 npm 包。包内提供
+本文面向已发布的 `0.0.7-beta`，扩展现有 `create-lumal-admin`，不新增独立 npm 包。包内提供
 `create-lumal` binary 和 `createLumalProject` API，保留旧 binary、API 与默认参数。
 `create-lumal` 名称在 2026-10-23 的 registry 查询返回 E404，不表示已取得发布权。
 当前仍没有独立的 `create-lumal` npm 包，不要把 `pnpm create lumal` 当成已发布命令。
 
 ## 版本与入口
 
-`create-lumal-admin@0.0.6-beta` 已发布，可精确选择包内的通用 binary；
-正式标签与逐包核验见 [本版发布记录](./npm-release-0.0.6-beta.md)：
+`create-lumal-admin@0.0.7-beta` 已发布，可精确选择包内的通用 binary；
+正式标签、逐包与 registry 消费者核验见 [本版发布记录](./npm-release-0.0.7-beta.md)：
 
 ```sh
-pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal demo --template blank
-pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal screen-demo --template screen
-pnpm create lumal-admin@0.0.6-beta admin-app --preset standard --api-mode local
+pnpm --package=create-lumal-admin@0.0.7-beta dlx create-lumal demo --template blank
+pnpm --package=create-lumal-admin@0.0.7-beta dlx create-lumal screen-demo --template screen
+pnpm create lumal-admin@0.0.7-beta admin-app --preset standard --api-mode local
 ```
 
 安装前核对实际版本；验证未发布源码时使用本地 tarball，不用旧 CLI 代替新增能力。
@@ -67,6 +67,9 @@ Charts 使用 ECharts；DataV 数字/边框不要求 ECharts；Cockpit 只使用
 不加载 Designer。`--viewport disabled|responsive|contain|width|vw` 单独控制适配，
 默认 responsive 不增加依赖；非默认适配才加入 `@lumal/viewport`。
 `scale` 保留为 contain 的别名，不是第二套算法。
+`0.0.7-beta` 的视口模板将 `viewportDesign/viewportPolicy` 集中到根 `viewport.config.ts`，
+供运行时包装器与按需构建转换共享设计尺寸；不会默认安装或启用 `@lumal/vite`。
+已有 `0.0.6-beta` 项目的配置由应用拥有，升级 npm 依赖不会自动补写该模板文件。
 
 ```sh
 node packages/create-lumal-admin/dist/project-cli.js datav-screen --template screen --visualization datav --viewport contain --no-interactive

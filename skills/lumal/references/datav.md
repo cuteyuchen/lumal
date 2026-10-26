@@ -68,5 +68,7 @@ import '@lumal/datav/style.css'
 - 滚动表的 HTML 字符串按文本渲染，这是安全边界，不通过 `v-html` 恢复旧行为。
 - `LumalFullScreenContainer` 与 Cockpit 不要重复缩放；组合时 Cockpit 选择 `viewport-mode="external"`。
 - 主题使用 `--lumal-datav-*` 语义变量，行业皮肤放应用层。
+- 全屏容器默认 fixed；嵌入 Admin 内容区时为局部宿主明确覆盖为 absolute 并设置宽高。
+  Admin `examples/DataVView.vue` 演示边框、装饰、翻牌和滚动排行，不需要安装 Cockpit 或地图引擎。
 
 仓库核对位置：`packages/datav/src/index.ts`、`types.ts`、各组件与测试；上游版权说明在包内 `THIRD_PARTY_NOTICES.md`。

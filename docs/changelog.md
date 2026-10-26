@@ -1,5 +1,17 @@
 # 更新日志
 
+## 0.0.7-beta (2026-10-26)
+
+- `@lumal/vite` 新增属性名单、选择器排除、声明忽略与独立 Vue 行内样式转换开关；保护原子化任意值类名及其 CSS 规则。
+- 修复保留字号却缩小行高的问题，默认保护最小尺寸与已有适配表达式；保留文件、依赖、SCSS source map 和 Dev/Build 一致性边界。
+- Screen 视口模板共享项目级设计尺寸，不默认开启构建转换，不修改 `@lumal/viewport` 公共 API。
+- 修复 Designer 名称输入与保存草稿，行内样式选择器支持属性存在、静态值和祖先排除。
+- 十包统一版本和内部依赖；新增 Vite tarball 消费者、双平台 Cockpit 完整构建及生产 E2E 门禁。
+
+十个公共包已通过正式标签的 Release Gate，并完成 registry、同次发布产物与六类 registry 消费者核验，
+见 [本版发布记录](./npm-release-0.0.7-beta.md)。十包 `beta` 指向本版，既有 `latest` 未改动。
+本次仅发布 npm，不部署生产；Admin 三模式工作区属于发包后的应用层修改，不包含在本版 npm tarball。
+
 ## 0.0.6-beta (2026-10-25)
 
 本版十个公共包已于 2026-10-25 发布，新增 `@lumal/viewport`。

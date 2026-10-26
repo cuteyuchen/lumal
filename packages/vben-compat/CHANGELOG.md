@@ -1,5 +1,11 @@
 # @lumal/vben-compat
 
+## 0.0.7-beta (2026-10-26)
+
+### Patch Changes
+
+- 同步 Core 与图标依赖至 0.0.7-beta；保持 v5、legacy 和无 UI 路由入口，不增加迁移运行时依赖。
+
 ## 0.0.6-beta (2026-10-25)
 
 ### Patch Changes

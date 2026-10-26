@@ -2,7 +2,7 @@
 
 Lumal 后台核心包，提供应用安装器、布局、路由菜单辅助、权限、请求、主题和基础组件。
 
-本文 API 基线为 `0.0.6-beta`，实际版本可用性以 registry 为准。
+本文 API 基线为已发布并核验的 `0.0.7-beta`；开发未发布源码时使用精确提交的 tarball。
 
 ```ts
 import { createLumalAdmin } from '@lumal/core'
@@ -28,11 +28,11 @@ await createLumalAdmin({ rootComponent: App }).mount('#app')
 
 ## 0.0.6-beta 修复
 
-以下变更属于本版，不能通过重新安装历史同版本包取得；发布核验前使用候选 tarball：
+以下变更自 `0.0.6-beta` 提供，当前版本继续保留；升级验证应使用目标版本的实际 tarball：
 
 - 序号列 `{ type: 'index', label: '序号' }` 不要求业务 field，支持跨页/选中行导出，不派生 CRUD 表单。
 - 清理缓存、切换 scope 或替换客户端凭据后，旧写请求401/刷新失败不触发新会话退出；刷新与过期通知按会话隔离。
 - TypedArray 保留二进制请求体。业务成功码、字段和上下文继续由应用 Adapter 处理。
 
 `clearCache` 不替应用取消在途请求或保护自定义刷新写入。应用仍须使用会话 AbortSignal/代次。
-升级含旧补丁的消费者前，先在隔离副本验证候选tarball；详见 `docs/upgrade-guide.md`。
+升级含旧补丁的消费者前，先在隔离副本验证目标版本；详见 `docs/upgrade-guide.md`。

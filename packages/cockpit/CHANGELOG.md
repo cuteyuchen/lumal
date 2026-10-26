@@ -1,5 +1,12 @@
 # @lumal/cockpit
 
+## 0.0.7-beta (2026-10-26)
+
+### Patch Changes
+
+- 修复 Designer 布局名称输入被旧值覆盖及保存旧名称的问题，保留草稿隔离、取消和保存前提交。
+- 同步 Core、图标与视口依赖至 0.0.7-beta；Runtime/Designer 隔离及 external 缩放契约不变。
+
 ## 0.0.6-beta (2026-10-25)
 
 ### Patch Changes

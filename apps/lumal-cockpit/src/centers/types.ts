@@ -1,6 +1,6 @@
 import type { SceneStatus } from '../data/demo-scene'
 
-export type CenterEngine = 'echarts' | 'openlayers' | 'cesium'
+export type CenterEngine = 'echarts' | 'openlayers' | 'cesium' | 'standalone'
 
 export interface SceneCenterRendererProps {
   selectedIds: string[]

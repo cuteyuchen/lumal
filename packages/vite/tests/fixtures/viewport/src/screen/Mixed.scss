@@ -4,4 +4,20 @@
 
 .screen-mixed {
   width: 384px;
+  min-width: 320px;
+  min-height: 40px;
+  font-size: 14px;
+  line-height: 20px;
+  border: 2px solid red;
+  padding: 24px;
+  /*! lumal-viewport-ignore-next */
+  height: 192px;
+}
+
+.screen-mixed-adapted {
+  width: calc(192px * var(--lumal-viewport-scale));
+}
+
+.screen-mixed-fixed {
+  width: 192px;
 }

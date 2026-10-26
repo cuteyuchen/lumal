@@ -2,11 +2,12 @@
 
 Lumal 通用驾驶舱 v3 编排框架。包负责布局配置、左右模块运行时、Designer、组件注册和消息总线；消费应用负责中心内容、业务模块、导航、主题皮肤、权限和持久化。
 
-本文 API 基线为 `0.0.6-beta`，实际版本可用性以 registry 为准；v3 是配置模型，不是 npm 版本。
+本文 API 基线为已发布并核验的 `0.0.7-beta`，接入时仍应核对实际安装版本；v3 是配置模型，不是 npm 版本。
 
 ## v3 模型
 
-- `CockpitConfig` 只包含 `layouts` 和 `activeLayoutId`，不包含分类、页面或中央组件配置。
+- `CockpitConfig` 必填字段为 `schemaVersion`、`id`、`title`、`layouts`，`activeLayoutId` 可选。
+- v3 不再包含旧版 `categories` / `pages` 或中心场景配置。
 - 一个布局保存独立的左、右区域。
 - 区域由像素列宽和百分比行高组成；所有行高标准化后合计 `100%`。
 - 普通行每列对应一个空槽或模块；合并行跨满区域并作为 Tab 容器。
@@ -61,7 +62,8 @@ registry.registerWidget({
 
 - 布局导航由消费应用负责。
 - 中心内容位于底层全宽画布，左右区域覆盖在其两侧。
-- `viewportMode="scale"` 使用 1920 × 1080 等比缩放；`viewportMode="vwvh"` 使用 VW/VH 单位适配。
+- `viewportMode="scale"` 使用 1920 × 1080 等比缩放；`viewportMode="vwvh"` 使用 VW/VH 单位适配；`viewportMode="external"` 由父容器负责缩放。
+- 外层使用 `LumalViewport` 或 DataV 全屏容器时，内层选择 `external`，同一内容树只缩放一次。
 - 相同模块 type 可以创建多个拥有独立 `instanceId` 的实例。
 - Tab 切换保留全部模块实例状态。
 
@@ -87,6 +89,9 @@ registry.registerWidget({
 - 已放置模块共享 `mode: 'design'` 的消息总线；模块库预览保持隔离。
 - 保存事件输出 `{ config, layout }`，包不调用 HTTP 或写入 localStorage。
 
+`0.0.7-beta` 已修复并发布布局名称输入在保存前被还原的补丁，并有回归测试保护。
+历史 registry 版本 `0.0.6-beta` 不包含该修复；npm 发布也不表示独立 Demo 已部署。
+
 ## 公共 Card
 
 `LumalCockpit` 默认使用 `LumalCockpitCard`。应用可通过 `cardComponent` 替换外框和 Tab 头部，组件须接收：
@@ -103,3 +108,11 @@ registry.registerWidget({
 ## 主题边界
 
 包只提供结构样式和语义 CSS 变量，不包含固定行业皮肤、Logo、地图、业务截图或业务字体。消费应用可以覆盖变量、传入 Card、使用标题背景和自定义插槽实现品牌样式。
+
+## 可运行示例
+
+- [独立 Demo](../../apps/lumal-cockpit/README.md)：四种中央场景、配置持久化、按需 Designer 和隔离 Viewport 实验。
+- [Admin 示例](../../apps/lumal-admin/README.md)：最小 Runtime 注册表与局部容器，不加载地图或 Designer。
+- [完整接入与 Cesium 部署](../../docs/demo-integration-guide.md)：安装、两文件示例、样式、资源目录和排错。
+
+Demo 的地图引擎不是公共包依赖；本分支示例未部署前，线上 Demo 不代表本分支代码。

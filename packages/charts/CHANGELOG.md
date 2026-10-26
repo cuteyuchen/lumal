@@ -1,5 +1,11 @@
 # @lumal/charts
 
+## 0.0.7-beta (2026-10-26)
+
+### Patch Changes
+
+- 与十包 fixed-group 同步为 0.0.7-beta；本轮未更改图表 API 或引擎 peer。
+
 ## 0.0.6-beta (2026-10-25)
 
 ### Patch Changes

@@ -1,7 +1,8 @@
 # 屏幕与工作区适配
 
-本文面向已发布的 `0.0.6-beta` 通用视口 API，正式标签与逐包核验见
-[本版发布记录](./npm-release-0.0.6-beta.md)。开发未发布源码时使用本地 tarball，不用历史包代替新增能力验收。
+本文面向已发布的 `0.0.7-beta`，正式标签、逐包与 registry 消费者核验见
+[本版发布记录](./npm-release-0.0.7-beta.md)。开发未发布源码时使用本地 tarball，不用历史包代替新增能力验收。
+运行时 API 自 `0.0.6-beta` 提供；下文属性名单、最小尺寸保护、Vue 行内样式及原子化 CSS 保护自 `0.0.7-beta` 提供。
 `@lumal/viewport` 仅以 Vue 为 peer；不依赖 Core、Element Plus、地图、图表或 Cockpit。
 独立包让普通 Vue/Blank/Screen 能使用同一算法，DataV/Cockpit 也无需反向依赖后台。
 复制三份算法或放进 Core 会分别增加维护成本或后台依赖；因此选择单独的小包。
@@ -87,6 +88,25 @@ const route = useRoute()
 KeepAlive 停用时断开观察器和待执行帧；激活重新测量，不重建页面实例。
 组件只写自己的行内变量，切路由不会残留全局样式。
 
+### Admin Demo 的工作区三模式
+
+发包后的 Admin Demo 以应用层包装器组合 `responsive / contain / width`，不是 Core 新增布局 API。
+仅内容工作区参与适配，Header、Tabbar、侧栏、全局字号和 body Teleport 弹层保持原布局。
+默认 responsive；设计工作区为 `1280 × 720`，`minScale: 0.75`、`minFontSize: 12`，
+偏好与路由的显式覆盖由应用管理。缩放达到下限时允许局部滚动，不承诺任意小窗口完整容纳。
+
+包装器为设计画布内显式接入的主题字号 token 和继承正文补偿字号；
+固定像素、`rem`、自绘 Canvas 和应用自己的字体规则不会被自动保护，
+需要页面显式接入：公共包装器可使用 `--lumal-viewport-min-font-size`，
+本 Demo 工作区使用 `--lumal-workspace-min-font-size`，也可直接调用 `computeViewportFontSize`。
+Demo 的六个路由覆盖为 responsive：`examples/viewport`、`examples/datav`、
+`examples/cockpit`、`examples/crud-table`、`system/user`、`system/role`。
+前三者拥有自己的缩放责任，后三者保留现有 CRUD 编辑器的定位上下文，避免非 Teleport 弹层被画布约束。
+这些覆盖通过可信应用映射写入 `meta.workspaceViewport: 'self-managed'`，不影响路由授权。
+业务地图与图表页也应按自身引擎需求显式覆盖，不让缩放改变坐标系统。
+稳定的 RouterView/KeepAlive 插槽不得随模式切换重新挂载。
+这些应用层改动不包含在已发布的 npm tarball 中，实际验证结果单独记录，不能从包发布推断通过。
+
 ## 容器与独立 Screen 示例
 
 ```vue
@@ -133,35 +153,160 @@ Element Plus Dialog 使用 append-to-body；Popper/Select/Tooltip 保持默认 t
 382px侧栏、210px底栏、业务 mapPadding、行业断点和颜色不能硬编码进 Lumal。
 不要为了适配删除地图、配色和业务回归断言；固定尺寸断言应改成可配置策略与边界断言。
 
+## 共享设计配置
+
+两个包没有相互依赖，也无需新增配置框架。用应用自己的 `viewport.config.ts` 保存同一份设计尺寸：
+
+```ts
+// 应用自有 viewport.config.ts，不导入 Vue 或 Vite。
+export const viewportDesign = {
+  designWidth: 1920,
+  designHeight: 1080,
+} as const
+
+// 作用于同一内容树的项目约定，按需分别启用测量和构建转换。
+export const viewportFeatures = {
+  measurement: true,
+  canvasScale: false,
+  cssTransform: false,
+}
+
+export const viewportPolicy = {
+  ...viewportDesign,
+  mode: !viewportFeatures.measurement
+    ? 'disabled'
+    : viewportFeatures.canvasScale ? 'contain' : 'responsive',
+  minFontSize: 12,
+} as const
+```
+
+运行时在既有入口使用 `app.use(createViewportPlugin(viewportPolicy))`，并由全局、页面或
+局部 `<LumalViewport :policy="...">` 包装器实际采用；未使用包装器不会自动缩放 DOM。
+Vite 使用 `viewportWidth: viewportDesign.designWidth`，并把开关设置为
+`viewportFeatures.cssTransform && !viewportFeatures.canvasScale`。
+测量与构建可以分别启用；仅测量的 `responsive` 可与构建转换协作，`contain/width`
+整体缩放画布不能再执行 px→vw。
+
+这组开关只是应用侧示例，不是新公共 API。混合项目中不同子树可以采用不同策略，
+但运行时缩放的文件目录仍须从构建范围排除，页面的临时 policy 覆盖不能自动改变构建结果。
+Screen 视口脚手架生成的根 `viewport.config.ts` 已集中 `viewportDesign/viewportPolicy`；
+不会因此默认安装或启用 `@lumal/vite`。Admin 和 Blank 可以同样按需添加这份普通配置。
+
 ## 可选构建转换
 
-Vite插件只处理CSS声明；SFC style和SCSS预处理后的样式与普通CSS共用一条管线：
+CSS、SFC style 和 SCSS 预处理后的声明共用 PostCSS 管线；Vue 行内样式有独立开关，
+基于模板 AST 定位并复用 CSS 声明规则，不扫描整份 SFC 或 TS/JS：
 
 ```ts
 import { createViewportTransformPlugin } from '@lumal/vite'
+import { viewportDesign, viewportFeatures } from './viewport.config'
 
 const viewport = createViewportTransformPlugin({
-  enabled: true,
+  enabled: viewportFeatures.cssTransform && !viewportFeatures.canvasScale,
   include: ['src/screen/**'],
-  exclude: ['**/map/**'],
-  viewportWidth: 1920,
+  exclude: ['**/map/**', 'src/screen/canvas/**'],
+  viewportWidth: viewportDesign.designWidth,
   fontSize: false,
+  minSize: false,
   customProperties: false,
+  includeProperties: ['width', 'height', 'top', 'left', 'padding*', '*gap'],
+  excludeProperties: ['border*', 'margin*'],
+  excludeSelectors: ['.runtime-canvas', '.map', /\.el-(?:dialog|popper)\b/],
+  inlineStyles: false,
 })
 ```
 
-插件加入已有plugins；默认关闭。默认不转换依赖，确需转换时用dependencies精确包名白名单。
-URL、引号字符串、var引用、已有vw、普通数字不会被改写，<=1px默认保留。
-fontSize/customProperties须各自显式启用；不扫描脚本或模板内联style。
-这项限制避免误转地图坐标、接口字符串和动态组件配置，动态布局使用响应式尺寸工具。
-已有PostCSS插件与配置文件保留；配置错误明确失败，不忽略。
+插件加入已有 plugins；默认关闭，必须显式 include，不按 serve/build 分支重复配置。
+默认不转换依赖，确需转换时用 `dependencies` 精确包名白名单。
+同一规则中的任一分组、嵌套祖先命中排除选择器时整条声明保留，不拆分选择器。
+字符串按选择器子串、正则按选择器匹配，正则 `g/y` 无跨规则状态。
+
+### 属性控制
+
+| 控制 | 默认 | 说明 |
+| --- | --- | --- |
+| `includeProperties` | `['*']` | CSS 连字符属性 glob；`[]` 不转换 |
+| `excludeProperties` | `[]` | 黑名单优先，支持 `border*`、`padding*`、`margin*`、`*gap` |
+| `fontSize` | `false` | `font-size`、`font`、`line-height` 一起保留 |
+| `minSize` | `false` | 保留物理和逻辑的宽高下限 |
+| `customProperties` | `false` | 保留自定义属性；`--lumal-viewport-*` 始终保留 |
+| `minPixelValue` | `1` | 保留绝对值不大于该值的 px，保护细边框 |
+| `precision` | `6` | 转换精度，`0..10` 位小数 |
+| `inlineStyles` | `false` | 独立开启 Vue 模板行内样式转换 |
+
+文件和来源限制、选择器/忽略标记/已有适配保护都不能被属性名单绕过；
+黑名单优先于白名单，白名单不能绕过字体、最小尺寸、自定义属性开关。
+因此 `font-size:14px; line-height:20px` 在 `fontSize:false` 时都保持原值，
+不会出现字号不变却行高缩小的问题。`fontSize:true` 才一起转换；
+若只转换行高，可再用 `excludeProperties: ['font', 'font-size']` 保护字体。
+
+`min-width/min-height/min-inline-size/min-block-size` 默认不转换，避免缩小最小可用尺寸；
+确需按设计尺寸缩放时设置 `minSize:true`。边框、间距继续沿用原像素阈值和转换行为，
+可以分别通过属性名单排除，不必关闭其他布局属性。
+
+### 声明与已有适配
+
+```css
+.panel {
+  /* lumal-viewport-ignore-next */
+  width: 382px;
+  height: 210px; /* lumal-viewport-ignore */
+  padding: 24px;
+}
+```
+
+前置 `ignore-next` 只保护紧随声明，后置 `ignore` 只保护紧邻前一声明。
+Sass 压缩时使用 `/*! ... */` 保留标记。原始注释不会改写为运行时逻辑。
+
+含 `var/env/attr/min/max/clamp` 函数或已有视口、容器、字体相对单位的声明整体保留，
+不会把 `calc(192px * var(--lumal-viewport-scale))` 中的 192px 再变成 vw，
+也不把 `clamp(320px, 50vw, 960px)` 的上下限缩小。
+URL、引号字符串、普通数字不变，重复处理仍然幂等。
+外部 transform 或跨组件的运行时策略无法靠 CSS 源码可靠推断，必须显式排除其文件、
+选择器或声明；不承诺自动识别任意缩放容器。
+
+### Vue 行内样式与原子化 CSS
+
+设置 `inlineStyles:true` 后：
+
+```vue
+<template>
+  <div style="width: 192px; height: 96px; font-size: 14px; line-height: 20px" />
+  <div :style="[{ width: '192px' }, runtimeStyle, { top: '24px' }]" />
+  <!-- lumal-viewport-ignore -->
+  <div style="width: 192px">
+    <span style="height: 96px" />
+  </div>
+  <div class="w-[192px] h-[96px]" aria-label="width: 192px" />
+</template>
+```
+
+宽度 1920、默认字体策略下，静态宽高变为 `10vw/5vw`，字号和行高保持 `14px/20px`；
+样式数组中的静态对象值同样处理，`runtimeStyle` 不求值。
+对象的 CSS fallback 字符串数组与无插值模板字符串可以处理；
+条件/逻辑表达式内部不遍历。对象的 `fontSize/lineHeight` 等 camelCase 属性按对应 CSS 属性过滤。
+模板忽略注释跳过紧随元素及子树。无法静态分析的表达式保持原样，交给运行时 API。
+配置了选择器排除时，动态 class/id、data 等非 style 属性无法确定是否命中，保守跳过该元素子树。
+不会修改 class、`:class`、`aria-label`、其他模板属性、脚本变量或业务字符串。
+
+Tailwind/UnoCSS 任意值类名及其生成 CSS 都保留，例如
+`.w-\[192px\] { width:192px }` 不参与转换；原子类本身不会阻止显式行内 style 的转换。解析选择器的 class AST，
+不会把普通的 `[data-size="192px"]` 属性选择器误识别为原子化规则。
+这不是脚本字符串转换；ECharts 配置和动态业务数值继续显式使用现有公开 API。
+
+已有 PostCSS 插件与配置文件保留；配置错误明确失败，不忽略。
 
 SCSS等预处理输出有原始source map时，逐声明校验其来源，避免Screen入口合并
 Element Plus、Shared或Admin样式后绕过白名单。没有可靠map时，含跨文件
 `@use` / `@forward` / Sass `@import`、无法解析语法或函数`additionalData`的
 style整体跳过并发出警告；将外部样式与Screen声明拆成独立文件或style块。
-纯SCSS声明与同一SFC中的独立安全style仍可转换。低层PostCSS入口处理预编译
+纯SCSS声明与同一SFC中的独立安全CSS/SCSS style仍可转换。低层PostCSS入口处理预编译
 SCSS/SFC时也必须提供原始map；来源不明的声明保留px，不能扩大转换范围。
+
+已有选项与调用方式保留，行内样式仍默认关闭。此次安全修正会额外保护行高、最小尺寸和
+已有适配表达式；依赖旧最小尺寸缩放结果的项目需显式启用 `minSize` 后验证。
+构建 vw 仍相对浏览器视口；嵌入 Admin 的窄容器优先采用运行时测量和容器单位，
+不要把浏览器 vw 当作容器宽度。地图、Element Plus 与 Teleport 浮层默认保持在转换范围之外。
 
 ## 隔离验收
 

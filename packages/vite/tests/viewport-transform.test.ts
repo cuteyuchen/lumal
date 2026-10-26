@@ -1,4 +1,6 @@
 // @vitest-environment node
+import type { Declaration } from 'postcss'
+import type { ViewportTransformOptions } from '../src'
 import { resolve } from 'node:path'
 import vue from '@vitejs/plugin-vue'
 import postcss from 'postcss'
@@ -9,13 +11,84 @@ import { createViewportPostcssPlugin, createViewportTransformPlugin } from '../s
 
 describe('受控视口 CSS 转换', () => {
   const options = { enabled: true, include: ['src/screen/**'], viewportWidth: 1920 }
-  async function transform(css: string, file = 'C:/app/src/screen/page.vue?vue&type=style&lang.css', overrides = {}) {
+  async function transform(css: string, file = 'C:/app/src/screen/page.vue?vue&type=style&lang.css', overrides: Partial<ViewportTransformOptions> = {}) {
     return (await postcss([createViewportPostcssPlugin({ ...options, ...overrides }, 'C:/app')]).process(css, { from: file })).css
   }
   it('默认关闭，开启必须显式限定范围', async () => {
     expect(await transform('a{width:192px}', undefined, { enabled: false })).toBe('a{width:192px}')
     expect(() => createViewportPostcssPlugin({ enabled: true, include: [] })).toThrow('include')
     expect(() => createViewportPostcssPlugin({ ...options, viewportWidth: 0 })).toThrow('viewportWidth')
+    expect(() => createViewportPostcssPlugin({ ...options, minPixelValue: -1 })).toThrow('minPixelValue')
+    expect(() => createViewportPostcssPlugin({ ...options, minPixelValue: Number.NaN })).toThrow('minPixelValue')
+  })
+  it('默认同时保护字号、font简写与行高，显式开启后一起转换', async () => {
+    const css = 'a{font-size:14px;line-height:20px;font:italic 14px/20px sans-serif;width:192px}'
+    expect(await transform(css)).toBe(css.replace('width:192px', 'width:10vw'))
+    expect(await transform(css, undefined, { fontSize: false })).toBe(css.replace('width:192px', 'width:10vw'))
+    expect(await transform(css, undefined, { fontSize: true }))
+      .toBe('a{font-size:0.729167vw;line-height:1.041667vw;font:italic 0.729167vw/1.041667vw sans-serif;width:10vw}')
+    expect(await transform('a{line-height:1.5;font-size:14px}', undefined, { fontSize: true }))
+      .toBe('a{line-height:1.5;font-size:0.729167vw}')
+  })
+  it('默认保护物理与逻辑最小尺寸，可单独开启而不改变其他旧选项', async () => {
+    const css = 'a{min-width:320px;min-height:40px;min-inline-size:320px;min-block-size:40px;width:384px;height:192px}'
+    expect(await transform(css)).toBe(css.replace('width:384px;height:192px', 'width:20vw;height:10vw'))
+    expect(await transform(css, undefined, { minSize: true }))
+      .toBe('a{min-width:16.666667vw;min-height:2.083333vw;min-inline-size:16.666667vw;min-block-size:2.083333vw;width:20vw;height:10vw}')
+  })
+  it('属性白名单支持通配符和大小写，空白名单不转换，黑名单始终优先', async () => {
+    const css = 'a{WIDTH:192px;height:192px;padding:24px;padding-left:12px;min-width:320px;font-size:14px;line-height:20px;--size:192px}'
+    expect(await transform(css, undefined, {
+      includeProperties: ['width', 'padding*', 'min-*', 'font*', 'line-height', '--*'],
+      excludeProperties: ['padding-left'],
+    })).toBe('a{WIDTH:10vw;height:192px;padding:1.25vw;padding-left:12px;min-width:320px;font-size:14px;line-height:20px;--size:192px}')
+    expect(await transform(css, undefined, { includeProperties: [] })).toBe(css)
+    expect(await transform(css, undefined, {
+      fontSize: true,
+      minSize: true,
+      customProperties: true,
+      excludeProperties: ['*'],
+    })).toBe(css)
+  })
+  it('边框、间距与负数沿用像素阈值，可按属性保留', async () => {
+    const css = 'a{border:1px solid red;border-top-width:2px;padding:24px 1px;margin:-24px;row-gap:12px;column-gap:12px;width:192px}'
+    expect(await transform(css))
+      .toBe('a{border:1px solid red;border-top-width:0.104167vw;padding:1.25vw 1px;margin:-1.25vw;row-gap:0.625vw;column-gap:0.625vw;width:10vw}')
+    expect(await transform(css, undefined, { excludeProperties: ['border*', 'padding*', 'margin*', '*gap'] }))
+      .toBe(css.replace('width:192px', 'width:10vw'))
+    expect(await transform('a{border-width:2px;padding:-2px 3px}', undefined, { minPixelValue: 2 }))
+      .toBe('a{border-width:2px;padding:-2px 0.15625vw}')
+  })
+  it('选择器排除覆盖分组、嵌套和伪类，不受正则的全局状态影响', async () => {
+    const css = '.fixed{width:192px}.fixed{height:192px}.safe,.map{width:192px}.host{.fixed{width:192px}.fluid{width:192px}}.fixed-parent{& .child{width:192px}}.safe:is(.map,.fluid){width:192px}.fluid{width:192px}'
+    const pattern = /\.fixed(?:-parent)?\b/g
+    pattern.lastIndex = 3
+    const result = await transform(css, undefined, { excludeSelectors: [pattern, '.map'] })
+    expect(result).toBe(css.replaceAll('.fluid{width:192px}', '.fluid{width:10vw}'))
+    expect(pattern.lastIndex).toBe(3)
+    expect(await transform('.fixed{color:red;.child{width:192px}}', undefined, { excludeSelectors: ['.fixed'] }))
+      .toContain('width:192px')
+  })
+  it('声明忽略标记方向明确，支持Sass保留注释且不泄漏到相邻声明或规则', async () => {
+    const css = '.a{width:192px;/* lumal-viewport-ignore-next */height:192px;margin:192px;/*! lumal-viewport-ignore */padding:192px}.b{width:192px}'
+    expect(await transform(css))
+      .toBe('.a{width:10vw;/* lumal-viewport-ignore-next */height:192px;margin:192px;/*! lumal-viewport-ignore */padding:10vw}.b{width:10vw}')
+    expect(await transform('.a{/* lumal-viewport-ignore-next */}.b{width:192px}')).toContain('.b{width:10vw}')
+    expect(await transform('a{width:192px;/* not-lumal-viewport-ignore */height:192px}'))
+      .toContain('width:10vw')
+  })
+  it('整条保护视口变量、动态表达式和尺寸约束，避免局部px二次缩放', async () => {
+    const css = 'a{width:calc(192px * var(--lumal-viewport-scale));height:calc(var(--panel) + 24px);padding:var(--gap,24px) 12px;top:calc(env(safe-area-inset-top) + 24px);left:calc(10vw + 24px);right:calc(10cqw + 24px);bottom:calc(1rem + 24px);gap:clamp(8px,2%,24px);max-width:min(960px,100%);min-height:max(40px,10%);--lumal-viewport-x-unit:192px;margin:calc(100% - 192px)}'
+    expect(await transform(css, undefined, { minSize: true, customProperties: true }))
+      .toBe(css.replace('margin:calc(100% - 192px)', 'margin:calc(100% - 10vw)'))
+  })
+  it('已有适配单位与阈值留下的px在多插件或重复处理时保持幂等', async () => {
+    const css = 'a{padding:24px 1px;width:calc(10vw + 24px);height:clamp(40px,10vw,192px)}'
+    const plugin = createViewportPostcssPlugin(options, 'C:/app')
+    const first = (await postcss([plugin, createViewportPostcssPlugin(options, 'C:/app')])
+      .process(css, { from: 'C:/app/src/screen/page.css' })).css
+    expect(first).toBe('a{padding:1.25vw 1px;width:calc(10vw + 24px);height:clamp(40px,10vw,192px)}')
+    expect(await transform(first, undefined, { minPixelValue: 0 })).toBe(first)
   })
   it('windows/Unix、SFC样式与query路径一致，排除后台与第三方', async () => {
     expect(await transform('a{width:192px}', 'C:\\app\\src\\screen\\page.vue?vue&type=style&lang.css')).toContain('10vw')
@@ -55,6 +128,53 @@ describe('受控视口 CSS 转换', () => {
     const whitelisted = await process(['element-plus'])
     expect(whitelisted).toContain('height: 1.666667vw')
     expect(whitelisted).toMatch(/\.shared-scoped-style\s*\{\s*width:\s*192px/)
+  })
+  it.each(['expanded', 'compressed'] as const)('%s SCSS混合来源保留精细控制、忽略标记与声明source map', async (style) => {
+    const root = resolve(import.meta.dirname, 'fixtures/viewport')
+    const file = resolve(root, 'src/screen/Mixed.scss')
+    const compiled = compile(file, { style, sourceMap: true, loadPaths: [resolve(import.meta.dirname, '../../../node_modules')] })
+    const plugin = createViewportPostcssPlugin({
+      ...options,
+      excludeProperties: ['border*'],
+      excludeSelectors: ['.screen-mixed-fixed'],
+    }, root)
+    const result = await postcss([plugin]).process(compiled.css, {
+      from: file,
+      map: { prev: compiled.sourceMap, inline: false, annotation: false },
+    })
+    const declarations: Record<string, Record<string, string>> = {}
+    result.root.walkDecls((declaration) => {
+      if (declaration.parent?.type !== 'rule')
+        return
+      const values = declarations[declaration.parent.selector] ??= {}
+      values[declaration.prop] = declaration.value
+    })
+    expect(declarations['.screen-mixed']).toMatchObject({
+      'width': '20vw',
+      'min-width': '320px',
+      'min-height': '40px',
+      'font-size': '14px',
+      'line-height': '20px',
+      'border': '2px solid red',
+      'padding': '1.25vw',
+      'height': '192px',
+    })
+    expect(declarations['.screen-mixed-fixed']!.width).toBe('192px')
+    expect(declarations['.screen-mixed-adapted']!.width).toMatch(/192px\s*\*\s*var\(--lumal-viewport-scale\)/)
+    expect(declarations['.shared-scoped-style']!.width).toBe('192px')
+    expect(declarations['.admin-scoped-style']!.height).toBe('192px')
+    const repeated = await postcss([plugin]).process(result.css, {
+      from: file,
+      map: { prev: result.map!.toJSON(), inline: false, annotation: false },
+    })
+    expect(repeated.css).toBe(result.css)
+    let origin: ReturnType<NonNullable<Declaration['source']>['input']['origin']>
+    repeated.root.walkDecls('width', (declaration) => {
+      if (declaration.parent?.type === 'rule' && declaration.parent.selector === '.screen-mixed')
+        origin = declaration.source!.input.origin(declaration.source!.start!.line, declaration.source!.start!.column)
+    })
+    expect(origin!).toMatchObject({ line: 6 })
+    expect(origin! && origin.file?.replaceAll('\\', '/')).toBe(file.replaceAll('\\', '/'))
   })
   it('source map无法归属的声明保守保留px', async () => {
     const result = await postcss([createViewportPostcssPlugin(options, 'C:/app')]).process('a{width:192px}', {
@@ -130,6 +250,71 @@ describe('受控视口 CSS 转换', () => {
       expect(css).toMatch(/\.screen-mixed\s*\{\s*width:\s*384px/)
       expect(css).toMatch(/\.screen-mixed-sfc\s*\{\s*height:\s*384px/)
       expect(outputs.output.filter(item => item.type === 'chunk').map(item => item.code).join('\n')).toContain('coordinate: 192')
+    }
+    finally {
+      await server.close()
+    }
+  })
+  it.each(['file', 'inline'])('%s PostCSS配置下真实Admin/Screen样式在Dev/Build结果一致', async (postcssConfig) => {
+    const root = resolve(import.meta.dirname, 'fixtures/viewport')
+    const config = {
+      root,
+      configFile: false as const,
+      plugins: [vue(), createViewportTransformPlugin({
+        ...options,
+        excludeProperties: ['border*', 'margin*'],
+        excludeSelectors: [/\.screen-map\b/g],
+      })],
+      css: {
+        postcss: postcssConfig === 'inline'
+          ? {
+              plugins: [{
+                postcssPlugin: 'existing-inline-plugin',
+                Declaration(declaration: Declaration) {
+                  if (declaration.prop === '--existing')
+                    declaration.value = 'retained'
+                },
+              }],
+            }
+          : undefined,
+      },
+      logLevel: 'silent' as const,
+      build: { write: false, minify: false, cssMinify: false, rollupOptions: { input: resolve(root, 'controlled.html') } },
+    }
+    function verify(css: string) {
+      expect(css).toMatch(/\.screen-controlled[^{}]*\{[^}]*width:\s*20vw/)
+      expect(css).toMatch(/\.screen-controlled[^{}]*\{[^}]*height:\s*10vw/)
+      expect(css).toMatch(/min-width:\s*320px/)
+      expect(css).toMatch(/min-height:\s*40px/)
+      expect(css).toMatch(/font-size:\s*14px;\s*line-height:\s*20px/)
+      expect(css).toMatch(/padding:\s*1.25vw/)
+      expect(css).toMatch(/margin:\s*24px/)
+      expect(css).toMatch(/border:\s*2px solid red/)
+      expect(css).toMatch(/\.screen-fixed[^{}]*,\s*\.screen-map[^{}]*\{\s*width:\s*192px/)
+      expect(css).toMatch(/\.screen-pinned[^{}]*\{[^}]*width:\s*192px;\s*height:\s*192px/)
+      expect(css).toContain('calc(192px * var(--lumal-viewport-scale))')
+      expect(css).toContain('calc(var(--panel-height) + 24px)')
+      expect(css).toContain('clamp(12px, 2vw, 24px)')
+      expect(css).toContain('--existing: retained')
+      expect(css).toMatch(/\.screen-css[^{}]*\{\s*width:\s*10vw/)
+      expect(css).toMatch(/\.shared-scoped-style\s*\{\s*width:\s*192px/)
+      expect(css).toMatch(/\.admin-scoped-style\s*\{\s*height:\s*192px/)
+      expect(css).toMatch(/\.screen-mixed-controls\s*\{\s*width:\s*384px/)
+    }
+    const server = await createServer(config)
+    try {
+      const styles = []
+      for (const [index, language] of ['scss', 'css', 'scss'].entries()) {
+        const style = await server.transformRequest(`/src/screen/Controlled.vue?vue&type=style&index=${index}&direct${index < 2 ? '&scoped=controls' : ''}&lang.${language}`)
+        styles.push(style!.code)
+      }
+      verify(styles.join('\n'))
+      const built = await build(config)
+      const outputs = (Array.isArray(built) ? built[0]! : built) as { output: { type: string, fileName: string, source?: string, code?: string }[] }
+      verify(outputs.output.filter(item => item.fileName.endsWith('.css')).map(item => String(item.source)).join('\n'))
+      const scripts = outputs.output.filter(item => item.type === 'chunk').map(item => item.code).join('\n')
+      expect(scripts).toContain('left: 192')
+      expect(scripts).toMatch(/top:\s*"192px"/)
     }
     finally {
       await server.close()

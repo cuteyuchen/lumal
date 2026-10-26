@@ -17,7 +17,7 @@
 下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm add @lumal/cockpit@0.0.6-beta @lumal/core@0.0.6-beta @lumal/icons-vue@0.0.6-beta vue@^3.5 element-plus@^2.11 @iconify/vue@^5
+pnpm add @lumal/cockpit@0.0.7-beta @lumal/core@0.0.7-beta @lumal/icons-vue@0.0.7-beta vue@^3.5 element-plus@^2.11 @iconify/vue@^5
 ```
 
 可视化组件按需另装 `@lumal/datav`。
@@ -34,7 +34,8 @@ pnpm add @lumal/cockpit@0.0.6-beta @lumal/core@0.0.6-beta @lumal/icons-vue@0.0.6
 
 ## v3 模型要点
 
-- `CockpitConfig` 仅含 `layouts` 与 `activeLayoutId`
+- `CockpitConfig` 必填字段为 `schemaVersion`、`id`、`title`、`layouts`，`activeLayoutId` 可选
+- v3 不再包含旧版 `categories` / `pages` 或中心场景配置
 - 布局含独立左、右区域；列宽像素、行高百分比（合计 100%）
 - 普通行每列一个槽；合并行作 Tab 容器
 - **中心内容不进配置**，由应用插槽提供
@@ -83,6 +84,7 @@ import '@lumal/cockpit/style.css'
 
 - `viewportMode="scale"`：1920×1080 等比缩放
 - `viewportMode="vwvh"`：VW/VH 适配
+- `viewportMode="external"`：外层 Viewport / DataV 容器负责缩放，内部不再缩放
 - 同 type 可多实例（独立 `instanceId`）；Tab 切换保留实例状态
 - 布局导航由应用负责
 
@@ -107,6 +109,11 @@ import { LumalCockpitDesigner } from '@lumal/cockpit/designer'
 - 仅编辑草稿副本；`@save` 输出 `{ config, layout }`
 - 包 **不** 调用 HTTP / localStorage
 - 装配区只含左右网格，无中央大屏预览
+
+完整的 Admin 内嵌 Runtime 与 Widget 源码、Designer 按需加载、Cesium 静态资源部署和构建排错：
+[Demo 与业务接入](/reference/demo-integration-guide)。
+`0.0.7-beta` 已修复并发布 Designer 布局名称输入回退补丁；
+历史 `0.0.6-beta` npm 包不包含该修复，Demo 是否上线仍须单独核对部署。
 
 ## 自定义 Card
 

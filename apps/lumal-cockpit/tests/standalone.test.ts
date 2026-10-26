@@ -1,10 +1,10 @@
 import type { Component, PropType } from 'vue'
 import { mount } from '@vue/test-utils'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 import App from '../src/App.vue'
 import { standaloneCockpitRegistry } from '../src/registry'
-import { loadStandaloneConfig, saveStandaloneConfig } from '../src/services/config'
+import { loadStandaloneConfig, loadStandaloneState, resetStandaloneConfig, saveStandaloneConfig } from '../src/services/config'
 import {
   resetStandalonePreferences,
   standalonePreferenceDefaults,
@@ -16,6 +16,7 @@ describe('独立驾驶舱应用', () => {
   afterEach(() => {
     resetStandalonePreferences()
     localStorage.clear()
+    vi.restoreAllMocks()
   })
 
   it('注册了自己的业务模块', () => {
@@ -93,6 +94,23 @@ describe('独立驾驶舱应用', () => {
     const saved = saveStandaloneConfig({ ...config, layouts: [] })
     expect(saved.layouts).toHaveLength(1)
     expect(saved.schemaVersion).toBe(3)
+  })
+
+  it('配置损坏时明确提示，并允许显式恢复而不是静默销毁存档', () => {
+    localStorage.setItem('lumal-cockpit:config', '{broken')
+    const state = loadStandaloneState()
+    expect(state.warning).toContain('本地配置无法读取')
+    expect(state.config.layouts).toHaveLength(2)
+    expect(localStorage.getItem('lumal-cockpit:config')).toBe('{broken')
+    resetStandaloneConfig()
+    expect(loadStandaloneState().warning).toBe('')
+  })
+
+  it('浏览器禁止读取存储时仍可运行，并反馈存储问题', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('denied')
+    })
+    expect(loadStandaloneState().warning).not.toBe('')
   })
 
   it('主题锁定为暗色', () => {

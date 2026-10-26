@@ -71,12 +71,12 @@ button {
   display: block;
   padding-top: 12px;
   color: var(--el-text-color-secondary);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
 }
 
 .lumal-admin-home__status {
   color: var(--el-color-primary);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
   font-weight: 700;
 }
 
@@ -215,7 +215,7 @@ button {
 .lumal-admin-example__metric span,
 .lumal-admin-example__chart-card-label {
   color: var(--el-text-color-secondary);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
 }
 
 .lumal-admin-example__metric strong,
@@ -296,7 +296,7 @@ button {
 .lumal-admin-example__chart-label,
 .lumal-admin-example__chart-value {
   color: var(--el-text-color-regular);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
 }
 
 .lumal-admin-example__chart-track {

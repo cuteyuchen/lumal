@@ -195,4 +195,20 @@ describe('lumalCockpitDesigner', () => {
     expect(payload.layout.id).toBe('layout-a')
     expect(payload.layout).toBe(payload.config.layouts[0])
   })
+
+  it('名称输入接收即时值，保留输入中的空格，保存前提交且不修改源配置', async () => {
+    const current = config()
+    const wrapper = mountDesigner(current)
+    const input = wrapper.get<HTMLInputElement>('input[aria-label="当前布局名称"]')
+    input.element.value = '新的布局 '
+    await input.trigger('input')
+    await nextTick()
+    expect(input.element.value).toBe('新的布局 ')
+    expect(current.layouts[0].title).toBe('布局 A')
+    await wrapper.get('.lumal-cockpit-designer__save').trigger('click')
+    const payload = wrapper.emitted('save')?.[0]?.[0] as CockpitDesignerSavePayload
+    expect(payload.layout.title).toBe('新的布局')
+    expect(current.layouts[0].title).toBe('布局 A')
+    wrapper.unmount()
+  })
 })

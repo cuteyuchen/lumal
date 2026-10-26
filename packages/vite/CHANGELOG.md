@@ -1,5 +1,16 @@
 # @lumal/vite
 
+## 0.0.7-beta (2026-10-26)
+
+### Minor Changes
+
+- 增加属性白名单/黑名单、选择器排除、声明忽略标记与最小尺寸开关。
+- `fontSize: false` 同时保护 `font-size`、`font`、`line-height`；默认保护物理和逻辑最小尺寸。
+- 使用独立 `inlineStyles` 开关，经 Vue 模板 AST 与 CSS AST 转换静态行内样式及可分析的绑定对象/数组，不扫描脚本或其他模板属性。
+- 识别原子化任意值类名对应的 CSS 规则，保留视口变量、动态尺寸及已有适配表达式，避免重复转换。
+- 保留来源和第三方依赖边界、SCSS source map 与既有 PostCSS 配置；修复混合 SCSS 连带阻止同 SFC 独立 CSS 块转换的问题。
+- 修复行内样式的静态值、属性存在和祖先选择器排除，绑定值不求值；新增独立 tarball 消费者与双平台门禁。
+
 ## 0.0.6-beta (2026-10-25)
 
 ### Minor Changes
