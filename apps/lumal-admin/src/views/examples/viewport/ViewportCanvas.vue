@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { ViewportPolicy } from '@lumal/viewport'
-import { computeViewportFontSize, LumalViewport } from '@lumal/viewport'
+import { computeViewportFontSize, LumalViewport, useViewportPolicy } from '@lumal/viewport'
 import { ref } from 'vue'
 
 /***********************普通 Vue 消费者，只由 LumalViewport 缩放*********************/
-defineProps<{ policy?: ViewportPolicy | false }>()
+const props = defineProps<{ policy?: ViewportPolicy | false }>()
+const viewportPolicy = useViewportPolicy(() => props.policy)
 const selected = ref(0)
 </script>
 
@@ -20,7 +21,7 @@ const selected = ref(0)
       <div class="viewport-canvas__chart" aria-label="运行趋势">
         <i v-for="value in [38, 65, 42, 80, 59, 92, 72]" :key="value" :style="{ height: `${value}%` }" />
       </div>
-      <footer :style="{ fontSize: `${computeViewportFontSize(16, scale, 12) / scale}px` }">
+      <footer :style="{ fontSize: `${computeViewportFontSize(16, scale, viewportPolicy.minFontSize) / scale}px` }">
         <span data-testid="viewport-font">告警确认</span>
         <button type="button" @click="selected++">
           确认 · {{ selected }}

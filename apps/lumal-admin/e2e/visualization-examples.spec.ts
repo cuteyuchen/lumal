@@ -11,11 +11,15 @@ test('Viewport 路由、策略覆盖、最小字号、浮层与离开后的样�
   await expect(page.getByTestId('viewport-metrics')).toContainText('scale 0.500')
   await page.getByRole('button', { name: '确认 · 0', exact: true }).click()
   await expect(page.getByRole('button', { name: '确认 · 1', exact: true })).toBeVisible()
-  const physicalFont = await page.getByTestId('viewport-font').evaluate((element) => {
+  const physicalFont = () => page.getByTestId('viewport-font').evaluate((element) => {
     const viewport = element.closest('[data-viewport-mode]') as HTMLElement
     return Number.parseFloat(getComputedStyle(element).fontSize) * Number(getComputedStyle(viewport).getPropertyValue('--lumal-viewport-scale'))
   })
-  expect(physicalFont).toBeGreaterThanOrEqual(12)
+  expect(await physicalFont()).toBeGreaterThanOrEqual(12)
+  await page.getByLabel('最小字号', { exact: true }).fill('20')
+  await expect.poll(physicalFont).toBeCloseTo(20, 1)
+  await page.getByLabel('最小字号', { exact: true }).fill('12')
+  await expect.poll(physicalFont).toBeCloseTo(12, 1)
   await page.getByRole('button', { name: '容器信息', exact: true }).click()
   await expect(page.getByRole('dialog', { name: '容器信息' })).toBeInViewport()
   await page.keyboard.press('Escape')
@@ -26,8 +30,18 @@ test('Viewport 路由、策略覆盖、最小字号、浮层与离开后的样�
   }
   await page.getByLabel('策略来源', { exact: true }).selectOption('global')
   await expect(page.getByTestId('viewport-metrics')).toContainText('responsive')
+  for (const label of ['设计宽', '设计高', '最小字号']) {
+    await expect(page.getByLabel(label, { exact: true })).toBeDisabled()
+  }
   await page.getByLabel('策略来源', { exact: true }).selectOption('route')
   await expect(page.getByTestId('viewport-metrics')).toContainText('contain')
+  for (const label of ['设计宽', '设计高', '最小字号']) {
+    await expect(page.getByLabel(label, { exact: true })).toBeDisabled()
+  }
+  await page.getByLabel('策略来源', { exact: true }).selectOption('container')
+  for (const label of ['设计宽', '设计高', '最小字号']) {
+    await expect(page.getByLabel(label, { exact: true })).toBeEnabled()
+  }
   await page.reload()
   await expect(page.getByTestId('viewport-metrics')).toBeVisible()
   await page.screenshot({ path: 'output/playwright/admin-viewport.png', animations: 'disabled' })
@@ -65,9 +79,12 @@ test('DataV 组件可交互，Cockpit 实际嵌入且不加载地图或 Designer
   await page.screenshot({ path: 'output/playwright/admin-cockpit-runtime-light.png', animations: 'disabled' })
   await page.reload()
   await expect(page.locator('.metric-widget')).toBeVisible()
-  const title = await page.locator('.embedded-center h2').boundingBox()
-  const widget = await page.locator('.metric-widget').boundingBox()
-  expect(title!.x).toBeGreaterThan(widget!.x + widget!.width)
+  // 侧栏恢复会改变工作区宽度；同一同步任务读取两个边界，避免跨动画帧比较。
+  await expect.poll(() => page.locator('.embedded-stage').evaluate((element) => {
+    const title = element.querySelector<HTMLElement>('.embedded-center h2')!.getBoundingClientRect()
+    const widget = element.querySelector<HTMLElement>('.metric-widget')!.getBoundingClientRect()
+    return title.left - widget.right
+  }), { message: '中心标题应在左侧 Widget 右边，且不存在遮挡' }).toBeGreaterThan(0)
   await page.screenshot({ path: 'output/playwright/admin-cockpit-runtime.png', animations: 'disabled' })
   expect(requests.filter(url => /cesium|openlayers|designer|\/@vite\/|\/src\//i.test(url))).toEqual([])
   await expectNoPageOverflow(page)

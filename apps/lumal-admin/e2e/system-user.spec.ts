@@ -53,6 +53,9 @@ test('用户管理在移动端紧凑显示机构筛选并在五档视口下无�
   await expect(page.locator('.lumal-crud-table__query')).toBeHidden()
   await expectNoPageOverflow(page)
 
+  // 页面骨架先于异步数据出现，须等真实行操作完成渲染后再测量移动端尺寸。
+  const moreButton = page.locator('.lumal-schema-table__mobile-actions').first()
+  await expect(moreButton).toBeVisible()
   const metrics = await page.evaluate(() => {
     const actionTrigger = document.querySelector('.lumal-schema-table__mobile-actions') as HTMLElement | null
     const toolbarButton = document.querySelector('.lumal-schema-table__toolbar .el-button') as HTMLElement | null
@@ -84,8 +87,6 @@ test('用户管理在移动端紧凑显示机构筛选并在五档视口下无�
   expect(metrics.actionColumnWidth).toBeGreaterThan(0)
   expect(metrics.actionColumnWidth).toBeLessThanOrEqual(84)
 
-  const moreButton = page.locator('.lumal-schema-table__mobile-actions').first()
-  await expect(moreButton).toBeVisible()
   await moreButton.click()
   await expect(moreButton).toHaveAttribute('aria-expanded', 'true')
   const viewAction = page.locator('.lumal-schema-table__mobile-actions-popper [data-action="view-user"], .el-popper [data-action="view-user"]').first()

@@ -57,9 +57,9 @@ const rows = computed(() => [
         <label>策略来源<select v-model="scope" aria-label="策略来源"><option value="global">全局默认</option><option value="route">路由页面</option><option value="container">容器覆盖</option></select></label>
         <label>适配模式<select v-model="mode" aria-label="适配模式" :disabled="scope !== 'container'"><option value="contain">contain</option><option value="width">width</option><option value="responsive">responsive</option><option value="disabled">disabled</option></select></label>
         <label>模拟尺寸<select v-model="simulation" aria-label="模拟尺寸"><option value="wide">宽屏</option><option value="short">矮屏</option><option value="narrow">窄屏</option></select></label>
-        <label>设计宽<input v-model.number="designWidth" aria-label="设计宽" type="number" min="320" max="3840"></label>
-        <label>设计高<input v-model.number="designHeight" aria-label="设计高" type="number" min="240" max="2160"></label>
-        <label>最小字号<input v-model.number="minFontSize" aria-label="最小字号" type="number" min="10" max="24"></label>
+        <label>设计宽<input v-model.number="designWidth" aria-label="设计宽" type="number" min="320" max="3840" :disabled="scope !== 'container'"></label>
+        <label>设计高<input v-model.number="designHeight" aria-label="设计高" type="number" min="240" max="2160" :disabled="scope !== 'container'"></label>
+        <label>最小字号<input v-model.number="minFontSize" aria-label="最小字号" type="number" min="10" max="24" :disabled="scope !== 'container'"></label>
         <ElTooltip content="真实视口中的弹窗" :teleported="false">
           <ElButton @click="dialogVisible = true">
             容器信息
