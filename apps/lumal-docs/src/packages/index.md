@@ -2,9 +2,9 @@
 
 Lumal 按职责拆包。应用只消费 **公开 `exports` 入口** 与样式路径，不要依赖 `packages/*/src` 或测试内部文件。
 
-本组文档对应 `0.0.6-beta` 的十包公开 API，该版已发布并完成 registry 与同次发布产物核验，
-见 [本版发布记录](/reference/npm-release-0.0.6-beta)。
-下列命令显式选择本版；未发布源码的 tarball 接入方式见 [安装说明](/guide/essentials/installation)。
+本组文档对应 `0.0.7-beta` 的十包候选契约，不代表 registry 已发布。
+历史十包核验见 [0.0.6-beta 发布记录](/reference/npm-release-0.0.6-beta)。
+下列命令显式选择候选版本；核验前的 tarball 接入方式见 [安装说明](/guide/essentials/installation)。
 
 ## 选型建议
 
@@ -40,11 +40,11 @@ Lumal 按职责拆包。应用只消费 **公开 `exports` 入口** 与样式路
 
 ```bash
 pnpm add vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
-pnpm add @lumal/core@0.0.6-beta @lumal/icons@0.0.6-beta @lumal/icons-vue@0.0.6-beta
+pnpm add @lumal/core@0.0.7-beta @lumal/icons@0.0.7-beta @lumal/icons-vue@0.0.7-beta
 # 按需
-pnpm add @lumal/charts@0.0.6-beta echarts@^6 vue-echarts@^8
-pnpm add @lumal/viewport@0.0.6-beta
-pnpm add -D @lumal/vite@0.0.6-beta
+pnpm add @lumal/charts@0.0.7-beta echarts@^6 vue-echarts@^8
+pnpm add @lumal/viewport@0.0.7-beta
+pnpm add -D @lumal/vite@0.0.7-beta
 ```
 
 Pinia 按应用需要安装。纯服务接入优先使用 `@lumal/core/minimal` / `request`，无需 Element Plus；UI 入口需安装对应 peer 与样式。

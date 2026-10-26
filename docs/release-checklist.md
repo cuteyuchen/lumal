@@ -5,7 +5,8 @@
 ## 版本准备
 
 公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。历史九包 `0.0.3-beta`、`0.0.4-beta`、`0.0.5-beta` 均已发布，完整门禁、registry 与实际 tarball 核验见 [历史发布记录](./npm-release-0.0.5-beta.md)。
-本轮新增 `@lumal/viewport`，十包 `0.0.6-beta` 已发布并完成 registry 与同次发布产物核验，见 [本版发布记录](./npm-release-0.0.6-beta.md)。
+`@lumal/viewport` 自 `0.0.6-beta` 加入十包集合；该版已发布并完成 registry 与同次发布产物核验，见 [历史发布记录](./npm-release-0.0.6-beta.md)。
+当前准备 `0.0.7-beta` 候选契约，尚不构成发布成功证明，实际结果须以正式门禁和 registry 核验为准。
 已发布版本不能用于新的全量发布；部分可见也不得重发。下一次正式发布前仍须逐包查询 registry，任一已有版本或网络异常都应中断。
 
 ```bash
@@ -20,7 +21,7 @@ pnpm release:verify
 - 将 pending Changeset 汇总进每个公共包 CHANGELOG，确认完整后移除已消费记录；本轮不运行标准 `changeset:version`，避免把 beta 序列变为稳定版 `0.1.0`。
 - 更新 `docs/changelog.md`、路线图基线、文档导航、安装命令和脚手架说明；历史版本与验收证据保留。
 - 保留脚手架源码的三个版本占位符；`pnpm build` 时按脚手架 package.json 注入精确版本，再用 `pnpm test:create-consumer` 验证 tarball 的 minimal/request、local、HTTP 三种消费路径。
-- 以空 Changeset 注明变更已手工汇总（本轮为 `prepared-0-0-6-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。
+- 以空 Changeset 注明变更已手工汇总（本轮为 `prepared-0-0-7-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。历史 `prepared-0-0-6-beta.md` 保留原发布语境。
 
 唯一发布入口是 `release-gate.yml`：`v*` tag 或手动运行。手动运行默认 `dry_run=true`，只执行校验；分支上不能以 `dry_run=false` 发包。真实运行必须选择版本相符且指向当前 HEAD 的 tag。含预发布后缀的 tag 使用 `beta`，稳定版使用 `latest`。
 

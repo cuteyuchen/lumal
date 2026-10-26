@@ -3,7 +3,7 @@
 ## 可选的局部 px → vw
 
 `0.0.6-beta` 已提供来源受控的 CSS 转换。以下精细控制和 Vue 行内样式功能属于
-**下一版未发布源码**，使用本地构建的 tarball 验证，不用已发布的旧包代替：
+**`0.0.7-beta` 候选契约**，发布核验前使用本地构建的 tarball 验证，不用已发布的旧包代替：
 
 ```ts
 import { createViewportTransformPlugin } from '@lumal/vite'

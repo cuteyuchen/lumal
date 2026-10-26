@@ -1,5 +1,11 @@
 # @lumal/datav
 
+## 0.0.7-beta (2026-10-26)
+
+### Patch Changes
+
+- 同步 Core、图标与视口依赖至 0.0.7-beta；独立组件、按需图表引擎与全屏容器契约不变。
+
 ## 0.0.6-beta (2026-10-25)
 
 ### Patch Changes

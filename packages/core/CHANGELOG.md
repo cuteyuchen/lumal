@@ -1,5 +1,11 @@
 # @lumal/core
 
+## 0.0.7-beta (2026-10-26)
+
+### Patch Changes
+
+- 与十包 fixed-group 同步为 0.0.7-beta；本轮未更改 Core 运行时 API，保留 minimal/request 和主题字号边界。
+
 ## 0.0.6-beta (2026-10-25)
 
 ### Patch Changes

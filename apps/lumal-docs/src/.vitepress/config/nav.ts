@@ -40,12 +40,12 @@ export function nav(): DefaultTheme.NavItem[] {
     },
     {
       // 与公共包保持同版，由文档回归测试和发布边界校验共同检查。
-      text: '0.0.6-beta',
+      text: '0.0.7-beta',
       items: [
         { text: '开发路线图', link: '/reference/development-roadmap' },
         { text: '发布检查清单', link: '/reference/release-checklist' },
         { text: '更新日志', link: '/reference/changelog' },
-        { text: '发布执行记录', link: '/reference/npm-release-0.0.6-beta' },
+        { text: '0.0.6-beta 发布记录', link: '/reference/npm-release-0.0.6-beta' },
         { text: 'GitHub', link: siteLinks.github },
       ],
     },

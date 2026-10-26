@@ -1,5 +1,11 @@
 # @lumal/icons
 
+## 0.0.7-beta (2026-10-26)
+
+### Patch Changes
+
+- 与十包 fixed-group 同步为 0.0.7-beta；静态内核、可选形变和 SSR 契约不变。
+
 ## 0.0.6-beta (2026-10-25)
 
 ### Patch Changes

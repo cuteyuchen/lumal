@@ -1,7 +1,7 @@
 # 通用视口适配
 
-`@lumal/viewport` 从已发布的 `0.0.6-beta` 提供以下 API；接入时核对 registry 与实际安装声明。
-验证未发布源码时使用本地 tarball，不能用历史 registry 包代替新增能力。
+本文按 `0.0.7-beta` 候选契约记录；以下运行时 API 自已发布的 `0.0.6-beta` 提供。
+接入时核对 registry 与实际安装声明，候选发布核验前使用本地 tarball，不能用历史包代替新增能力。
 仅 Vue peer，不依赖 Core/UI/图表。尺寸优先来自实际容器而不是 window。
 
 - `computeViewportScale`：纯算法，contain/width；可选 minScale/maxScale。
@@ -21,7 +21,7 @@ Teleport到body的UI独立于设计画布。Cockpit放入缩放容器时必须�
 
 ## 与构建转换协作
 
-未发布源码的Screen视口模板把 `viewportDesign/viewportPolicy` 集中到项目根
+`0.0.7-beta` 候选的Screen视口模板把 `viewportDesign/viewportPolicy` 集中到项目根
 `viewport.config.ts`。这是不导入Vue/Vite的普通项目配置，不是新公共API，
 也不默认安装或启用 `@lumal/vite`。
 运行时policy展开同一designWidth/designHeight，Vite用

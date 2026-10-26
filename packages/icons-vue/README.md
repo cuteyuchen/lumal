@@ -2,7 +2,7 @@
 
 `@lumal/icons` 的 Vue 3 组件与响应式适配层，提供 `LumalIcon`、`LumalIconPicker`、`LumalIconPickerDialog` 和 `useIconRegistry`。
 
-本文 API 基线为 `0.0.6-beta`，实际版本可用性以 registry 为准；两个图标包保持同版。
+本文 API 基线为 `0.0.7-beta` 候选契约，实际版本可用性以 registry 为准；两个图标包保持同版。
 
 ```vue
 <script setup lang="ts">

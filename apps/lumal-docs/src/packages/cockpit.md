@@ -17,7 +17,7 @@
 下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm add @lumal/cockpit@0.0.6-beta @lumal/core@0.0.6-beta @lumal/icons-vue@0.0.6-beta vue@^3.5 element-plus@^2.11 @iconify/vue@^5
+pnpm add @lumal/cockpit@0.0.7-beta @lumal/core@0.0.7-beta @lumal/icons-vue@0.0.7-beta vue@^3.5 element-plus@^2.11 @iconify/vue@^5
 ```
 
 可视化组件按需另装 `@lumal/datav`。
@@ -112,8 +112,8 @@ import { LumalCockpitDesigner } from '@lumal/cockpit/designer'
 
 完整的 Admin 内嵌 Runtime 与 Widget 源码、Designer 按需加载、Cesium 静态资源部署和构建排错：
 [Demo 与业务接入](/reference/demo-integration-guide)。
-本分支修复了 Designer 布局名称输入回退问题，已登记 Changeset，**尚未发布补丁**；
-不能用 `0.0.6-beta` npm 包宣称该修复已经上线。
+`0.0.7-beta` 候选修复了 Designer 布局名称输入回退问题；发布核验前使用候选 tarball，
+不能用历史 `0.0.6-beta` npm 包宣称该修复已经上线。
 
 ## 自定义 Card
 

@@ -1,11 +1,12 @@
 # create-lumal-admin
 
-## 未发布
+## 0.0.7-beta (2026-10-26)
 
 ### Patch Changes
 
 - Screen 视口模板将设计尺寸与运行时策略集中到项目根 `viewport.config.ts`，便于构建配置复用同一设计宽度。
 - 不默认安装或启用 `@lumal/vite`，保留 Admin/Screen/Blank 的按需依赖与既有适配模式。
+- 生成依赖精确同步为 0.0.7-beta，保留原有 CLI、权限和登录失败处理契约。
 
 ## 0.0.6-beta (2026-10-25)
 

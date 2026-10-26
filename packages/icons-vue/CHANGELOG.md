@@ -1,5 +1,11 @@
 # @lumal/icons-vue
 
+## 0.0.7-beta (2026-10-26)
+
+### Patch Changes
+
+- 同步图标依赖与十包 fixed-group 至 0.0.7-beta，保持既有组件 API 和静态加载边界。
+
 ## 0.0.6-beta (2026-10-25)
 
 ### Patch Changes

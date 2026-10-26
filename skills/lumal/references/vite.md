@@ -53,7 +53,7 @@ export default defineConfig({
 ## 视口转换
 
 `0.0.6-beta` 已提供 `createViewportTransformPlugin` / `createViewportPostcssPlugin`；
-以下精细控制、行内样式和原子化保护属于未发布源码，须使用候选 tarball，
+以下精细控制、行内样式和原子化保护属于 `0.0.7-beta` 候选契约，发布核验前须使用候选 tarball，
 不能用历史 registry 包验证。默认关闭，启用必须明确 `include`，例如 `src/screen/**`。
 
 ```ts

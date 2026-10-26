@@ -14,7 +14,7 @@ Vite 配置助手：组件 resolver、工作区源码 / 产物 alias、可选 De
 下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm add -D @lumal/vite@0.0.6-beta
+pnpm add -D @lumal/vite@0.0.7-beta
 ```
 
 ## 公开入口
@@ -70,8 +70,8 @@ export default {
 `0.0.6-beta` 提供默认关闭的 `createViewportTransformPlugin` 和低层
 `createViewportPostcssPlugin`。启用时显式指定 `include: ['src/screen/**']`，
 Dev/Build 共用 CSS 声明转换，不扫描脚本或业务坐标。
-下列精细控制、Vue 行内样式和原子化 CSS 保护属于**下一版未发布源码**，
-需用本地构建的 tarball 验证，不能直接用已发布 `0.0.6-beta` 验收新增选项。
+下列精细控制、Vue 行内样式和原子化 CSS 保护属于 **`0.0.7-beta` 候选契约**，
+发布核验前需用本地构建的 tarball 验证，不能直接用已发布 `0.0.6-beta` 验收新增选项。
 默认不转换 node_modules、字号/行高、最小尺寸及自定义属性；依赖只通过精确包名白名单加入。
 保留已有 PostCSS 配置和来源边界，无法可靠定位预处理声明时跳过并警告。
 配置与限制见 [屏幕适配](/reference/screen-viewport-guide)，不要覆盖 Admin、
