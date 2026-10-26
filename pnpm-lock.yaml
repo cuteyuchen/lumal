@@ -20,6 +20,9 @@ importers:
       '@types/node':
         specifier: ^24.6.1
         version: 24.13.3
+      '@types/pngjs':
+        specifier: 6.0.5
+        version: 6.0.5
       '@vitejs/plugin-vue':
         specifier: ^6.0.1
         version: 6.0.7(vite@8.1.4(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.49.0)(yaml@2.9.0))(vue@3.5.39(typescript@6.0.3))
@@ -38,6 +41,9 @@ importers:
       jsdom:
         specifier: ^27.0.0
         version: 27.4.0
+      pngjs:
+        specifier: 7.0.0
+        version: 7.0.0
       prettier:
         specifier: ^3.9.10
         version: 3.9.10
@@ -2258,6 +2264,9 @@ packages:
 
   '@types/picomatch@4.0.3':
     resolution: {integrity: sha512-iG0T6+nYJ9FAPmx9SsUlnwcq1ZVRuCXcVEvWnntoPlrOpwtSTKNDC9uVAxTsC3PUvJ+99n4RpAcNgBbHX3JSnQ==}
+
+  '@types/pngjs@6.0.5':
+    resolution: {integrity: sha512-0k5eKfrA83JOZPppLtS2C7OUtyNAl2wKNxfyYl9Q5g9lPkgBl/9hNyAu6HuEH2J4XmIv2znEpkDd0SaZVxW6iQ==}
 
   '@types/rbush@4.0.0':
     resolution: {integrity: sha512-+N+2H39P8X+Hy1I5mC6awlTX54k3FhiUmvt7HWzGJZvF+syUAAxP/stwppS8JE84YHqFgRMv6fCy31202CMFxQ==}
@@ -4591,6 +4600,10 @@ packages:
   pluralize@8.0.0:
     resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
     engines: {node: '>=4'}
+
+  pngjs@7.0.0:
+    resolution: {integrity: sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==}
+    engines: {node: '>=14.19.0'}
 
   pnpm-workspace-yaml@1.6.1:
     resolution: {integrity: sha512-yTeZntGWi8m9WNuhoVsP0DpFc4sC1U0+rr/qR6Zi9n2g3sxXY+JfccjXjjruNz96tM8I09yaJUA86doRnNLkbg==}
@@ -8319,6 +8332,10 @@ snapshots:
 
   '@types/picomatch@4.0.3': {}
 
+  '@types/pngjs@6.0.5':
+    dependencies:
+      '@types/node': 24.13.3
+
   '@types/rbush@4.0.0': {}
 
   '@types/resolve@1.20.2': {}
@@ -10988,6 +11005,8 @@ snapshots:
       fsevents: 2.3.2
 
   pluralize@8.0.0: {}
+
+  pngjs@7.0.0: {}
 
   pnpm-workspace-yaml@1.6.1:
     dependencies:

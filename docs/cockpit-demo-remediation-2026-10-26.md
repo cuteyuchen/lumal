@@ -7,6 +7,8 @@ GitHub PR 测试使用合并引用 `fa71750a161b8d7ae70a58f0d008e49185c17b93`，
 [主 CI](https://github.com/cuteyuchen/lumal/actions/runs/40264662877)、
 [Build Validation](https://github.com/cuteyuchen/lumal/actions/runs/40264662712) 均已完成并通过；
 下文另列外部 Vercel Preview 的失败，不将它隐去。
+这些是 `5779229` 的阶段性证据。后续 `5ec6b86` 复跑在 Windows 出现累计截图超时，
+不是最新提交全部通过；八项用例与 Node 像素分析的后续结果通过 PR 检查和附件逐次记录。
 
 ## 构建基线
 
@@ -58,7 +60,8 @@ GitHub PR 测试使用合并引用 `fa71750a161b8d7ae70a58f0d008e49185c17b93`，
 | Cockpit 最终应用构建 | `pnpm --filter lumal-cockpit build:app` | 通过 | `cockpit-demo-build-polished.log` |
 | Admin 最终应用构建 | `pnpm --filter lumal-admin build` | 通过 | `admin-build-budget-fixed.log` |
 | Admin 生产 E2E | `pnpm test:e2e:release:built`，专用 preview / Chromium，34 用例 | 34 通过 | `admin-e2e-full-verified.log` |
-| Cockpit 生产 E2E | `pnpm test:e2e:cockpit:built`，preview / Chromium / SwiftShader | 7 通过，含浏览器时钟驱动刷新、实际缩放边界及重试后的像素 | `cockpit-e2e-stage-bounds.log` |
+| Cockpit 本地生产 E2E | `pnpm test:e2e:cockpit:built`，preview / Chromium / SwiftShader | 8 通过，含浏览器时钟驱动刷新、实际缩放边界及重试后的像素 | `cockpit-e2e-node-pixels.log` |
+| Node 像素分析回归 | `pnpm --filter lumal-cockpit test`、独立 `tsc --ignoreConfig --noEmit --strict ... canvas-pixels.ts` | 应用单元 24 通过，含 4 项 PNG 取样测试；类型检查通过 | 本地终端 |
 | ESLint | `pnpm exec eslint .` | 通过 | `demo-lint-polished.log` |
 | 模板格式 | `pnpm format:check` | 通过 | `demo-format-check.log` |
 | 文档 / Skill / 安全 / 测试配置契约 | `pnpm exec vitest run --config vitest.config.ts scripts/docs-links.test.ts scripts/playwright-release.test.ts scripts/lumal-skill.test.ts scripts/release-safety.test.mjs` | 收尾更新后 97 通过 | 本地终端，最终功能提交加报告更新 |
@@ -81,7 +84,7 @@ GitHub PR 测试使用合并引用 `fa71750a161b8d7ae70a58f0d008e49185c17b93`，
 Viewport 覆盖 1280×720、1366×768、1440×900、1920×1080、2560×1440。
 本轮没有为 Cockpit 新增真实浏览器 80% / 125% / 150% 缩放矩阵，不以 viewport 设置冒充浏览器缩放。
 既有 Viewport 消费者的真实 zoom 检查由 Ubuntu CI 实际运行通过，不将它扩展为所有 Demo 已通过该矩阵。
-Designer 复杂拖拽及替换的全组合仍主要由既有公共包测试保护，不宣称本轮七条 E2E 穷尽所有路径。
+Designer 复杂拖拽及替换的全组合仍主要由既有公共包测试保护，不宣称本轮八条 E2E 穷尽所有路径。
 
 首轮远程生产浏览器测试实际失败：Ubuntu 2 失败 / 2 通过，Windows 3 失败 / 1 通过。
 下载的 trace 显示软件 GPU 环境中单次截图耗时约 24 秒、设计器单次操作约 14 秒，
@@ -108,6 +111,21 @@ PNG 和 JSON 保存在 `ci-5779229-ubuntu/output/playwright/`，Windows 对应�
 独立 `validate` Job 已完成最新消费者、独立模板与真实 zoom 检查，整个 Build Validation run 成功。
 主 CI `40264662877` 已完成，包含 lint、format、1100 项单元、类型、构建、Actions 语法与 Linux PTY。
 
+第四轮报告提交 `5ec6b86` 的复跑：主 CI `40266544062` 通过；
+Build Validation `40266544074` 中 Ubuntu、Windows DataV 视觉及消费者 / 模板 / 真实 zoom 通过，
+但 Windows Cockpit 为 6 通过 / 1 失败，后续 Admin / 文档 / 预算步骤因此跳过，不能沿用上一轮通过宣称本轮成功。
+该轮 Ubuntu Cockpit 7 项、Admin 34 项仍通过，失败证据保留于 `ci-windows-demo-5ec6b86.log` 和
+`ci-5ec6b86-windows/trace-cesium/`。trace 中上下文创建约 14.3 秒，
+首次真实截图约 39 秒、返回浏览器解码约 16.5 秒；错误重试后的第二次截图耗尽 90 秒预算。
+
+后续将正常资源 / resize 与中断恢复拆为两个独立契约，共八项 E2E。
+真实 PNG 不再发回正忙于软件 GPU 的浏览器解码，而由测试进程的 `pngjs` 读取，
+按固定 32×32 网格统计真实像素；保留 `>10` 门槛、PNG 附件、原 90 秒预算及零重试。
+新增空白、小图、大图、无效 PNG 四项测试，防止把占位或解码错误当成成功。
+本地八项完整通过，2.0 分钟，三次取样为 402 / 201 / 337 色，
+Node 分析耗时分别为 75.0 / 64.4 / 69.3 毫秒；这不是应用运行时的性能数据。
+后续跨平台复测见 PR 检查及附件，不以本地结果或第三轮记录替代。
+
 ## 包体与依赖
 
 通过 `measureApplication()` 测量入口 HTML 与静态 import 闭包，动态 chunk 不全计入首屏。
@@ -125,8 +143,10 @@ PNG 和 JSON 保存在 `ci-5779229-ubuntu/output/playwright/`，Windows 对应�
 | Ubuntu | 332895 / 42805 | 687533 / 71258 |
 | Windows | 332873 / 42797 | 687529 / 71261 |
 
-`pnpm release:budgets` 通过，日志 `demo-budgets-verified.log`。新增依赖只有应用显式引用的
+`pnpm release:budgets` 通过，日志 `demo-budgets-verified.log`。新增应用运行时依赖只有显式引用的
 workspace 公共包：Cockpit 增 Viewport，Admin 增 Viewport / DataV / Cockpit；未增加第三方运行时依赖。
+测试进程新增 `pngjs@7.0.0` / `@types/pngjs@6.0.5` 两项根级 devDependencies，
+不进入应用入口或公共包依赖；frozen install 和独立类型检查通过。
 地图资源仍只属于独立 Demo；Admin 首页和嵌入 Runtime 不请求 Cesium、OpenLayers 或 Designer。
 
 ## 生产域名只读核对

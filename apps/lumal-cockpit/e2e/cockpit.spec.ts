@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test'
 import { expect, test } from '../../lumal-admin/e2e/fixtures'
+import { countCanvasColors } from './canvas-pixels'
 
 /***********************生产画布像素、网络和组件生命周期证据*********************/
 async function expectFittedStage(page: Page, width: number, height: number): Promise<void> {
@@ -13,27 +14,17 @@ async function expectFittedStage(page: Page, width: number, height: number): Pro
   }).toBe(true)
 }
 
-async function expectPaintedCanvas(page: Page, canvas: Locator): Promise<void> {
+async function expectPaintedCanvas(canvas: Locator): Promise<void> {
   await expect(canvas).toBeVisible()
   // 软件 GPU 的截图本身可能耗时 20 秒，不应占用轮询断言预算并丢弃已经绘制的结果。
   const image = await canvas.screenshot({ animations: 'disabled' })
   await test.info().attach('canvas-pixel-sample', { body: image, contentType: 'image/png' })
-  const colorCount = await page.evaluate(async (base64) => {
-    const bitmap = new Image()
-    bitmap.src = `data:image/png;base64,${base64}`
-    await bitmap.decode()
-    const target = document.createElement('canvas')
-    target.width = 32
-    target.height = 32
-    const context = target.getContext('2d', { willReadFrequently: true })!
-    context.drawImage(bitmap, 0, 0, 32, 32)
-    const pixels = context.getImageData(0, 0, 32, 32).data
-    const colors = new Set<string>()
-    for (let index = 0; index < pixels.length; index += 4)
-      colors.add(`${pixels[index]},${pixels[index + 1]},${pixels[index + 2]}`)
-    return colors.size
-  }, image.toString('base64'))
-  test.info().annotations.push({ type: 'canvas-colors', description: String(colorCount) })
+  const analysisStarted = performance.now()
+  const colorCount = countCanvasColors(image)
+  test.info().annotations.push(
+    { type: 'canvas-colors', description: String(colorCount) },
+    { type: 'canvas-analysis-ms', description: (performance.now() - analysisStarted).toFixed(1) },
+  )
   expect(colorCount, '真实 Canvas 截图不能是空白或单色占位').toBeGreaterThan(10)
 }
 
@@ -48,7 +39,7 @@ test('默认动画场景、Widget、Tab 折叠与 OpenLayers resize', async ({ b
   await page.goto('/')
   await expect(page.getByRole('heading', { name: '全国智慧运行态势' })).toBeVisible()
   await expect(page.locator('.metric-summary__grid')).toBeVisible()
-  await expectPaintedCanvas(page, page.locator('.echarts-geo-center canvas').first())
+  await expectPaintedCanvas(page.locator('.echarts-geo-center canvas').first())
   await page.getByRole('tab', { name: '区域状态分布', exact: false }).click()
   await expect(page.locator('.status-distribution')).toBeVisible()
   await page.locator('[data-action="collapse-left"]').click()
@@ -72,7 +63,7 @@ test('默认动画场景、Widget、Tab 折叠与 OpenLayers resize', async ({ b
   expect(failed).toEqual([])
 })
 
-test('Cesium 资源、像素、原实例 resize、中断重试与独立场景', async ({ page }) => {
+test('Cesium 资源、像素与原实例 resize', async ({ page }) => {
   // 使用应用已有的按需绘制策略，避免 CI 软件 GPU 持续重绘挤占输入和截图。
   await page.emulateMedia({ reducedMotion: 'reduce' })
   const failed: string[] = []
@@ -88,20 +79,37 @@ test('Cesium 资源、像素、原实例 resize、中断重试与独立场景', 
   await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
   await expect(page.locator('.cesium-widget canvas')).toBeVisible()
   await expect(page.locator('.cesium-center [role="alert"]')).toHaveCount(0)
-  await expectPaintedCanvas(page, page.locator('.cesium-widget canvas'))
+  await expectPaintedCanvas(page.locator('.cesium-widget canvas'))
   const cesium = await page.locator('.cesium-widget canvas').elementHandle()
   await page.setViewportSize({ width: 1440, height: 900 })
   await expectFittedStage(page, 1440, 900)
   await expect.poll(() => cesium!.evaluate(element => element.isConnected)).toBe(true)
   await expect.poll(() => workers.length).toBeGreaterThan(0)
   await page.screenshot({ path: 'output/playwright/cockpit-cesium-1440.png', animations: 'disabled' })
+  await page.getByRole('tab', { name: 'ECharts', exact: true }).click()
+  await expect(page.locator('.cesium-widget')).toHaveCount(0)
+  expect(failed).toEqual([])
+})
+
+test('Cesium 中断重试后的真实像素与独立场景切换', async ({ page }) => {
+  // 恢复契约单独初始化，避免把两次软件 GPU 截图串进同一个测试预算。
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  const failed: string[] = []
+  page.on('response', (response) => {
+    if (response.status() >= 400)
+      failed.push(`${response.status()} ${response.url()}`)
+  })
+  await page.goto('/')
+  await page.getByRole('tab', { name: 'Cesium', exact: true }).click()
+  await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
+  await expect(page.locator('.cesium-widget canvas')).toBeVisible()
   await page.locator('.cesium-widget canvas').dispatchEvent('webglcontextlost')
   await expect(page.locator('.cesium-center [role="alert"]')).toContainText('Cesium 渲染中断')
   await page.getByRole('button', { name: '重新加载', exact: true }).click()
   await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
   await expect(page.locator('.cesium-widget canvas')).toBeVisible()
   await expect(page.locator('.cesium-center [role="alert"]')).toHaveCount(0)
-  await expectPaintedCanvas(page, page.locator('.cesium-widget canvas'))
+  await expectPaintedCanvas(page.locator('.cesium-widget canvas'))
   await page.getByRole('tab', { name: '独立场景', exact: true }).click()
   await expect(page.getByRole('img', { name: '中性场景区域预览' })).toBeVisible()
   await page.locator('.standalone-center__point-button').first().click()
