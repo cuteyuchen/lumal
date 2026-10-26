@@ -55,17 +55,18 @@ export const test = base.extend<BrowserDiagnosticsFixtures>({
     const allowedWarnings = new Set<string>()
 
     function recordConsole(message: ConsoleMessage): void {
-      if (message.type() !== 'warning' && message.type() !== 'error') {
+      const type = message.type()
+      if (type !== 'warning' && type !== 'error') {
         return
       }
 
       const text = message.text().trim()
-      if (message.type() === 'warning' && allowedWarnings.has(text))
+      if (type === 'warning' && allowedWarnings.has(text))
         return
       if (!ignoredBrowserDiagnostics.has(text)) {
         const location = message.location()
         diagnostics.push({
-          kind: `console.${message.type()}`,
+          kind: `console.${type}`,
           source: location.url || undefined,
           text,
         })

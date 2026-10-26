@@ -43,6 +43,8 @@ jobs:
         run: pnpm --filter lumal-cockpit build
       - name: Cockpit application tests
         run: pnpm --filter lumal-cockpit test
+      - name: Typecheck Cockpit browser tests
+        run: pnpm typecheck:e2e:cockpit
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
       - name: Cockpit production browser

@@ -37,6 +37,9 @@ pnpm dev
 - Cesium 的初始化、渲染或 WebGL 上下文错误显示可重试状态，并释放旧实例及监听器。
 - 本地配置无法读取时显示恢复提示，保留原始存档；只有显式恢复或保存时覆盖。
 
+浏览器验收前在仓库根执行 `pnpm typecheck:e2e:cockpit`，检查 E2E 与共享诊断 Fixture 的类型。
+`pnpm test:e2e:cockpit` 会先完整构建，再运行生产 preview；已构建产物可用 `pnpm test:e2e:cockpit:built`。
+
 ## 目录结构
 
 ```

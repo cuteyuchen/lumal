@@ -162,6 +162,25 @@ PNG 返回 290 色，Node 分析 2585ms，独立场景点击也完成，但再�
 `cockpit-recovery-scope-report.json`、`demo-docs-recovery-scope.log`。
 该本地结果不替代跨平台复测；当前提交的最终结果见 PR 检查与附件。
 
+第七轮 `7226a98`：主 CI `40273879297` 的 1104 项单元、全部类型与构建通过。
+Build Validation `40273879261` 的 Ubuntu 完整 Demo、Windows DataV 和消费者 / 模板 / zoom 通过，
+Ubuntu Cockpit 八项 / Admin 34 项通过；Windows Cockpit 仍为 7 通过 / 1 失败，后续门禁跳过。
+证据 `ci-windows-demo-7226a98.log`、`ci-7226a98-windows/` 保留，未以复跑替换失败。
+trace 证明仅移动交互不足：本轮恢复 PNG 仍返回 290 色，但 Node 全幅同步解码在该 runner 上耗时 13148.5ms，
+加上首次就绪约 24.25 秒、截图 34.88 秒，在退出场景前已超过总预算。
+恢复用例改为真实截图的中央 768×512 区域；该区域也避开两侧 Widget，防止用 Widget 颜色误判地图已经恢复。
+全幅 Canvas 截图、完整场景截图、Worker / 资源、实例 resize 和释放检查仍保留在常规用例，
+没有修改应用分辨率、场景内容、像素门槛、超时或重试。新增采样边界测试，后续结果按新提交另行验证。
+独立严格类型检查还发现共享诊断 Fixture 对 `message.type()` 多次调用未能收窄类型；
+修复为单次读取后分支，运行时规则不变。新增 `pnpm typecheck:e2e:cockpit`，
+普通双平台 PR 与 Release Gate 均必跑，并增加防止该步骤被移除的安全回归。
+本地完整生产 E2E 八项通过（1.5 分钟），恢复中央采样 27 色、Node 分析 13.8ms，
+保留 PNG 并人工复核为地图标签与点位，不含两侧 Widget。
+26 项应用单元、97 项契约、E2E 严格类型、ESLint、工作流静态约束和严格文档构建通过；
+证据 `cockpit-e2e-central-map.log`、`cockpit-central-map-report.json`、
+`playwright/cockpit-recovery-central.png`、`demo-docs-central-map.log`。
+这些仍是本地证据，后续跨平台结果见 PR 当前提交的检查与附件。
+
 ## 包体与依赖
 
 通过 `measureApplication()` 测量入口 HTML 与静态 import 闭包，动态 chunk 不全计入首屏。

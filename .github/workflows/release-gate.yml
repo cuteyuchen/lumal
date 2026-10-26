@@ -225,6 +225,9 @@ jobs:
       - name: Build Cockpit through package script
         run: pnpm --filter lumal-cockpit build:app
 
+      - name: Typecheck Cockpit browser tests
+        run: pnpm typecheck:e2e:cockpit
+
       - name: Install Chromium for Cockpit
         run: pnpm exec playwright install --with-deps chromium
 

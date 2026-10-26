@@ -2,9 +2,27 @@
 import { Buffer } from 'node:buffer'
 import { PNG } from 'pngjs'
 import { describe, expect, it } from 'vitest'
-import { countCanvasColors } from '../e2e/canvas-pixels'
+import { canvasSampleClip, countCanvasColors } from '../e2e/canvas-pixels'
 
 describe('生产 Canvas 截图取样', () => {
+  it('全幅画布只采样中央地图，保留实际页面偏移', () => {
+    expect(canvasSampleClip({ x: 17, y: 80, width: 1886, height: 962 })).toEqual({
+      x: 576,
+      y: 305,
+      width: 768,
+      height: 512,
+    })
+  })
+
+  it('小画布不会采样到边界之外', () => {
+    expect(canvasSampleClip({ x: 4, y: 8, width: 320, height: 180 })).toEqual({
+      x: 4,
+      y: 8,
+      width: 320,
+      height: 180,
+    })
+  })
+
   it('空白或单色截图不能达到颜色门槛', () => {
     const image = new PNG({ width: 128, height: 64 })
     image.data.fill(255)

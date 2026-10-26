@@ -25,6 +25,10 @@ describe('release dependency graph', () => {
     job.strategy.matrix.os = ['ubuntu-latest', 'windows-latest']
     job.steps = job.steps.filter(step => step.run !== 'pnpm test:e2e:cockpit:built')
     expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('cockpit')
+    const noTypes = readWorkflows()
+    const untyped = noTypes['build-validation.yml'].jobs['demo-production']
+    untyped.steps = untyped.steps.filter(step => step.run !== 'pnpm typecheck:e2e:cockpit')
+    expect(() => verifyReleaseWorkflows(noTypes, scripts)).toThrow('typecheck:e2e:cockpit')
   })
 
   it('消费者生产浏览器校验之前必须准备 Chromium', () => {

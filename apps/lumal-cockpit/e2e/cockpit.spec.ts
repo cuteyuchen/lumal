@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test'
+import type { Buffer } from 'node:buffer'
 import { expect, test } from '../../lumal-admin/e2e/fixtures'
-import { countCanvasColors } from './canvas-pixels'
+import { canvasSampleClip, countCanvasColors } from './canvas-pixels'
 
 /***********************生产画布像素、网络和组件生命周期证据*********************/
 async function expectFittedStage(page: Page, width: number, height: number): Promise<void> {
@@ -14,10 +15,20 @@ async function expectFittedStage(page: Page, width: number, height: number): Pro
   }).toBe(true)
 }
 
-async function expectPaintedCanvas(canvas: Locator): Promise<void> {
+async function expectPaintedCanvas(canvas: Locator, sampleOnly = false): Promise<void> {
   await expect(canvas).toBeVisible()
   // 软件 GPU 的截图本身可能耗时 20 秒，不应占用轮询断言预算并丢弃已经绘制的结果。
-  const image = await canvas.screenshot({ animations: 'disabled' })
+  let image: Buffer
+  if (sampleOnly) {
+    const bounds = await canvas.boundingBox()
+    expect(bounds, '中央画布必须有实际尺寸').not.toBeNull()
+    const clip = canvasSampleClip(bounds!)
+    image = await canvas.page().screenshot({ animations: 'disabled', clip })
+    test.info().annotations.push({ type: 'canvas-sample-size', description: `${clip.width}x${clip.height}` })
+  }
+  else {
+    image = await canvas.screenshot({ animations: 'disabled' })
+  }
   await test.info().attach('canvas-pixel-sample', { body: image, contentType: 'image/png' })
   const analysisStarted = performance.now()
   const colorCount = countCanvasColors(image)
@@ -114,7 +125,8 @@ test('Cesium 中断重试、真实像素与退出清理', async ({ page }) => {
   await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
   await expect(page.locator('.cesium-widget canvas')).toBeVisible()
   await expect(page.locator('.cesium-center [role="alert"]')).toHaveCount(0)
-  await expectPaintedCanvas(page.locator('.cesium-widget canvas'))
+  // 全幅与 resize 由上一用例验证；恢复采样中央真实地图，不用 Widget 颜色证明重绘成功。
+  await expectPaintedCanvas(page.locator('.cesium-widget canvas'), true)
   await page.getByRole('tab', { name: '独立场景', exact: true }).click()
   await expect(page.getByRole('img', { name: '中性场景区域预览' })).toBeVisible()
   await expect(page.locator('.cesium-widget')).toHaveCount(0)
