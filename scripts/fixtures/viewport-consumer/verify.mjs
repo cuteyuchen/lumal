@@ -11,7 +11,8 @@ import { build, createServer } from 'vite'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 
-const root = process.cwd()
+// Windows 短路径和 junction 需要与模块来源统一为真实路径。
+const root = await realpath(process.cwd())
 const require = createRequire(import.meta.url)
 const options = { enabled: true, include: ['src/screen/**'], viewportWidth: 1920 }
 
@@ -72,7 +73,7 @@ async function main() {
   assert.equal(typeof commonjs.createViewportTransformPlugin, 'function')
   assert.equal(typeof createViewportTransformPlugin, 'function')
   const resolved = await realpath(require.resolve('@lumal/vite'))
-  assert.ok(resolved.startsWith(`${resolve(root)}${sep}`), '消费者必须从自己的 node_modules 解析 tarball')
+  assert.ok(resolved.startsWith(`${resolve(root, 'node_modules')}${sep}`), '消费者必须从自己的 node_modules 解析 tarball')
   for (const [format, api] of [['esm', { createViewportPostcssPlugin }], ['cjs', commonjs]]) {
     const result = await postcss([api.createViewportPostcssPlugin(options, root)])
       .process('.format{width:192px;font-size:14px;line-height:20px;min-height:40px}', { from: resolve(root, 'src/screen/format.css') })
