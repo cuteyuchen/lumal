@@ -2,6 +2,11 @@
 
 本轮基线：`3f9e1848f87c3e3ca68a04643a604b74f92f5528`，分支 `codex/cockpit-demo-example-quality`。
 公共包维持 `0.0.6-beta`。本轮不发布 npm、不部署生产、不修改真实业务项目。
+本报告的功能代码验收提交为 `57792299f13a14032fa841c0113f1201678d8fad`；
+GitHub PR 测试使用合并引用 `fa71750a161b8d7ae70a58f0d008e49185c17b93`，不是正式合并。
+[主 CI](https://github.com/cuteyuchen/lumal/actions/runs/40264662877)、
+[Build Validation](https://github.com/cuteyuchen/lumal/actions/runs/40264662712) 均已完成并通过；
+下文另列外部 Vercel Preview 的失败，不将它隐去。
 
 ## 构建基线
 
@@ -47,16 +52,16 @@
 
 | 验证 | 实际命令/环境 | 结果 | 证据 |
 | --- | --- | --- | --- |
-| 全仓库单元测试 | `pnpm test`，Windows / Node 24.14.1，Ubuntu / Node 22.23.3 | 本地功能提交 1094 通过；新增测试后 Ubuntu `9e9e086` 1100 通过 | `demo-workspace-tests.log`、CI `40263504547` / `ci-fast-9e9e086.log` |
-| 全仓库类型检查 | `pnpm typecheck`，Windows + Ubuntu | 通过 | `demo-workspace-typecheck.log`、CI `40263504547` |
-| 全公共包构建 | `pnpm build`，Windows + Ubuntu | 通过 | `demo-workspace-build.log`、CI `40263504547` |
+| 全仓库单元测试 | `pnpm test`，Windows / Node 24.14.1，Ubuntu / Node 22.23.3 | 本地功能提交 1094 通过；最终功能提交 Ubuntu 1100 通过 | `demo-workspace-tests.log`、CI `40264662877` / `ci-fast-5779229.log` |
+| 全仓库类型检查 | `pnpm typecheck`，Windows + Ubuntu | 通过 | `demo-workspace-typecheck.log`、CI `40264662877` |
+| 全公共包构建 | `pnpm build`，Windows + Ubuntu | 通过 | `demo-workspace-build.log`、CI `40264662877` |
 | Cockpit 最终应用构建 | `pnpm --filter lumal-cockpit build:app` | 通过 | `cockpit-demo-build-polished.log` |
 | Admin 最终应用构建 | `pnpm --filter lumal-admin build` | 通过 | `admin-build-budget-fixed.log` |
 | Admin 生产 E2E | `pnpm test:e2e:release:built`，专用 preview / Chromium，34 用例 | 34 通过 | `admin-e2e-full-verified.log` |
 | Cockpit 生产 E2E | `pnpm test:e2e:cockpit:built`，preview / Chromium / SwiftShader | 7 通过，含浏览器时钟驱动刷新、实际缩放边界及重试后的像素 | `cockpit-e2e-stage-bounds.log` |
 | ESLint | `pnpm exec eslint .` | 通过 | `demo-lint-polished.log` |
 | 模板格式 | `pnpm format:check` | 通过 | `demo-format-check.log` |
-| 测试 / 部署文档契约 | `pnpm exec vitest run --config vitest.config.ts scripts/docs-links.test.ts scripts/playwright-release.test.ts` | 30 通过 | 本地终端，脚本提交 `82e371f` 及后续文档提交 |
+| 文档 / Skill / 安全 / 测试配置契约 | `pnpm exec vitest run --config vitest.config.ts scripts/docs-links.test.ts scripts/playwright-release.test.ts scripts/lumal-skill.test.ts scripts/release-safety.test.mjs` | 收尾更新后 97 通过 | 本地终端，最终功能提交加报告更新 |
 | 全脚本回归 | `pnpm test:scripts`，Windows | 115 通过 | `demo-scripts-ci-followup.log` |
 | 文档 / 链接 | `pnpm docs:build`，ignoreDeadLinks=false | 通过 | `demo-docs-build-verified.log` |
 | 发布边界 / 工作流 | `pnpm release:boundaries` / `pnpm release:workflows` | 通过 | `demo-boundaries-verified.log`、`demo-workflows-check.log` |
@@ -65,6 +70,10 @@
 | Skill | `python -X utf8 .../quick_validate.py skills/lumal` | 通过；独立分发测试包含在 scripts | 终端结果、`demo-workspace-tests.log` |
 | Ubuntu / Windows CI 首轮 | Build Validation `40261401062`，Node 22.23.3 / pnpm 10.33.0 | 双平台 frozen install、两种完整 Cockpit 构建与应用单测通过；生产浏览器超时，整改后复测 | Actions Job `121374384086` / `121374383973` |
 | Ubuntu 消费者 / 既有 zoom | 同 run 的 `validate` Job | 通过，含完整脚手架消费者、独立模板、40 组工作区 / 8 组局部缩放 / 2 组实例与稳定窗口检查 | Job `121374384263`，`ci-consumers-f5a07ba.log` |
+| Ubuntu 最终 Demo 门禁 | Ubuntu 24.04.5 / Node 22.23.3 / pnpm 10.33.0，Build Validation `40264662712` | frozen install、两种完整构建、20 项应用单测、Cockpit 7 项 / Admin 34 项生产 E2E、严格文档构建、原预算通过 | Job `121384625652`，`ci-ubuntu-demo-5779229.log` |
+| Windows 最终 Demo 门禁 | Windows Server 2025 / Node 22.23.4 / pnpm 10.33.0，同 run | 与 Ubuntu 相同的完整门禁通过；Cockpit 7 项 / Admin 34 项通过 | Job `121384625603`，`ci-windows-demo-5779229.log` |
+| Windows DataV 视觉 | 同 run，`pnpm test:datav:visual --repeat-each=3` | 通过 | Job `121384625444` |
+| 最终消费者 / 模板 / 真实 zoom | Ubuntu，同 run，`pnpm test:create-consumer` / `pnpm test:create-projects` / `pnpm test:viewport` | 全部通过；视口为 40 组工作区、8 组局部缩放、2 组实例与稳定窗口检查 | Job `121384625660`，`ci-consumers-5779229.log` |
 | 线上部署 | 本轮只读核对，不执行部署 | 未部署本分支 | 下表 |
 
 生产 E2E 观察真实 Canvas 像素、地图引擎初始化/切换/释放、同一实例 resize、无静态资源 404，
@@ -79,15 +88,25 @@ Designer 复杂拖拽及替换的全组合仍主要由既有公共包测试保�
 多个职责串在一条用例中耗尽 90 秒，并非构建失败。后续将地图、持久化、刷新和视口操作拆分，
 默认动画仍单独验证；其余场景使用应用已有的 reduced-motion 策略，刷新只推进必要的浏览器时钟。
 保留真实 Canvas 像素、地图实例、Worker、错误恢复、交互和全部尺寸断言，维持零重试及 90 秒超时。
-trace 保留 DOM / 网络 / 源码，停止持续逐帧截图，显式截图和失败截图仍保留。复测结果另行记录。
-`82e371f` 本地七条全部通过，2.0 分钟；远程双平台复测尚未完成，不能以该本地结果替代。
+trace 保留 DOM / 网络 / 源码，停止持续逐帧截图，显式截图和失败截图仍保留。
+`82e371f` 本地七条全部通过，2.0 分钟；该本地结果不替代后续远程验收。
 
 第二轮 `40263504391`：Ubuntu、Windows 均为 6 通过 / 1 失败，仅 Cesium 首次像素断言失败。
 Ubuntu trace 记录截图取样实际返回 **540 色**，截图及解码约 20.2 秒，
 超过 `expect.poll` 的 20 秒预算，导致已经绘制成功的结果被断言层判为超时。
 修复为先在测试总预算内获取一次真实截图，再直接检查相同的 `>10` 颜色门槛；
 保存 PNG 附件与颜色数量，不再用昂贵截图作为短时轮询的回调。未增加超时、重试或降低像素门槛。
-第二轮 CI 的 lint / format / 单元 / 类型 / 公共包构建已成功；后续浏览器复测另行记录。
+第二轮 CI 的 lint / format / 单元 / 类型 / 公共包构建已成功。
+
+第三轮 `40264662712`、功能提交 `5779229`：Ubuntu 与 Windows 的 Demo Job 均通过，
+Cockpit 各 7 项、Admin 各 34 项；没有跳过或重试。Cockpit 分别耗时 4.7 / 5.0 分钟，
+Admin 分别耗时 2.2 / 2.0 分钟。两平台均复制 389 项 Cesium 资源，生产网络无未预期 404。
+下载的 Ubuntu JSON 报告记录三次 Canvas 取样为 515 / 541 / 578 色，包含 Cesium 恢复后取样；
+Windows 对应取样为 524 / 412 / 593 色。
+PNG 和 JSON 保存在 `ci-5779229-ubuntu/output/playwright/`，Windows 对应目录为 `ci-5779229-windows/`；
+已人工核对 Windows Cesium、Ubuntu 最小视口实验及 Admin Viewport 截图。
+独立 `validate` Job 已完成最新消费者、独立模板与真实 zoom 检查，整个 Build Validation run 成功。
+主 CI `40264662877` 已完成，包含 lint、format、1100 项单元、类型、构建、Actions 语法与 Linux PTY。
 
 ## 包体与依赖
 
@@ -98,6 +117,13 @@ Ubuntu trace 记录截图取样实际返回 **540 色**，截图及解码约 20.
 | --- | --- | --- | --- |
 | Admin | 313019 / 42591 | 332877 / 42797 | 335000 / 50000 |
 | Cockpit | 703778 / 71192 | 687525 / 71259 | 800000 / 80000 |
+
+最终功能提交的远程产物也通过同一预算；两平台使用各自构建信息，gzip 允许自然字节差异：
+
+| CI 平台 | Admin JS / CSS | Cockpit JS / CSS |
+| --- | --- | --- |
+| Ubuntu | 332895 / 42805 | 687533 / 71258 |
+| Windows | 332873 / 42797 | 687529 / 71261 |
 
 `pnpm release:budgets` 通过，日志 `demo-budgets-verified.log`。新增依赖只有应用显式引用的
 workspace 公共包：Cockpit 增 Viewport，Admin 增 Viewport / DataV / Cockpit；未增加第三方运行时依赖。
@@ -136,6 +162,10 @@ Cockpit 自定义域名的 alias 确认仍指向旧 Deployment，不是本轮产
 这解释了该 Preview 失败，但不将它当作用户未提供日志的本地构建故障根因。
 只修改输出路径不足以修复错误过滤器。平台配置保持未修改，需获得授权后成对更新，
 经受控流程构建并核对资源后再部署；不通过仓库根 `vercel.json` 覆盖其他项目。
+最终功能提交 `5779229` 的自动 Preview `dpl_GGayLoQqeNEFL6FzXznzMqqdmhAy`
+同样失败。再次读取该 Deployment 的设置快照，构建命令、输出目录和 Node 均与上表一致；
+构建日志末尾仍包含 `No projects matched the filters` 和 `STATIC_BUILD_NO_OUT_DIR`。
+因此 GitHub 主 CI / Demo Job 通过，不代表 PR 的外部 Vercel 检查或线上部署通过。
 
 ## CI 与交付
 
@@ -147,7 +177,11 @@ Build Validation 新增双平台 demo-production Job：frozen install、两种�
 主要提交：`1a562e4`（构建输入）、`b8677cb`（Cockpit 能力）、`0dd58a2`（Designer 补丁）、
 `b4c60cd`（Cesium 恢复）、`c47cbe0`（Admin 示例）、`dc181db`（图表初始化与嵌入布局）、
 `81659cc`（文档 / Skill）、`f5a07ba`（双平台门禁）、`82e371f`（软件渲染验收隔离）。
+后续提交：`9e9e086`（真实缩放边界和平台配置审计）、`5779229`（分离截图与像素断言预算）。
 Draft PR：[cuteyuchen/lumal#8](https://github.com/cuteyuchen/lumal/pull/8)，未合并。
+
+十包文档与实际示例的逐项清单见 [公共包覆盖表](./public-package-coverage.md)，
+Vue + Viewport、HTTP Screen、Admin 嵌入 Runtime、Cesium 资源部署见 [接入指南](./demo-integration-guide.md)。
 
 未完成/未授权：用户原始标准构建失败尚缺完整日志；真实浏览器缩放全矩阵、真实业务页、
 生产域名新版本验证、公共补丁 npm 发布、正式合并。两个真实消费者保持只读。
