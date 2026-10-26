@@ -24,6 +24,14 @@ Lumal 是一套供个人长期使用、同时开放给其他开发者的轻量 V
 通用 binary 仍由 `create-lumal-admin` 包分发，没有新增独立的 `create-lumal` npm 包；
 不要把 `pnpm create lumal` 当成已发布命令。
 
+## Demo 后续整改
+
+本工作分支补充 Cockpit 的直接 Viewport 实验、错误恢复和配置交互，
+以及 Admin 的 Viewport / DataV / 轻量 Cockpit Runtime 示例。公开 API 仍以 `0.0.6-beta` 为基线；
+Designer 名称输入补丁尚未发布，已有 Changeset。没有为 Demo 整改自动发布 npm 或更新生产站点。
+接入代码见 [Demo 指南](docs/demo-integration-guide.md)，十包能力见 [覆盖表](docs/public-package-coverage.md)，
+实际环境、构建与浏览器证据见 [整改验收](docs/cockpit-demo-remediation-2026-10-26.md)。
+
 ## 快速开始
 
 环境要求：Node.js 22.12+、pnpm 10.33.0。

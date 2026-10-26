@@ -1,6 +1,6 @@
 # lumal-cockpit
 
-独立驾驶舱应用，演示 `@lumal/cockpit` 的运行时与设计器能力，并集成多种地理/图表可视化方案（Cesium、OpenLayers、ECharts GEO）。作为独立示例站运行，不进入 `@lumal/cockpit` 的发布检查。
+独立驾驶舱应用，基于 `@lumal/* 0.0.6-beta` 演示运行时与设计器，并集成 Cesium、OpenLayers、ECharts GEO。应用不进入公共包 tarball；完整生产构建和生产浏览器纳入普通 PR 与 Release Gate。
 
 ## 技术栈
 
@@ -8,7 +8,7 @@
 - Vite（含 `vite-plugin-static-copy` 拷贝 Cesium 静态资源）
 - Element Plus
 - 可视化：Cesium、OpenLayers（ol / my-openlayer）、ECharts + vue-echarts、china-geojson
-- Lumal 组件库：`@lumal/core`、`@lumal/charts`、`@lumal/cockpit`、`@lumal/datav`、`@lumal/icons`、`@lumal/icons-vue`
+- Lumal 组件库：`@lumal/core`、`@lumal/charts`、`@lumal/viewport`、`@lumal/cockpit`、`@lumal/datav`、`@lumal/icons`、`@lumal/icons-vue`
 
 ## 本地开发
 
@@ -34,6 +34,7 @@ pnpm dev
   实际容器尺寸和点击热区。它不包裹主驾驶舱，不会造成双重缩放。
 - 主驾驶舱保留 scale / vwvh / DataV 全屏容器三种用法；容器模式内部为 `external`。
 - 中心支持 ECharts、OpenLayers、Cesium 与独立 SVG 场景。窗口 resize 不重建地图。
+- Cesium 的初始化、渲染或 WebGL 上下文错误显示可重试状态，并释放旧实例及监听器。
 - 本地配置无法读取时显示恢复提示，保留原始存档；只有显式恢复或保存时覆盖。
 
 ## 目录结构
@@ -70,3 +71,11 @@ src/
 
 在仓库根目录使用 `pnpm cockpit:build`，或 `pnpm --filter lumal-cockpit build`，两者执行同一完整构建链。
 生产 `preview` 只读取 dist，不启用开发源码 alias。不要用裸 `vite build` 替代包含类型检查的构建命令。
+
+根目录执行 `pnpm test:e2e:cockpit` 完整构建并运行 Playwright；
+已有产物时使用 `pnpm test:e2e:cockpit:built`。证据在 `output/playwright/`，
+覆盖地图切换、真实 Canvas 像素、静态资源、自动刷新、Designer 保存和配置损坏恢复。
+Viewport 实验与主画布隔离；测试的五种窗口尺寸不等同于真实浏览器缩放验证。
+
+完整安装、Cesium 资源与源码 alias / dist 边界见 [接入指南](../../docs/demo-integration-guide.md)。
+本轮 Designer 名称输入修复留有 Changeset，尚未发布；示例未部署前，线上域名不代表当前分支。

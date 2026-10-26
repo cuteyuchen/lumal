@@ -1,6 +1,6 @@
 # lumal-admin
 
-Lumal 中后台管理台示例应用，基于 `@lumal/core` 及其配套包搭建，演示登录鉴权、动态菜单、权限指令、SchemaForm/CrudTable、主题定制以及独立驾驶舱外链与 DataV 指南站等完整能力。
+Lumal 中后台管理台示例应用，基于 `@lumal/* 0.0.6-beta` 公开 API 搭建，演示登录鉴权、动态菜单、权限指令、SchemaForm/CrudTable、主题定制，以及局部视口、DataV 和 Cockpit Runtime 集成。
 
 ## 技术栈
 
@@ -9,11 +9,11 @@ Lumal 中后台管理台示例应用，基于 `@lumal/core` 及其配套包搭�
 - Vue Router 4
 - Element Plus
 - ECharts + vue-echarts（通过 `@lumal/charts`）
-- Lumal 组件库：`@lumal/core`、`@lumal/charts`、`@lumal/icons`、`@lumal/icons-vue`
+- Lumal 组件库：Core、Charts、Icons / Icons Vue；Viewport 提供轻量默认策略，DataV / Cockpit 仅在对应示例页加载。
 
 ## 本地开发
 
-本应用在开发（`vite serve`）模式下，通过 `@lumal/vite` 的 `createLumalAliases` 将 `@lumal/*` 依赖别名指向各 package 的 **源码**（`packages/*/src`），因此改动组件库源码会即时热更新，**无需先构建 dist**。生产构建（`vite build`）时才使用各包发布的 `dist` 产物。
+本应用在开发（`vite serve`）模式下，通过 `@lumal/vite` 的 `createLumalAliases` 将 `@lumal/*` 依赖别名指向各 package 的 **源码**（`packages/*/src`），因此改动组件库源码会即时热更新，**无需先构建 dist**。生产构建和 preview 使用各包的 `dist` 产物，不混入开发 alias。
 
 ```bash
 # 在仓库根目录：一键并行启动全部 app（推荐）
@@ -81,6 +81,28 @@ src/
 
 - 生产构建依赖各 `@lumal/*` 包的 `dist`，构建前请先在根目录执行 `pnpm build` 生成所有包产物，或使用根目录的 `pnpm admin:build`（会先构建全部包再构建 admin）。
 - 后端接口由 [lumal-mock-api](../lumal-mock-api/README.md) 提供，登录账号见该文档。
+
+## 新示例
+
+| 路由 | 实际能力 | 授权 |
+| --- | --- | --- |
+| `/#/examples/viewport` | 应用默认、路由和容器策略；contain / width / responsive / disabled；实测尺寸、字号下限、独立弹窗和源码 | `examples:view` |
+| `/#/examples/datav` | 边框、装饰、数字翻牌、滚动榜单与局部全屏容器 | `examples:view` |
+| `/#/examples/cockpit` | 真实 Runtime、最小 Widget、主题切换；外层 Viewport 与内层 external | `cockpit:view` |
+
+页面全部通过组件白名单动态导入。远程菜单仍由 Mock 决定授权；Viewport 页的布局策略在
+`src/api/menu.ts` 按可信组件名补入，不依赖后端 DTO 透传任意 meta。
+guest 不显示 Cockpit 集成入口，直接访问返回 403。首页不加载 DataV、Cockpit、Designer 或地图资源。
+
+在根目录执行 `pnpm test:e2e:release`，生产产物运行全部 Admin Playwright；
+只测新增页面可在已构建后执行：
+
+```sh
+pnpm test:e2e:release:built apps/lumal-admin/e2e/visualization-examples.spec.ts
+```
+
+完整接入说明见 [Demo 与业务接入](../../docs/demo-integration-guide.md)。
+新增示例属于本工作分支，未部署前不能使用线上地址验证本地改动。
 
 ## 关于页面与版本确认
 

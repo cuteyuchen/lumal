@@ -83,6 +83,7 @@ import '@lumal/cockpit/style.css'
 
 - `viewportMode="scale"`：1920×1080 等比缩放
 - `viewportMode="vwvh"`：VW/VH 适配
+- `viewportMode="external"`：外层 Viewport / DataV 容器负责缩放，内部不再缩放
 - 同 type 可多实例（独立 `instanceId`）；Tab 切换保留实例状态
 - 布局导航由应用负责
 
@@ -107,6 +108,11 @@ import { LumalCockpitDesigner } from '@lumal/cockpit/designer'
 - 仅编辑草稿副本；`@save` 输出 `{ config, layout }`
 - 包 **不** 调用 HTTP / localStorage
 - 装配区只含左右网格，无中央大屏预览
+
+完整的 Admin 内嵌 Runtime 与 Widget 源码、Designer 按需加载、Cesium 静态资源部署和构建排错：
+[Demo 与业务接入](/reference/demo-integration-guide)。
+本分支修复了 Designer 布局名称输入回退问题，已登记 Changeset，**尚未发布补丁**；
+不能用 `0.0.6-beta` npm 包宣称该修复已经上线。
 
 ## 自定义 Card
 

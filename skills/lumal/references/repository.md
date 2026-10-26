@@ -38,6 +38,11 @@ pnpm release:artifacts
 pnpm release:budgets
 ```
 
+改动独立 Cockpit 或可视化示例时，完整构建与浏览器验收分别运行
+`pnpm cockpit:build` / `pnpm test:e2e:cockpit:built`；
+Admin 使用 `pnpm test:e2e:release`。普通公共包 build 不证明 Demo 可运行。
+参考 `docs/public-package-coverage.md` 核对十包文档，生产站点必须单独核对部署提交。
+
 修改脚手架时在构建后执行 `pnpm test:create-consumer`。只有确需验证路由、焦点、画布等浏览器行为时再选择相关 Playwright 用例，不因文档或类型改动默认启动全部应用。
 
 ## Skill 更新规则

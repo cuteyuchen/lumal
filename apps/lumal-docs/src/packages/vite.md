@@ -34,7 +34,7 @@ export default defineConfig({
       workspaceRoot: resolve(__dirname, '../..'),
       // 开发默认 source；CI 验证 dist 时可改为 'dist'
       target: 'source',
-      // packages: ['core', 'icons', 'icons-vue', 'charts', 'datav', 'cockpit', 'vben-compat'],
+      // packages: ['viewport', 'core', 'icons', 'icons-vue', 'charts', 'datav', 'cockpit', 'vben-compat'],
     }),
   },
 })
@@ -74,6 +74,27 @@ Dev/Build 共用 CSS 声明转换，不扫描脚本、模板内联 style 或业�
 保留已有 PostCSS 配置和来源边界，无法可靠定位预处理声明时跳过并警告。
 配置与限制见 [屏幕适配](/reference/screen-viewport-guide)，不要覆盖 Admin、
 Element Plus 或地图样式，也不要与同一画布的 transform 叠加。
+
+```ts
+import { createViewportTransformPlugin } from '@lumal/vite'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [createViewportTransformPlugin({
+    enabled: true,
+    include: ['src/screen/**'],
+    viewportWidth: 1920,
+  })],
+})
+```
+
+`include` 是必须明确选择的来源，不要设为全项目。此插件转 CSS 声明，不转脚本数值、
+URL、地图坐标或模板内联 style；默认不转字体、自定义属性和依赖。
+Dev 与 Build 使用相同入口。完整选项和 SCSS 来源限制见 [屏幕适配](/reference/screen-viewport-guide)。
+
+Monorepo 的开发源码 alias 应限定为 `command === 'serve' && !isPreview`，
+并包含传递依赖 viewport；普通 npm 消费者不需要这些 alias。
+生产构建必须先生成公共包 dist，preview 不得借源码掩盖产物遗漏。
 
 ## 边界
 

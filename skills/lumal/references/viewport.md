@@ -20,3 +20,8 @@
 Teleport到body的UI独立于设计画布。Cockpit放入缩放容器时必须使用external。
 
 完整示例见仓库 docs/screen-viewport-guide.md；隔离真实浏览器夹具位于apps/lumal-viewport-lab。
+
+Admin 的 `examples/ViewportView.vue` 演示默认/路由/容器策略，`viewport/ViewportCanvas.vue`
+是可复制的组件；路由策略在应用可信映射中补入，后端菜单 DTO 不一定保留扩展 meta。
+独立 Cockpit 的 ViewportLab 与主驾驶舱隔离，不能将实验包装器再套在自缩放的 Cockpit 外。
+`computeViewportFontSize` 需显式用于目标文字，不会自动改变整个后台字号。

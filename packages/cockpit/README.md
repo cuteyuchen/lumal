@@ -61,7 +61,8 @@ registry.registerWidget({
 
 - 布局导航由消费应用负责。
 - 中心内容位于底层全宽画布，左右区域覆盖在其两侧。
-- `viewportMode="scale"` 使用 1920 × 1080 等比缩放；`viewportMode="vwvh"` 使用 VW/VH 单位适配。
+- `viewportMode="scale"` 使用 1920 × 1080 等比缩放；`viewportMode="vwvh"` 使用 VW/VH 单位适配；`viewportMode="external"` 由父容器负责缩放。
+- 外层使用 `LumalViewport` 或 DataV 全屏容器时，内层选择 `external`，同一内容树只缩放一次。
 - 相同模块 type 可以创建多个拥有独立 `instanceId` 的实例。
 - Tab 切换保留全部模块实例状态。
 
@@ -87,6 +88,9 @@ registry.registerWidget({
 - 已放置模块共享 `mode: 'design'` 的消息总线；模块库预览保持隔离。
 - 保存事件输出 `{ config, layout }`，包不调用 HTTP 或写入 localStorage。
 
+当前工作分支修复了布局名称输入在保存前被还原的问题，已有回归测试与 Changeset，
+但该补丁尚未发布，不应将本地源码修复描述为 registry 的 `0.0.6-beta` 已包含。
+
 ## 公共 Card
 
 `LumalCockpit` 默认使用 `LumalCockpitCard`。应用可通过 `cardComponent` 替换外框和 Tab 头部，组件须接收：
@@ -103,3 +107,11 @@ registry.registerWidget({
 ## 主题边界
 
 包只提供结构样式和语义 CSS 变量，不包含固定行业皮肤、Logo、地图、业务截图或业务字体。消费应用可以覆盖变量、传入 Card、使用标题背景和自定义插槽实现品牌样式。
+
+## 可运行示例
+
+- [独立 Demo](../../apps/lumal-cockpit/README.md)：四种中央场景、配置持久化、按需 Designer 和隔离 Viewport 实验。
+- [Admin 示例](../../apps/lumal-admin/README.md)：最小 Runtime 注册表与局部容器，不加载地图或 Designer。
+- [完整接入与 Cesium 部署](../../docs/demo-integration-guide.md)：安装、两文件示例、样式、资源目录和排错。
+
+Demo 的地图引擎不是公共包依赖；本分支示例未部署前，线上 Demo 不代表本分支代码。

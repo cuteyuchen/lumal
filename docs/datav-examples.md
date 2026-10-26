@@ -352,4 +352,4 @@ pnpm --filter lumal-datav-guide build     # 产出静态站点到 apps/lumal-dat
 
 ## 组件与 DataV 2.10.0 映射
 
-完整的 38 个 DataV 组件到 15 个 `Lumal*` 组件的映射表，见 [`packages/datav/README.md`](../packages/datav/README.md)。DataV 仅作为 MIT 许可下的重构基准，版权声明见 [`packages/datav/THIRD_PARTY_NOTICES.md`](../packages/datav/THIRD_PARTY_NOTICES.md)。
+完整的 38 个 DataV 组件到 15 个 `Lumal*` 组件的映射表，见 [DataV 包说明](https://github.com/cuteyuchen/lumal/blob/master/packages/datav/README.md)。DataV 仅作为 MIT 许可下的重构基准，版权声明见 [第三方声明](https://github.com/cuteyuchen/lumal/blob/master/packages/datav/THIRD_PARTY_NOTICES.md)。

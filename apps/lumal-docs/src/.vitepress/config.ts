@@ -9,7 +9,7 @@ export default defineConfig({
   lang: 'zh-CN',
   cleanUrls: true,
   lastUpdated: true,
-  ignoreDeadLinks: true,
+  ignoreDeadLinks: false,
   srcDir: '.',
   outDir: '../dist',
   cacheDir: '../.vitepress/cache',

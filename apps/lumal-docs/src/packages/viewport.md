@@ -55,3 +55,10 @@ Screen 与混合后台项目见 [项目模板](/reference/project-template-guide
 
 脱敏夹具的真实地图、Canvas、Element Plus 与浏览器缩放证据见
 [隔离验收报告](/reference/screen-viewport-verification)，不能代替原业务页面验收。
+
+## 可运行示例
+
+仅 Vue + Viewport 的完整 App、Admin 页面与容器覆盖示例见
+[Demo 与业务接入](/reference/demo-integration-guide)。
+本分支 Admin 路径为 `/#/examples/viewport`，独立 Cockpit 顶部提供「视口实验」；
+新入口需本分支产物部署后才会出现在在线站点，当前可在本地生产 preview 运行。

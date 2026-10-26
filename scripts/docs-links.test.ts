@@ -82,6 +82,19 @@ describe('published documentation links', () => {
     }
   })
 
+  it('十包覆盖表逐一关联实际公共包，运行时文档包含 external', () => {
+    const content = readFileSync(join(root, 'docs/public-package-coverage.md'), 'utf8')
+    const rows = [...content.matchAll(/^\| `([^`]+)` \|/gm)].map(match => match[1])
+    const packages = readdirSync(join(root, 'packages')).map(directory =>
+      JSON.parse(readFileSync(join(root, 'packages', directory, 'package.json'), 'utf8'))).filter(pkg => !pkg.private).map(pkg => pkg.name)
+    expect(rows.toSorted()).toEqual(packages.toSorted())
+    expect(new Set(rows).size).toBe(rows.length)
+    const runtime = readFileSync(join(root, 'apps/lumal-docs/src/components/cockpit/runtime.md'), 'utf8')
+    expect(runtime).toContain('external')
+    expect(readFileSync(join(root, 'apps/lumal-docs/src/.vitepress/config.ts'), 'utf8'))
+      .toContain('ignoreDeadLinks: false')
+  })
+
   it('当前文档与应用入口不再引用旧站、平台默认域名或占位仓库', () => {
     const docs = join(root, 'apps/lumal-docs/src')
     const files = [
