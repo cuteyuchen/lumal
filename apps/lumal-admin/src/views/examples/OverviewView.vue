@@ -4,8 +4,9 @@ import { LumalIcon } from '@lumal/icons-vue'
 import { ElButton, ElInput, ElTag } from 'element-plus'
 import { computed, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
+import { permissionStore } from '../../services/permission'
 
-interface Capability { description: string, entry: string, group: string, route: string, status: 'stable' | 'enhancing', title: string }
+interface Capability { description: string, entry: string, group: string, route: string, status: 'stable' | 'enhancing', title: string, permission?: string }
 /***********************能力列表*********************/
 const router = useRouter()
 const keyword = shallowRef('')
@@ -18,6 +19,9 @@ const capabilities: Capability[] = [
   { title: 'Schema Table', description: '选择、列设置、分页和字典回显。', entry: '@lumal/core/components', group: '数据展示', route: '/examples/schema-table', status: 'stable' },
   { title: 'CRUD Table', description: '查询、新增、编辑、删除和异常反馈闭环。', entry: '@lumal/core/components', group: '数据展示', route: '/examples/crud-table', status: 'stable' },
   { title: '图表面板', description: '加载、异常、空数据、视图切换和导出。', entry: '@lumal/charts', group: '可视化', route: '/examples/chart-panel', status: 'enhancing' },
+  { title: 'Viewport', description: '全局默认、路由与容器级适配和尺寸测量。', entry: '@lumal/viewport', group: '可视化', route: '/examples/viewport', status: 'stable' },
+  { title: 'DataV', description: '边框、装饰、数字翻牌与滚动榜单。', entry: '@lumal/datav', group: '可视化', route: '/examples/datav', status: 'stable' },
+  { title: 'Cockpit Runtime', description: 'Admin 工作区中的轻量驾驶舱和 Widget。', entry: '@lumal/cockpit/runtime', group: '可视化', route: '/examples/cockpit', status: 'stable', permission: 'cockpit:view' },
   { title: '核心服务', description: '请求、会话刷新、字典与错误分类。', entry: '@lumal/core/request', group: '服务', route: '/examples/services', status: 'stable' },
   { title: 'Composables', description: '分页与选择状态的可交互实验区。', entry: '@lumal/core/composables', group: '开发工具', route: '/examples/composables', status: 'stable' },
   { title: 'Utils', description: '使用真实输入验证公开工具函数。', entry: '@lumal/core/utils', group: '开发工具', route: '/examples/utils', status: 'stable' },
@@ -26,7 +30,7 @@ const groups = ['全部', ...new Set(capabilities.map(item => item.group))]
 const visibleCapabilities = computed(() => capabilities.filter((item) => {
   const matchesGroup = activeGroup.value === '全部' || item.group === activeGroup.value
   const query = keyword.value.trim().toLowerCase()
-  return matchesGroup && (!query || `${item.title}${item.description}${item.entry}`.toLowerCase().includes(query))
+  return permissionStore.hasPermission(item.permission) && matchesGroup && (!query || `${item.title}${item.description}${item.entry}`.toLowerCase().includes(query))
 }))
 </script>
 

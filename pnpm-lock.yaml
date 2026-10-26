@@ -77,15 +77,24 @@ importers:
       '@lumal/charts':
         specifier: 0.0.6-beta
         version: link:../../packages/charts
+      '@lumal/cockpit':
+        specifier: 0.0.6-beta
+        version: link:../../packages/cockpit
       '@lumal/core':
         specifier: 0.0.6-beta
         version: link:../../packages/core
+      '@lumal/datav':
+        specifier: 0.0.6-beta
+        version: link:../../packages/datav
       '@lumal/icons':
         specifier: 0.0.6-beta
         version: link:../../packages/icons
       '@lumal/icons-vue':
         specifier: 0.0.6-beta
         version: link:../../packages/icons-vue
+      '@lumal/viewport':
+        specifier: 0.0.6-beta
+        version: link:../../packages/viewport
       echarts:
         specifier: ^6.1.0
         version: 6.1.0

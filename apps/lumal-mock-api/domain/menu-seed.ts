@@ -318,6 +318,39 @@ export const adminMenuSeed: LumalMenuRecord[] = [
         },
       },
       {
+        component: 'examples/viewport',
+        name: 'ExamplesViewport',
+        path: 'viewport',
+        meta: {
+          authority: ['examples:view'],
+          icon: 'lumal:monitor',
+          order: 15,
+          title: 'Viewport',
+        },
+      },
+      {
+        component: 'examples/datav',
+        name: 'ExamplesDataV',
+        path: 'datav',
+        meta: {
+          authority: ['examples:view'],
+          icon: 'app:chart',
+          order: 16,
+          title: 'DataV',
+        },
+      },
+      {
+        component: 'examples/cockpit',
+        name: 'ExamplesCockpit',
+        path: 'cockpit',
+        meta: {
+          authority: ['cockpit:view'],
+          icon: 'lumal:monitor',
+          order: 17,
+          title: 'Cockpit Runtime',
+        },
+      },
+      {
         component: 'examples/info-reference',
         name: 'ExamplesRestricted',
         path: 'restricted',
