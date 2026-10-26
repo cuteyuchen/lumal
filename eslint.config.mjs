@@ -8,6 +8,8 @@ export default antfu(
       '**/*.md',
       '**/dist/**',
       '**/node_modules/**',
+      // 生成工程采用独立的 ESLint/Prettier 配置，不继承仓库格式规则。
+      'packages/create-lumal-admin/templates/**',
     ],
     rules: {
       'pnpm/yaml-enforce-settings': 'off',

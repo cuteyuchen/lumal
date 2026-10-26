@@ -1,0 +1,21 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadMetrics } from '../src/services/metrics';
+import { request } from '../src/services/request';
+
+vi.mock('../src/services/request', () => ({ request: { get: vi.fn() } }));
+beforeEach(() => vi.resetAllMocks());
+
+describe('接口指标 Adapter', () => {
+  it('透传取消并验证响应', async () => {
+    vi.mocked(request.get).mockResolvedValue([{ label: '任务', value: 3 }]);
+    const signal = new AbortController().signal;
+    expect(await loadMetrics(signal)).toEqual([{ label: '任务', value: 3 }]);
+    expect(request.get).toHaveBeenCalledWith('/screen/metrics', { signal });
+  });
+  it('接口失败不能回退静态示例', async () => {
+    vi.mocked(request.get).mockRejectedValue(new Error('backend rejected'));
+    await expect(loadMetrics()).rejects.toThrow('backend rejected');
+    vi.mocked(request.get).mockResolvedValue({ code: 403 });
+    await expect(loadMetrics()).rejects.toThrow('指标响应');
+  });
+});

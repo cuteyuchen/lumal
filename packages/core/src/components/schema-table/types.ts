@@ -52,8 +52,7 @@ export interface SchemaTableSortChangePayload {
   prop?: string | null
 }
 
-export interface SchemaTableColumn<T extends SchemaTableRecord = SchemaTableRow> {
-  field: SchemaTableFieldKey<T>
+export interface SchemaTableColumnBase<T extends SchemaTableRecord = SchemaTableRow> {
   label: string
   authority?: SchemaTableAuthority
   dictionary?: string
@@ -71,7 +70,15 @@ export interface SchemaTableColumn<T extends SchemaTableRecord = SchemaTableRow>
   configurable?: boolean
 }
 
-export interface NormalizedSchemaTableColumn<T extends SchemaTableRecord = SchemaTableRow> extends SchemaTableColumn<T> {
+/** 序号由表格生成，不要求业务行伪造字段；普通列仍校验真实字段名。 */
+export type SchemaTableColumn<T extends SchemaTableRecord = SchemaTableRow> = SchemaTableColumnBase<T> & (
+  | { type: 'index', field?: never }
+  | { type?: 'default', field: SchemaTableFieldKey<T> }
+)
+
+export interface NormalizedSchemaTableColumn<T extends SchemaTableRecord = SchemaTableRow> extends SchemaTableColumnBase<T> {
+  type?: 'default' | 'index'
+  field: SchemaTableFieldKey<T>
   align: SchemaTableAlign
   componentProps: Record<string, unknown>
   emptyText: string

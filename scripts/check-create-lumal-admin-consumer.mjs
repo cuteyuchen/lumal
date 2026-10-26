@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 import process from 'node:process'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { measureAdminBuild } from './measure-admin-build.mjs'
 import { createScaffoldTestApi, verifyScaffoldBrowsers } from './scaffold-verification.mjs'
 
@@ -34,7 +34,7 @@ function quoteWindowsArg(arg) {
   return /[\s"]/.test(arg) ? `"${arg.replaceAll('"', '\\"')}"` : arg
 }
 
-function runPnpm(args, cwd = rootDir, capture = false, extraEnv = {}) {
+export function runPnpm(args, cwd = rootDir, capture = false, extraEnv = {}) {
   const started = performance.now()
   const useShell = process.platform === 'win32'
   const result = spawnSync(
@@ -65,7 +65,7 @@ function runPnpm(args, cwd = rootDir, capture = false, extraEnv = {}) {
   return { seconds: Number(((performance.now() - started) / 1000).toFixed(3)), stdout: result.stdout }
 }
 
-function toFileSpecifier(fromDir, filePath) {
+export function toFileSpecifier(fromDir, filePath) {
   return `file:${relative(fromDir, filePath).replaceAll('\\', '/')}`
 }
 
@@ -79,7 +79,7 @@ async function ensureBuildArtifacts() {
   }
 }
 
-async function packPackage(packageName, packageDir, tarballDir) {
+export async function packPackage(packageName, packageDir, tarballDir) {
   const before = new Set(await readdir(tarballDir))
   runPnpm([
     '--dir',
@@ -99,8 +99,29 @@ async function packPackage(packageName, packageDir, tarballDir) {
   return join(tarballDir, created[0])
 }
 
-async function readJson(filePath) {
+export async function readJson(filePath) {
   return JSON.parse(await readFile(filePath, 'utf8'))
+}
+
+async function assertLazyModuleBoundaries(projectDir) {
+  const manifest = await readJson(join(projectDir, 'dist/.vite/manifest.json'))
+  function closure(key, visited = new Set()) {
+    if (visited.has(key))
+      return visited
+    visited.add(key)
+    for (const dependency of manifest[key]?.imports ?? [])
+      closure(dependency, visited)
+    return visited
+  }
+  const businessFiles = new Set(Object.entries(manifest)
+    .filter(([key]) => /src\/modules\/(?:system|vben-migration)\/.*View\.vue$/.test(key))
+    .map(([, value]) => value.file))
+  const critical = Object.keys(manifest).filter(key => manifest[key].isEntry || /(?:Login|Forbidden|NotFound|Dashboard)View\.vue$/.test(key))
+  for (const key of critical) {
+    if ([...closure(key)].some(dependency => businessFiles.has(manifest[dependency]?.file)))
+      throw new Error(`${key} 静态提前装载系统管理或迁移页面`)
+  }
+  return { criticalEntries: critical, isolatedBusinessPages: businessFiles.size, status: 'passed' }
 }
 
 async function checkMinimalConsumer(tempRoot, tarballs) {
@@ -183,6 +204,7 @@ async function main() {
       toFileSpecifier(runnerDir, tarballs['create-lumal-admin']),
     ], runnerDir)
     const cliPath = join(runnerDir, 'node_modules/create-lumal-admin/dist/cli.js')
+    runPnpm(['exec', 'vitest', 'run', '--config', 'vitest.config.ts', 'packages/create-lumal-admin/tests/cli-terminal.test.ts'], rootDir, false, { LUMAL_TEST_CLI: cliPath })
     const createPackage = await readJson(join(rootDir, packageDirectories['create-lumal-admin'], 'package.json'))
     const cliCases = [
       [['--help'], 0, '--preset'],
@@ -256,18 +278,31 @@ async function main() {
           )
 
           const install = runPnpm(['install', '--frozen-lockfile=false', '--prefer-offline'], projectDir)
+          runPnpm(['install', '--frozen-lockfile', '--prefer-offline'], projectDir)
           runPnpm(['typecheck'], projectDir)
           runPnpm(['test'], projectDir)
           runPnpm(['lint'], projectDir)
+          runPnpm(['format:check'], projectDir)
           const build = runPnpm(['exec', 'vite', 'build'], projectDir, false, {
             VITE_API_BASE_URL: `${api.url}/${preset}`,
             // 只为本轮生产浏览器演示显式启用，生成项目的默认环境仍禁用。
             VITE_ENABLE_LOCAL_DEMO: 'true',
           })
           const metrics = await measureAdminBuild(projectDir)
+          const boundaries = await assertLazyModuleBoundaries(projectDir)
           const project = { projectDir, preset, apiMode, routerMode }
           projects.push(project)
-          results.push({ preset, apiMode, routerMode, installSeconds: install.seconds, buildSeconds: build.seconds, ...metrics })
+          results.push({
+            preset,
+            apiMode,
+            routerMode,
+            runtimeDependencyCount: Object.keys(generatedPackage.dependencies ?? {}).length,
+            developmentDependencyCount: Object.keys(generatedPackage.devDependencies ?? {}).length,
+            installSeconds: install.seconds,
+            buildSeconds: build.seconds,
+            ...metrics,
+            boundaries,
+          })
           browserEvidence.push(...await verifyScaffoldBrowsers([project], api, screenshotDirectory))
           console.log(`create-lumal-admin ${preset}/${apiMode}/${routerMode} tarball 独立安装、类型、测试、lint 与生产构建通过。`)
           await writeFile(join(reportDirectory, 'scaffold-report.json'), `${JSON.stringify({ environment: { node: process.version, platform: process.platform }, cliCases: cliCases.length, tempRoot, projects, results, browserEvidence, optionalFeatures }, null, 2)}\n`)
@@ -293,11 +328,20 @@ async function main() {
       }
       await writeFile(path, `${JSON.stringify(manifest, null, 2)}\n`)
       runPnpm(['install', '--frozen-lockfile=false', '--prefer-offline'], projectDir)
+      runPnpm(['install', '--frozen-lockfile', '--prefer-offline'], projectDir)
       runPnpm(['typecheck'], projectDir)
       runPnpm(['test'], projectDir)
       runPnpm(['lint'], projectDir)
+      runPnpm(['format:check'], projectDir)
       const build = runPnpm(['exec', 'vite', 'build'], projectDir, false, { VITE_ENABLE_LOCAL_DEMO: 'true' })
-      optionalFeatures.push({ preset, features, buildSeconds: build.seconds, ...await measureAdminBuild(projectDir) })
+      optionalFeatures.push({
+        preset,
+        features,
+        runtimeDependencyCount: Object.keys(manifest.dependencies ?? {}).length,
+        developmentDependencyCount: Object.keys(manifest.devDependencies ?? {}).length,
+        buildSeconds: build.seconds,
+        ...await measureAdminBuild(projectDir),
+      })
     }
     await writeFile(join(reportDirectory, 'scaffold-report.json'), `${JSON.stringify({ environment: { node: process.version, platform: process.platform }, cliCases: cliCases.length, tempRoot, projects, results, browserEvidence, optionalFeatures }, null, 2)}\n`)
   }
@@ -312,7 +356,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error)
-  process.exit(1)
-})
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error)
+    process.exit(1)
+  })
+}

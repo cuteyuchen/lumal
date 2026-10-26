@@ -81,6 +81,7 @@ export type {
   SchemaTableCellFormatter,
   SchemaTableClassName,
   SchemaTableColumn,
+  SchemaTableColumnBase,
   SchemaTableColumnSettings,
   SchemaTableContext,
   SchemaTableFieldKey,

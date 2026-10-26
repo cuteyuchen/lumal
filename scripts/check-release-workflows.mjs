@@ -43,16 +43,48 @@ export function verifyReleaseWorkflows(workflows, scripts) {
     assert.ok(job && !job.if && !job['continue-on-error'], `${gate} 不得跳过或容错`)
     assert.ok(!JSON.stringify(job).includes('secrets.'), `${gate} 不得接触发布 Secrets`)
     assert.ok(job.steps.every(step => !step['continue-on-error']), `${gate} 步骤不得容错`)
+    // 诊断附件可在失败时或始终上传，实际校验步骤仍不得条件跳过。
     assert.ok(job.steps.every(step => !step.if
-      || (step.if === 'failure()' && step.uses === 'actions/upload-artifact@v4')
+      || (['failure()', 'always()'].includes(step.if) && step.uses === 'actions/upload-artifact@v4')
       || (gate === 'version-check' && step.run === 'pnpm release:verify --require-tag'
         && step.if === sideEffectsCondition)), `${gate} 校验步骤不得跳过`)
   }
   assert.ok(release.jobs['site-build'].needs.includes('release-check'), '站点必须使用生产 E2E 验证后的 Admin 产物')
   assert.ok(release.jobs['release-check'].steps.some(step => step.run === 'pnpm release:check'))
   assert.ok(release.jobs['site-build'].steps.some(step => step.run === 'pnpm release:budgets --require-all'))
-  for (const command of ['lint', 'release:workflows', 'release:boundaries', 'test', 'typecheck', 'build', 'test:create-consumer', 'admin:build', 'compat:build', 'release:artifacts', 'test:e2e:release:built', 'pack:dry-run'])
+  for (const command of ['lint', 'format:check', 'release:workflows', 'release:boundaries', 'test', 'typecheck', 'build', 'test:create-consumer', 'test:create-projects', 'test:viewport', 'admin:build', 'compat:build', 'release:artifacts', 'test:e2e:release:built', 'pack:dry-run'])
     assert.ok(scripts['release:check'].split(' && ').includes(`pnpm ${command}`), `${command} 必须在 release:check 中`)
+  for (const [file, jobName, commands] of [
+    ['ci.yml', 'check', ['lint', 'format:check', 'test', 'typecheck', 'build']],
+    ['release-gate.yml', 'windows-check', ['lint', 'format:check', 'test', 'typecheck', 'build']],
+    ['build-validation.yml', 'validate', ['test:create-consumer', 'test:create-projects', 'test:viewport']],
+  ]) {
+    for (const command of commands) {
+      assert.ok(workflows[file].jobs[jobName].steps.some(step =>
+        step.run === `pnpm ${command}` && !step.if && !step['continue-on-error']), `${file} 必须执行 ${command}`)
+    }
+  }
+  for (const [file, jobName] of [
+    ['build-validation.yml', 'datav-visual'],
+    ['release-gate.yml', 'windows-check'],
+  ]) {
+    const job = workflows[file].jobs[jobName]
+    assert.ok(job && job['runs-on'] === 'windows-latest' && !job.if && !job['continue-on-error'], `${file} 必须执行 Windows DataV 视觉门禁`)
+    const steps = job.steps
+    const install = steps.findIndex(step => step.run === 'pnpm exec playwright install chromium'
+      && !step.if && !step['continue-on-error'])
+    const visual = steps.findIndex(step => step.run === 'pnpm test:datav:visual --repeat-each=3'
+      && !step.if && !step['continue-on-error'])
+    assert.ok(install >= 0 && visual > install, `${file} DataV 视觉门禁必须在 Chromium 安装后连续运行且不得容错`)
+    assert.ok(steps.some(step => step.run === 'pnpm exec vue-tsc --noEmit -p packages/datav/tests/visual/tsconfig.json'
+      && !step.if && !step['continue-on-error']), `${file} 必须检查 DataV 视觉夹具类型`)
+  }
+  for (const [file, jobName] of [['ci.yml', 'check'], ['release-gate.yml', 'windows-check']]) {
+    assert.ok(workflows[file].jobs[jobName].steps.some(step => step.uses === 'actions/upload-artifact@v4'
+      && step.if === 'always()' && !step['continue-on-error']
+      && step.with?.path === 'output/release/cli-terminal/'
+      && step.with?.['if-no-files-found'] === 'error'), `${file} 必须保留 CLI 终端实跑证据`)
+  }
   assert.ok(scripts['release:check'].includes('pnpm --filter lumal-mock-api build:test'), '生产 E2E 必须构建独立 Mock Node 产物')
   assert.equal(scripts['test:e2e:release:built'], 'playwright test --config playwright.release.config.ts', '生产 E2E 必须使用专用配置且不能只跑 smoke')
   for (const [file, workflow] of Object.entries(workflows)) {
@@ -63,7 +95,7 @@ export function verifyReleaseWorkflows(workflows, scripts) {
       const chromiumIndex = steps.findIndex(step => step.run === 'pnpm exec playwright install --with-deps chromium'
         && !step.if && !step['continue-on-error'])
       for (const [index, step] of steps.entries()) {
-        if (step.run === 'pnpm test:create-consumer' || step.run === 'pnpm release:check')
+        if (['pnpm test:create-consumer', 'pnpm test:create-projects', 'pnpm test:viewport', 'pnpm release:check'].includes(step.run))
           assert.ok(chromiumIndex >= 0 && chromiumIndex < index, `${file} 必须在消费者生产浏览器校验前安装 Chromium`)
         if (/\b(?:pnpm|npm)\b[^\n]+\bpublish\b/.test(step.run ?? ''))
           assert.equal(file, 'release-npm.yml', '发现独立 npm 发布路径')

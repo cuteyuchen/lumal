@@ -4,7 +4,9 @@
 
 ## 版本准备
 
-九个公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。`0.0.3-beta`、`0.0.4-beta`、`0.0.5-beta` 的九包均已发布，当前版本的完整门禁、registry 与实际 tarball 核验见 [发布记录](./npm-release-0.0.5-beta.md)。这些版本不能用于新的全量发布；部分可见也不得重发。下一轮的 `NEXT_VERSION` 必须由维护者核对 registry 后选择尚未发布的合法版本。
+公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。历史九包 `0.0.3-beta`、`0.0.4-beta`、`0.0.5-beta` 均已发布，完整门禁、registry 与实际 tarball 核验见 [历史发布记录](./npm-release-0.0.5-beta.md)。
+本轮新增 `@lumal/viewport`，十包 `0.0.6-beta` 已发布并完成 registry 与同次发布产物核验，见 [本版发布记录](./npm-release-0.0.6-beta.md)。
+已发布版本不能用于新的全量发布；部分可见也不得重发。下一次正式发布前仍须逐包查询 registry，任一已有版本或网络异常都应中断。
 
 ```bash
 pnpm release:version NEXT_VERSION
@@ -18,47 +20,60 @@ pnpm release:verify
 - 将 pending Changeset 汇总进每个公共包 CHANGELOG，确认完整后移除已消费记录；本轮不运行标准 `changeset:version`，避免把 beta 序列变为稳定版 `0.1.0`。
 - 更新 `docs/changelog.md`、路线图基线、文档导航、安装命令和脚手架说明；历史版本与验收证据保留。
 - 保留脚手架源码的三个版本占位符；`pnpm build` 时按脚手架 package.json 注入精确版本，再用 `pnpm test:create-consumer` 验证 tarball 的 minimal/request、local、HTTP 三种消费路径。
-- 以空 Changeset 注明变更已手工汇总（本轮为 `prepared-0-0-5-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。
+- 以空 Changeset 注明变更已手工汇总（本轮为 `prepared-0-0-6-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。
 
 唯一发布入口是 `release-gate.yml`：`v*` tag 或手动运行。手动运行默认 `dry_run=true`，只执行校验；分支上不能以 `dry_run=false` 发包。真实运行必须选择版本相符且指向当前 HEAD 的 tag。含预发布后缀的 tag 使用 `beta`，稳定版使用 `latest`。
 
 默认只发布 npm，不自动授权生产部署。仅在维护者明确要求部署时，将仓库 Actions Variable `DEPLOY_PRODUCTION` 设为字符串 `true`，再启动本次发布；缺失或其他值均跳过部署，npm 发布仍受全部门禁约束。仅发包时应确认该变量不存在或不为 `true`。不要通过反复重跑已发布版本来补做部署，仍需遵守下方中断恢复流程。
 
-`release:verify` 读取九包 manifests、所有工作区内部依赖和 lockfile；Actions 上还校验 tag 版本和 Git commit。安装使用 frozen lockfile。发布作业在任何 `publish` 之前额外执行 `release:verify --require-tag --check-registry`，逐包只读查询，只有九包版本全部不存在才继续；任一已发布、部分发布、网络或 registry 异常均中断。
+`release:verify` 读取全部公共包 manifests、所有工作区内部依赖和 lockfile；Actions 上还校验 tag 版本和 Git commit。安装使用 frozen lockfile。发布作业在任何 `publish` 之前额外执行 `release:verify --require-tag --check-registry`，逐包只读查询，只有全部包版本均不存在才继续；任一已发布、部分发布、网络或 registry 异常均中断。
 
 ## 实际发布依赖
 
 ```text
 tag / workflow_dispatch (默认 dry_run=true)
-  version-check：九包 / lockfile / tag / YAML / 发布图
+  version-check：全部公共包 / lockfile / tag / YAML / 发布图
     ├─ release-check (Ubuntu)：完整 release:check
-    │    lint → 单测 → 类型 → 九包构建 → tarball 消费者
+    │    lint / format → 单测 → 类型 → 公共包构建 → Admin及14类tarball消费者
+    │    → 三级视口 / Dev与Build真实浏览器zoom
     │    → Admin / Compat → 产物与预算 → Mock Node 构建
-    │    → 完整生产 Chromium E2E → 九包 pack dry-run
+    │    → 完整生产 Chromium E2E → 全部公共包 pack dry-run
     │      └─ site-build：复用上面验证的包、Admin/Compat dist
     │           → Docs / Cockpit / DataV Guide → 全部消费者预算
-    └─ windows-check：lint / test / typecheck / build
+    └─ windows-check：lint / format / test / typecheck / build
+         → DataV 视觉夹具类型 → Chromium → 三轮视觉回归
 
   四个校验 job 全部成功
-    → publish (needs: 四个校验)：凭据预检 → registry 预检 → 九包串行发布
+    → publish (needs: 四个校验)：凭据预检 → registry 预检 → 全部公共包串行发布
       → deploy (needs: 四个校验 + publish；DEPLOY_PRODUCTION=true 才运行)
           configuration：全部 Vercel 项目配置预检
             └─ vercel：五站点矩阵（Docs / Admin / Cockpit / DataV Guide / Compat）
 ```
 
-`release-npm.yml`、`deploy.yml` 保留为 `workflow_call` 复用单元，没有 tag、分支或独立手动触发器。发布/部署 job 使用默认成功条件，不使用 `always()` 或状态函数覆盖；上游失败、取消或跳过均阻断。只有失败诊断上传步骤使用 `if: failure()`。所有生产 run 共用串行 concurrency，不取消正在进行的版本发布。
+`release-npm.yml`、`deploy.yml` 保留为 `workflow_call` 复用单元，没有 tag、分支或独立手动触发器。发布/部署 job 使用默认成功条件，不使用 `always()` 或状态函数覆盖；上游失败、取消或跳过均阻断。只有校验作业的诊断附件上传允许使用 `if: failure()` 或 `if: always()`，实际校验步骤不得条件跳过。所有生产 run 共用串行 concurrency，不取消正在进行的版本发布。
 
 `DEPLOY_PRODUCTION` 只收紧部署条件，不能越过任一门禁或 npm 成功依赖；`dry_run=true` 时无论该变量为何值都不发包、不部署。
 
 普通 CI 继续运行 lint/单测/类型/构建/边界，增加发布图与 actionlint；Build Validation 保留独立脚手架消费者校验。`deployment-artifacts.yml` 仅构建产物，不访问云部署。
 
+当前版本的 `release:check` 不允许遗漏 `format:check`、`test:create-projects` 或 `test:viewport`，
+Windows校验同样检查模板格式；`release-safety.test.mjs` 用移除/容错变体保护这些门禁。
+Ubuntu的生成器单测包含原有Linux PTY交互，不能以Windows执行替代其实际结果。
+新模板、Screen可选能力及真实缩放的报告/截图随消费者artifact上传，不需要发布权限。
+
+CI 的 Linux PTY 与发布门禁的 Windows PTY 输出始终单独上传 `output/release/cli-terminal/`，缺失附件报错，
+不能只用测试总数作为跨平台交互证据。Build Validation 的 Windows DataV job 和发布 Windows job
+复用原 `pnpm test:datav:visual --repeat-each=3`；禁止 `only`、重试、跳过或容错，
+不在 CI 更新 golden。当前基准为 Windows Chromium，不能拿来冒充 Linux 像素基准。
+视觉夹具验证异步实例、非空 Canvas、固定 SMIL 时点、内容边界及跨加载截图一致性。
+
 校验作业没有发布 Secrets。只有门禁成功后的作业才能访问所需凭据；npm 使用 `npm-release` Environment，部署使用 `production` Environment。维护者应在 Settings → Environments 配置审批人和 tag 限制，同时关闭 Vercel 的独立 Git 自动生产部署，避免仓库外的平台旁路。2026-10-20 已将 Docs 项目的 Ignored Build Step 设为 `exit 0`，跳过 Git 构建但保留显式 prebuilt 部署；另外四个项目仍需逐个核对，不能据此认定整个账户已关闭自动部署。
 
 ## 中断与恢复
 
-- 九包尚未开始发布：修复失败原因，在人工确认后重跑完整发布门禁。
-- 九包已全部发布：禁止重跑整个发布链覆盖同版本；只读核实每包 `npm view <name>@<version> version dist.integrity --json` 与 dist-tag。部署失败不意味着 npm 回滚。
-- 仅部分包已发布：不要盲目 Retry publish、撤包或补发所有包。记录成功包、版本、integrity 和原 run；维护者核对内容与内部依赖后，优先选择新的统一九包版本重新经过门禁。若必须补发剩余同版本包，需要单独人工恢复方案和审批，当前自动化故意拒绝这种操作。
+- 公共包尚未开始发布：修复失败原因，在人工确认后重跑完整发布门禁。
+- 公共包已全部发布：禁止重跑整个发布链覆盖同版本；只读核实每包 `npm view <name>@<version> version dist.integrity --json` 与 dist-tag。部署失败不意味着 npm 回滚。
+- 仅部分包已发布：不要盲目 Retry publish、撤包或补发所有包。记录成功包、版本、integrity 和原 run；维护者核对内容与内部依赖后，优先选择新的统一版本重新经过门禁。若必须补发剩余同版本包，需要单独人工恢复方案和审批，当前自动化故意拒绝这种操作。
 - 平台上传不是原子事务；一个站点部署成功、另一个失败时，必须核对各平台 Deployment 状态，不能用工作流的一条绿色步骤代表全部线上成功。
 
 ## 命名检查
@@ -80,6 +95,7 @@ rg -n "guiren|gr-framework|GrFramework|GSchemaForm|GSchemaTable|GCrudTable|GPage
 - `@lumal/charts` 将 ECharts 和 vue-echarts 保持为 peer dependency。
 - `@lumal/cockpit` 依赖 `@lumal/core`，`@lumal/core` 不反向依赖 `@lumal/cockpit`；`@lumal/cockpit` 不依赖 `@lumal/charts` 或任何地图/图表运行时。
 - `@lumal/vite` 不引入强制运行时依赖。
+- `@lumal/viewport` 仅以 Vue 为 peer；DataV/Cockpit 共享其算法，不反向依赖 Admin/地图/图表。
 
 ## 验证命令
 
@@ -101,17 +117,20 @@ pnpm release:boundaries
 pnpm release:names
 ```
 
-这个命令验证 `@lumal/icons`、`@lumal/icons-vue`、`@lumal/core`、`@lumal/charts`、`@lumal/datav`、`@lumal/cockpit`、`@lumal/vben-compat`、`@lumal/vite`、`create-lumal-admin` 是否能在 registry 查询到；它不能证明发布账号拥有或可创建 `@lumal` scope。
+这个命令验证 `@lumal/viewport`、`@lumal/icons`、`@lumal/icons-vue`、`@lumal/core`、`@lumal/charts`、`@lumal/datav`、`@lumal/cockpit`、`@lumal/vben-compat`、`@lumal/vite`、`create-lumal-admin` 是否能在 registry 查询到；它不能证明发布账号拥有或可创建 `@lumal` scope。
 
 拆开执行时也必须保持串行：
 
 ```bash
 pnpm lint
+pnpm format:check
 pnpm release:boundaries
 pnpm test
 pnpm typecheck
 pnpm build
 pnpm test:create-consumer
+pnpm test:create-projects
+pnpm test:viewport
 pnpm docs:build
 pnpm admin:build
 pnpm compat:build
@@ -140,6 +159,7 @@ pnpm --filter @lumal/icons pack --dry-run
 pnpm --filter @lumal/icons-vue pack --dry-run
 pnpm --filter @lumal/core pack --dry-run
 pnpm --filter @lumal/charts pack --dry-run
+pnpm --filter @lumal/viewport pack --dry-run
 pnpm --filter @lumal/datav pack --dry-run
 pnpm --filter @lumal/cockpit pack --dry-run
 pnpm --filter @lumal/vben-compat pack --dry-run
@@ -157,14 +177,15 @@ pnpm --filter create-lumal-admin pack --dry-run
 - `@lumal/icons` 包含 `morph.js` / `morph.cjs` 及 `src/morph/index.d.ts`；核对 ESM/CJS 消费、可选 peer 缺失时的静态入口和动态失败回退。
 - `@lumal/icons-vue` 包含 `dist/icons-vue.css`。
 - `@lumal/cockpit` 包含 `dist/cockpit.css` 及 `dist/runtime.js`、`dist/designer.js` 独立入口。
-- `create-lumal-admin` 包含 `dist/cli.js` 和 `dist/index.js`，两模式生成的 Core/图标依赖精确等于脚手架版本，不能残留 `^0.0.0` 占位符。
+- `@lumal/viewport` 包含 ESM/CJS、声明和 README/CHANGELOG，不带 Element Plus、ECharts 或业务夹具。
+- `create-lumal-admin` 包含 `dist/cli.js`、`dist/project-cli.js` 和 `dist/index.js`，模板所需 Lumal 依赖精确等于脚手架版本，不能残留 `^0.0.0` 占位符；不假定独立 `create-lumal` npm包已发布。
 - 不包含 `apps/*`。
 - 不包含本地日志、IDE 文件和构建缓存。
 
 ## 浏览器与产物检查
 
 - 开发态 `pnpm test:e2e` 启动 Nitro dev + Vite dev，不能证明发布产物行为。
-- 生产态一条命令 `pnpm test:e2e:release`：串行构建九包和 `apps/lumal-admin/dist`、执行 Mock API `build:test`，然后启动下列服务并运行同一完整测试集。已有产物时使用 `pnpm test:e2e:release:built`；这也是 `release:check` 中不可跳过的步骤，不是 smoke。
+- 生产态一条命令 `pnpm test:e2e:release`：串行构建全部公共包和 `apps/lumal-admin/dist`、执行 Mock API `build:test`，然后启动下列服务并运行同一完整测试集。已有产物时使用 `pnpm test:e2e:release:built`；这也是 `release:check` 中不可跳过的步骤，不是 smoke。
 - Mock 服务为 `apps/lumal-mock-api/.output/server/index.mjs`，直接使用 Node，`NITRO_HOST=127.0.0.1`、`NITRO_PORT=5323`，等待 `/api/status`。Admin 使用 `vite preview --host 127.0.0.1 --port 4176 --strictPort`，等待首页。preview 继承 `server.proxy`，`/api` 指向上述 Mock，登录测试真实验证连通性。
 - 构建和 preview 都没有 `packages/*/src` alias；严格浏览器 fixture 拒绝生产态的 Vite client / src / packages 网络请求。不复用端口上已有服务，由 Playwright 启停并清理本轮子进程。
 - Chromium 首次安装：`pnpm exec playwright install chromium`；Ubuntu Actions 使用 `--with-deps chromium`。本机可显式设置 `PLAYWRIGHT_CHROMIUM_CHANNEL=chrome` 使用已安装 Chrome，报告必须记录与 CI 配套 Chromium 的差异。开发态端口可用 `LUMAL_E2E_ADMIN_PORT` / `LUMAL_E2E_API_PORT` 隔离，生产端口固定且占用时失败。
@@ -191,7 +212,7 @@ pnpm --filter create-lumal-admin pack --dry-run
 | 名称 | 类型 / 使用位置 | 用途与人工验证 |
 | --- | --- | --- |
 | `DEPLOY_PRODUCTION` | 仓库 Actions Variable / release-gate | 部署显式开关，仅字符串 `true` 启用；在 Settings → Secrets and variables → Actions → Variables 配置；仅发 npm 时留空或设为 `false` |
-| `NPM_TOKEN` | Secret / npm-release | 允许发布九包的细粒度令牌；维护者核对 scope、包写权限、有效期与组织 2FA 策略 |
+| `NPM_TOKEN` | Secret / npm-release | 允许发布当前十包的细粒度令牌；维护者核对 scope、包写权限、有效期与组织 2FA 策略 |
 | `VERCEL_TOKEN` | Secret / production | Vercel CLI 身份；核对 team 和五项目访问权限 |
 | `VERCEL_ORG_ID` | Secret / production | 五项目所属 team/org；与平台 project 设置一致 |
 | `VERCEL_PROJECT_ID_ADMIN` | Secret / production | Admin 项目 ID |
@@ -216,7 +237,7 @@ Vercel 五个静态目录来自同 run 的校验 artifact，文档使用 `apps/l
 | DataV Guide | https://lumal-datav.cuteyuchen.top | `LUMAL_DATAV_GUIDE_URL` |
 | Vben Compat | https://lumal-compat.cuteyuchen.top | `LUMAL_VBEN_COMPAT_DEMO_URL` |
 
-绑定域名只切换访问入口，不会构建新文档。版本号、安装依赖或外链变更后，必须重新构建并部署 Docs，验证生产首页、安装页、九包文档及静态资源，而不是仅检查域名配置。历史部署快照的旧域名和版本保留在对应执行报告中，不作为当前默认地址；大陆不同运营商的可达性需要另行验证。
+绑定域名只切换访问入口，不会构建新文档。版本号、安装依赖或外链变更后，必须重新构建并部署 Docs，验证生产首页、安装页、全部公共包文档及静态资源，而不是仅检查域名配置。历史部署快照的旧域名和版本保留在对应执行报告中，不作为当前默认地址；大陆不同运营商的可达性需要另行验证。
 
 Vercel 文档 READY 后，已使用无 Cookie、无 Authorization 的 HTTP 请求校验全部 219 个产物及 63 条无扩展名映射，线上文件 SHA-256 与上传产物一致，未知路径返回真实 404。之后关闭旧 `lumal-docs-cf` 的生产与预览自动部署，清理超过平台直接删除限制的历史记录，再删除项目及剩余部署；删除 API 返回成功，查询项目返回 404。仓库发布链不再调用 Cloudflare，不再要求 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID` 或 `CF_PAGES_PROJECT`；维护者可在确认无其他用途后移除旧 Actions 配置。
 
@@ -227,7 +248,7 @@ Vercel 文档 READY 后，已使用无 Cookie、无 Authorization 的 HTTP 请�
 ## 文档检查
 
 - README 与当前实现一致。
-- `docs/changelog.md`、九包 CHANGELOG、文档导航版本、安装命令与公共包版本一致。
+- `docs/changelog.md`、全部公共包 CHANGELOG、文档导航版本、安装命令与公共包版本一致。
 - `docs/development-roadmap.md` 是唯一开发规划和阶段状态来源。
 - `docs/architecture.md` 说明包边界。
 - `docs/icons.md` 说明注册、渲染、选择器，以及通用 DOM/其他框架转换与 Vue 形变的入口、安装和回退边界。

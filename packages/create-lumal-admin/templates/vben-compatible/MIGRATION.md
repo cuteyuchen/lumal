@@ -13,6 +13,8 @@
 6. 原 Vben Drawer/Modal 改为 Element Plus Dialog 或 Lumal CRUD 编辑器。
 7. `@vben/access` 的高频用法可改为本入口的 AccessControl / useAccess；
    路由数据先经 adaptVbenMenus，authority 按角色匹配。
+8. `#toolbar-actions` 与 `#toolbar-tools` 用于具名工具栏插槽；当前不注入完整 VXE 工具栏上下文，
+   命令通过已获得的 `gridApi` 调用。兼容页面位于独立 `modules/vben-migration`，不混入系统管理。
 
 本模板 `migration/form` 对应 web-ele/demos/form/basic 与共享 rules/dynamic
 场景；`migration/users` 对应共享 vxe-table/form 和 system/user 的

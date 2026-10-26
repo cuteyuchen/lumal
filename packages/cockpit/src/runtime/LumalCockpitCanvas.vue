@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { CockpitCenterContext, CockpitLayoutConfig, CockpitViewportMode } from '../types'
-import { computed, ref } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 import { useCanvasScale } from '../composables/useCanvasScale'
 import LumalCockpitRegion from './LumalCockpitRegion.vue'
 
@@ -15,10 +15,11 @@ const props = defineProps<{
   viewportMode: CockpitViewportMode
 }>()
 
-const containerRef = ref<HTMLElement | null>(null)
+const containerRef = useTemplateRef<HTMLElement>('containerRef')
 const { result } = useCanvasScale(containerRef, {
   baseWidth: () => props.baseWidth,
   baseHeight: () => props.baseHeight,
+  enabled: () => props.viewportMode === 'scale',
 })
 const stageStyle = computed(() => {
   // vwvh：用视口单位铺满，子元素按设计像素单位布局

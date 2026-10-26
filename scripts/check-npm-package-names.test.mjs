@@ -13,6 +13,7 @@ describe('getPublishPackageNames', () => {
       '@lumal/icons-vue',
       '@lumal/core',
       '@lumal/charts',
+      '@lumal/viewport',
       '@lumal/datav',
       '@lumal/cockpit',
       '@lumal/vben-compat',

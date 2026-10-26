@@ -4,7 +4,6 @@ import type {
   SchemaFormItem,
   SchemaFormModel,
   SchemaTableColumn,
-  SchemaTableRow,
 } from '@lumal/core/components'
 
 /***********************查询与表单数据*********************/
@@ -203,7 +202,15 @@ export const exampleCrudColumns: CrudTableColumn[] = [
 ]
 
 /***********************表格数据*********************/
-export const exampleTableColumns: SchemaTableColumn[] = [
+export interface ExampleTableRow {
+  id: string
+  internalCode: string
+  name: string
+  priority: string
+  status: string
+}
+
+export const exampleTableColumns: SchemaTableColumn<ExampleTableRow>[] = [
   {
     componentProps: {
       minWidth: 160,
@@ -230,7 +237,7 @@ export const exampleTableColumns: SchemaTableColumn[] = [
   },
 ]
 
-export const exampleTableRows: SchemaTableRow[] = [
+export const exampleTableRows = [
   {
     id: 'example-1',
     internalCode: 'LUMAL-001',
@@ -245,7 +252,7 @@ export const exampleTableRows: SchemaTableRow[] = [
     priority: 'normal',
     status: 'disabled',
   },
-]
+] satisfies ExampleTableRow[]
 
 /***********************展示数据*********************/
 export const frameworkInfoItems: InfoTableItem[] = [

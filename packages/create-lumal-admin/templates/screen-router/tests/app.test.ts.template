@@ -1,0 +1,20 @@
+import { describe, expect, it } from 'vitest';
+import { createSSRApp } from 'vue';
+import { createMemoryHistory, createRouter } from 'vue-router';
+import { renderToString } from 'vue/server-renderer';
+import App from '../src/App.vue';
+import ScreenEntry from '../src/screen/ScreenEntry.vue';
+
+describe('应用路由', () => {
+  it('可以渲染首页', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/', component: ScreenEntry }],
+    });
+    const app = createSSRApp(App);
+    app.use(router);
+    await router.push('/');
+    await router.isReady();
+    expect(await renderToString(app)).toContain('<main');
+  });
+});

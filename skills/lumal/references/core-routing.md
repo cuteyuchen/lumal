@@ -98,5 +98,21 @@ const menus = createMenuRouteRuntime({
 - 新窗口地址沿用 `router.resolve(path).href`，避免破坏 hash/history/base。
 - `progress/loading` 反映真实导航，不额外添加固定时长假进度。
 
+## 单应用组合 Admin 与 Screen
+
+保留同一个 Router，公开 Screen 设置 `meta.requireLogin: false`，
+受保护 Admin 父路由设置 true，并保留子路由的权限。公共403/404也显式免登录，防止回跳循环。
+菜单用 `meta.authority`，守卫用 `meta.permissions/roles`，两种协议不要混用。
+不同顶级路由可组合独立布局；Screen 不必渲染 LumalLayout，也不需要独立创建一套会话。
+
+后台 Layout 显式设置 `routeTabFilter` 只收录后台路径。外层用稳定缓存键保留 Screen，
+内层按后台标签管理缓存，不能让关闭后台标签同时销毁地图。
+动态路由交给注册表/菜单运行时，重复注册应幂等，退出重置不删除应用静态路由。
+身份切换后更新授权，并通过 Router 的 `replace({ path: current.fullPath, force: true })`
+重新检查当前路由；仅改变菜单不能阻止当前已打开页面继续显示。
+
+尺寸适配与权限分离。页面可用 [视口](viewport.md) 的包装器读取应用自有路由元信息，
+System页关闭适配；不要把整个 Admin DOM 根 transform，也不要让大屏变量污染后台浮层。
+
 完整接线可核对 `packages/create-lumal-admin/templates/base/src/{App.vue,router/index.ts}` 或
 `apps/lumal-admin/src/App.vue`；以消费项目的用户/权限适配为准，不照搬 Demo 业务。

@@ -48,6 +48,15 @@ export default defineConfig({
 
 `resolveLumalDevtoolsPlugin({ enabled, factory })` 只在开启时调用 factory，Devtools 实现由应用安装并提供。关闭时返回 `undefined`，按 Vite 插件列表用法处理。
 
-本包不提供全局 px-to-viewport 转换，不强制安装 Devtools、自动导入或打包完整行业预设。静态 SVG 插件属于 `@lumal/icons/vite`。
+`0.0.6-beta` 提供 `createViewportTransformPlugin`，默认关闭；必须显式 enabled/include，
+例如 `include: ['src/screen/**']`。Dev/Build共用PostCSS，不扫描JS数字/字符串或模板内联style。
+默认不处理node_modules、font/font-size和自定义属性；依赖只通过精确包名白名单加入。
+保留已有PostCSS配置；不转换URL和已有vw；不要与同一画布transform叠加。
+预处理source map可用时按声明原址判断；无可靠map的跨文件Sass导入、
+无法解析语法或函数additionalData使该style整体跳过并警告，不能按Screen入口
+批准第三方/Shared/Admin输出。将外部样式与Screen声明拆开；纯SCSS或独立安全
+style仍可转换。低层PostCSS入口处理预编译SCSS/SFC也需要原始map。
+这不是全局px-to-viewport开关，不应用到后台或地图样式。
+本包不强制安装 Devtools、自动导入或打包完整行业预设。静态 SVG 插件属于 `@lumal/icons/vite`。
 
-仓库核对位置：`packages/vite/src/{index,component-resolver,aliases,devtools}.ts`。
+仓库核对位置：`packages/vite/src/{index,component-resolver,aliases,devtools,viewport-transform}.ts`。

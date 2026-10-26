@@ -1,6 +1,15 @@
 import { expect, test } from './fixtures'
 import { expectNoPageOverflow, loginAsAdmin, openPreferences, openTopMenu } from './helpers'
 
+const layoutTransitionSelector = [
+  '.lumal-layout-header-enter-active',
+  '.lumal-layout-header-leave-active',
+  '.lumal-layout-breadcrumb-enter-active',
+  '.lumal-layout-breadcrumb-leave-active',
+  '.lumal-layout-sidebar-enter-active',
+  '.lumal-layout-sidebar-leave-active',
+].join(',')
+
 test('设置、标签页和移动布局可以完整操作并持久化', async ({ page }) => {
   await loginAsAdmin(page)
   await openTopMenu(page, '功能示例')
@@ -69,6 +78,8 @@ test('三种布局在 375、768、1024、1440px 下保持导航可用且无页�
       await page.goto('/#/examples/detail')
       await expect(page).toHaveURL(/#\/examples\/detail$/)
       await expect(page.locator('.lumal-layout')).toHaveAttribute('data-layout', layout.value)
+      // 离场节点在过渡结束前仍合法存在，唯一节点断言应检查稳定布局。
+      await expect(page.locator(layoutTransitionSelector)).toHaveCount(0)
       await expectNoPageOverflow(page)
 
       const breadcrumb = page.getByRole('navigation', { name: '面包屑' })
@@ -131,6 +142,115 @@ test('三种布局在 375、768、1024、1440px 下保持导航可用且无页�
   }
 })
 
+for (const layout of [
+  { label: '侧边导航', value: 'sidebar-nav' },
+  { label: '顶部导航', value: 'top-nav' },
+  { label: '混合导航', value: 'mixed-nav' },
+] as const) {
+  test(`内容最大化在${layout.label}中保留页面并完成生产动画还原`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await loginAsAdmin(page)
+    await page.goto('/#/examples/overview')
+    const draft = page.getByPlaceholder('搜索能力或公开入口', { exact: true })
+    await expect(draft).toBeVisible()
+    await openPreferences(page)
+    await page.getByRole('tab', { name: '布局', exact: true }).click()
+    await page.getByRole('button', { name: layout.label, exact: true }).click()
+    await page.getByRole('button', { name: '关闭此对话框' }).click()
+
+    const shell = page.locator('.lumal-layout')
+    const main = page.locator('.lumal-layout__main')
+    const content = page.locator('.lumal-content')
+    const header = page.locator('.lumal-header')
+    const sidebar = page.locator('.lumal-layout__desktop-sidebar')
+    const transitions = shell.locator(layoutTransitionSelector)
+    await expect(shell).toHaveAttribute('data-layout', layout.value)
+    await expect(transitions).toHaveCount(0)
+    await draft.fill('Schema')
+    const originalInput = await draft.elementHandle()
+    const originalPage = await page.locator('.lumal-admin-example').elementHandle()
+    const baseline = await main.boundingBox()
+    const baselineContent = await content.boundingBox()
+    expect(baseline).not.toBeNull()
+    expect(baselineContent).not.toBeNull()
+    expect(baseline!.width).toBeGreaterThan(900)
+    const metrics: Record<string, unknown>[] = [{ state: 'initial', main: baseline, content: baselineContent }]
+
+    async function expectPagePreserved() {
+      await expect(draft).toHaveValue('Schema')
+      expect(await draft.evaluate((current, original) => current === original, originalInput!)).toBe(true)
+      expect(await page.locator('.lumal-admin-example').evaluate((current, original) => current === original, originalPage!)).toBe(true)
+      await expect(page).toHaveURL(/#\/examples\/overview$/)
+      await expectNoPageOverflow(page)
+    }
+
+    async function expectRestored() {
+      await expect(shell).not.toHaveClass(/is-content-maximized/)
+      await expect(page.getByRole('button', { name: '内容最大化', exact: true })).toBeVisible()
+      await expect(header).toBeVisible()
+      await expect(transitions).toHaveCount(0)
+      await expect(sidebar).toHaveCount(layout.value === 'top-nav' ? 0 : 1)
+      await expect(header).toHaveCSS('opacity', '1')
+      await expect.poll(async () => {
+        const box = await main.boundingBox()
+        return box && (['x', 'y', 'width', 'height'] as const).every(key => Math.abs(box[key] - baseline![key]) < 1)
+      }).toBe(true)
+      await expectPagePreserved()
+    }
+
+    for (const restore of ['button', 'Escape'] as const) {
+      await page.getByRole('button', { name: '内容最大化', exact: true }).click()
+      await expect(shell).toHaveClass(/is-content-maximized/)
+      await expect(page.getByRole('button', { name: '退出内容最大化', exact: true })).toBeVisible()
+      await expect(header).toBeHidden()
+      await expect(sidebar).toHaveCount(0)
+      await expect(transitions).toHaveCount(0)
+      const maximized = await main.boundingBox()
+      const workspace = await content.boundingBox()
+      const tabs = await page.locator('.lumal-tabs').boundingBox()
+      expect(maximized).not.toBeNull()
+      expect(workspace).not.toBeNull()
+      expect(tabs).not.toBeNull()
+      expect(maximized!.x).toBeCloseTo(0, 0)
+      expect(maximized!.y).toBeCloseTo(0, 0)
+      expect(maximized!.width).toBeCloseTo(1440, 0)
+      expect(maximized!.height).toBeCloseTo(900, 0)
+      expect(workspace!.width).toBeCloseTo(1440, 0)
+      expect(workspace!.height + tabs!.height).toBeCloseTo(900, 0)
+      expect(workspace!.height).toBeGreaterThan(baselineContent!.height + 32)
+      expect(['absolute', 'fixed']).not.toContain(await main.evaluate(element => getComputedStyle(element).position))
+      await expectPagePreserved()
+      metrics.push({ state: `maximized-before-${restore}`, main: maximized, content: workspace })
+      if (restore === 'button') {
+        await testInfo.attach('maximized-layout', { body: await page.screenshot(), contentType: 'image/png' })
+        await page.getByRole('button', { name: '退出内容最大化', exact: true }).click()
+      }
+      else {
+        await page.keyboard.press('Escape')
+      }
+      await expectRestored()
+    }
+
+    // 同一真实按钮在离场过渡尚未结束时反向操作，不让自动等待把它变成两次完整动画。
+    const reversedDuringTransition = await page.getByRole('button', { name: '内容最大化', exact: true }).evaluate(async (element) => {
+      const button = element as HTMLButtonElement
+      button.click()
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+      const leaving = Boolean(document.querySelector('.lumal-layout-header-leave-active'))
+      button.click()
+      return leaving
+    })
+    expect(reversedDuringTransition).toBe(true)
+    await expectRestored()
+    metrics.push({ state: 'restored-after-reversal', main: await main.boundingBox(), content: await content.boundingBox() })
+    await testInfo.attach('layout-maximize-metrics', {
+      body: JSON.stringify({ layout: layout.value, viewport: page.viewportSize(), metrics }, null, 2),
+      contentType: 'application/json',
+    })
+  })
+}
+
 test('侧栏折叠后仍显示已注册的菜单图标', async ({ page }) => {
   await loginAsAdmin(page)
   await page.getByRole('button', { name: '偏好设置' }).click()
@@ -146,12 +266,15 @@ test('侧栏折叠后仍显示已注册的菜单图标', async ({ page }) => {
 })
 
 test('混合导航会根据一级菜单子级动态显示和隐藏侧栏', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
   await loginAsAdmin(page)
   const sidebar = page.locator('.lumal-layout__desktop-sidebar')
 
   await expect(sidebar).toHaveCount(0)
   await openTopMenu(page, '系统管理')
   await expect(sidebar).toBeVisible()
+  // 等待 appear 完成，避免把尚未展开的宽度误作离场动画的基线。
+  await expect(page.locator(layoutTransitionSelector)).toHaveCount(0)
   await expect(sidebar).toHaveCSS('transition-duration', /.+/)
 
   const sampledWidths = await page.locator('.lumal-header__navigation')

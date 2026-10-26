@@ -94,14 +94,79 @@ describe('release dependency graph', () => {
       'test:e2e:release:built': 'playwright test --grep smoke',
     })).toThrow('不能只跑 smoke')
   })
+
+  it.each(['format:check', 'test:create-projects', 'test:viewport'])('发布脚本不能遗漏 %s', (command) => {
+    expect(() => verifyReleaseWorkflows(readWorkflows(), {
+      ...scripts,
+      'release:check': scripts['release:check'].split(' && ').filter(step => step !== `pnpm ${command}`).join(' && '),
+    })).toThrow(`${command} 必须在 release:check 中`)
+  })
+
+  it.each([
+    ['ci.yml', 'check', 'format:check'],
+    ['release-gate.yml', 'windows-check', 'format:check'],
+    ['build-validation.yml', 'validate', 'test:create-projects'],
+    ['build-validation.yml', 'validate', 'test:viewport'],
+  ])('%s 不能移除或容错 %s/%s', (file, jobName, command) => {
+    const workflows = readWorkflows()
+    const job = workflows[file].jobs[jobName]
+    const step = job.steps.find(step => step.run === `pnpm ${command}`)
+    step['continue-on-error'] = true
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow()
+    job.steps = job.steps.filter(step => step.run !== `pnpm ${command}`)
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow()
+  })
+
+  it.each([
+    ['build-validation.yml', 'datav-visual'],
+    ['release-gate.yml', 'windows-check'],
+  ])('%s 不能遗漏或容错 DataV 视觉回归', (file, jobName) => {
+    const workflows = readWorkflows()
+    const job = workflows[file].jobs[jobName]
+    const step = job.steps.find(step => step.run === 'pnpm test:datav:visual --repeat-each=3')
+    step['continue-on-error'] = true
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow()
+    delete step['continue-on-error']
+    job.steps = job.steps.filter(item => item !== step)
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('DataV')
+  })
+
+  it.each([
+    ['ci.yml', 'check'],
+    ['release-gate.yml', 'windows-check'],
+  ])('%s 终端实跑证据必须始终上传，不能仅保留主测试日志', (file, jobName) => {
+    const workflows = readWorkflows()
+    const job = workflows[file].jobs[jobName]
+    const step = job.steps.find(item => item.with?.path === 'output/release/cli-terminal/')
+    step.if = 'success()'
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow()
+    step.if = 'always()'
+    step.with['if-no-files-found'] = 'ignore'
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('终端实跑证据')
+    job.steps = job.steps.filter(item => item !== step)
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('终端实跑证据')
+  })
 })
 
 describe('release version and registry preflight', () => {
-  it('当前九包、内部依赖和锁文件一致', () => {
+  it('当前十包、内部依赖和锁文件一致', () => {
     const release = verifyWorkspaceRelease()
-    expect(release.packages).toHaveLength(9)
+    expect(release.packages).toHaveLength(10)
     expect(release.version).toBe(JSON.parse(readFileSync(join(root, 'packages/core/package.json'), 'utf8')).version)
     expect(() => verifyWorkspaceRelease(root, '99.0.0-no-release')).toThrow('不一致')
+  })
+
+  it('当前版本位于十包和统一 CHANGELOG 的首个发布条目', () => {
+    const release = verifyWorkspaceRelease()
+    const files = [
+      'docs/changelog.md',
+      ...release.packages.map(pkg => `${pkg.dir}/CHANGELOG.md`),
+    ]
+    for (const file of files) {
+      const content = readFileSync(join(root, file), 'utf8')
+      const firstVersion = /^## (\d+\.\d+\.\d+(?:-[\da-z.-]+)?) \(/im.exec(content)?.[1]
+      expect(firstVersion, file).toBe(release.version)
+    }
   })
 
   it('拒绝内部依赖与 lockfile 不一致', () => {
@@ -131,12 +196,12 @@ describe('release version and registry preflight', () => {
     }
   })
 
-  it.each([1, 9])('已有 %s 个包发布时，在任何发布动作前拒绝全量重发', async (count) => {
+  it.each([1, 10])('已有 %s 个包发布时，在任何发布动作前拒绝全量重发', async (count) => {
     const release = verifyWorkspaceRelease()
     const fetcher = vi.fn()
     release.packages.forEach((_pkg, index) => fetcher.mockResolvedValueOnce({ status: index < count ? 200 : 404 }))
     await expect(verifyUnpublishedRelease(release, fetcher)).rejects.toThrow('禁止全量重发')
-    expect(fetcher).toHaveBeenCalledTimes(9)
+    expect(fetcher).toHaveBeenCalledTimes(release.packages.length)
   })
 
   it('仅全部 404 可以发布；registry 异常或网络失败均中断', async () => {

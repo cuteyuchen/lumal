@@ -1,13 +1,14 @@
 {
   "name": "create-lumal-admin",
   "type": "module",
-  "version": "0.0.5-beta",
-  "description": "Create a modular Lumal admin application with minimal, standard and Vben 5 presets.",
+  "version": "0.0.6-beta",
+  "description": "Create lightweight Vue Blank, Screen or Lumal Admin projects with optional capabilities.",
   "license": "MIT",
   "keywords": [
     "lumal",
     "vue",
     "admin",
+    "screen",
     "scaffold",
     "create"
   ],
@@ -21,6 +22,7 @@
     }
   },
   "bin": {
+    "create-lumal": "./dist/project-cli.js",
     "create-lumal-admin": "./dist/cli.js"
   },
   "files": [
@@ -32,6 +34,12 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && node ../../scripts/clean-package-dist.mjs dist && node ../../scripts/sync-create-lumal-admin-version.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run --config ../../vitest.config.ts tests"
+    "test": "pnpm build && vitest run --config ../../vitest.config.ts tests"
+  },
+  "dependencies": {
+    "@clack/prompts": "1.8.1"
+  },
+  "devDependencies": {
+    "@lydell/node-pty": "1.2.0-beta.15"
   }
 }

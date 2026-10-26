@@ -1,0 +1,7 @@
+@use 'element-plus/theme-chalk/src/button.scss';
+@use '../shared/panel.scss' as shared;
+@use '../admin/panel.scss' as admin;
+
+.screen-mixed {
+  width: 384px;
+}

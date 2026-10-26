@@ -665,6 +665,343 @@ describe('create request client', () => {
     expect(formData.get('category')).toBe('doc')
     expect(formData.get('attachment')).toBeInstanceOf(Blob)
   })
+
+  it.each(['reset', 'scope', 'token'] as const)('%s 切换后迟到401不清除新会话，不依赖调用方Abort', async (change) => {
+    let token = 'account-a'
+    let scope = 'session-a'
+    let respond!: (response: Response) => void
+    const expired = vi.fn()
+    const responseError = vi.fn()
+    const fetch = vi.fn(() => new Promise<Response>((resolve) => {
+      respond = resolve
+    }))
+    const client = createRequestClient({ fetch, getToken: () => token, getCacheScope: () => scope, onSessionExpired: expired, onResponseError: responseError })
+    const old = client.get('/private').catch(error => error)
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledOnce())
+    if (change === 'reset')
+      client.clearCache()
+    if (change === 'scope')
+      scope = 'session-b'
+    token = 'account-b'
+    respond(createJsonResponse({}, { status: 401 }))
+    expect(await old).toMatchObject({ code: 'STALE_SESSION', kind: 'cancelled' })
+    expect(expired).not.toHaveBeenCalled()
+    expect(responseError).not.toHaveBeenCalled()
+    expect(token).toBe('account-b')
+  })
+
+  it.each(['reset', 'scope', 'token'] as const)('%s 切换后新会话仍独立通知失效，同一会话只通知一次', async (change) => {
+    let token = 'account-a'
+    let scope = 'session-a'
+    const expired = vi.fn()
+    const client = createRequestClient({
+      fetch: async () => createJsonResponse({}, { status: 401 }),
+      getToken: () => token,
+      getCacheScope: () => scope,
+      onSessionExpired: expired,
+    })
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    expect(expired).toHaveBeenCalledTimes(1)
+    if (change === 'reset')
+      client.clearCache()
+    if (change === 'scope')
+      scope = 'session-b'
+    if (change === 'token')
+      token = 'account-b'
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    expect(expired).toHaveBeenCalledTimes(2)
+  })
+
+  it('旧会话迟到401不占用或重置新会话的失效通知', async () => {
+    let scope = 'session-a'
+    let respond!: (response: Response) => void
+    const expired = vi.fn()
+    const responseError = vi.fn()
+    const client = createRequestClient({
+      fetch: async url => String(url) === '/late'
+        ? new Promise<Response>((resolve) => { respond = resolve })
+        : createJsonResponse({}, { status: 401 }),
+      getToken: () => scope,
+      getCacheScope: () => scope,
+      onSessionExpired: expired,
+      onResponseError: responseError,
+    })
+    const old = client.get('/late').catch(error => error)
+    await vi.waitFor(() => expect(respond).toBeDefined())
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    scope = 'session-b'
+    respond(createJsonResponse({}, { status: 401 }))
+    expect(await old).toMatchObject({ code: 'STALE_SESSION', kind: 'cancelled' })
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    expect(expired).toHaveBeenCalledTimes(2)
+    expect(responseError).toHaveBeenCalledTimes(3)
+  })
+
+  it('旧凭据迟到成功不会重新开启新凭据的重复失效通知', async () => {
+    let token = 'account-a'
+    let respond!: (response: Response) => void
+    const expired = vi.fn()
+    const client = createRequestClient({
+      fetch: async url => String(url) === '/late'
+        ? new Promise<Response>((resolve) => { respond = resolve })
+        : createJsonResponse({}, { status: 401 }),
+      getToken: () => token,
+      onSessionExpired: expired,
+    })
+    const old = client.get('/late')
+    await vi.waitFor(() => expect(respond).toBeDefined())
+    token = 'account-b'
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    respond(createJsonResponse({ ok: true }))
+    await expect(old).resolves.toEqual({ ok: true })
+    await expect(client.get('/private')).rejects.toMatchObject({ kind: 'session' })
+    expect(expired).toHaveBeenCalledTimes(1)
+  })
+
+  it.each([true, false])('authRefresh下不可重放的写请求区分凭据切换与当前会话失效（切换=%s）', async (switched) => {
+    let token = 'account-a'
+    let respond!: (response: Response) => void
+    const expired = vi.fn()
+    const responseError = vi.fn()
+    const refresh = vi.fn(async () => {})
+    const client = createRequestClient({
+      fetch: () => new Promise<Response>((resolve) => { respond = resolve }),
+      getToken: () => token,
+      authRefresh: { refresh },
+      onSessionExpired: expired,
+      onResponseError: responseError,
+    })
+    const pending = client.post('/private', { body: { value: 'draft' } }).catch(error => error)
+    await vi.waitFor(() => expect(respond).toBeDefined())
+    if (switched)
+      token = 'account-b'
+    respond(createJsonResponse({}, { status: 401 }))
+    expect(await pending).toMatchObject(switched
+      ? { code: 'STALE_SESSION', kind: 'cancelled' }
+      : { kind: 'session', status: 401 })
+    expect(refresh).not.toHaveBeenCalled()
+    expect(expired).toHaveBeenCalledTimes(switched ? 0 : 1)
+    expect(responseError).toHaveBeenCalledTimes(switched ? 0 : 1)
+    expect(token).toBe(switched ? 'account-b' : 'account-a')
+  })
+
+  it.each(['changed', 'cleared', 'same'] as const)('刷新期间凭据%s时，迟到失败仅通知仍然匹配的会话', async (change) => {
+    let token: string | undefined = 'account-a'
+    let rejectRefresh!: (error: Error) => void
+    const expired = vi.fn()
+    const responseError = vi.fn()
+    const refresh = vi.fn(() => new Promise<void>((_resolve, reject) => {
+      rejectRefresh = reject
+    }))
+    const client = createRequestClient({
+      fetch: async () => createJsonResponse({}, { status: 401 }),
+      getToken: () => token,
+      authRefresh: { refresh },
+      onSessionExpired: expired,
+      onResponseError: responseError,
+    })
+    const pending = client.get('/private').catch(error => error)
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce())
+    if (change !== 'same')
+      token = change === 'changed' ? 'account-b' : undefined
+    rejectRefresh(new Error('refresh failed'))
+    expect(await pending).toMatchObject(change === 'same'
+      ? { kind: 'session', status: 401 }
+      : { code: 'STALE_SESSION', kind: 'cancelled' })
+    expect(expired).toHaveBeenCalledTimes(change === 'same' ? 1 : 0)
+    expect(responseError).toHaveBeenCalledTimes(change === 'same' ? 1 : 0)
+  })
+
+  it('只切换Token也会隔离新旧刷新，旧失败不会解绑新凭据的刷新', async () => {
+    let token = 'account-a'
+    const refreshes: Array<{ reject: (error: Error) => void, resolve: () => void }> = []
+    const refresh = vi.fn(() => new Promise<void>((resolve, reject) => {
+      refreshes.push({ resolve, reject })
+    }))
+    const expired = vi.fn()
+    const fetch = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) =>
+      new Headers(init?.headers).get('Authorization') === 'Bearer account-b-valid'
+        ? createJsonResponse({ ok: true })
+        : createJsonResponse({}, { status: 401 }))
+    const client = createRequestClient({ fetch, getToken: () => token, authRefresh: { refresh }, onSessionExpired: expired })
+    const old = client.get('/old').catch(error => error)
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledTimes(1))
+    token = 'account-b'
+    const current = client.get('/current')
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledTimes(2))
+    refreshes[0]!.reject(new Error('old refresh failed'))
+    expect(await old).toMatchObject({ code: 'STALE_SESSION', kind: 'cancelled' })
+    const another = client.get('/another')
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(3))
+    expect(refresh).toHaveBeenCalledTimes(2)
+    token = 'account-b-valid'
+    refreshes[1]!.resolve()
+    await expect(Promise.all([current, another])).resolves.toEqual([{ ok: true }, { ok: true }])
+    expect(expired).not.toHaveBeenCalled()
+  })
+
+  it('刷新完成前已退出的请求不再以匿名凭据重放', async () => {
+    let token: string | undefined = 'account-a'
+    let finishRefresh!: () => void
+    const refresh = vi.fn(() => new Promise<void>((resolve) => {
+      finishRefresh = resolve
+    }))
+    const expired = vi.fn()
+    const responseError = vi.fn()
+    const fetch = vi.fn(async () => createJsonResponse({}, { status: 401 }))
+    const client = createRequestClient({
+      fetch,
+      getToken: () => token,
+      authRefresh: { refresh },
+      onSessionExpired: expired,
+      onResponseError: responseError,
+    })
+    const pending = client.get('/private').catch(error => error)
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce())
+    token = undefined
+    finishRefresh()
+    expect(await pending).toMatchObject({ code: 'STALE_SESSION', kind: 'cancelled' })
+    expect(fetch).toHaveBeenCalledOnce()
+    expect(expired).not.toHaveBeenCalled()
+    expect(responseError).not.toHaveBeenCalled()
+  })
+
+  it.each(['GET', 'POST'] as const)('匿名%s的迟到401不使新登录凭据失效', async (method) => {
+    let token: string | undefined
+    let respond!: (response: Response) => void
+    const refresh = vi.fn(async () => {})
+    const expired = vi.fn()
+    const fetch = vi.fn()
+      .mockImplementationOnce(() => new Promise<Response>((resolve) => { respond = resolve }))
+      .mockImplementation(async () => createJsonResponse({ ok: true }))
+    const client = createRequestClient({ fetch, getToken: () => token, authRefresh: { refresh }, onSessionExpired: expired })
+    const pending = client.request('/private', { method }).catch(error => error)
+    await vi.waitFor(() => expect(respond).toBeDefined())
+    token = 'account-b'
+    respond(createJsonResponse({}, { status: 401 }))
+    expect(await pending).toMatchObject(method === 'GET'
+      ? { ok: true }
+      : { code: 'STALE_SESSION', kind: 'cancelled' })
+    expect(fetch).toHaveBeenCalledTimes(method === 'GET' ? 2 : 1)
+    expect(refresh).not.toHaveBeenCalled()
+    expect(expired).not.toHaveBeenCalled()
+  })
+
+  it.each(['explicit', 'hook'] as const)('客户端Token切换不改变%s注入的外部Authorization失效行为', async (source) => {
+    let token = 'account-a'
+    let respond!: (response: Response) => void
+    const refresh = vi.fn(async () => {})
+    const expired = vi.fn()
+    const fetch = vi.fn(() => new Promise<Response>((resolve) => {
+      respond = resolve
+    }))
+    const client = createRequestClient({
+      fetch,
+      getToken: () => token,
+      authRefresh: { refresh },
+      onRequest: source === 'hook'
+        ? (context) => {
+            const headers = new Headers(context.init.headers)
+            headers.set('Authorization', 'Bearer external-token')
+            context.init.headers = headers
+          }
+        : undefined,
+      onSessionExpired: expired,
+    })
+    const pending = client.get('/external', {
+      headers: source === 'explicit' ? { Authorization: 'Bearer external-token' } : undefined,
+    }).catch(error => error)
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledOnce())
+    token = 'account-b'
+    respond(createJsonResponse({}, { status: 401 }))
+    expect(await pending).toMatchObject({ kind: 'session', status: 401 })
+    expect(refresh).not.toHaveBeenCalled()
+    expect(expired).toHaveBeenCalledOnce()
+  })
+
+  it('取消发生在异步读取当前凭据期间时不再刷新或通知会话失效', async () => {
+    let readToken!: (token: string) => void
+    const getToken = vi.fn()
+      .mockImplementationOnce(() => 'account-a')
+      .mockImplementationOnce(() => new Promise<string>((resolve) => { readToken = resolve }))
+    const refresh = vi.fn(async () => {})
+    const expired = vi.fn()
+    const responseError = vi.fn()
+    const controller = new AbortController()
+    const client = createRequestClient({
+      fetch: async () => createJsonResponse({}, { status: 401 }),
+      getToken,
+      authRefresh: { refresh },
+      onSessionExpired: expired,
+      onResponseError: responseError,
+    })
+    const pending = client.get('/private', { signal: controller.signal }).catch(error => error)
+    await vi.waitFor(() => expect(readToken).toBeDefined())
+    controller.abort()
+    readToken('account-a')
+    expect(await pending).toMatchObject({ kind: 'cancelled' })
+    expect(refresh).not.toHaveBeenCalled()
+    expect(expired).not.toHaveBeenCalled()
+    expect(responseError).not.toHaveBeenCalled()
+  })
+
+  it('旧刷新失败不能清除新会话或与新请求共享刷新', async () => {
+    let scope = 'session-a'
+    let rejectRefresh!: (error: Error) => void
+    const expired = vi.fn()
+    const refresh = vi.fn(() => new Promise<void>((_resolve, reject) => {
+      rejectRefresh = reject
+    }))
+    const client = createRequestClient({
+      fetch: async () => createJsonResponse({}, { status: 401 }),
+      getToken: () => 'same-token-value',
+      getCacheScope: () => scope,
+      authRefresh: { refresh },
+      onSessionExpired: expired,
+    })
+    const old = client.get('/private').catch(error => error)
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce())
+    scope = 'session-b'
+    client.clearCache()
+    rejectRefresh(new Error('old refresh failed'))
+    expect(await old).toMatchObject({ code: 'STALE_SESSION', kind: 'cancelled' })
+    expect(expired).not.toHaveBeenCalled()
+  })
+  it('只切换scope也会隔离新旧刷新，不要求额外创建客户端', async () => {
+    let scope = 'a'
+    let valid = false
+    const pending: Array<() => void> = []
+    const refresh = vi.fn(() => new Promise<void>((resolve) => {
+      pending.push(resolve)
+    }))
+    const client = createRequestClient({
+      fetch: async () => valid ? createJsonResponse({ ok: true }) : createJsonResponse({}, { status: 401 }),
+      getCacheScope: () => scope,
+      getToken: () => 'token',
+      authRefresh: { refresh },
+    })
+    const old = client.get('/old').catch(error => error)
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledTimes(1))
+    scope = 'b'
+    const current = client.get('/current')
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledTimes(2))
+    pending[0]!()
+    expect(await old).toMatchObject({ code: 'STALE_SESSION', kind: 'cancelled' })
+    valid = true
+    pending[1]!()
+    await expect(current).resolves.toEqual({ ok: true })
+  })
+
+  it('二进制请求体不被误编码为JSON', async () => {
+    const fetch = vi.fn(async () => createJsonResponse({ ok: true }))
+    const client = createRequestClient({ fetch })
+    const body = new Uint8Array([1, 2, 3])
+    await client.post('/binary', { body })
+    expect(fetch.mock.calls[0]?.[1]?.body).toBe(body)
+  })
 })
 
 describe('parse standard response', () => {

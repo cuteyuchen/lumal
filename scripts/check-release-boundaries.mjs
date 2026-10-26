@@ -11,6 +11,7 @@ const packageDirs = {
   iconsVue: join(rootDir, 'packages/icons-vue'),
   core: join(rootDir, 'packages/core'),
   charts: join(rootDir, 'packages/charts'),
+  viewport: join(rootDir, 'packages/viewport'),
   datav: join(rootDir, 'packages/datav'),
   cockpit: join(rootDir, 'packages/cockpit'),
   vbenCompat: join(rootDir, 'packages/vben-compat'),
@@ -127,6 +128,7 @@ const iconsPackage = checkPublishPackage('@lumal/icons', packageDirs.icons)
 const iconsVuePackage = checkPublishPackage('@lumal/icons-vue', packageDirs.iconsVue)
 const corePackage = checkPublishPackage('@lumal/core', packageDirs.core)
 const chartsPackage = checkPublishPackage('@lumal/charts', packageDirs.charts)
+const viewportPackage = checkPublishPackage('@lumal/viewport', packageDirs.viewport)
 const datavPackage = checkPublishPackage('@lumal/datav', packageDirs.datav)
 const cockpitPackage = checkPublishPackage('@lumal/cockpit', packageDirs.cockpit)
 const compatPackage = checkPublishPackage('@lumal/vben-compat', packageDirs.vbenCompat)
@@ -134,7 +136,7 @@ const vitePackage = checkPublishPackage('@lumal/vite', packageDirs.vite)
 const createPackage = checkPublishPackage('create-lumal-admin', packageDirs.createLumalAdmin)
 
 /***********************统一发布版本*********************/
-const publicPackages = [iconsPackage, iconsVuePackage, corePackage, chartsPackage, datavPackage, cockpitPackage, compatPackage, vitePackage, createPackage]
+const publicPackages = [iconsPackage, iconsVuePackage, corePackage, chartsPackage, viewportPackage, datavPackage, cockpitPackage, compatPackage, vitePackage, createPackage]
 const releaseVersion = corePackage.version
 const publicPackageNames = new Set(publicPackages.map(pkg => pkg.name))
 const appPackages = readdirSync(join(rootDir, 'apps'), { withFileTypes: true })
@@ -167,6 +169,7 @@ assert(corePackage.exports?.['./style.css'] === './dist/core.css', '@lumal/core 
 assert(corePackage.exports?.['./minimal']?.import && corePackage.exports?.['./minimal']?.require && corePackage.exports?.['./minimal']?.types, '@lumal/core 未完整导出 minimal 入口')
 assert(corePackage.exports?.['./theme-chalk/index.scss'], '@lumal/core 未导出 theme-chalk/index.scss')
 assert(createPackage.bin?.['create-lumal-admin'] === './dist/cli.js', 'create-lumal-admin 缺少 bin.create-lumal-admin')
+assert(createPackage.bin?.['create-lumal'] === './dist/project-cli.js', 'create-lumal-admin 缺少通用 bin.create-lumal')
 assert(datavPackage.exports?.['./style.css'] === './dist/datav.css', '@lumal/datav 未导出 style.css')
 for (const entry of [
   'active-ring-chart',
@@ -255,15 +258,18 @@ assert(!hasDependency(chartsPackage, 'dependencies', 'echarts'), '@lumal/charts 
 assert(!chartsAllDependencies.has('@lumal/core'), '@lumal/charts 不应依赖 @lumal/core')
 assert(hasDependency(datavPackage, 'peerDependencies', 'vue'), '@lumal/datav 应把 vue 放在 peerDependencies')
 assert(hasDependency(datavPackage, 'peerDependencies', 'echarts'), '@lumal/datav 应把 echarts 放在 peerDependencies')
+assert(datavPackage.peerDependenciesMeta?.echarts?.optional === true, '@lumal/datav 的 ECharts peer 必须可选，不能污染无引擎模板')
 assert(hasDependency(datavPackage, 'dependencies', '@jiaminghi/charts'), '@lumal/datav config 模式应声明 @jiaminghi/charts 运行时依赖')
-assert(datavAllDependencies.size === 3, '@lumal/datav 运行时依赖应仅包含 vue、echarts peer 与 @jiaminghi/charts')
+assert(datavAllDependencies.size === 4 && hasDependency(datavPackage, 'dependencies', '@lumal/viewport'), '@lumal/datav 仅允许 vue、echarts peer、@jiaminghi/charts 和共享 viewport')
+assert(getDependencyNames(viewportPackage, ['dependencies', 'optionalDependencies']).size === 0
+  && Object.keys(viewportPackage.peerDependencies ?? {}).join() === 'vue', '@lumal/viewport 只允许 Vue peer，不得引入 UI/图表/业务依赖')
 assert(!hasDependency(datavPackage, 'dependencies', 'vue'), '@lumal/datav 不能把 vue 放在 dependencies')
 assert(!hasDependency(datavPackage, 'dependencies', 'echarts'), '@lumal/datav 不能把 echarts 放在 dependencies')
 assert(!hasDependency(datavPackage, 'optionalDependencies', 'vue'), '@lumal/datav 不能把 vue 放在 optionalDependencies')
 for (const forbiddenName of ['@lumal/cockpit', '@lumal/charts', 'element-plus', '@jiaminghi/data-view', '@jiaminghi/c-render']) {
   assert(!datavAllDependencies.has(forbiddenName), `@lumal/datav 不能依赖 ${forbiddenName}`)
 }
-assert(viteAllDependencies.size === 0, '@lumal/vite 不应引入强制运行时依赖')
+assert([...viteAllDependencies].every(name => ['picomatch', 'postcss', 'postcss-load-config', 'postcss-value-parser'].includes(name)), '@lumal/vite 仅允许受控 CSS 转换所需的构建期解析依赖')
 
 /***********************@lumal/cockpit 依赖边界*********************/
 const cockpitAllDependencies = getDependencyNames(cockpitPackage, [
@@ -331,7 +337,7 @@ for (const match of datavForbiddenMatches) {
 
 const appSourceAliasMatches = findTextMatches(
   join(rootDir, 'apps'),
-  /\.\.\/\.\.\/packages|packages\/(?:icons|icons-vue|core|datav|cockpit|vben-compat|vite)\/src|packages\\(?:icons|icons-vue|core|datav|cockpit|vben-compat|vite)\\src/,
+  /\.\.\/\.\.\/packages|packages\/(?:icons|icons-vue|core|charts|viewport|datav|cockpit|vben-compat|vite)\/src|packages\\(?:icons|icons-vue|core|charts|viewport|datav|cockpit|vben-compat|vite)\\src/,
   new Set(),
   ['../../packages/vite/src/aliases'],
 )
@@ -342,6 +348,9 @@ for (const match of appSourceAliasMatches) {
 
 const oldNameMatches = findTextMatches(rootDir, oldNamePattern, new Set([
   'docs/release-checklist.md',
+  // 迁移矩阵必须准确引用前身API；只放行这两份说明，不允许在源码恢复旧别名。
+  'docs/real-consumer-compatibility.md',
+  'docs/upgrade-guide.md',
   'apps/lumal-docs/src/reference/release-checklist.md',
   'scripts/check-release-boundaries.mjs',
 ]))

@@ -1,7 +1,7 @@
 name: Build Validation
 
 # 与 ci.yml 分工：ci.yml 负责 lint/test/typecheck/build，
-# 这里只补它没覆盖的消费者脚手架校验；三个站点的构建移到 tag 触发的 release-gate.yml。
+# 这里补消费者脚手架和 DataV 视觉校验；三个站点的构建移到 tag 触发的 release-gate.yml。
 on:
   push:
     branches:
@@ -18,9 +18,47 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  datav-visual:
+    name: Windows DataV visual regression
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build viewport dependency
+        run: pnpm --filter @lumal/viewport build
+
+      - name: Typecheck visual fixtures
+        run: pnpm exec vue-tsc --noEmit -p packages/datav/tests/visual/tsconfig.json
+
+      - name: Install Chromium
+        run: pnpm exec playwright install chromium
+
+      - name: Repeat DataV visual regressions
+        run: pnpm test:datav:visual --repeat-each=3
+
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: datav-visual-windows-${{ github.sha }}
+          path: .playwright-results/datav/
+          if-no-files-found: error
+          retention-days: 7
+
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -45,3 +83,19 @@ jobs:
 
       - name: Validate create-lumal-admin consumer
         run: pnpm test:create-consumer
+
+      - name: Validate independent project templates
+        run: pnpm test:create-projects
+
+      - name: Validate viewport and real browser zoom
+        run: pnpm test:viewport
+
+      - name: Upload consumer evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: consumer-evidence-${{ github.sha }}
+          path: |
+            output/release/
+            output/playwright/
+          if-no-files-found: ignore

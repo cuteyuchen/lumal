@@ -13,6 +13,7 @@ const publishPackageJsonPaths = [
   'packages/icons-vue/package.json',
   'packages/core/package.json',
   'packages/charts/package.json',
+  'packages/viewport/package.json',
   'packages/datav/package.json',
   'packages/cockpit/package.json',
   'packages/vben-compat/package.json',

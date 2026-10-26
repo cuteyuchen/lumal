@@ -45,6 +45,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Template formatting
+        run: pnpm format:check
+
       - name: Release boundaries
         run: pnpm release:boundaries
 
@@ -56,6 +59,15 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Upload Linux terminal evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-terminal-linux-${{ github.sha }}
+          path: output/release/cli-terminal/
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Typecheck
         run: pnpm typecheck

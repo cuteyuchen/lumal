@@ -6,13 +6,16 @@
 
 ## 安装与注册
 
-以下命令显式选择 `0.0.5-beta`，ECharts 需要 6.x。
+以下命令显式选择 `0.0.6-beta`；实际可用性以 registry 为准，
+候选发布核验前使用本地 tarball。只使用数字、边框和列表时无需图表引擎。
 
 ```bash
-pnpm add @lumal/datav@0.0.5-beta vue@^3.5 echarts@^6
+pnpm add @lumal/datav@0.0.6-beta vue@^3.5
+# 仅使用 ECharts 模式或 LumalActiveRingChart 时安装。
+pnpm add echarts@^6
 ```
 
-`vue` 和 `echarts` 是 peer dependency，需要应用侧安装。`LumalCharts` 按 `config` / `option` 模式动态加载 DataV / ECharts 引擎；`LumalActiveRingChart` 也通过它使用 ECharts。其他纯 SVG、数字和列表子入口不加载图表运行时。
+`vue` 是必需 peer，`echarts` 是可选 peer，需要时由应用侧安装。`LumalCharts` 按 `config` / `option` 模式动态加载 DataV / ECharts 引擎；`LumalActiveRingChart` 也通过它使用 ECharts。其他纯 SVG、数字和列表子入口不加载图表运行时。
 
 全量注册：
 

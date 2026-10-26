@@ -697,55 +697,57 @@ defineExpose({
     }"
     direction="vertical"
   >
-    <LumalHeader
-      v-if="showHeader"
-      v-show="!isContentMaximized"
-      :title="title"
-      :collapsed="isMobileViewport ? !mobileMenuOpen : collapsed"
-      :height="headerHeight"
-      :mobile-only-toggle="!hasSidebar && hasTopMenus"
-      :sidebar-enabled="hasSidebar || hasTopMenus"
-      :toggle-after-title="hasSidebar && !isMobileViewport"
-      @toggle-collapse="handleToggleCollapse"
-    >
-      <template v-if="$slots.logo" #logo>
-        <slot name="logo" />
-      </template>
+    <Transition name="lumal-layout-header">
+      <LumalHeader
+        v-if="showHeader"
+        v-show="!isContentMaximized"
+        :title="title"
+        :collapsed="isMobileViewport ? !mobileMenuOpen : collapsed"
+        :height="headerHeight"
+        :mobile-only-toggle="!hasSidebar && hasTopMenus"
+        :sidebar-enabled="hasSidebar || hasTopMenus"
+        :toggle-after-title="hasSidebar && !isMobileViewport"
+        @toggle-collapse="handleToggleCollapse"
+      >
+        <template v-if="$slots.logo" #logo>
+          <slot name="logo" />
+        </template>
 
-      <template v-if="hasTopMenus" #navigation>
-        <LumalTopNav
-          :menus="topMenus"
-          :active-path="resolvedTopMenuActivePath"
-          :align="preferences.header.menuAlign"
-          :max-width="preferences.header.menuMaxWidth"
-          :mode="resolvedTopMenuMode"
-          @select="handleTopMenuSelect"
-        />
-      </template>
+        <template v-if="hasTopMenus" #navigation>
+          <LumalTopNav
+            :menus="topMenus"
+            :active-path="resolvedTopMenuActivePath"
+            :align="preferences.header.menuAlign"
+            :max-width="preferences.header.menuMaxWidth"
+            :mode="resolvedTopMenuMode"
+            @select="handleTopMenuSelect"
+          />
+        </template>
 
-      <template v-if="showHeaderBreadcrumb" #breadcrumb>
-        <LumalBreadcrumb
-          class="lumal-layout__header-breadcrumb"
-          :active-menu-path="resolvedActiveMenuPath"
-          :active-path="resolvedCurrentPath"
-          :hide-only-one="breadcrumbPreferences.hideOnlyOne"
-          :menus="menus"
-          :show-home="breadcrumbPreferences.showHome"
-          :show-icon="breadcrumbPreferences.showIcon"
-          @select="handleDiscoverySelect"
-        />
-      </template>
+        <template v-if="showHeaderBreadcrumb" #breadcrumb>
+          <LumalBreadcrumb
+            class="lumal-layout__header-breadcrumb"
+            :active-menu-path="resolvedActiveMenuPath"
+            :active-path="resolvedCurrentPath"
+            :hide-only-one="breadcrumbPreferences.hideOnlyOne"
+            :menus="menus"
+            :show-home="breadcrumbPreferences.showHome"
+            :show-icon="breadcrumbPreferences.showIcon"
+            @select="handleDiscoverySelect"
+          />
+        </template>
 
-      <template v-if="globalSearchEnabled || $slots.headerActions" #actions>
-        <LumalGlobalSearch
-          v-if="globalSearchEnabled"
-          :menus="menus"
-          :shortcut="globalSearchShortcutEnabled"
-          @select="handleDiscoverySelect"
-        />
-        <slot name="headerActions" />
-      </template>
-    </LumalHeader>
+        <template v-if="globalSearchEnabled || $slots.headerActions" #actions>
+          <LumalGlobalSearch
+            v-if="globalSearchEnabled"
+            :menus="menus"
+            :shortcut="globalSearchShortcutEnabled"
+            @select="handleDiscoverySelect"
+          />
+          <slot name="headerActions" />
+        </template>
+      </LumalHeader>
+    </Transition>
 
     <ElContainer class="lumal-layout__body">
       <button
@@ -756,9 +758,9 @@ defineExpose({
         @click="mobileMenuOpen = false"
       />
 
-      <Transition v-if="!isContentMaximized" name="lumal-layout-sidebar" appear>
+      <Transition name="lumal-layout-sidebar" appear>
         <LumalSidebar
-          v-if="hasSidebar"
+          v-if="hasSidebar && !isContentMaximized"
           class="lumal-layout__desktop-sidebar"
           aria-label="主菜单"
           :menus="sidebarMenus"
@@ -785,16 +787,18 @@ defineExpose({
       />
 
       <ElContainer class="lumal-layout__main" direction="vertical" data-layout-fullscreen-target>
-        <LumalBreadcrumb
-          v-if="breadcrumbPreferences.enable && !showHeaderBreadcrumb && !isContentMaximized"
-          :active-menu-path="resolvedActiveMenuPath"
-          :active-path="resolvedCurrentPath"
-          :hide-only-one="breadcrumbPreferences.hideOnlyOne"
-          :menus="menus"
-          :show-home="breadcrumbPreferences.showHome"
-          :show-icon="breadcrumbPreferences.showIcon"
-          @select="handleDiscoverySelect"
-        />
+        <Transition name="lumal-layout-breadcrumb">
+          <LumalBreadcrumb
+            v-if="breadcrumbPreferences.enable && !showHeaderBreadcrumb && !isContentMaximized"
+            :active-menu-path="resolvedActiveMenuPath"
+            :active-path="resolvedCurrentPath"
+            :hide-only-one="breadcrumbPreferences.hideOnlyOne"
+            :menus="menus"
+            :show-home="breadcrumbPreferences.showHome"
+            :show-icon="breadcrumbPreferences.showIcon"
+            @select="handleDiscoverySelect"
+          />
+        </Transition>
 
         <LumalTabs
           v-if="hasTabs && preferences.tabbar.enable"
@@ -876,12 +880,40 @@ defineExpose({
 }
 
 .lumal-layout.is-content-maximized .lumal-layout__main {
-  position: absolute;
-  inset: 0;
-  z-index: var(--lumal-z-scrim);
-  /* 脱离 Flex 布局后需覆盖普通布局的零宽度，避免内容被裁剪。 */
+  /* 保持 Flex 布局，让内容区随导航收合连续伸展，避免定位切换造成跳变。 */
   width: 100%;
   background: var(--el-bg-color-page);
+}
+
+.lumal-layout-header-enter-active,
+.lumal-layout-header-leave-active,
+.lumal-layout-breadcrumb-enter-active,
+.lumal-layout-breadcrumb-leave-active {
+  overflow: hidden;
+  transition:
+    height var(--lumal-motion-duration-base) var(--lumal-easing-standard),
+    opacity var(--lumal-motion-duration-fast) ease,
+    border-bottom-width var(--lumal-motion-duration-base) var(--lumal-easing-standard);
+}
+
+.lumal-layout-breadcrumb-enter-active,
+.lumal-layout-breadcrumb-leave-active {
+  height: 40px;
+  min-height: 0;
+}
+
+.lumal-layout-header-leave-active,
+.lumal-layout-breadcrumb-leave-active {
+  pointer-events: none;
+}
+
+.lumal-layout-header-enter-from,
+.lumal-layout-header-leave-to,
+.lumal-layout-breadcrumb-enter-from,
+.lumal-layout-breadcrumb-leave-to {
+  height: 0 !important;
+  opacity: 0;
+  border-bottom-width: 0;
 }
 
 .lumal-layout-sidebar-enter-active,
@@ -948,6 +980,10 @@ defineExpose({
 
 @media (prefers-reduced-motion: reduce) {
   .lumal-layout__body :deep(.lumal-sidebar),
+  .lumal-layout-header-enter-active,
+  .lumal-layout-header-leave-active,
+  .lumal-layout-breadcrumb-enter-active,
+  .lumal-layout-breadcrumb-leave-active,
   .lumal-layout-sidebar-enter-active,
   .lumal-layout-sidebar-leave-active {
     transition: none;

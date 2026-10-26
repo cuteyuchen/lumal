@@ -4,12 +4,18 @@
 
 ## 安装
 
-下列命令对应工作区 0.0.5-beta；npm beta 仍为 0.0.4-beta。本轮仅验证本地 tarball，
-registry 存在对应版本后才可使用精确版本安装，当前也可从源码构建后 file 接入。
+下列命令面向 `0.0.6-beta`，以 registry 存在对应版本为前提；
+发布核验前使用本地构建或候选 tarball，不根据本文推断 npm 的当前 dist-tag。
 
 ```bash
-pnpm add @lumal/datav@0.0.5-beta vue echarts@^6
+pnpm add @lumal/datav@0.0.6-beta vue@^3.5
+# 仅使用 ECharts 模式或 LumalActiveRingChart 时安装。
+pnpm add echarts@^6
 ```
+
+本版 ECharts 为可选 peer：仅 ECharts 图表模式与 `LumalActiveRingChart`
+需要安装，纯数字、边框和列表子入口不要求引擎。Vue 仍为必需 peer。
+DataV 与 Cockpit 共享轻量 `@lumal/viewport`，保留既有全屏缩放 API 与组件行为。
 
 ```ts
 import { createApp } from 'vue'
@@ -51,6 +57,10 @@ import '@lumal/datav/style.css'
 `autoResize` 对两种运行时都有效；`theme`、事件、loading 与 ECharts 实例方法仅属于 `option` 扩展模式。组件 ref 提供 `getInstance()`、`getNativeInstance()`、`setConfig()`、`setOption()` 与 `resize()`。
 
 两套引擎按当前模式动态加载，实例在加载完成后创建；切换模式或卸载会使旧加载失效。`LumalActiveRingChart` 使用 ECharts 模式，不应视为无引擎组件。其他纯 SVG/数字/列表子入口不引入图表引擎；需要实例的方法应在实例创建后调用。
+
+本版在首次 `setOption` 前绑定 `events` 和 `@rendered/@finished`，静态图表也能收到首帧通知。
+不要等 `onMounted` 后才注册首帧监听。容器使用明确高度或 `minmax(0, 1fr)` 网格内容行；
+单独给父级 `min-height`，再让图表占 `height: 100%`，可能形成尺寸反馈循环。
 
 ## 两套 API
 

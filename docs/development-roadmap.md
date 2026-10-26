@@ -4,9 +4,9 @@
 
 ## 当前基线
 
-- 日期：2026-10-21。
-- 工作区版本：`0.0.5-beta`（九个可发布包统一版本；私有示例应用仍为 `0.0.0`）。正式门禁、九包 npm 发布及完整 registry/tarball 核验通过；三种真实 npm 模板已通过，详见 [发布记录](./npm-release-0.0.5-beta.md)。
-- 当前分支：`master`；升级起点 `4112ecc`，正式标签源提交 `53395dc`。
+- 日期：2026-10-25。
+- 工作区版本：`0.0.6-beta`（十个公共包已发布并完成 registry 与同次发布产物核验；私有示例应用仍为 `0.0.0`）。本轮新增三种项目形态、工程规范、通用视口和消费者修复，最新已执行结果见 [下一阶段验收](./lumal-next-phase-audit.md)；正式标签及逐包证据见 [本版发布记录](./npm-release-0.0.6-beta.md)，不将发包成功扩展为真实业务验收或生产部署。
+- 当前分支：`codex/lumal-project-types-and-quality`；本轮实际开发基线 `29e474e`。上一版正式标签源提交 `53395dc`，`0.0.5-beta` 的九包发布事实保留在 [历史记录](./npm-release-0.0.5-beta.md)。
 - 前一阶段提交记录（历史基线，不代表本轮工作区已提交）：
   - `671f739 perf: 落地 admin/core/cockpit 整体性能与正确性优化`
   - `4d7a0e8 feat(components): 增强飞线图组件与文档，优化可访问性与交互体验`
@@ -463,7 +463,9 @@ pnpm release:boundaries
 pnpm release:check
 ```
 
-该命令串行包含 Lint、发布边界、全部测试、类型检查、全包构建、Admin/Compat 构建、发布产物检查、Playwright E2E 和九个发布包 dry-run。
+该命令串行包含 Lint、模板格式、工作流安全、发布边界、全部测试、类型检查、全包构建、
+Admin 与 Blank/Screen 独立消费者、三级视口真实缩放、Admin/Compat 构建、发布产物检查、
+生产 Playwright E2E 和十个发布包 dry-run。
 
 浏览器矩阵：
 

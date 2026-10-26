@@ -20,6 +20,7 @@ import {
   onBeforeUnmount,
   onMounted,
   shallowRef,
+  toRaw,
   unref,
   useTemplateRef,
   watch,
@@ -142,7 +143,7 @@ const flexibleColumnField = computed(() => [...renderableColumns.value]
   ?.field)
 
 const { dictionaryMap } = useDictionaryMap(() =>
-  normalizedColumns.value.map(column => column.dictionary ?? column.dictType),
+  normalizedColumns.value.filter(column => column.type !== 'index').map(column => column.dictionary ?? column.dictType),
 )
 
 const columnOptionIndexes = computed(() => new Map(
@@ -281,6 +282,8 @@ function restoreColumnSettings(): void {
 }
 
 function resolveColumnOptions(column: NormalizedSchemaTableColumn<T>) {
+  if (column.type === 'index')
+    return []
   const dictionary = column.dictionary ?? column.dictType
   if (dictionary) {
     return dictionaryMap.value[dictionary] ?? []
@@ -296,6 +299,8 @@ function isCellHidden(row: T, column: NormalizedSchemaTableColumn<T>, index: num
 }
 
 function resolveCellDisplay(row: T, column: NormalizedSchemaTableColumn<T>, index: number) {
+  if (column.type === 'index')
+    return { tags: [], text: String(resolveRowIndex(index)) }
   return resolveSchemaTableCellDisplay(
     row as SchemaTableRow,
     column as NormalizedSchemaTableColumn,
@@ -303,6 +308,10 @@ function resolveCellDisplay(row: T, column: NormalizedSchemaTableColumn<T>, inde
     resolveColumnOptions(column),
     columnOptionIndexes.value.get(String(column.field)),
   )
+}
+
+function resolveRowIndex(index: number): number {
+  return (props.pagination ? (page.value - 1) * pageSize.value : 0) + index + 1
 }
 
 function createColumnFormatter(column: NormalizedSchemaTableColumn<T>) {
@@ -448,7 +457,7 @@ watch(() => props.autoResize, () => {
   setupResizeObserver()
 })
 watch(
-  () => [props.columns.map(column => String(column.field)).join('\u0000'), props.columnSettings?.storageKey],
+  () => [normalizedColumns.value.map(column => String(column.field)).join('\u0000'), props.columnSettings?.storageKey],
   restoreColumnSettings,
 )
 watch(openMobileActionKey, (key) => {
@@ -479,11 +488,12 @@ defineExpose({
   getSelectedRows: () => [...selectedRows.value],
   getColumnOrder: () => [...columnOrder.value],
   getExportData: (sourceRows: T[] = props.rows) => {
-    const indexes = new Map(sourceRows.map((row, index) => [row, index]))
+    // 导出选中行时沿用当前页的行号，不按选中顺序重新编号。
+    const indexes = new Map(props.rows.map((row, index) => [toRaw(row), index]))
     return {
       columns: renderableColumns.value.map(column => ({ field: String(column.field), label: column.label })),
-      rows: sourceRows.map(row => renderableColumns.value.map(column =>
-        resolveCellDisplay(row, column, indexes.get(row) ?? -1).text,
+      rows: sourceRows.map((row, index) => renderableColumns.value.map(column =>
+        resolveCellDisplay(row, column, indexes.get(toRaw(row)) ?? index).text,
       )),
     }
   },
@@ -584,7 +594,9 @@ defineExpose({
           v-for="column in renderableColumns"
           :key="String(column.field)"
           v-bind="column.componentProps"
-          :prop="String(column.field)"
+          :type="column.type"
+          :index="resolveRowIndex"
+          :prop="column.type === 'index' ? undefined : String(column.field)"
           :label="column.label"
           :align="column.align"
           :width="resolveColumnWidth(column)"
@@ -595,7 +607,7 @@ defineExpose({
           :formatter="resolveColumnFormatter(column)"
           :data-field="String(column.field)"
         >
-          <template #default="{ row, $index }">
+          <template v-if="column.type !== 'index'" #default="{ row, $index }">
             <template v-if="!isCellHidden(row, column, $index)">
               <slot
                 :name="`table-${String(column.field)}`"

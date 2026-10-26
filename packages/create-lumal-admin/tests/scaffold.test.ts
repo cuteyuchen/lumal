@@ -3,12 +3,12 @@ import * as fs from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { parseCliArgs } from '../src/cli'
+import { main, parseCliArgs } from '../src/cli'
 import { createLumalAdminProject } from '../src/scaffold'
 
 vi.mock('node:fs/promises', async (original) => {
   const actual = await original<typeof fs>()
-  return { ...actual, open: vi.fn(actual.open) }
+  return { ...actual, open: vi.fn(actual.open), readdir: vi.fn(actual.readdir) }
 })
 const temporary: string[] = []
 async function directory(): Promise<string> {
@@ -18,6 +18,7 @@ async function directory(): Promise<string> {
 }
 afterEach(async () => {
   vi.mocked(fs.open).mockRestore()
+  vi.mocked(fs.readdir).mockRestore()
   await Promise.all(temporary.splice(0).map(path => fs.rm(path, { recursive: true, force: true })))
 })
 
@@ -30,6 +31,12 @@ describe('模板资源组合', () => {
           const result = await createLumalAdminProject({ name: 'demo-admin', targetDir, preset, apiMode, routerMode })
           expect(result.createdFiles).toEqual(expect.arrayContaining([
             'README.md',
+            '.editorconfig',
+            '.gitattributes',
+            '.prettierignore',
+            'prettier.config.mjs',
+            'AGENTS.md',
+            'docs/DEVELOPMENT.md',
             '.gitignore',
             '.env.example',
             '.env.development',
@@ -39,21 +46,25 @@ describe('模板资源组合', () => {
             'tsconfig.json',
             'vite.config.ts',
             'vitest.config.ts',
-            'src/router/index.ts',
-            'src/services/session-runtime.ts',
+            'src/app/router/index.ts',
+            'src/app/services/session-runtime.ts',
             'tests/session.test.ts',
           ]))
           const manifest = JSON.parse(await fs.readFile(join(targetDir, 'package.json'), 'utf8'))
           expect(manifest.name).toBe('demo-admin')
+          expect(manifest.scripts.check).toBe('pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build')
+          expect(manifest.devDependencies.prettier).toBeDefined()
           expect(Object.keys(manifest.dependencies)).toEqual(Object.keys(manifest.dependencies).sort((left, right) => left.localeCompare(right)))
           expect(manifest.dependencies['@lumal/vben-compat'] !== undefined).toBe(preset === 'vben-compatible')
           for (const heavy of ['@lumal/charts', '@lumal/datav', '@lumal/cockpit', 'vxe-table', 'echarts'])
             expect(manifest.dependencies[heavy]).toBeUndefined()
-          expect(result.createdFiles.includes('src/views/system/SystemEntityView.vue')).toBe(preset !== 'minimal')
-          expect(result.createdFiles.includes('src/views/migration/VbenUsersView.vue')).toBe(preset === 'vben-compatible')
+          expect(result.createdFiles).not.toContain('src/views/system/SystemEntityView.vue')
+          expect(result.createdFiles.includes('src/modules/system/user/UserView.vue')).toBe(preset !== 'minimal')
+          expect(result.createdFiles.includes('src/modules/profile/ProfileView.vue')).toBe(preset !== 'minimal')
+          expect(result.createdFiles.includes('src/modules/vben-migration/VbenUsersView.vue')).toBe(preset === 'vben-compatible')
           const config = await fs.readFile(join(targetDir, 'src/app.config.ts'), 'utf8')
           expect(config).toContain(`routerMode: '${routerMode}'`)
-          const source = await fs.readFile(join(targetDir, 'src/services/data-source.ts'), 'utf8')
+          const source = await fs.readFile(join(targetDir, 'src/app/services/data-source.ts'), 'utf8')
           if (apiMode === 'http') {
             expect(source).toContain('createRequestClient')
             expect(source).toContain('/auth/login')
@@ -64,6 +75,7 @@ describe('模板资源组合', () => {
           else {
             expect(source).toContain('crypto.randomUUID()')
             expect(source).toContain('VITE_ENABLE_LOCAL_DEMO')
+            expect(source).toContain('../../modules/business/*/local.ts')
           }
           for (const file of result.createdFiles) {
             const text = await fs.readFile(join(targetDir, file), 'utf8')
@@ -82,27 +94,54 @@ describe('模板资源组合', () => {
   it('按需禁用业务模块，保留公共认证与布局', async () => {
     const targetDir = join(await directory(), 'no-features')
     const result = await createLumalAdminProject({ name: 'no-features', targetDir, preset: 'standard', features: [] })
-    expect(result.createdFiles).not.toContain('src/modules/system.ts')
-    expect(result.createdFiles).not.toContain('src/modules/examples.ts')
-    expect(result.createdFiles).toContain('src/services/session-runtime.ts')
+    expect(result.createdFiles.some(file => file.startsWith('src/modules/system/'))).toBe(false)
+    expect(result.createdFiles.some(file => file.startsWith('src/modules/examples/'))).toBe(false)
+    expect(result.createdFiles).toContain('src/app/services/session-runtime.ts')
   })
   it('固定标签与路由使用相同的多角色匹配模式', async () => {
     const targetDir = join(await directory(), 'role-tabs')
     await createLumalAdminProject({ name: 'role-tabs', targetDir, preset: 'minimal' })
-    const router = await fs.readFile(join(targetDir, 'src/router/index.ts'), 'utf8')
+    const router = await fs.readFile(join(targetDir, 'src/app/router/index.ts'), 'utf8')
     expect(router).toContain('permissionStore.hasRole(route.meta.roles, \'some\')')
   })
   it('迁移业务页不依赖可选 system 层声明资源权限', async () => {
     const targetDir = join(await directory(), 'migration-only')
     const result = await createLumalAdminProject({ name: 'migration-only', targetDir, preset: 'vben-compatible', features: [] })
-    expect(result.createdFiles).not.toContain('src/modules/system.ts')
-    const module = await fs.readFile(join(targetDir, 'src/modules/vben.ts'), 'utf8')
-    expect(module).toContain('permissionPrefix: \'system:user\'')
-    expect(module).toContain('resource: \'users\'')
+    expect(result.createdFiles.some(file => file.startsWith('src/modules/system/'))).toBe(false)
+    const module = await fs.readFile(join(targetDir, 'src/modules/vben-migration/module.ts'), 'utf8')
+    expect(module).toContain('permission: \'system:user:create\'')
+    expect(module).toContain('path: \'/migration\'')
   })
 })
 
 describe('安全创建与恢复', () => {
+  it('创建途中取消只回滚本次文件，不残留新目录', async () => {
+    const root = await directory()
+    const targetDir = join(root, 'cancelled')
+    const controller = new AbortController()
+    const realOpen = (await vi.importActual<typeof fs>('node:fs/promises')).open
+    let count = 0
+    vi.mocked(fs.open).mockImplementation(async (...args) => {
+      const handle = await realOpen(...args)
+      if (++count === 3)
+        controller.abort(new Error('用户取消创建'))
+      return handle
+    })
+    await expect(createLumalAdminProject({ name: 'cancelled', targetDir, signal: controller.signal })).rejects.toThrow('用户取消')
+    expect(await fs.readdir(root)).toEqual([])
+  })
+  it('模板资源缺失在首次文件写入前失败', async () => {
+    const root = await directory()
+    const readdir = (await vi.importActual<typeof fs>('node:fs/promises')).readdir
+    vi.mocked(fs.readdir).mockImplementation(((...args: Parameters<typeof fs.readdir>) => {
+      if (String(args[0]).replaceAll('\\', '/').includes('/templates/'))
+        return Promise.reject(Object.assign(new Error('模板资源缺失'), { code: 'ENOENT' }))
+      return readdir(...args)
+    }) as typeof fs.readdir)
+    await expect(createLumalAdminProject({ name: 'missing', targetDir: join(root, 'missing') })).rejects.toThrow('模板资源缺失')
+    expect(fs.open).not.toHaveBeenCalled()
+    expect(await fs.readdir(root)).toEqual([])
+  })
   it.each(['Foo', '.hidden', '_bad', '-bad', '~bad', 'foo~bar', '@team/foo~bar', 'node_modules', 'node:fs', 'bad name', 'a/b', '', 'a'.repeat(215)])('拒绝非法 npm 名称 %s', async (name) => {
     const root = await directory()
     await expect(createLumalAdminProject({ name, targetDir: join(root, 'new') })).rejects.toThrow('非法 npm')
@@ -147,6 +186,20 @@ describe('安全创建与恢复', () => {
 })
 
 describe('cLI 参数', () => {
+  it.each([false, true])('帮助准确区分项目路由枚举与默认值（通用入口=%s）', async (unified) => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    try {
+      await main(['--help'], unified)
+      const output = log.mock.calls.flat().join('\n')
+      expect(output).toContain('--router-mode none|hash|history')
+      expect(output).toContain('Admin 默认 hash；Screen/Blank 默认 none')
+      expect(output).toContain('Admin 仅 hash|history；Blank 仅 none')
+    }
+    finally {
+      log.mockRestore()
+    }
+  })
+
   it('保留无交互选项及可组合特性', () => {
     expect(parseCliArgs(['my-admin', '--preset', 'standard', '--api-mode', 'http', '--router-mode', 'history', '--features', 'system', '--no-interactive']))
       .toMatchObject({ target: 'my-admin', preset: 'standard', apiMode: 'http', routerMode: 'history', features: ['system'], interactive: false })

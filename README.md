@@ -1,14 +1,28 @@
 # Lumal
 
-Lumal 是一套面向中小型后台项目的轻量 Vue Admin 基础设施。它以 Vue 3、TypeScript、Vite 和 Element Plus 为基础，提供应用安装、布局导航、主题、权限、路由、请求、字典、Schema 表单、Schema 表格、CRUD、图标、图表、驾驶舱编排、DataV 可视化组件和迁移兼容能力。
+Lumal 是一套供个人长期使用、同时开放给其他开发者的轻量 Vue 3 项目基础设施。Admin 以 TypeScript、Vite 和 Element Plus 为基础；独立 Screen 和纯 Blank 按需组合，不为普通 Vue 应用强加后台依赖。公共包集中维护布局、权限、请求、CRUD、图表和屏幕适配等重复能力。
 
 `apps/lumal-admin` 是公开 API 的集成示例与验收入口；可复用能力必须沉淀到 `packages/*`，业务接口字段、状态码和页面逻辑不得进入框架包。
 
-九个公共包已于 2026-10-21 发布 `0.0.5-beta`，正式门禁、生产 E2E、registry 与实际 tarball 逐包核验均通过，详见 [发布执行记录](docs/npm-release-0.0.5-beta.md)。三种真实 npm 脚手架项目均通过独立安装、测试和生产构建。Beta 使用 npm 的 `beta` 标签，`latest` 未改动；安装时显式指定版本。
+当前工作区与本文 API 基线为 `0.0.6-beta`，十个公共包已发布并完成 registry 与同次发布产物核验，
+详见 [本版发布记录](docs/npm-release-0.0.6-beta.md)。下列 npm 命令显式选择本版，不依赖浮动标签。
+十包 `beta` 指向本版；既有九包的 `latest` 保持 `0.0.1-beta`，
+新增 `@lumal/viewport` 首次发布后的 `latest` 为 `0.0.6-beta`。公共包发布不等于业务验收或生产部署。
+上一版九包 `0.0.5-beta` 的已核验发布事实保留在 [历史发布记录](docs/npm-release-0.0.5-beta.md)。
 
-当前工作区为 `0.0.5-beta`，新增三模板、真实 HTTP 认证和显式 Vben 5 迁移入口。
-下列命令显式选择已核验的脚手架版本，不依赖 npm 的 `latest`；
-完整功能与兼容边界见 [升级验收](docs/upgrade-verification.md)。
+## 0.0.6-beta 能力
+
+- 统一 `create-lumal` bin 生成 Admin、Screen、Blank，旧 Admin 命令与参数保留。
+- 所有模板具备 ESLint、Prettier、EditorConfig、AI 规范和统一 `pnpm check`。
+- Screen 的认证、业务数据、路由、可视化和视口能力独立选择；Blank 默认仅 Vue。
+- 新 `@lumal/viewport` 支持应用默认、页面和容器适配，不变换 DOM 根或全局后台字号。
+- 请求会话隔离与无业务字段序号列的修复，配套脱敏真实消费者契约。
+
+创建方式见 [项目模板](docs/project-template-guide.md)，
+三级适配见 [屏幕与工作区](docs/screen-viewport-guide.md)，
+兼容边界见 [真实消费者](docs/real-consumer-compatibility.md) 与 [升级指南](docs/upgrade-guide.md)。
+通用 binary 仍由 `create-lumal-admin` 包分发，没有新增独立的 `create-lumal` npm 包；
+不要把 `pnpm create lumal` 当成已发布命令。
 
 ## 快速开始
 
@@ -24,7 +38,10 @@ pnpm admin:dev
 创建新项目：
 
 ```bash
-pnpm create lumal-admin@0.0.5-beta my-admin --preset standard
+pnpm create lumal-admin@0.0.6-beta my-admin --preset standard
+# 通用入口由现有包提供，明确选择 binary。
+pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-screen --template screen
+pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-blank --template blank
 ```
 
 应用侧最小接入：
@@ -48,14 +65,16 @@ await createLumalAdmin({
 | `packages/icons-vue` | Vue 图标组件、选择器和响应式注册表适配 |
 | `packages/core` | 安装器、布局、路由、权限、请求、主题、字典和核心组件 |
 | `packages/charts` | 可选 ECharts 面板与自适应能力 |
+| `packages/viewport` | 纯 Vue 容器尺寸、全局默认/页面/容器适配，不依赖后台或图表 |
 | `packages/datav` | 面向驾驶舱的 Vue 3 DataV 可视化包（15 个导出组件，含变体共 38 种形态） |
 | `packages/cockpit` | 通用驾驶舱编排框架：布局运行时、组件注册、设计器与消息总线 |
 | `packages/vben-compat` | 常用旧项目写法到 Lumal 原生 API 的迁移层 |
 | `packages/vite` | 组件 resolver、工作区 alias 和可选 Devtools 配置助手 |
-| `packages/create-lumal-admin` | 轻量后台项目脚手架 |
+| `packages/create-lumal-admin` | Admin/Screen/Blank 项目脚手架，保留旧 Admin 入口 |
 | `apps/lumal-admin` | 原生 Admin 集成、系统管理示例和浏览器验收入口 |
 | `apps/lumal-cockpit` | 独立驾驶舱示例应用 |
 | `apps/lumal-datav-guide` | `@lumal/datav` 组件指南站，可静态托管并作为 Admin 外链嵌入 |
+| `apps/lumal-viewport-lab` | 脱敏工作区与真实浏览器缩放验收，非业务应用 |
 | `apps/lumal-mock-api` | Nitro/H3 演示接口服务 |
 | `apps/vben-compat-demo` | 兼容层构建示例 |
 
@@ -71,18 +90,19 @@ await createLumalAdmin({
 @lumal/vben-compat  ←  apps/vben-compat-demo
 
 @lumal/charts  ←  apps/lumal-admin
+@lumal/viewport ← @lumal/datav, @lumal/cockpit, 普通 Vue / Screen
 @lumal/datav   ←  apps/lumal-admin, apps/lumal-cockpit, apps/lumal-datav-guide
 @lumal/vite    →  Vite 配置与构建辅助
 create-lumal-admin  →  生成消费公开包入口的应用
 ```
 
-`@lumal/datav` 是独立可视化包，不依赖 `@lumal/core`；它把 `vue` 和 `echarts` 作为 peer dependency，并为 DataV `config` 模式声明 `@jiaminghi/charts` 运行时依赖。驾驶舱和 Admin 可直接按需消费其组件。
+`@lumal/datav` 是独立可视化包，不依赖 `@lumal/core`；Vue 保持 peer，ECharts peer 为可选，只有实际使用 ECharts 图表才需安装。DataV `config` 模式声明 `@jiaminghi/charts` 运行时依赖。DataV/Cockpit 共享 `@lumal/viewport` 的算法与尺寸监听；旧缩放契约保持。三级适配与地图约定见[屏幕适配指南](docs/screen-viewport-guide.md)。
 
 需要严格轻量启动时使用 `@lumal/core/minimal`，只显式注册需要的组件；根入口保留默认 UI 便利接线。`@lumal/core/request` 等纯服务子入口无需 Element Plus。DataV 通用图表按模式动态加载引擎，无引擎组件可使用独立子入口。
 
 ## AI Skill
 
-[Lumal 总 Skill](skills/lumal/SKILL.md) 覆盖全部 9 个公共包，指导 AI 判断何时使用、如何接入及需要避免的误区。总入口负责包选型，详细示例按任务从 `references/` 读取，不要求每次加载整套文档。
+[Lumal 总 Skill](skills/lumal/SKILL.md) 以 `0.0.6-beta` 为 API 基线，覆盖十个公共包，指导 AI 判断何时使用、如何接入及需要避免的误区。总入口负责包选型，详细示例按任务从 `references/` 读取，不要求每次加载整套文档。
 
 将 `skills/lumal` 整个目录安装到 AI 工具支持的 Skill 目录后，可用 `$lumal` 显式调用。安装位置、示例请求与维护说明见 [AI Skill 指南](apps/lumal-docs/src/guide/essentials/ai-skills.md)。
 
@@ -126,6 +146,9 @@ pnpm admin:build
 pnpm compat:build
 pnpm test:e2e
 pnpm lint
+pnpm format:check
+pnpm test:create-projects
+pnpm test:viewport
 pnpm release:boundaries
 pnpm release:artifacts
 pnpm pack:dry-run

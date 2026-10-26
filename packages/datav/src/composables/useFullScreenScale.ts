@@ -1,5 +1,5 @@
 import type { Ref } from 'vue'
-import { onBeforeUnmount, onMounted, shallowRef, watch } from 'vue'
+import { computeViewportScale, useViewportScale } from '@lumal/viewport'
 
 /***********************全屏容器缩放*********************/
 
@@ -27,30 +27,7 @@ export function computeFullScreenScale(
   designWidth: number,
   designHeight: number,
 ): FullScreenScaleResult {
-  if (designWidth <= 0 || designHeight <= 0 || containerWidth <= 0 || containerHeight <= 0) {
-    return {
-      containerWidth: Math.max(0, containerWidth),
-      containerHeight: Math.max(0, containerHeight),
-      scale: 1,
-      scaledWidth: designWidth,
-      scaledHeight: designHeight,
-      offsetX: 0,
-      offsetY: 0,
-    }
-  }
-
-  const scale = Math.min(containerWidth / designWidth, containerHeight / designHeight)
-  const scaledWidth = designWidth * scale
-  const scaledHeight = designHeight * scale
-  return {
-    containerWidth,
-    containerHeight,
-    scale,
-    scaledWidth,
-    scaledHeight,
-    offsetX: (containerWidth - scaledWidth) / 2,
-    offsetY: (containerHeight - scaledHeight) / 2,
-  }
+  return computeViewportScale(containerWidth, containerHeight, designWidth, designHeight)
 }
 
 export interface UseFullScreenScaleOptions {
@@ -66,76 +43,10 @@ export function useFullScreenScale(
   containerRef: Readonly<Ref<HTMLElement | null>>,
   options: UseFullScreenScaleOptions,
 ) {
-  const result = shallowRef<FullScreenScaleResult>({
-    containerWidth: 0,
-    containerHeight: 0,
-    scale: 1,
-    scaledWidth: options.designWidth(),
-    scaledHeight: options.designHeight(),
-    offsetX: 0,
-    offsetY: 0,
+  const { result, ready, measure } = useViewportScale({
+    target: containerRef,
+    designWidth: options.designWidth,
+    designHeight: options.designHeight,
   })
-  const ready = shallowRef(false)
-
-  let observer: ResizeObserver | undefined
-  let frame: number | undefined
-
-  function cancelFrame(): void {
-    if (frame === undefined)
-      return
-    if (typeof cancelAnimationFrame === 'function')
-      cancelAnimationFrame(frame)
-    else
-      clearTimeout(frame)
-    frame = undefined
-  }
-
-  function commit(): void {
-    frame = undefined
-    const el = containerRef.value
-    if (!el)
-      return
-    result.value = computeFullScreenScale(
-      el.clientWidth,
-      el.clientHeight,
-      options.designWidth(),
-      options.designHeight(),
-    )
-    ready.value = true
-  }
-
-  function measure(): void {
-    cancelFrame()
-    frame = typeof requestAnimationFrame === 'function'
-      ? requestAnimationFrame(commit)
-      : setTimeout(commit, 16) as unknown as number
-  }
-
-  function observe(target: HTMLElement | null): void {
-    observer?.disconnect()
-    observer = undefined
-    if (target && typeof ResizeObserver !== 'undefined') {
-      observer = new ResizeObserver(measure)
-      observer.observe(target)
-    }
-    measure()
-  }
-
-  watch(containerRef, observe)
-
-  onMounted(() => {
-    observe(containerRef.value)
-    if (typeof window !== 'undefined' && typeof ResizeObserver === 'undefined')
-      window.addEventListener('resize', measure)
-  })
-
-  onBeforeUnmount(() => {
-    cancelFrame()
-    observer?.disconnect()
-    observer = undefined
-    if (typeof window !== 'undefined')
-      window.removeEventListener('resize', measure)
-  })
-
   return { result, ready, measure }
 }

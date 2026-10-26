@@ -10,6 +10,7 @@
 | `@lumal/icons` | `packages/icons` | [/packages/icons](/packages/icons) | 同上规则 |
 | `@lumal/icons-vue` | `packages/icons-vue` | [/packages/icons-vue](/packages/icons-vue) | 同上 |
 | `@lumal/charts` | `packages/charts` | [/packages/charts](/packages/charts) | 同上 |
+| `@lumal/viewport` | `packages/viewport` | [/packages/viewport](/packages/viewport) | 同上 |
 | `@lumal/datav` | `packages/datav` | [/packages/datav](/packages/datav) | 同上 |
 | `@lumal/cockpit` | `packages/cockpit` | [/packages/cockpit](/packages/cockpit) | 同上 |
 | `@lumal/vite` | `packages/vite` | [/packages/vite](/packages/vite) | 同上 |
@@ -18,22 +19,28 @@
 
 ## npm 安装
 
-下列命令对应 `0.0.5-beta`，显式指定预发布版本，不依赖 npm 的 `latest` 标签。
-实际可用版本以 registry 和发布工作流为准；开发尚未发布的源码时，按
-[升级验收](/reference/upgrade-verification) 构建并运行独立 tarball 消费测试。
+下列命令对应 `0.0.6-beta`，显式指定预发布版本，不依赖 npm 的 `latest` 标签。
+本版十包已发布并完成 registry 与同次发布产物核验，详见 [发布记录](/reference/npm-release-0.0.6-beta)。
+开发未发布源码时，按 [项目模板](/reference/project-template-guide) 构建并验证本地 tarball，不能以旧包代替新增能力。
 
 ```bash
-pnpm add @lumal/core@0.0.5-beta @lumal/icons@0.0.5-beta @lumal/icons-vue@0.0.5-beta vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
-pnpm add @lumal/charts@0.0.5-beta echarts@^6 vue-echarts@^8   # 可选
-pnpm add @lumal/datav@0.0.5-beta echarts@^6                  # 可选
-pnpm add @lumal/cockpit@0.0.5-beta                           # 可选
-pnpm add -D @lumal/vite@0.0.5-beta
-pnpm add @lumal/vben-compat@0.0.5-beta                       # 迁移
+pnpm add @lumal/core@0.0.6-beta @lumal/icons@0.0.6-beta @lumal/icons-vue@0.0.6-beta vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
+pnpm add @lumal/charts@0.0.6-beta echarts@^6 vue-echarts@^8   # 可选
+pnpm add @lumal/datav@0.0.6-beta                            # 可选，纯装饰无需 ECharts
+pnpm add @lumal/viewport@0.0.6-beta                         # 可选，只有 Vue peer
+pnpm add @lumal/cockpit@0.0.6-beta                          # 可选
+pnpm add -D @lumal/vite@0.0.6-beta
+pnpm add @lumal/vben-compat@0.0.6-beta                      # 迁移
 ```
 
 Pinia 是可选 peer；使用 `createPinia()` 时另装 `pinia@^3.0.3`，框架不会自动创建 Store。图表不再兼容 ECharts 5 / vue-echarts 7；默认主题与布局迁移注意事项见 [更新日志](/reference/changelog)。
 
-只使用 `@lumal/core/minimal` 或 request 等纯服务子入口时，只需安装 Core 和 Vue，无需 Element Plus；消费 UI、图标或 Router 子入口时再安装对应 peer。脚手架本身是带 Element Plus 的后台基座。
+只使用 `@lumal/core/minimal` 或 request 等纯服务子入口时，只需安装 Core 和 Vue，无需 Element Plus；消费 UI、图标或 Router 子入口时再安装对应 peer。
+
+`0.0.6-beta` 提供 Blank/Screen 模板与仅 Vue peer 的 `@lumal/viewport`，
+DataV 的 ECharts peer 为可选；仅 ECharts 图表模式与 `LumalActiveRingChart`
+需要另装 `echarts@^6`。纯数字/边框不需要图表引擎，Blank 默认仅安装 Vue。
+按需依赖见[项目模板](/reference/project-template-guide)及[屏幕适配](/reference/screen-viewport-guide)。
 
 ## 本地 monorepo
 
@@ -71,11 +78,11 @@ pnpm add @lumal/core@file:../lumal/packages/core
 
 ## Peer 依赖摘要
 
-以下范围与已发布包的 `peerDependencies` 一致；按实际使用的入口安装，不必为了纯服务入口安装全部 UI peer。
+以下范围与本版包的 `peerDependencies` 一致；按实际使用的入口安装，不必为了纯服务入口安装全部 UI peer。
 
 | 依赖 | 兼容范围 | 使用场景 |
 | --- | --- | --- |
-| `vue` | `^3.5.0` | Core、Vue 图标、Charts、DataV、Cockpit、兼容层 |
+| `vue` | `^3.5.0` | Core、Vue 图标、Charts、Viewport、DataV、Cockpit、兼容层 |
 | `vue-router` | `^4.5.0` | Core 路由与布局接入，可选 peer |
 | `element-plus` | `^2.11.0` | Core / Cockpit UI；Core 中为可选 peer |
 | `pinia` | `^3.0.3` | 应用显式接入 Pinia，Core 可选 peer |

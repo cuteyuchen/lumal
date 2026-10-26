@@ -1,9 +1,12 @@
-import { randomUUID } from 'node:crypto'
-import { readFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
 import { extname, join, resolve, sep } from 'node:path'
 import process from 'node:process'
 import { chromium, expect } from '@playwright/test'
+import { verifyScaffoldNavigation } from './verify-scaffold-navigation.mjs'
+import { verifyScaffoldSystem } from './verify-scaffold-system.mjs'
+
+export { createScaffoldTestApi } from './scaffold-test-api.mjs'
 
 async function listen(server) {
   await new Promise(done => server.listen(0, '127.0.0.1', done))
@@ -14,131 +17,7 @@ async function close(server) {
   await new Promise((done, reject) => server.close(error => error ? reject(error) : done()))
 }
 
-/** 独立消费者的真实网络后端，不替换 fetch；凭据与数据只存在于本轮验收进程。 */
-export async function createScaffoldTestApi() {
-  const sessions = new Map()
-  const refreshes = new Map()
-  const resources = new Map()
-  const state = { failList: false, requests: 0, refreshes: 0 }
-  const permissions = ['user', 'role', 'menu', 'organization', 'dict', 'config']
-    .flatMap(resource => ['list', 'view', 'create', 'update', 'delete', 'authorize'].map(action => `system:${resource}:${action}`))
-  const server = createServer(async (request, response) => {
-    try {
-      state.requests += 1
-      response.setHeader('Access-Control-Allow-Origin', '*')
-      response.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type')
-      response.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
-      if (request.method === 'OPTIONS') {
-        response.writeHead(204)
-        response.end()
-        return
-      }
-      const url = new URL(request.url, 'http://localhost')
-      const [, preset, ...segments] = url.pathname.split('/')
-      const path = `/${segments.join('/')}`
-      let text = ''
-      for await (const chunk of request) text += String(chunk)
-      const input = text ? JSON.parse(text) : {}
-      function send(data, status = 200) {
-        response.writeHead(status, { 'content-type': 'application/json' })
-        response.end(JSON.stringify(data))
-      }
-      function issue(username) {
-        const accessToken = randomUUID()
-        const refreshToken = randomUUID()
-        sessions.set(accessToken, username)
-        refreshes.set(refreshToken, username)
-        return { accessToken, refreshToken }
-      }
-      if (path === '/auth/login') {
-        if (!['admin', 'guest'].includes(input.username) || input.password !== 'integration-pass')
-          return send({ message: '账号或密码不正确' }, 401)
-        return send(issue(input.username))
-      }
-      if (path === '/auth/refresh') {
-        state.refreshes += 1
-        const username = refreshes.get(input.refreshToken)
-        return username ? send(issue(username)) : send({}, 401)
-      }
-      const accessToken = request.headers.authorization?.replace('Bearer ', '')
-      const username = sessions.get(accessToken)
-      if (!username)
-        return send({}, 401)
-      if (path === '/auth/logout') {
-        sessions.delete(accessToken)
-        return send({})
-      }
-      if (path === '/session/me')
-        return send({ id: username, name: username, username })
-      if (path === '/session/access')
-        return send({ roles: [username], permissions: username === 'admin' ? permissions : [] })
-      if (path === '/menus') {
-        // 任一角色可访问的固定页，验证标签与路由守卫的角色语义一致。
-        const menus = [{ path: '/dashboard', name: 'Dashboard', component: 'dashboard/index', meta: { title: '工作台', affixTab: true, keepAlive: true, roles: ['admin', 'guest'] } }]
-        if (preset !== 'minimal') {
-          for (const [resource, code, title] of [['users', 'user', '用户管理'], ['roles', 'role', '角色管理'], ['menus', 'menu', '菜单管理'], ['organizations', 'organization', '机构管理'], ['dictionaries/types', 'dict', '字典管理'], ['dictionaries/items', 'dict', '字典项管理'], ['config', 'config', '系统配置']])
-            menus.push({ path: `/system/${resource}`, name: `System-${resource.replaceAll('/', '-')}`, component: `system/${resource}`, meta: { title, authority: [`system:${code}:${code === 'config' ? 'view' : 'list'}`], keepAlive: true } })
-          menus.push({ path: '/examples/form', name: 'FormExample', component: 'examples/form', meta: { title: 'Schema 表单' } })
-          menus.push({ path: '/examples/crud', name: 'CrudExample', component: 'examples/crud', meta: { title: 'CRUD 示例' } })
-        }
-        if (preset === 'vben-compatible') {
-          menus.push({ path: '/migration/form', name: 'VbenForm', component: 'migration/form', meta: { title: 'Vben 表单迁移' } })
-          menus.push({ path: '/migration/users', name: 'VbenUsers', component: 'migration/users', meta: { title: 'Vben 业务迁移', roles: ['admin'] } })
-        }
-        return send(menus)
-      }
-      const resourceKey = segments.slice(1).join('/')
-      const resource = segments[1] === 'dictionaries' ? segments.slice(1, 3).join('/') : segments[1]
-      if (!resources.has(`${preset}:${resource}`))
-        resources.set(`${preset}:${resource}`, resource === 'users' ? [{ id: '1', username: 'admin', nickname: '管理员', status: 'enabled', roles: ['admin'] }] : [])
-      const rows = resources.get(`${preset}:${resource}`)
-      if (request.method === 'GET' && path.startsWith('/system/')) {
-        if (state.failList)
-          return send({ message: '测试网络失败' }, 503)
-        const keyword = url.searchParams.get('keyword') ?? ''
-        const filtered = rows.filter(row => Object.values(row).some(value => String(value).includes(keyword)))
-        const page = Number(url.searchParams.get('page') ?? 1)
-        const pageSize = Number(url.searchParams.get('pageSize') ?? 10)
-        return send({ items: filtered.slice((page - 1) * pageSize, page * pageSize), total: filtered.length })
-      }
-      if (request.method === 'POST' && path.startsWith('/system/')) {
-        const record = { ...input, id: randomUUID() }
-        rows.push(record)
-        return send(record)
-      }
-      const id = resourceKey.slice(resource.length + 1)
-      const index = rows.findIndex(row => row.id === id)
-      if (index < 0)
-        return send({}, 404)
-      if (request.method === 'PUT') {
-        rows[index] = { ...rows[index], ...input, id }
-        return send(rows[index])
-      }
-      if (request.method === 'DELETE') {
-        rows.splice(index, 1)
-        return send({})
-      }
-      send({}, 404)
-    }
-    catch (error) {
-      response.writeHead(500)
-      response.end(String(error))
-    }
-  })
-  return {
-    url: await listen(server),
-    state,
-    seedUsers(preset) {
-      const key = `${preset}:users`
-      const rows = (resources.get(key) ?? []).filter(row => !String(row.id).startsWith('fixture-'))
-      rows.push(...Array.from({ length: 12 }, (_, index) => ({ id: `fixture-${index}`, username: `fixture-${index}`, nickname: '分页样例', status: 'enabled', roles: ['guest'] })))
-      resources.set(key, rows)
-    },
-    close: () => close(server),
-  }
-}
-
-async function serveProduction(directory) {
+export async function serveProduction(directory) {
   const root = resolve(directory, 'dist')
   const server = createServer(async (request, response) => {
     const path = resolve(root, `.${decodeURIComponent(new URL(request.url, 'http://localhost').pathname)}`)
@@ -172,8 +51,11 @@ export async function verifyScaffoldBrowsers(projects, api, screenshotDirectory)
   const evidence = []
   try {
     for (const project of projects) {
+      if (project.apiMode === 'http')
+        api.reset(project.preset)
       const preview = await serveProduction(project.projectDir)
       const context = await browser.newContext()
+      await context.tracing.start({ screenshots: true, snapshots: true, sources: false })
       const page = await context.newPage()
       const diagnostics = []
       page.on('pageerror', error => diagnostics.push(error.message))
@@ -217,29 +99,16 @@ export async function verifyScaffoldBrowsers(projects, api, screenshotDirectory)
           await page.getByRole('button', { name: '提交', exact: true }).click()
           await expect(page.locator('.el-message--success')).toContainText('保存成功')
           // 通过菜单切页再返回，验证标签与 KeepAlive 保留表单值。
+          await page.getByRole('menuitem', { name: '系统管理', exact: true }).click()
           await page.getByRole('menuitem', { name: '用户管理', exact: true }).click()
+          await expect(page.locator('.lumal-breadcrumb')).toContainText('系统管理')
+          await expect(page.getByRole('tab', { name: '用户管理', exact: true })).toBeVisible()
+          await page.getByRole('menuitem', { name: '开发示例', exact: true }).click()
           await page.getByRole('menuitem', { name: 'Schema 表单', exact: true }).click()
           await expect(page.locator('.el-alert--error')).toHaveCount(0)
           await expect(page.locator('input[name="name"]')).toHaveValue('标准表单验证')
-          await page.goto(path('/system/users'))
-          await page.getByRole('button', { name: '新增', exact: true }).click()
-          const dialog = page.getByRole('dialog')
-          await dialog.locator('input[name="username"]').fill('standard-test')
-          await dialog.locator('input[name="nickname"]').fill('标准用户')
-          await dialog.getByRole('button', { name: '保存', exact: true }).click()
-          await expect(dialog).not.toBeVisible()
-          await page.locator('input[name="keyword"]').fill('standard-test')
-          await page.getByRole('button', { name: '查询', exact: true }).click()
-          const row = page.locator('.el-table__row').filter({ hasText: 'standard-test' })
-          await expect(row).toBeVisible()
-          await row.getByRole('button', { name: '编辑', exact: true }).click()
-          await dialog.locator('input[name="nickname"]').fill('标准用户已编辑')
-          await dialog.getByRole('button', { name: '保存', exact: true }).click()
-          await expect(row).toContainText('标准用户已编辑')
-          await row.getByRole('button', { name: '删除', exact: true }).click()
-          await page.locator('.el-message-box').getByRole('button', { name: '删除', exact: true }).click()
-          await expect(row).toHaveCount(0)
-          await expect(page.locator('.el-message-box')).not.toBeVisible()
+          await verifyScaffoldNavigation(page, path, project.preset)
+          await verifyScaffoldSystem(page, path, project, api)
         }
         if (project.preset === 'vben-compatible') {
           await page.goto(path('/migration/form'))
@@ -339,6 +208,8 @@ export async function verifyScaffoldBrowsers(projects, api, screenshotDirectory)
       }
       catch (error) {
         await page.screenshot({ path: join(screenshotDirectory, `failed-${project.preset}-${project.apiMode}-${project.routerMode}.png`), fullPage: true })
+        await writeFile(join(screenshotDirectory, `failed-${project.preset}-${project.apiMode}-${project.routerMode}.json`), JSON.stringify({ error: String(error), diagnostics, url: page.url() }, null, 2))
+        await context.tracing.stop({ path: join(screenshotDirectory, `failed-${project.preset}-${project.apiMode}-${project.routerMode}.zip`) })
         throw error
       }
       finally {

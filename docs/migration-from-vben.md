@@ -48,6 +48,21 @@ UI 需要 Vue、Element Plus、Core 样式及 `@lumal/vben-compat/style.css`。
 | route.meta.authority/activePath/link/iframeSrc | `adaptVbenRouteMeta/adaptVbenMenus` | 在应用路由边界调用 | authority 是角色，转换为 roles；activePath→activeMenu；iframe 需白名单应用组件 |
 | hideInMenu/title/icon/affixTab/keepAlive/redirect | 元信息映射到 Core 动态菜单/布局 | 保留应用白名单 resolver | 路由测试与生成项目；不包含 Vben 布局和全局 preferences store |
 
+### 支持等级
+
+| 等级 | 当前范围 |
+| --- | --- |
+| 契约内完全兼容 | `[Form, formApi]` / `[Grid, gridApi]` 元组结构、单数 `schema`、顶层 `formOptions`，仅限上表已列出的调用 |
+| 部分兼容 | 表单联动、Grid proxy/分页、列设置、权限及常用插槽；底层是 Lumal 组件和轻量 facade，不是 VXE 实例 |
+| 需要适配 | 显式泛型、后端服务、renderer、复杂布局、自定义弹窗、Vben 状态运行时和事件 payload |
+| 不支持 | VXE 高级编辑/虚拟滚动/全局 renderer、任意控件注册、完整 VeeValidate/Tailwind、嵌套路径和 fieldMappingTime |
+
+`toolbar-actions` 和 `toolbar-tools` 均为具名插槽，当前不注入 VXE 的完整工具栏上下文；
+应通过已获得的 `gridApi` 操作。迁移示例使用 `#toolbar-actions` 放置新增按钮，
+通过真实业务服务完成查询、分页和弹窗 CRUD。不能把“插槽显示正常”等同于完整 VXE 插槽协议兼容。
+系统管理与迁移页面分别位于生成项目的 `modules/system` / `modules/vben-migration`，
+后者拥有自己的 `/migration` 父菜单；不向 Core 注入兼容层。
+
 接口不是同名就等价：`grid` 是明确列出方法的轻量 facade；表单 schema
 不支持 `fieldMappingTime`、任意嵌套路径、任意运行时规则名称。
 国际化、富文本、图表及原生 VXE 页面保留原可选引擎或重构，不进入 Core。
@@ -79,7 +94,7 @@ Grid 命令式 query/reload 失败会拒绝 Promise，这是有意保留的错�
 
 | 原始场景 | 迁移样例 | 迁移等级 |
 | --- | --- | --- |
-| web-ele `views/demos/form/basic.vue`；playground `examples/form/{rules,dynamic}.vue` | 模板 `components/migration/VbenFormExample.vue`、Demo `V5FormExample.vue` | 基础 schema 仅改导入；Zod/动态字段支持声明子集，复杂布局轻微适配 |
+| web-ele `views/demos/form/basic.vue`；playground `examples/form/{rules,dynamic}.vue` | 模板 `modules/vben-migration/components/VbenFormExample.vue`、Demo `V5FormExample.vue` | 基础 schema 仅改导入；Zod/动态字段支持声明子集，复杂布局轻微适配 |
 | playground `examples/vxe-table/form.vue` | 模板 `VbenUsers.vue`、Demo `V5GridExample.vue` | query 分页/表单结构保留；列 renderer 改插槽 |
 | playground `system/user/{list,modules/form}.vue` | 模板 `VbenUsers.vue` 的 Dialog CRUD | 业务服务接线和弹窗由应用重构；不声称 Vben Modal API 兼容 |
 | playground `demos/access/button-control.vue` | 模板权限按钮、Demo `AccessControl` | 替换导入并注入权限 Store |

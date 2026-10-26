@@ -1,5 +1,18 @@
 # create-lumal-admin
 
+## 0.0.6-beta (2026-10-25)
+
+### Minor Changes
+
+- 使用 Clack 键盘向导、功能注册表和创建前摘要确认，保留参数与非交互调用。
+- 按 `app/modules/shared` 组织生成源码；系统管理七页独立实现，开发示例和迁移示例独立分组。
+- 增加模块级强类型服务、角色授权、机构和菜单树、字典缓存、配置表单、工作台和个人中心。
+- 加固远程菜单、外链、iframe 与权限刷新，保留 Local/HTTP 的失败传播和会话隔离。
+- 增加真实 PTY、可选模块组合、生产浏览器业务测试及可复现体积比较。
+- 新增 create-lumal binary 和 Admin/Screen/Blank 项目类型，不发布另一个未经验证的 create-lumal npm 包。
+- Screen 的认证、数据、路由、Charts/DataV/Cockpit 和视口适配按需生成；Blank 默认仅依赖 Vue。
+- 统一 ESLint/Prettier/EditorConfig、测试与 check、分层 AI 开发规范，生成依赖精确同步为 0.0.6-beta。
+
 ## 0.0.5-beta (2026-10-20)
 
 ### Minor Changes

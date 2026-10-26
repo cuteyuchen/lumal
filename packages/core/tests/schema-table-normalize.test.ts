@@ -5,6 +5,17 @@ import {
 } from '../src/components/schema-table'
 
 describe('schema table normalize', () => {
+  it('无field的序号列有稳定内部标识，普通空字段仍过滤', () => {
+    const columns = normalizeSchemaTableColumns([
+      { type: 'index', label: '序号' },
+      { field: '', label: '无效列' },
+      { field: 'name', label: '名称' },
+      { type: 'index', label: '第二序号' },
+    ])
+    expect(columns.map(column => column.field)).toEqual(['__lumal_index__0', 'name', '__lumal_index__3'])
+    expect(resolveSchemaTableCellDisplay({}, columns[0]!, 9)).toEqual({ tags: [], text: '10' })
+  })
+
   it('会过滤空字段，并标记隐藏列不可渲染', () => {
     const columns = normalizeSchemaTableColumns([
       {

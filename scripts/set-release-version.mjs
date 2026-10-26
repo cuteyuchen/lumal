@@ -1,7 +1,7 @@
 /**
  * 统一设置发布版本号。
  *
- * 仓库的 9 个可发布包在 .changeset/config.json 里属于同一个 fixed 组，
+ * 仓库的可发布包在 .changeset/config.json 里属于同一个 fixed 组，
  * 始终同版本发布；apps/* 通过 workspace 引用这些包，也需要同步版本，
  * 否则 pnpm install --frozen-lockfile 会因 specifier 不一致而失败。
  *

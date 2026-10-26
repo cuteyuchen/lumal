@@ -194,8 +194,9 @@ async function createChart(): Promise<void> {
     echartsRef.value = chart
     if (props.group)
       chart.group = props.group
-    applyEChartsOption(props.option)
+    // 静态 setOption 会同步绘制首帧，必须先绑定 rendered/finished 等监听器。
     syncEvents()
+    applyEChartsOption(props.option)
     if (props.loading)
       chart.showLoading(props.loadingType, props.loadingOptions)
   }

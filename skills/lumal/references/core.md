@@ -119,5 +119,10 @@ defineExpose({ reload })
 - 未传 `formSchemas` 时从 columns 派生表单；显式传入会整体替换派生结果。`showInForm`、`showInTable` 分别控制两边。
 - `table-${field}`、`query-${field}`、`form-${field}` 和 `row-actions` 等插槽用于局部定制，不必复制整个 CRUD。
 - CRUD 不自带页面壳，需要页标题或描述时在外面组合 `LumalPage`。
+- `0.0.6-beta` 支持 `{ type: 'index', label: '序号' }` 无业务field列，按分页计算跨页序号，
+  不派生编辑字段、不请求字典；普通列field仍强类型。`SchemaTableColumn`是判别联合，
+  自定义扩展应使用交叉type，而非interface extends联合类型。
+- DataSource的create/update/remove resolve即完成，返回false不是失败；业务失败必须reject，
+  保留编辑器和错误重试。不要机械迁移旧CRUD的boolean saveHandler。
 
 仓库核对位置：`packages/core/src/exports/components.ts`、`packages/core/src/app/types.ts`、`packages/core/src/components/*/types.ts`、`docs/core-api.md`。

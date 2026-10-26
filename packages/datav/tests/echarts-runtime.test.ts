@@ -22,6 +22,32 @@ afterEach(() => {
 })
 
 describe('echarts 6 runtime', () => {
+  it('静态图表的首帧渲染也通知已配置的事件监听器', async () => {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(480)
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(240)
+    const finished = vi.fn()
+    const rendered = vi.fn()
+    const wrapper = mount(LumalCharts, {
+      attachTo: document.body,
+      props: {
+        autoResize: false,
+        events: { finished, rendered },
+        initOptions: { renderer: 'svg' },
+        option,
+      },
+    })
+
+    try {
+      await flushPromises()
+      expect(wrapper.get('svg').attributes('width')).toBe('480')
+      expect(rendered).toHaveBeenCalled()
+      expect(finished).toHaveBeenCalled()
+    }
+    finally {
+      wrapper.unmount()
+    }
+  })
+
   it('真实渲染、更新并在卸载时销毁 ECharts 实例', async () => {
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(480)
     vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(240)

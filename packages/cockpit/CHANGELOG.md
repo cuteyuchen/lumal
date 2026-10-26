@@ -1,5 +1,13 @@
 # @lumal/cockpit
 
+## 0.0.6-beta (2026-10-25)
+
+### Patch Changes
+
+- 复用 @lumal/viewport 的纯缩放算法与尺寸监听，保留 computeCanvasScale 和设计器坐标契约。
+- external 模式由外层负责缩放，不重复注册内部尺寸监听；runtime 与 Designer 继续隔离。
+- 同步 Core、图标及视口依赖至 0.0.6-beta。
+
 ## 0.0.5-beta (2026-10-20)
 
 ### Patch Changes

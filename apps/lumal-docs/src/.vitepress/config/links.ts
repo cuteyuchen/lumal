@@ -53,6 +53,12 @@ export const packageLinks = {
     docs: '/packages/charts',
     npm: env('LUMAL_NPM_CHARTS', 'https://www.npmjs.com/package/@lumal/charts'),
   },
+  viewport: {
+    name: '@lumal/viewport',
+    path: 'packages/viewport',
+    docs: '/packages/viewport',
+    npm: env('LUMAL_NPM_VIEWPORT', 'https://www.npmjs.com/package/@lumal/viewport'),
+  },
   datav: {
     name: '@lumal/datav',
     path: 'packages/datav',

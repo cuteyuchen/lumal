@@ -47,6 +47,14 @@ const page = await request.get<{ items: { id: number }[], total: number }>('/pro
 - 退出/切换上下文调用 `request.clearCache()`；不要把 Token 拼入自定义 cache key，也不要让不同用户共用无身份区分的数据。
 - 旧在途请求在清理后不能重新回填缓存；不要用额外的全局 Map 绕开此生命周期。
 - `clearCache()` 同时解绑共享刷新任务，让新会话不等待旧刷新，但不会自动取消旧网络请求；应用仍须传入会话 signal 并保护刷新结果写入。
+- `0.0.6-beta` 会话隔离：清理/作用域切换后的旧401与旧刷新失败返回 `cancelled/STALE_SESSION`，
+  不触发新身份退出。失效通知按会话版本、scope和实际凭据隔离，连续两次失效会话各自能通知。
+  仅替换Token也隔离刷新锁、迟到写请求及刷新失败；安全GET可使用更新凭据重放一次，
+  退出后不匿名重放。显式或Hook外部Authorization不跟随客户端Token刷新，
+  由对应客户端的应用失效策略处理。
+  成功旧响应仍可能返回给调用者，因此应用侧的 AbortSignal 与结果写入检查不能删除。
+- `ArrayBuffer` 与 TypedArray 作为二进制发送，不 JSON 编码；Multipart 使用 upload 或 FormData，
+  不手动设置 multipart boundary。GET/DELETE 的参数放 query，POST/PUT/PATCH 的业务数据放 body。
 
 ## 字典
 

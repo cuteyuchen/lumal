@@ -1,7 +1,7 @@
 import { resolve } from 'node:path'
 
 export type LumalAliasTarget = 'dist' | 'source'
-export type LumalAliasPackage = 'charts' | 'cockpit' | 'core' | 'datav' | 'icons' | 'icons-vue' | 'vben-compat'
+export type LumalAliasPackage = 'charts' | 'cockpit' | 'core' | 'datav' | 'icons' | 'icons-vue' | 'vben-compat' | 'viewport'
 
 export interface LumalAliasEntry {
   find: string
@@ -22,6 +22,12 @@ interface PackageEntry {
 }
 
 const PACKAGE_ENTRIES: PackageEntry[] = [
+  {
+    dist: 'packages/viewport/dist/index.js',
+    packageName: 'viewport',
+    source: 'packages/viewport/src/index.ts',
+    specifier: '@lumal/viewport',
+  },
   ...['auth', 'components', 'composables', 'dictionary', 'directives', 'layout', 'minimal', 'permission', 'request', 'router', 'theme', 'utils']
     .map(name => ({
       dist: `packages/core/dist/${name}.js`,
@@ -165,7 +171,7 @@ const PACKAGE_ENTRIES: PackageEntry[] = [
 
 export function createLumalAliases(options: CreateLumalAliasesOptions): LumalAliasEntry[] {
   const target = options.target ?? 'source'
-  const includedPackages = new Set(options.packages ?? ['charts', 'cockpit', 'core', 'datav', 'icons', 'icons-vue', 'vben-compat'])
+  const includedPackages = new Set(options.packages ?? ['charts', 'cockpit', 'core', 'datav', 'icons', 'icons-vue', 'vben-compat', 'viewport'])
 
   return PACKAGE_ENTRIES
     .filter(entry => includedPackages.has(entry.packageName))
