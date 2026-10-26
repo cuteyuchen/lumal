@@ -12,7 +12,13 @@ const viewport: ViewportTransformOptions = {
   fontSize: false,
   inlineStyles: true,
   excludeProperties: ['border*', 'margin*'],
-  excludeSelectors: ['.map-panel', '.viewport-fixed', '[data-fixed="yes"]'],
+  excludeSelectors: [
+    '.map-panel',
+    '.viewport-fixed',
+    '[data-fixed="yes"]',
+    '.style-presence-inline[style]',
+    '[style="width: 384px; height: 192px"]',
+  ],
 }
 
 export default defineConfig({

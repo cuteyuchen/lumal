@@ -113,15 +113,21 @@ export function transformViewportTemplate(code: string, id: string, options: Vie
   }
   function selector(element: ElementNode) {
     let value = selectorParser.tag({ value: element.tag }).toString()
+    let presence = value
     let uncertain = false
+    // 静态 style 同时保留值与存在两种表示；绑定仅声明存在，不求值表达式。
+    function append(token: string, presenceToken = token) {
+      value += token
+      presence += presenceToken
+    }
     for (const property of element.props) {
-      if (property.type === NodeTypes.ATTRIBUTE && property.name !== 'style') {
+      if (property.type === NodeTypes.ATTRIBUTE) {
         if (property.name === 'class') {
           for (const name of property.value?.content.split(/\s+/).filter(Boolean) ?? [])
-            value += selectorParser.className({ value: name }).toString()
+            append(selectorParser.className({ value: name }).toString())
         }
         else if (property.name === 'id' && property.value) {
-          value += selectorParser.id({ value: property.value.content }).toString()
+          append(selectorParser.id({ value: property.value.content }).toString())
         }
         else {
           const attribute = selectorParser.attribute({
@@ -133,17 +139,19 @@ export function transformViewportTemplate(code: string, id: string, options: Vie
             attribute.operator = '='
             attribute.setValue(property.value.content, { quoteMark: '"' })
           }
-          value += attribute.toString()
+          append(attribute.toString(), property.name === 'style' ? '[style]' : undefined)
         }
       }
-      if (property.type === NodeTypes.DIRECTIVE && property.name === 'bind'
-        && (!property.arg || property.arg.type !== NodeTypes.SIMPLE_EXPRESSION || !property.arg.isStatic || property.arg.content !== 'style')) {
-        uncertain = true
+      if (property.type === NodeTypes.DIRECTIVE && property.name === 'bind') {
+        if (property.arg?.type === NodeTypes.SIMPLE_EXPRESSION && property.arg.isStatic && property.arg.content === 'style')
+          append('[style]')
+        else
+          uncertain = true
       }
     }
-    return { value, uncertain }
+    return { value, presence, uncertain }
   }
-  function visit(nodes: TemplateChildNode[], ancestors = '') {
+  function visit(nodes: TemplateChildNode[], ancestors = '', presenceAncestors = '') {
     let ignoreNext = false
     for (const node of nodes) {
       if (node.type === NodeTypes.COMMENT && node.content.trim() === 'lumal-viewport-ignore')
@@ -156,8 +164,9 @@ export function transformViewportTemplate(code: string, id: string, options: Vie
       }
       const current = selector(node)
       const path = `${ancestors} ${current.value}`.trim()
+      const presencePath = `${presenceAncestors} ${current.presence}`.trim()
       // 动态选择器属性可能命中排除项，无法证明安全时不猜测最终值。
-      if (excludedSelector(path) || (options.excludeSelectors?.length && current.uncertain))
+      if (excludedSelector(path) || excludedSelector(presencePath) || (options.excludeSelectors?.length && current.uncertain))
         continue
       for (const property of node.props) {
         if (property.type === NodeTypes.ATTRIBUTE && property.name === 'style' && property.value) {
@@ -175,7 +184,7 @@ export function transformViewportTemplate(code: string, id: string, options: Vie
             output.overwrite(property.exp.loc.start.offset, property.exp.loc.end.offset, escapeAttribute(value))
         }
       }
-      visit(node.children, path)
+      visit(node.children, path, presencePath)
     }
   }
   visit(template.ast.children)

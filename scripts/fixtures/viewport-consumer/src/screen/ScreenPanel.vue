@@ -17,6 +17,10 @@ const active = true
     <div class="dynamic-selector-inline" :data-fixed="active ? 'yes' : 'no'" style="width: 192px">
       <i class="dynamic-selector-child" style="height: 96px" />
     </div>
+    <div class="style-presence-inline" :style="{ width: '288px' }">
+      <i class="style-presence-child" style="height: 144px" />
+    </div>
+    <div class="style-value-inline" style="width: 384px; height: 192px" />
     <div class="atomic-inline w-[192px] h-[96px] top-[20px]" aria-label="192px" />
     <!-- eslint-disable-next-line vue/prefer-separate-static-class -->
     <div :class="['w-[192px]', active && 'mt-[20px]']">

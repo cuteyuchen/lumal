@@ -108,6 +108,26 @@ const active = true
     expect(styles(transform(source, { excludeSelectors: ['.runtime-canvas', '[data-fixed="192px"]'] })))
       .toEqual(['width:192px', 'height:96px', 'width:192px', 'width:10vw'])
   })
+  it.each(['[style]', 'div[style]', /\[style\]/])('静态style存在选择器 %s 保护元素及子树', (selector) => {
+    const source = '<template><div style="width:192px"><i style="height:96px" /></div></template>'
+    expect(transform(source, { excludeSelectors: [selector] })).toBe(source)
+  })
+  it('静态style值保留在选择器中，命中祖先时保护子树且不影响后续兄弟', () => {
+    const source = '<template><div style="width:192px"><i style="height:96px" /></div><span style="width:384px" /></template>'
+    expect(styles(transform(source, { excludeSelectors: ['[style="width:192px"]'] })))
+      .toEqual(['width:192px', 'height:96px', 'width:20vw'])
+  })
+  it('style存在选择器可命中祖先路径，而非仅命中当前元素', () => {
+    const source = '<template><div style="width:192px"><i style="height:96px" /></div><span style="width:384px" /></template>'
+    expect(styles(transform(source, { excludeSelectors: ['div[style] i'] })))
+      .toEqual(['width:10vw', 'height:96px', 'width:20vw'])
+  })
+  it.each(['[style]', 'div[style]', /\[style\]/])(':style仅提供属性存在标记供 %s 排除，不求值动态对象', (selector) => {
+    const source = '<template><div :style="{ width: \'192px\', height: measured }"><i style="height:96px" /></div></template>'
+    expect(transform(source, { excludeSelectors: [selector] })).toBe(source)
+    expect(styles(transform(source, { excludeSelectors: ['[style="width:192px"]'] })))
+      .toEqual(['{ width: "10vw", height: measured }', 'height:5vw'])
+  })
   it.each([':class="classes"', ':id="id"', ':data-fixed="fixed"', ':aria-label.prop="label"', 'v-bind="attrs"', ':[name]="value"'])('配置selector排除时动态属性 %s 保守跳过子树', (binding) => {
     const source = `<template><div ${binding} style="width:192px"><i style="height:96px" /></div></template>`
     expect(transform(source, { excludeSelectors: ['.fixed', '[data-fixed="yes"]'] })).toBe(source)
