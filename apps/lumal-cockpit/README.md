@@ -52,7 +52,11 @@ src/
 | 脚本 | 说明 |
 | --- | --- |
 | `pnpm dev` | 启动开发服务器（端口 5180） |
-| `pnpm build` | 类型检查 + 生产构建 |
+| `pnpm build` | 从仓库根编排公共包，再类型检查和生产构建；干净 checkout 推荐入口 |
+| `pnpm build:app` | 内部步骤，要求已执行根目录 `pnpm cockpit:deps`；缺少产物时给出明确错误 |
 | `pnpm preview` | 预览构建产物 |
 | `pnpm typecheck` | 类型检查 |
 | `pnpm test` | 运行单元测试 |
+
+在仓库根目录使用 `pnpm cockpit:build`，或 `pnpm --filter lumal-cockpit build`，两者执行同一完整构建链。
+生产 `preview` 只读取 dist，不启用开发源码 alias。不要用裸 `vite build` 替代包含类型检查的构建命令。

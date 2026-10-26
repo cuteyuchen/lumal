@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "pnpm --workspace-root run cockpit:build",
-    "build:app": "vue-tsc --noEmit -p tsconfig.json && vite build",
+    "build:app": "node ../../scripts/check-cockpit-build-inputs.mjs && vue-tsc --noEmit -p tsconfig.json && vite build",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",
     "test": "vitest run --config vitest.config.ts tests",
     "preview": "vite preview --host 127.0.0.1"
