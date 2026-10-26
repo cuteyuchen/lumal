@@ -47,9 +47,9 @@
 
 | 验证 | 实际命令/环境 | 结果 | 证据 |
 | --- | --- | --- | --- |
-| 全仓库单元测试 | `pnpm test`，Windows / Node 24.14.1 | 1094 通过 | `demo-workspace-tests.log` |
-| 全仓库类型检查 | `pnpm typecheck`，Windows | 通过 | `demo-workspace-typecheck.log` |
-| 全公共包构建 | `pnpm build`，Windows | 通过 | `demo-workspace-build.log` |
+| 全仓库单元测试 | `pnpm test`，Windows / Node 24.14.1，Ubuntu / Node 22.23.3 | 本地功能提交 1094 通过；新增测试后 Ubuntu `9e9e086` 1100 通过 | `demo-workspace-tests.log`、CI `40263504547` / `ci-fast-9e9e086.log` |
+| 全仓库类型检查 | `pnpm typecheck`，Windows + Ubuntu | 通过 | `demo-workspace-typecheck.log`、CI `40263504547` |
+| 全公共包构建 | `pnpm build`，Windows + Ubuntu | 通过 | `demo-workspace-build.log`、CI `40263504547` |
 | Cockpit 最终应用构建 | `pnpm --filter lumal-cockpit build:app` | 通过 | `cockpit-demo-build-polished.log` |
 | Admin 最终应用构建 | `pnpm --filter lumal-admin build` | 通过 | `admin-build-budget-fixed.log` |
 | Admin 生产 E2E | `pnpm test:e2e:release:built`，专用 preview / Chromium，34 用例 | 34 通过 | `admin-e2e-full-verified.log` |
@@ -82,6 +82,13 @@ Designer 复杂拖拽及替换的全组合仍主要由既有公共包测试保�
 trace 保留 DOM / 网络 / 源码，停止持续逐帧截图，显式截图和失败截图仍保留。复测结果另行记录。
 `82e371f` 本地七条全部通过，2.0 分钟；远程双平台复测尚未完成，不能以该本地结果替代。
 
+第二轮 `40263504391`：Ubuntu、Windows 均为 6 通过 / 1 失败，仅 Cesium 首次像素断言失败。
+Ubuntu trace 记录截图取样实际返回 **540 色**，截图及解码约 20.2 秒，
+超过 `expect.poll` 的 20 秒预算，导致已经绘制成功的结果被断言层判为超时。
+修复为先在测试总预算内获取一次真实截图，再直接检查相同的 `>10` 颜色门槛；
+保存 PNG 附件与颜色数量，不再用昂贵截图作为短时轮询的回调。未增加超时、重试或降低像素门槛。
+第二轮 CI 的 lint / format / 单元 / 类型 / 公共包构建已成功；后续浏览器复测另行记录。
+
 ## 包体与依赖
 
 通过 `measureApplication()` 测量入口 HTML 与静态 import 闭包，动态 chunk 不全计入首屏。
@@ -109,6 +116,7 @@ workspace 公共包：Cockpit 增 Viewport，Admin 增 Viewport / DataV / Cockpi
 
 Cockpit 自定义域名的 alias 确认仍指向旧 Deployment，不是本轮产物或 0.0.6-beta 源码。
 当前文档域名直接 HTTP 响应包含 0.0.6-beta；搜索索引缓存可能仍展示旧文案，不作为部署证据。
+同日五个自定义域名均通过只读 HTTP GET 返回 200；这只能证明入口可访问，不证明新示例已上线。
 本轮不调整别名、不部署、不声称线上 E2E 通过；需授权后由受控流程更新站点并比对静态产物。
 
 ## Vercel Preview 配置审计

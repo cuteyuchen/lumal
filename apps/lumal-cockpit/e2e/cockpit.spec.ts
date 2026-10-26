@@ -15,24 +15,26 @@ async function expectFittedStage(page: Page, width: number, height: number): Pro
 
 async function expectPaintedCanvas(page: Page, canvas: Locator): Promise<void> {
   await expect(canvas).toBeVisible()
-  await expect.poll(async () => {
-    const image = await canvas.screenshot({ animations: 'disabled' })
-    return page.evaluate(async (base64) => {
-      const bitmap = new Image()
-      bitmap.src = `data:image/png;base64,${base64}`
-      await bitmap.decode()
-      const target = document.createElement('canvas')
-      target.width = 32
-      target.height = 32
-      const context = target.getContext('2d', { willReadFrequently: true })!
-      context.drawImage(bitmap, 0, 0, 32, 32)
-      const pixels = context.getImageData(0, 0, 32, 32).data
-      const colors = new Set<string>()
-      for (let index = 0; index < pixels.length; index += 4)
-        colors.add(`${pixels[index]},${pixels[index + 1]},${pixels[index + 2]}`)
-      return colors.size
-    }, image.toString('base64'))
-  }).toBeGreaterThan(10)
+  // 软件 GPU 的截图本身可能耗时 20 秒，不应占用轮询断言预算并丢弃已经绘制的结果。
+  const image = await canvas.screenshot({ animations: 'disabled' })
+  await test.info().attach('canvas-pixel-sample', { body: image, contentType: 'image/png' })
+  const colorCount = await page.evaluate(async (base64) => {
+    const bitmap = new Image()
+    bitmap.src = `data:image/png;base64,${base64}`
+    await bitmap.decode()
+    const target = document.createElement('canvas')
+    target.width = 32
+    target.height = 32
+    const context = target.getContext('2d', { willReadFrequently: true })!
+    context.drawImage(bitmap, 0, 0, 32, 32)
+    const pixels = context.getImageData(0, 0, 32, 32).data
+    const colors = new Set<string>()
+    for (let index = 0; index < pixels.length; index += 4)
+      colors.add(`${pixels[index]},${pixels[index + 1]},${pixels[index + 2]}`)
+    return colors.size
+  }, image.toString('base64'))
+  test.info().annotations.push({ type: 'canvas-colors', description: String(colorCount) })
+  expect(colorCount, '真实 Canvas 截图不能是空白或单色占位').toBeGreaterThan(10)
 }
 
 test('默认动画场景、Widget、Tab 折叠与 OpenLayers resize', async ({ browserDiagnostics, page }) => {
