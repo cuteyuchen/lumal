@@ -37,6 +37,8 @@ jobs:
         run: node --version && pnpm --version
       - name: Install frozen dependencies
         run: pnpm install --frozen-lockfile
+      - name: Validate scoped viewport tarball consumer
+        run: pnpm test:vite-consumer
       - name: Build complete Cockpit from clean checkout
         run: pnpm cockpit:build
       - name: Validate package build entry

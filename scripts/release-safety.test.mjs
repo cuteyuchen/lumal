@@ -121,7 +121,7 @@ describe('release dependency graph', () => {
     })).toThrow('不能只跑 smoke')
   })
 
-  it.each(['format:check', 'test:create-projects', 'test:viewport'])('发布脚本不能遗漏 %s', (command) => {
+  it.each(['format:check', 'test:vite-consumer', 'test:create-projects', 'test:viewport'])('发布脚本不能遗漏 %s', (command) => {
     expect(() => verifyReleaseWorkflows(readWorkflows(), {
       ...scripts,
       'release:check': scripts['release:check'].split(' && ').filter(step => step !== `pnpm ${command}`).join(' && '),
@@ -131,6 +131,8 @@ describe('release dependency graph', () => {
   it.each([
     ['ci.yml', 'check', 'format:check'],
     ['release-gate.yml', 'windows-check', 'format:check'],
+    ['release-gate.yml', 'windows-check', 'test:vite-consumer'],
+    ['build-validation.yml', 'demo-production', 'test:vite-consumer'],
     ['build-validation.yml', 'validate', 'test:create-projects'],
     ['build-validation.yml', 'validate', 'test:viewport'],
   ])('%s 不能移除或容错 %s/%s', (file, jobName, command) => {

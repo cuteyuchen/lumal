@@ -169,6 +169,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Validate scoped viewport tarball consumer
+        run: pnpm test:vite-consumer
+
       - name: Typecheck visual fixtures
         run: pnpm exec vue-tsc --noEmit -p packages/datav/tests/visual/tsconfig.json
 
