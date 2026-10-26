@@ -56,6 +56,8 @@ let clickHandler: ScreenSpaceEventHandler | undefined
 let resizeObserver: ResizeObserver | undefined
 let initializeFrame = 0
 let generation = 0
+let removeRenderError: (() => void) | undefined
+let removeContextLost: (() => void) | undefined
 let animationStart = JulianDate.now()
 
 function color(value: string, alpha = 1): Color {
@@ -308,6 +310,10 @@ function indexRegionEntities(current: Viewer, dataSource: GeoJsonDataSource): vo
 }
 
 function destroyViewer(): void {
+  removeRenderError?.()
+  removeRenderError = undefined
+  removeContextLost?.()
+  removeContextLost = undefined
   generation += 1
   cancelAnimationFrame(initializeFrame)
   initializeFrame = 0
@@ -356,8 +362,23 @@ async function initializeViewer(): Promise<void> {
       requestRenderMode: props.reducedMotion,
       maximumRenderTimeChange: props.reducedMotion ? Number.POSITIVE_INFINITY : 0,
       targetFrameRate: 30,
+      showRenderLoopErrors: false,
     })
     viewer = current
+    // Worker / WebGL 的错误可能在初始化 Promise 完成后出现，仍需可见回退与重试。
+    const showRuntimeError = () => {
+      if (!isCurrentViewer(current, currentGeneration))
+        return
+      errorMessage.value = 'Cesium 渲染中断，请检查静态资源或 WebGL 支持后重新加载。'
+      loading.value = false
+      queueMicrotask(() => {
+        if (isCurrentViewer(current, currentGeneration))
+          destroyViewer()
+      })
+    }
+    removeRenderError = current.scene.renderError.addEventListener(showRuntimeError)
+    current.scene.canvas.addEventListener('webglcontextlost', showRuntimeError)
+    removeContextLost = () => current.scene.canvas.removeEventListener('webglcontextlost', showRuntimeError)
 
     animationStart = JulianDate.now()
     current.clock.startTime = JulianDate.clone(animationStart)

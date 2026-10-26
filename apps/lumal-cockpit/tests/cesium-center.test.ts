@@ -11,6 +11,8 @@ const cesiumMocks = vi.hoisted(() => ({
   load: vi.fn(),
   observerDisconnect: vi.fn(),
   requestRender: vi.fn(),
+  renderError: undefined as (() => void) | undefined,
+  removeRenderError: vi.fn(),
   viewer: undefined as any,
   viewerDestroy: vi.fn(),
 }))
@@ -145,6 +147,12 @@ vi.mock('cesium', () => {
         maximumRenderTimeChange: 0,
         pick: vi.fn(),
         requestRender: cesiumMocks.requestRender,
+        renderError: {
+          addEventListener(callback: () => void) {
+            cesiumMocks.renderError = callback
+            return cesiumMocks.removeRenderError
+          },
+        },
         requestRenderMode: false,
         screenSpaceCameraController: { maximumZoomDistance: 0, minimumZoomDistance: 0 },
       }
@@ -212,6 +220,21 @@ function createDeferred<T>() {
 }
 
 describe('cesium 中央地图', () => {
+  it('初始化后的渲染错误显示可重试状态并清理观察器与事件', async () => {
+    const wrapper = mount(CesiumCenter, {
+      props: { selectedIds: [], focusedId: '', reducedMotion: true },
+    })
+    await flushPromises()
+    cesiumMocks.renderError!()
+    await flushPromises()
+    expect(wrapper.get('[role="alert"]').text()).toContain('Cesium 渲染中断')
+    expect(cesiumMocks.removeRenderError).toHaveBeenCalled()
+    expect(cesiumMocks.observerDisconnect).toHaveBeenCalled()
+    await wrapper.get('[role="alert"] button').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
   beforeEach(() => {
     vi.clearAllMocks()
     cesiumMocks.clickCallback = undefined

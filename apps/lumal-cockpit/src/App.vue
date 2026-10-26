@@ -151,7 +151,7 @@ onBeforeUnmount(() => {
         v-model:active-layout-id="activeLayoutId"
         v-model:auto-refresh-enabled="autoRefreshEnabled"
         auto-refresh
-        :auto-refresh-interval-ms="30000"
+        :auto-refresh-interval-ms="60000"
         :card-component="CockpitCard"
         :config="config"
         :registry="standaloneCockpitRegistry"

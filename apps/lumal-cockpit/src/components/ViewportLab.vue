@@ -71,7 +71,7 @@ label { display: grid; gap: 6px; font-size: 14px; }
 select, input, button { padding: 8px; border: 1px solid var(--el-border-color); border-radius: 4px; background: var(--el-bg-color); color: inherit; font: inherit; }
 input { width: 120px; }
 .viewport-lab__scroll { overflow: auto; }
-.viewport-lab__host { max-width: 100%; border: 1px solid var(--el-border-color); }
+.viewport-lab__host { max-width: 100%; outline: 1px solid var(--el-border-color); }
 .viewport-lab__canvas { box-sizing: border-box; display: flex; flex-direction: column; gap: 24px; height: 100%; padding: 24px; background: #12232a; color: #eaf6f8; font-size: 18px; }
 header { display: flex; justify-content: space-between; gap: 16px; font-size: 24px; }
 header span { color: #82d5b1; font-size: 14px; }
