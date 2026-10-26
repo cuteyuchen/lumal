@@ -15,7 +15,7 @@ async function expectFittedStage(page: Page, width: number, height: number): Pro
   }).toBe(true)
 }
 
-async function expectPaintedCanvas(canvas: Locator, sampleOnly = false): Promise<void> {
+async function captureCanvas(canvas: Locator, sampleOnly = false): Promise<Buffer> {
   await expect(canvas).toBeVisible()
   // 软件 GPU 的截图本身可能耗时 20 秒，不应占用轮询断言预算并丢弃已经绘制的结果。
   let image: Buffer
@@ -30,6 +30,10 @@ async function expectPaintedCanvas(canvas: Locator, sampleOnly = false): Promise
     image = await canvas.screenshot({ animations: 'disabled' })
   }
   await test.info().attach('canvas-pixel-sample', { body: image, contentType: 'image/png' })
+  return image
+}
+
+function expectCanvasColors(image: Buffer): void {
   const analysisStarted = performance.now()
   const colorCount = countCanvasColors(image)
   test.info().annotations.push(
@@ -48,7 +52,7 @@ test('默认动画、真实画布与 Widget 交互', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { name: '全国智慧运行态势' })).toBeVisible()
   await expect(page.locator('.metric-summary__grid')).toBeVisible()
-  await expectPaintedCanvas(page.locator('.echarts-geo-center canvas').first())
+  expectCanvasColors(await captureCanvas(page.locator('.echarts-geo-center canvas').first()))
   await page.getByRole('tab', { name: '区域状态分布', exact: false }).click()
   await expect(page.locator('.status-distribution')).toBeVisible()
   await page.locator('[data-action="collapse-left"]').click()
@@ -90,7 +94,7 @@ test('独立场景交互与 OpenLayers 原实例 resize 和释放', async ({ bro
   expect(failed).toEqual([])
 })
 
-test('Cesium 资源、像素与原实例 resize', async ({ page }) => {
+test('Cesium 资源与原实例 resize', async ({ page }) => {
   // 使用应用已有的按需绘制策略，避免 CI 软件 GPU 持续重绘挤占输入和截图。
   await page.emulateMedia({ reducedMotion: 'reduce' })
   const failed: string[] = []
@@ -106,7 +110,6 @@ test('Cesium 资源、像素与原实例 resize', async ({ page }) => {
   await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
   await expect(page.locator('.cesium-widget canvas')).toBeVisible()
   await expect(page.locator('.cesium-center [role="alert"]')).toHaveCount(0)
-  await expectPaintedCanvas(page.locator('.cesium-widget canvas'))
   const cesium = await page.locator('.cesium-widget canvas').elementHandle()
   await page.setViewportSize({ width: 1440, height: 900 })
   await expectFittedStage(page, 1440, 900)
@@ -116,6 +119,19 @@ test('Cesium 资源、像素与原实例 resize', async ({ page }) => {
   await page.getByRole('tab', { name: 'ECharts', exact: true }).click()
   await expect(page.locator('.cesium-widget')).toHaveCount(0)
   expect(failed).toEqual([])
+})
+
+test('Cesium 全幅真实像素与退出清理', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  await page.getByRole('tab', { name: 'Cesium', exact: true }).click()
+  await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
+  await expect(page.locator('.cesium-center [role="alert"]')).toHaveCount(0)
+  // 保留默认设计尺寸的全幅采样，但不让软件 GPU 与同步 PNG 解码争用 CPU。
+  const image = await captureCanvas(page.locator('.cesium-widget canvas'))
+  await page.getByRole('tab', { name: 'ECharts', exact: true }).click()
+  await expect(page.locator('.cesium-widget')).toHaveCount(0)
+  expectCanvasColors(image)
 })
 
 test('Cesium 中断重试、真实像素与退出清理', async ({ page }) => {
@@ -136,11 +152,12 @@ test('Cesium 中断重试、真实像素与退出清理', async ({ page }) => {
   await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
   await expect(page.locator('.cesium-widget canvas')).toBeVisible()
   await expect(page.locator('.cesium-center [role="alert"]')).toHaveCount(0)
-  // 全幅与 resize 由上一用例验证；恢复采样中央真实地图，不用 Widget 颜色证明重绘成功。
-  await expectPaintedCanvas(page.locator('.cesium-widget canvas'), true)
+  // 全幅与 resize 由独立用例验证；恢复采样中央真实地图，不用 Widget 颜色证明重绘成功。
+  const image = await captureCanvas(page.locator('.cesium-widget canvas'), true)
   await page.getByRole('tab', { name: '独立场景', exact: true }).click()
   await expect(page.getByRole('img', { name: '中性场景区域预览' })).toBeVisible()
   await expect(page.locator('.cesium-widget')).toHaveCount(0)
+  expectCanvasColors(image)
   expect(failed).toEqual([])
 })
 
