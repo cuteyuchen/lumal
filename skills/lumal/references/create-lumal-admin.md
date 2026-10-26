@@ -27,6 +27,10 @@ DataV数字/边框不安装ECharts。`--viewport disabled|responsive|contain|wid
 与项目类型独立，非默认适配使用 [视口](viewport.md)；Admin不接受Screen专属参数。
 非Admin不能叠Admin base，不能靠先生成再删除无用文件实现轻量。
 
+未发布的Screen视口模板将设计尺寸和运行时策略集中到根 `viewport.config.ts`，
+供运行时包装器和按需接入的 `@lumal/vite` 共享；不会默认安装构建插件或双重缩放。
+已发布旧CLI不包含这项模板调整，验证时使用候选tarball。
+
 新项目均生成独立ESLint/Prettier/EditorConfig、AI规范和统一check。
 首次install生成lockfile，再frozen复装；完成前运行 `pnpm check`。
 `pnpm test:create-projects`覆盖14组独立消费者；旧Admin矩阵继续保留。

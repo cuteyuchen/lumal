@@ -108,7 +108,7 @@ export async function composeProjectTemplates(options: ResolvedScreenOptions): P
     files.set(entryPath, files.get(entryPath)!
       .replace('import ScreenView from \'./ScreenView.vue\';', 'import ScreenView from \'./ScreenView.vue\';\nimport ScreenViewport from \'./ScreenViewport.vue\';')
       .replace('    <ScreenView />', '    <ScreenViewport>\n      <ScreenView />\n    </ScreenViewport>'))
-    files.set('src/screen/ScreenViewport.vue', files.get('src/screen/ScreenViewport.vue')!
+    files.set('viewport.config.ts', files.get('viewport.config.ts')!
       .replace('/* VIEWPORT_MODE */ \'contain\'', `'${options.viewport === 'scale' ? 'contain' : options.viewport}'`))
   }
   const conventions = options.template === 'blank'

@@ -6,6 +6,8 @@ import picomatch from 'picomatch'
 import { parse } from 'postcss'
 import loadPostcssConfig from 'postcss-load-config'
 import valueParser from 'postcss-value-parser'
+import { createViewportCssTransformer } from './viewport-css'
+import { transformViewportTemplate } from './viewport-template'
 
 export interface ViewportTransformOptions {
   /** 必须显式开启；不设置时不修改配置。 */
@@ -17,7 +19,18 @@ export interface ViewportTransformOptions {
   precision?: number
   /** 默认保留 <=1px，避免细边框消失。 */
   minPixelValue?: number
+  /** CSS 属性 glob 白名单，默认全部；空数组表示不转换任何属性。 */
+  includeProperties?: string[]
+  /** CSS 属性 glob 黑名单，优先于白名单和各类属性开关。 */
+  excludeProperties?: string[]
+  /** 字符串按选择器子串匹配；任一分组或祖先规则命中时整条声明保留。 */
+  excludeSelectors?: (string | RegExp)[]
+  /** 独立启用 Vue 模板 style/:style 的静态分析，默认 false；从不扫描脚本。 */
+  inlineStyles?: boolean
+  /** 默认同时保留 font-size、font 和 line-height。 */
   fontSize?: boolean
+  /** 默认保留 min-width/min-height 及对应逻辑属性，显式 true 才转换。 */
+  minSize?: boolean
   customProperties?: boolean
   /** 默认排除全部依赖；仅此处显式列出的包可以转换。 */
   dependencies?: string[]
@@ -61,14 +74,7 @@ function createSourceFilter(options: ViewportTransformOptions, root: string) {
 }
 
 function createPostcssPlugin(options: ViewportTransformOptions, root: string, sourceAllowed?: (id: string) => boolean): PostcssPlugin {
-  const viewportWidth = options.viewportWidth ?? 1920
-  const precision = options.precision ?? 6
-  if (!(viewportWidth > 0) || !Number.isFinite(viewportWidth))
-    throw new Error('viewportWidth 必须为正数')
-  if (!Number.isInteger(precision) || precision < 0 || precision > 10)
-    throw new Error('precision 必须为0到10的整数')
-  if (options.enabled && !options.include?.length)
-    throw new Error('视口转换必须显式指定 include 范围')
+  const transformDeclaration = createViewportCssTransformer(options)
   const included = createSourceFilter(options, root)
   function originalSource(declaration: Declaration): string | undefined {
     const source = declaration.source
@@ -91,26 +97,8 @@ function createPostcssPlugin(options: ViewportTransformOptions, root: string, so
   return {
     postcssPlugin: 'lumal-scoped-viewport',
     Declaration(declaration) {
-      if (!included(originalSource(declaration))
-        || (!options.customProperties && declaration.prop.startsWith('--'))
-        || (!options.fontSize && /^(?:font|font-size)$/i.test(declaration.prop))) {
-        return
-      }
-      const parsed = valueParser(declaration.value)
-      let changed = false
-      parsed.walk((node) => {
-        if (node.type === 'function' && /^(?:url|var)$/i.test(node.value))
-          return false
-        if (node.type !== 'word' || !/^-?(?:\d+(?:\.\d*)?|\.\d+)px$/i.test(node.value))
-          return
-        const pixels = Number.parseFloat(node.value)
-        if (Math.abs(pixels) <= (options.minPixelValue ?? 1))
-          return
-        node.value = `${Number((pixels / viewportWidth * 100).toFixed(precision))}vw`
-        changed = true
-      })
-      if (changed)
-        declaration.value = parsed.toString()
+      if (included(originalSource(declaration)))
+        transformDeclaration(declaration)
     },
   }
 }
@@ -162,10 +150,14 @@ export function createViewportTransformPlugin(options: ViewportTransformOptions)
     name: 'lumal-scoped-viewport',
     enforce: 'pre',
     transform(code, id) {
+      if (options.inlineStyles && included(id) && /\.vue$/i.test(id))
+        return transformViewportTemplate(code, id, options)
       const language = preprocessorLanguage(id)
-      if (!included(id) || !language)
+      const cssStyle = /[?&]lang\.css(?:&|$)/i.test(id)
+      if (!included(id) || (!language && !cssStyle))
         return
-      const safe = preambles.get(language) !== false && !hasUntrackedImports(code, id)
+      // 普通 SFC CSS 也按块登记，不能被同组件的混合 SCSS 安全状态连带否决。
+      const safe = !language || (preambles.get(language) !== false && !hasUntrackedImports(code, id))
       const path = normalize(id)
       const styles = sources.get(path) ?? new Map<string, boolean>()
       styles.set(styleIndex(id), safe)

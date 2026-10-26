@@ -1,0 +1,8 @@
+{
+  "name": "viewport-widget",
+  "version": "1.0.0",
+  "exports": {
+    ".": "./style.css",
+    "./style.css": "./style.css"
+  }
+}

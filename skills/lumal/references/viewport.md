@@ -19,6 +19,20 @@
 图表按实际容器resize。浮层协调宽高，局部滚动；行业尺寸与mapPadding留业务层。
 Teleport到body的UI独立于设计画布。Cockpit放入缩放容器时必须使用external。
 
+## 与构建转换协作
+
+未发布源码的Screen视口模板把 `viewportDesign/viewportPolicy` 集中到项目根
+`viewport.config.ts`。这是不导入Vue/Vite的普通项目配置，不是新公共API，
+也不默认安装或启用 `@lumal/vite`。
+运行时policy展开同一designWidth/designHeight，Vite用
+`viewportWidth: viewportDesign.designWidth`，避免分别维护设计宽度。
+
+全局、页面和局部容器测量继续由现有API决定；构建和测量可独立开启。
+responsive仅测量时可以协作，但contain/width整体缩放画布必须从构建转换范围排除。
+构建vw相对浏览器视口，运行时vw模式提供的px单位相对实际容器，不能当成同一坐标系。
+Vite会保留变量与已有适配表达式，但无法自动推断任意外部/跨组件transform；
+应用仍须显式排除画布目录、选择器或声明。详见 [构建辅助](vite.md)。
+
 完整示例见仓库 docs/screen-viewport-guide.md；隔离真实浏览器夹具位于apps/lumal-viewport-lab。
 
 Admin 的 `examples/ViewportView.vue` 演示默认/路由/容器策略，`viewport/ViewportCanvas.vue`

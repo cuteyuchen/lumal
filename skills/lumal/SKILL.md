@@ -30,7 +30,7 @@ metadata:
 | 驾驶舱左右区域编排、模块注册、多布局、可视化设计 | `@lumal/cockpit` | [驾驶舱](references/cockpit.md) |
 | 不依赖 Vue 的图标注册、SVG 处理、Data URI、可选状态形变 | `@lumal/icons`、`@lumal/icons/morph` | [图标内核](references/icons.md) |
 | Vue 图标组件、选择器、响应式图标注册表 | `@lumal/icons-vue` | [Vue 图标](references/icons-vue.md) |
-| Vite resolver、Lumal 仓库源码 alias、可选 Devtools | `@lumal/vite` | [构建辅助](references/vite.md) |
+| 受控 CSS/行内样式视口转换、Vite resolver、源码 alias、可选 Devtools | `@lumal/vite` | [构建辅助](references/vite.md) |
 | 迁移 Vben 5 页面或旧 Lumal 适配代码 | `@lumal/vben-compat/v5` 或 `/legacy` | [Vben 迁移](references/vben-compat.md) |
 | 修改包源码、公共 API、脚手架模板、发布边界 | 对应包及受影响消费者 | [仓库维护](references/repository.md)，再读相应分包参考 |
 

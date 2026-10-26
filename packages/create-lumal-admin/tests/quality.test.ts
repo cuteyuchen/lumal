@@ -34,8 +34,13 @@ describe('生成工程的格式契约', () => {
     }
   })
 
-  it.each(['blank', 'screen'] as const)('%s 输出符合公共格式且无 Admin 规范', async (template) => {
-    const options = resolveProjectOptions({ template, name: 'quality-test', targetDir: 'unused' })
+  it.each([
+    { template: 'blank' },
+    { template: 'screen' },
+    { template: 'screen', viewport: 'contain' },
+    { template: 'screen', viewport: 'vw' },
+  ] as const)('%j 输出符合公共格式且无 Admin 规范', async (input) => {
+    const options = resolveProjectOptions({ ...input, name: 'quality-test', targetDir: 'unused' })
     if (options.template === 'admin')
       throw new Error('预期非 Admin 模板')
     for (const file of await composeProjectTemplates(options)) {

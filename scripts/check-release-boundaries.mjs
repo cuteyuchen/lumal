@@ -269,7 +269,7 @@ assert(!hasDependency(datavPackage, 'optionalDependencies', 'vue'), '@lumal/data
 for (const forbiddenName of ['@lumal/cockpit', '@lumal/charts', 'element-plus', '@jiaminghi/data-view', '@jiaminghi/c-render']) {
   assert(!datavAllDependencies.has(forbiddenName), `@lumal/datav 不能依赖 ${forbiddenName}`)
 }
-assert([...viteAllDependencies].every(name => ['picomatch', 'postcss', 'postcss-load-config', 'postcss-value-parser'].includes(name)), '@lumal/vite 仅允许受控 CSS 转换所需的构建期解析依赖')
+assert([...viteAllDependencies].every(name => ['@vue/compiler-dom', '@vue/compiler-sfc', 'picomatch', 'postcss', 'postcss-load-config', 'postcss-selector-parser', 'postcss-value-parser'].includes(name)), '@lumal/vite 仅允许受控 CSS/模板转换所需的构建期解析依赖')
 
 /***********************@lumal/cockpit 依赖边界*********************/
 const cockpitAllDependencies = getDependencyNames(cockpitPackage, [

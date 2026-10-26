@@ -1,18 +1,11 @@
 <script setup lang="ts">
 import { LumalViewport } from '@lumal/viewport';
-
-/***********************只适配实际内容区，登录栏独立占位*********************/
-const policy = {
-  mode: /* VIEWPORT_MODE */ 'contain',
-  designWidth: 1920,
-  designHeight: 1080,
-  minFontSize: 12,
-} as const;
+import { viewportPolicy } from '../../viewport.config';
 </script>
 
 <template>
   <div class="screen-viewport">
-    <LumalViewport :policy="policy">
+    <LumalViewport :policy="viewportPolicy">
       <slot />
     </LumalViewport>
   </div>

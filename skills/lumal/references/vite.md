@@ -48,15 +48,55 @@ export default defineConfig({
 
 `resolveLumalDevtoolsPlugin({ enabled, factory })` 只在开启时调用 factory，Devtools 实现由应用安装并提供。关闭时返回 `undefined`，按 Vite 插件列表用法处理。
 
-`0.0.6-beta` 提供 `createViewportTransformPlugin`，默认关闭；必须显式 enabled/include，
-例如 `include: ['src/screen/**']`。Dev/Build共用PostCSS，不扫描JS数字/字符串或模板内联style。
-默认不处理node_modules、font/font-size和自定义属性；依赖只通过精确包名白名单加入。
-保留已有PostCSS配置；不转换URL和已有vw；不要与同一画布transform叠加。
-预处理source map可用时按声明原址判断；无可靠map的跨文件Sass导入、
-无法解析语法或函数additionalData使该style整体跳过并警告，不能按Screen入口
-批准第三方/Shared/Admin输出。将外部样式与Screen声明拆开；纯SCSS或独立安全
-style仍可转换。低层PostCSS入口处理预编译SCSS/SFC也需要原始map。
-这不是全局px-to-viewport开关，不应用到后台或地图样式。
 本包不强制安装 Devtools、自动导入或打包完整行业预设。静态 SVG 插件属于 `@lumal/icons/vite`。
+
+## 视口转换
+
+`0.0.6-beta` 已提供 `createViewportTransformPlugin` / `createViewportPostcssPlugin`；
+以下精细控制、行内样式和原子化保护属于未发布源码，须使用候选 tarball，
+不能用历史 registry 包验证。默认关闭，启用必须明确 `include`，例如 `src/screen/**`。
+
+```ts
+import { createViewportTransformPlugin } from '@lumal/vite'
+
+const viewport = createViewportTransformPlugin({
+  enabled: true,
+  include: ['src/screen/**'],
+  exclude: ['src/screen/canvas/**', '**/map/**'],
+  viewportWidth: 1920,
+  fontSize: false,
+  minSize: false,
+  includeProperties: ['width', 'height', 'padding*', '*gap'],
+  excludeProperties: ['border*', 'margin*'],
+  excludeSelectors: ['.runtime-canvas', /\.el-(?:dialog|popper)\b/],
+  inlineStyles: false,
+})
+```
+
+- 属性使用 CSS 连字符形式与 glob；白名单默认全部，`[]` 不转换，黑名单始终优先。
+- `fontSize:false` 同时保留 font/font-size/line-height；minSize默认false，保护物理及逻辑最小宽高。
+  白名单不绕过这些开关。边框、间距按属性名单独立控制；<=1px默认保留。
+- 默认保留自定义属性，`--lumal-viewport-*` 始终保留。含var/env/attr/min/max/clamp、
+  已有视口/容器/字体相对单位的整条声明保留，不转换表达式旁的px。
+- `excludeSelectors` 字符串按子串、正则按选择器匹配，分组或嵌套祖先命中则整条声明保留。
+  紧邻前置 `/* lumal-viewport-ignore-next */` 或后置 `/* lumal-viewport-ignore */`
+  保护单条声明；Sass压缩时使用 `/*! ... */`。
+- `inlineStyles:true` 才用Vue模板AST+CSS AST处理静态style及可静态分析的:style对象/数组。
+  支持无插值模板字符串与CSS fallback字符串数组，不遍历条件/逻辑表达式。
+  动态值不求值；class/:class/aria和其他属性、JS数字/业务字符串不修改。
+  配置selector排除且class/id、data等非style属性动态绑定时，保守跳过该元素子树。
+  模板 `<!-- lumal-viewport-ignore -->` 跳过紧随元素及子树。
+- 原子化任意值class和对应生成CSS规则保留，普通属性选择器不误伤；原子class本身不阻止显式inline style转换。
+- Dev/Build共用转换规则，保留已有PostCSS配置、source map和文件边界。
+  node_modules默认排除，仅精确包名dependencies白名单允许加入。
+  无可靠map的跨文件Sass导入、无法解析语法或函数additionalData让该style跳过并警告；
+  独立安全CSS/SCSS块仍可转换。低层PostCSS处理预编译SCSS/SFC也需原始map。
+
+同一内容树不能与运行时contain/width或外部transform双重缩放。无法自动推断跨组件缩放，
+显式排除画布文件/selector/声明。项目级普通 `viewport.config.ts` 可共享设计对象：
+运行时policy展开designWidth/designHeight，Vite使用viewportWidth=designWidth；
+不增加两个包间依赖。构建vw相对浏览器，运行时单位相对真实容器。
+Admin/地图/Teleport浮层不要纳入宽泛转换；ECharts与动态尺寸继续显式使用运行时API。
+新选项默认关闭或保守保护，旧最小尺寸如需继续缩放必须显式minSize:true。
 
 仓库核对位置：`packages/vite/src/{index,component-resolver,aliases,devtools,viewport-transform}.ts`。
