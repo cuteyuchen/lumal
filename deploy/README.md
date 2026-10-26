@@ -59,7 +59,11 @@ Install Command 统一使用：
 pnpm install --frozen-lockfile
 ```
 
-Node.js 使用 22，pnpm 使用 `package.json` 中声明的 10.33.0。
+CI 与 Release Gate 使用 Node.js 22，pnpm 使用 `package.json` 中声明的 10.33.0；
+仓库 `engines.node` 的最低要求为 22.12.0。
+2026-10-27 只读核对时，六个 Vercel 项目的 `nodeVersion` 均显式为 `24.x`，
+与 CI 的 Node 22 环境应分别记录，不能将其中一方的通过结果称为另一方的验证。
+本次未修改平台 Node 配置；后续若调整版本，仍须核对精确提交的构建及公开资源。
 
 五站点沿用现有 Vercel Project，公开链接统一使用上表中的自定义域名；Cloudflare 使用 DNS-only CNAME，不负责产物托管。不使用受登录保护的部署长域名作为文档入口。
 
