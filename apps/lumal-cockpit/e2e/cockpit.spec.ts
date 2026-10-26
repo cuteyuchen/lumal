@@ -5,7 +5,7 @@ import { expect, test } from '../../lumal-admin/e2e/fixtures'
 async function expectPaintedCanvas(page: Page, canvas: Locator): Promise<void> {
   await expect(canvas).toBeVisible()
   await expect.poll(async () => {
-    const image = await canvas.screenshot()
+    const image = await canvas.screenshot({ animations: 'disabled' })
     return page.evaluate(async (base64) => {
       const bitmap = new Image()
       bitmap.src = `data:image/png;base64,${base64}`
@@ -24,16 +24,13 @@ async function expectPaintedCanvas(page: Page, canvas: Locator): Promise<void> {
   }).toBeGreaterThan(10)
 }
 
-test('默认场景、引擎切换与 resize 保留同一地图实例', async ({ browserDiagnostics, page }) => {
+test('默认动画场景、Widget、Tab 折叠与 OpenLayers resize', async ({ browserDiagnostics, page }) => {
   // OpenLayers 命中检测触发的浏览器性能建议，不是资源或执行错误；不放宽其他警告。
   browserDiagnostics.allowConsoleWarning('Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently')
   const failed: string[] = []
-  const workers: string[] = []
   page.on('response', (response) => {
     if (response.status() >= 400)
       failed.push(`${response.status()} ${response.url()}`)
-    if (response.url().includes('/cesiumStatic/Workers/'))
-      workers.push(response.url())
   })
   await page.goto('/')
   await expect(page.getByRole('heading', { name: '全国智慧运行态势' })).toBeVisible()
@@ -55,8 +52,26 @@ test('默认场景、引擎切换与 resize 保留同一地图实例', async ({ 
   // 中央内容是全幅底图；点击中部实际空白区域，避开覆盖在两侧的模块。
   const bounds = await openlayers.boundingBox()
   await page.mouse.click(bounds!.x + bounds!.width / 2, bounds!.y + bounds!.height / 2)
-  await page.setViewportSize({ width: 1920, height: 1080 })
+  await page.getByRole('tab', { name: 'ECharts', exact: true }).click()
+  await expect(openlayers).toHaveCount(0)
+  await expect(page.locator('.echarts-geo-center canvas').first()).toBeVisible()
+  expect(failed).toEqual([])
+})
+
+test('Cesium 资源、像素、原实例 resize、中断重试与独立场景', async ({ page }) => {
+  // 使用应用已有的按需绘制策略，避免 CI 软件 GPU 持续重绘挤占输入和截图。
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  const failed: string[] = []
+  const workers: string[] = []
+  page.on('response', (response) => {
+    if (response.status() >= 400)
+      failed.push(`${response.status()} ${response.url()}`)
+    if (response.url().includes('/cesiumStatic/Workers/'))
+      workers.push(response.url())
+  })
+  await page.goto('/')
   await page.getByRole('tab', { name: 'Cesium', exact: true }).click()
+  await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
   await expect(page.locator('.cesium-widget canvas')).toBeVisible()
   await expect(page.locator('.cesium-center [role="alert"]')).toHaveCount(0)
   await expectPaintedCanvas(page, page.locator('.cesium-widget canvas'))
@@ -64,12 +79,14 @@ test('默认场景、引擎切换与 resize 保留同一地图实例', async ({ 
   await page.setViewportSize({ width: 1440, height: 900 })
   await expect.poll(() => cesium!.evaluate(element => element.isConnected)).toBe(true)
   await expect.poll(() => workers.length).toBeGreaterThan(0)
-  await page.screenshot({ path: 'output/playwright/cockpit-cesium-1440.png' })
+  await page.screenshot({ path: 'output/playwright/cockpit-cesium-1440.png', animations: 'disabled' })
   await page.locator('.cesium-widget canvas').dispatchEvent('webglcontextlost')
   await expect(page.locator('.cesium-center [role="alert"]')).toContainText('Cesium 渲染中断')
   await page.getByRole('button', { name: '重新加载', exact: true }).click()
+  await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
   await expect(page.locator('.cesium-widget canvas')).toBeVisible()
   await expect(page.locator('.cesium-center [role="alert"]')).toHaveCount(0)
+  await expectPaintedCanvas(page, page.locator('.cesium-widget canvas'))
   await page.getByRole('tab', { name: '独立场景', exact: true }).click()
   await expect(page.getByRole('img', { name: '中性场景区域预览' })).toBeVisible()
   await page.locator('.standalone-center__point-button').first().click()
@@ -79,8 +96,8 @@ test('默认场景、引擎切换与 resize 保留同一地图实例', async ({ 
   expect(failed).toEqual([])
 })
 
-test('布局持久化、设计器取消与保存、刷新控制和三种既有视口', async ({ page }) => {
-  await page.clock.install()
+test('布局持久化、设计器取消、名称尺寸保存与刷新恢复', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   await page.getByRole('button', { name: '运行分析', exact: true }).click()
   await page.reload()
@@ -102,6 +119,15 @@ test('布局持久化、设计器取消与保存、刷新控制和三种既有�
     const config = JSON.parse(localStorage.getItem('lumal-cockpit:config')!)
     return config.layouts.find((layout: { id: string }) => layout.id === config.activeLayoutId).left.width
   })).toBe(360)
+})
+
+test('暂停、恢复定时刷新与立即刷新', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.clock.install()
+  await page.goto('/')
+  // 刷新验证不依赖地图动画；仍通过真实按钮与 Widget 状态观察公开刷新行为。
+  await page.getByRole('tab', { name: '独立场景', exact: true }).click()
+  await expect(page.locator('.standalone-center')).toBeVisible()
   await page.getByRole('button', { name: '自动刷新开', exact: true }).click()
   await expect(page.getByRole('button', { name: '自动刷新关', exact: true })).toHaveAttribute('aria-pressed', 'false')
   await page.clock.fastForward(60_000)
@@ -109,12 +135,17 @@ test('布局持久化、设计器取消与保存、刷新控制和三种既有�
   await page.getByRole('button', { name: '自动刷新关', exact: true }).click()
   await page.clock.fastForward(60_000)
   await expect(page.locator('.widget-state').first()).toBeVisible()
-  await page.clock.runFor(300)
+  await page.clock.fastForward(300)
   await expect(page.locator('.widget-state')).toHaveCount(0)
   await page.getByRole('button', { name: '立即刷新模块', exact: true }).click()
   await expect(page.locator('.widget-state').first()).toBeVisible()
-  await page.clock.runFor(300)
+  await page.clock.fastForward(300)
   await expect(page.locator('.widget-state')).toHaveCount(0)
+})
+
+test('三种既有视口与全屏退出', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
   for (const mode of ['vwvh', 'external', 'scale']) {
     await page.getByRole('button', { name: '切换大屏适配模式' }).click()
     await expect(page.locator('.lumal-cockpit')).toHaveAttribute('data-viewport-mode', mode)
@@ -126,7 +157,10 @@ test('布局持久化、设计器取消与保存、刷新控制和三种既有�
 })
 
 test('隔离 Viewport 实验的模式、尺寸、点击热区与窗口 resize', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
+  await page.getByRole('tab', { name: '独立场景', exact: true }).click()
+  await expect(page.locator('.standalone-center')).toBeVisible()
   await page.getByRole('button', { name: '打开视口实验' }).click()
   await expect(page.getByTestId('viewport-lab-metrics')).toContainText('比例 1.000')
   await page.getByLabel('模拟容器', { exact: true }).selectOption('portrait')
@@ -140,11 +174,12 @@ test('隔离 Viewport 实验的模式、尺寸、点击热区与窗口 resize', 
   for (const [width, height] of [[1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]]) {
     await page.setViewportSize({ width, height })
     await expect(page.getByTestId('viewport-lab-metrics')).not.toContainText('容器 0 × 0')
-    await page.screenshot({ path: `output/playwright/cockpit-viewport-${width}.png` })
+    await page.screenshot({ path: `output/playwright/cockpit-viewport-${width}.png`, animations: 'disabled' })
   }
 })
 
 test('配置损坏时可见回退提示和显式恢复', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   await page.evaluate(() => localStorage.setItem('lumal-cockpit:config', '{broken'))
   await page.reload()

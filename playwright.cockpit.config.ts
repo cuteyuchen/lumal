@@ -6,6 +6,7 @@ export default defineConfig({
   outputDir: 'output/playwright/cockpit',
   reporter: [['list'], ['json', { outputFile: 'output/playwright/cockpit-report.json' }]],
   fullyParallel: false,
+  forbidOnly: true,
   workers: 1,
   retries: 0,
   timeout: 90_000,
@@ -18,7 +19,12 @@ export default defineConfig({
       launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] },
     },
   }],
-  use: { baseURL: 'http://127.0.0.1:4182', trace: 'retain-on-failure', screenshot: 'only-on-failure' },
+  use: {
+    baseURL: 'http://127.0.0.1:4182',
+    // DOM/网络 trace 与失败截图保留，不持续抓取软件 GPU 的高分辨率逐帧截图。
+    trace: { mode: 'retain-on-failure', screenshots: false, snapshots: true, sources: true },
+    screenshot: 'only-on-failure',
+  },
   metadata: { productionPreview: true },
   webServer: {
     command: 'node ../../node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 4182 --strictPort',
