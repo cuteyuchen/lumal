@@ -28,7 +28,7 @@ async function expectPaintedCanvas(canvas: Locator): Promise<void> {
   expect(colorCount, '真实 Canvas 截图不能是空白或单色占位').toBeGreaterThan(10)
 }
 
-test('默认动画场景、Widget、Tab 折叠与 OpenLayers resize', async ({ browserDiagnostics, page }) => {
+test('默认动画、独立场景交互、Widget 与 OpenLayers resize', async ({ browserDiagnostics, page }) => {
   // OpenLayers 命中检测触发的浏览器性能建议，不是资源或执行错误；不放宽其他警告。
   browserDiagnostics.allowConsoleWarning('Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently')
   const failed: string[] = []
@@ -46,6 +46,11 @@ test('默认动画场景、Widget、Tab 折叠与 OpenLayers resize', async ({ b
   await expect(page.locator('[data-action="collapse-left"]')).toHaveAttribute('aria-expanded', 'false')
   await page.locator('[data-action="collapse-left"]').click()
 
+  // 普通场景交互归常规引擎切换验证，不与两次 WebGL 初始化共用恢复预算。
+  await page.getByRole('tab', { name: '独立场景', exact: true }).click()
+  await expect(page.getByRole('img', { name: '中性场景区域预览' })).toBeVisible()
+  await page.locator('.standalone-center__point-button').first().click()
+  await expect(page.locator('.standalone-center__status strong')).not.toHaveText('未选择')
   await page.getByRole('tab', { name: 'OpenLayers', exact: true }).click()
   const openlayers = page.locator('.ol-viewport')
   await expect(openlayers).toBeVisible()
@@ -91,7 +96,7 @@ test('Cesium 资源、像素与原实例 resize', async ({ page }) => {
   expect(failed).toEqual([])
 })
 
-test('Cesium 中断重试后的真实像素与独立场景切换', async ({ page }) => {
+test('Cesium 中断重试、真实像素与退出清理', async ({ page }) => {
   // 恢复契约单独初始化，避免把两次软件 GPU 截图串进同一个测试预算。
   await page.emulateMedia({ reducedMotion: 'reduce' })
   const failed: string[] = []
@@ -112,9 +117,6 @@ test('Cesium 中断重试后的真实像素与独立场景切换', async ({ page
   await expectPaintedCanvas(page.locator('.cesium-widget canvas'))
   await page.getByRole('tab', { name: '独立场景', exact: true }).click()
   await expect(page.getByRole('img', { name: '中性场景区域预览' })).toBeVisible()
-  await page.locator('.standalone-center__point-button').first().click()
-  await expect(page.locator('.standalone-center__status strong')).not.toHaveText('未选择')
-  await page.getByRole('tab', { name: 'ECharts', exact: true }).click()
   await expect(page.locator('.cesium-widget')).toHaveCount(0)
   expect(failed).toEqual([])
 })

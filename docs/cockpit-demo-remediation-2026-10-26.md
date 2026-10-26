@@ -9,7 +9,9 @@ GitHub PR 测试使用合并引用 `fa71750a161b8d7ae70a58f0d008e49185c17b93`，
 下文另列外部 Vercel Preview 的失败，不将它隐去。
 这些是 `5779229` 的阶段性证据。后续 `5ec6b86` 复跑在 Windows 出现累计截图超时，
 不是最新提交全部通过；`eb42cb4` 随后的 Windows 复测暴露了刷新用例的模拟时钟竞态，
-已保留失败证据并修复。后续结果通过 PR 检查和附件逐次记录。
+已保留失败证据并修复。`85df390` 的最新主 CI、Ubuntu Demo、Windows DataV 和消费者通过，
+但 Windows 恢复用例再次耗尽总预算，见下方 trace 分析；不以历史通过替代本轮结果。
+后续结果通过 PR 检查和附件逐次记录。
 
 ## 构建基线
 
@@ -145,6 +147,20 @@ trace 中点击后有真实加载态，但读取断言时已消失：`clock.inst
 `cockpit-e2e-paused-clock.log`、`demo-docs-paused-clock.log`。
 第五轮独立消费者、项目模板、既有真实 zoom 和 Windows DataV 视觉也已完成通过，
 不以这些结果抵消 Windows Demo Job 的失败。
+
+第六轮 `85df390`：主 CI `40271473414` 通过，1104 项单元、lint、format、类型、构建和 Linux PTY 均通过。
+Build Validation `40271473416` 的 Ubuntu Demo、Windows DataV、消费者 / 模板 / 真实 zoom 通过，
+Ubuntu Cockpit 八项 / Admin 34 项、文档和原预算通过；Windows 两种完整构建和 24 项应用单测通过，
+Cockpit 为 7 通过 / 1 失败，后续 Admin / 文档 / 预算被跳过。
+证据 `ci-windows-demo-85df390.log` 和 `ci-85df390-windows/` 保留。
+恢复用例 trace 中，上下文创建 10.0 秒、第一次初始化就绪等待 19.45 秒、恢复后的真实截图 39.71 秒；
+PNG 返回 290 色，Node 分析 2585ms，独立场景点击也完成，但再次初始化 ECharts 时耗尽 90 秒。
+因此将独立场景点击移至常规引擎切换用例；恢复用例仍验证可见错误、真实重试、PNG、退出后的实例释放和网络错误。
+不修改应用、像素门槛、trace、90 秒预算或零重试设置，也不删除独立场景的交互断言。
+职责调整后，本地完整生产 E2E 八项通过（1.6 分钟），恢复用例 14.1 秒；
+97 项契约、ESLint 和严格文档构建通过，日志 `cockpit-e2e-recovery-scope.log`、
+`cockpit-recovery-scope-report.json`、`demo-docs-recovery-scope.log`。
+该本地结果不替代跨平台复测；当前提交的最终结果见 PR 检查与附件。
 
 ## 包体与依赖
 
