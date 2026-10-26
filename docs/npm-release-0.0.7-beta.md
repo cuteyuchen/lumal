@@ -166,3 +166,92 @@ SHA256 为 `afd2f874539ad3e86cff8d4ab0b10f9825b3db4cef58800eedc19e95f1a83e7c`。
 两个真实业务仓库保持只读。省级旧消费者原有失败与业务补丁仍以
 [兼容报告](./real-consumer-compatibility.md) 为准，不根据版本号直接宣称补丁均可删除。
 公开 Demo、文档构建与生产部署分别记录，本站点发布仍未执行。
+
+## 发包后文档、Skill 与 Demo 验收
+
+遵循先发包后更新的顺序，后置修改分为两个独立提交：
+
+- `f530075`：同步十包 README、当前指南、文档站、版本检查与仓库 Skill。
+  历史版本事实保留，不全局替换旧版本号。
+- `cffa764`：Admin Header 增加 responsive / contain / width 选择，
+  仅适配实际内容工作区，默认 responsive。使用公开 Viewport API，
+  不改根字号、Header、标签栏、侧栏或权限白名单。
+
+工作区设计尺寸为 1280×720，缩放下限 0.75，可读字号下限 12px。
+正文及 Element Plus 变量显式补偿字号，自有小字通过应用 token 接入；
+这不是对任意第三方固定字号的自动保证。六类可信页面保持 responsive：
+`examples/viewport`、`examples/datav`、`examples/cockpit`、
+`examples/crud-table`、`system/user`、`system/role`。
+前三类避免双重缩放，后三类保留非 Teleport CRUD 编辑器的定位上下文。
+其他系统页的 Select/Dialog 经实际点击验证仍 Teleport 到画布外。
+
+三层包装 DOM 与插槽保持稳定，模式切换不重建 RouterView/KeepAlive 或清空草稿。
+空间不足时使用局部滚动；偏好持久化对损坏或不可用 storage 安全回退。
+应用侧调整未改包源码、manifest 或 lockfile，不需要重发 npm。
+
+### 本地复测
+
+环境为 Windows x64 / Node 24.14.1 / pnpm 10.33.0。
+下表日志均位于 `output/release/`，未把正式 tag 的 CI 结果当作后置提交的验证。
+
+| 验证项 | 实际命令 | 结果 / 日志 |
+| --- | --- | --- |
+| Admin 单元测试 | `pnpm --filter lumal-admin test` | 29 files / 211 tests，`007-postpublish-admin-tests-final.log` |
+| 根脚本测试 | `pnpm test:scripts` | 9 files / 132 tests，`007-postpublish-scripts-tests-final-report.log` |
+| Docs / Skill 专项 | `pnpm exec vitest run --config vitest.config.ts scripts/docs-links.test.ts scripts/lumal-skill.test.ts` | 2 files / 65 tests，`007-postpublish-docs-skill-tests.log` |
+| 全仓 lint / 模板格式 | `pnpm lint`、`pnpm format:check` | 退出 0，`007-postpublish-lint-final.log`、`007-postpublish-format-check.log` |
+| 发布边界 / 工作流 / 版本 | `pnpm release:boundaries`、`pnpm release:workflows`、`pnpm release:verify` | 退出 0；分支版本检查不包含 tag 检查，对应 `007-postpublish-*.log` |
+| 文档构建 | `pnpm docs:build` | 严格链接构建通过，`007-postpublish-docs-build-final-report.log` |
+| Admin 类型及生产构建 | `pnpm --filter lumal-admin build` | vue-tsc 与 Vite 退出 0，`007-postpublish-admin-build-cffa764.log` |
+| 生产浏览器完整回归 | `pnpm test:e2e:release:built` | 38 passed，`007-postpublish-admin-e2e-cffa764.log` |
+| 产物检查 | `node scripts/check-release-artifacts.mjs` | 退出 0，`007-postpublish-artifacts.log` |
+| 全站预算 | `pnpm release:budgets --require-all` | 退出 0，`007-postpublish-budgets-cffa764.log` |
+
+最终生产浏览器回归于北京时间 18:40:05 开始，耗时 127.989 秒：
+expected 38，skipped/unexpected/flaky 均为 0，顶层错误数组为空，没有重试。
+新四项覆盖三模式与持久化、草稿/缓存、局部滚动、六类覆盖及 Teleport 浮层。
+1440×700 时实际工作区为 1132×542，contain 为 0.752778，
+width 为 0.884375，验证高度约束真实生效，不仅断言模式标记。
+
+JSON 报告保留为
+`output/release/007-postpublish-admin-e2e-cffa764-report.json`，
+436,015 bytes，SHA256 为
+`b53df86a7795256e0d142b578d1d698b2f319532d6dd9a13559bc50082178dab`。
+HTML、截图与测量附件分别保留于
+`output/release/007-postpublish-admin-e2e-cffa764-html/`、
+`output/playwright/007-postpublish-cffa764/`。
+
+首次完整回归为 34 passed / 4 failed，新用例错误地假设 Element Plus Dropdown
+暴露 `menuitemradio`。核对已安装实现和 trace 后，改用真实 `menuitem`
+并以 `aria-current` 表示当前模式，保留点击、状态、布局与交互断言；
+没有增加超时、重试或 skip。初始日志与失败现场保留于
+`007-postpublish-admin-e2e.log` 和 `007-workspace-role-baseline/`。
+截图附件禁用过渡动画以固定取证时刻，应用动画与原动画测试仍保留。
+
+### 后置产物与 Skill
+
+| 站点 | 本地首屏 JS gzip bytes / 原上限 | 本地首屏 CSS gzip bytes / 原上限 |
+| --- | ---: | ---: |
+| Admin | 334,341 / 335,000 | 43,032 / 50,000 |
+| Cockpit | 687,530 / 800,000 | 71,268 / 80,000 |
+| DataV Guide | 417,327 / 850,000 | 46,286 / 55,000 |
+| Vben Compat | 285,636 / 300,000 | 40,627 / 45,000 |
+
+Admin 同机改造前基线为 332,865 / 42,797 B，增量为 JS 1,476 B / CSS 235 B。
+不与正式 Ubuntu 产物直接作增量对比；没有新增依赖或提高预算。
+Admin JS 距原预算仅余 659 B，后续示例仍须保持动态加载边界。
+
+仓库 Skill 与本机安装副本已逐文件比对并同步六份知识文件；
+两份 `quick_validate.py` 校验均通过，独立接线审查未发现公开 API 使用障碍。
+本机 Python 默认 GBK，直接运行曾在以 GBK 读取 UTF-8 文件时解码失败；
+显式使用 `python -X utf8 <宿主的 quick_validate.py> <Skill 目录>` 后两份均通过，
+未修改校验器或将 Skill 改为 GBK。
+整目录文本一致；原有 `references/charts.md` 与宿主元数据仅有 LF/CRLF 差别，
+没有为换行重写这两个安装文件。
+保留宿主 `agents/openai.yaml` 元数据，SHA256 仍为
+`6910543fc6e333d6a53c0d4b36494d4127cc7e6b6d918ffab17b7d94797fe9d1`。
+公共 `--lumal-viewport-min-font-size` 与 Demo 的应用专用
+`--lumal-workspace-min-font-size` 已在指南中区分。
+
+后置提交尚需其自身的远端 PR 门禁；正式 tag 的 Ubuntu/Windows 成功不替代该检查。
+当前记录不代表线上 Demo 或文档已切换到后置提交，未执行生产部署。
