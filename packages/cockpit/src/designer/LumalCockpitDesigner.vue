@@ -30,6 +30,9 @@ const draft = useCockpitDraft(props.config)
 const issues = ref<CockpitConfigIssue[]>([])
 const placementSelection = ref<DesignerPlacementSelection>()
 const activeLayout = computed(() => draft.activeLayout.value)
+const layoutTitle = ref('')
+// 受控输入必须接收即时值；只监听 change 会被 Element Plus 还原为旧 modelValue。
+watch(() => activeLayout.value?.title, title => layoutTitle.value = title ?? '', { immediate: true })
 const errors = computed(() => issues.value.filter(issue => issue.level === 'error'))
 const previewMessages = createCockpitMessageBus()
 const placementStatus = computed(() => {
@@ -65,6 +68,8 @@ function handleDesignerKeydown(event: KeyboardEvent): void {
 }
 
 function save(): void {
+  if (activeLayout.value)
+    draft.renameLayout(activeLayout.value.id, layoutTitle.value)
   const result = draft.buildSaveConfig()
   issues.value = result.validation.issues
   if (!result.validation.valid)
@@ -140,7 +145,7 @@ defineExpose({ toggleTheme })
         </label>
         <ElInput
           v-if="activeLayout"
-          :model-value="activeLayout.title"
+          v-model="layoutTitle"
           aria-label="当前布局名称"
           @change="draft.renameLayout(activeLayout.id, $event)"
         />
