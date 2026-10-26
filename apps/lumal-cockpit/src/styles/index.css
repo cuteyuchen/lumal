@@ -304,6 +304,7 @@ textarea {
   --lumal-cockpit-ep-danger: #ff647c;
 }
 
+.el-dialog,
 .el-popper.el-select__popper,
 .el-overlay-dialog .el-message-box,
 .el-message-box {
@@ -319,6 +320,7 @@ textarea {
   --el-border-radius-base: 10px;
 }
 
+.el-dialog,
 .el-popper.el-select__popper,
 .el-message-box {
   border: 1px solid var(--lumal-cockpit-ep-border);

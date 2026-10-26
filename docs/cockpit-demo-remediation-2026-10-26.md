@@ -38,6 +38,8 @@ GitHub PR 测试使用合并引用 `fa71750a161b8d7ae70a58f0d008e49185c17b93`，
 - 开发别名补齐 Viewport；生产 preview 排除源码别名；Windows chunk 路径统一。
 - `build:app` 在编译前检查公共包真实 exports 的 JS / types，缺失时说明完整构建命令；没有跳过 typecheck。
 - Cockpit 增加独立 Viewport 实验、立即/定时刷新、布局持久化、损坏存档恢复、独立场景中心。
+- 截图复核发现视口实验 Dialog 未使用应用暗色 Token；复用现有弹层样式，补真实浏览器背景色断言，
+  不以根节点的 dark 标记代替浮层验收。
 - Cesium 监听异步 renderError / contextlost，显示可重试错误；销毁实例和监听器，不空白假成功。
 - 真实浏览器发现 Designer 布局名称输入被还原：公共组件改为受控草稿，在保存前提交；
   增加回归测试和 `.changeset/calm-cockpit-title.md`，补丁尚未发布。
@@ -62,6 +64,7 @@ GitHub PR 测试使用合并引用 `fa71750a161b8d7ae70a58f0d008e49185c17b93`，
 | Admin 最终应用构建 | `pnpm --filter lumal-admin build` | 通过 | `admin-build-budget-fixed.log` |
 | Admin 生产 E2E | `pnpm test:e2e:release:built`，专用 preview / Chromium，34 用例 | 34 通过 | `admin-e2e-full-verified.log` |
 | Cockpit 本地生产 E2E | `pnpm test:e2e:cockpit:built`，preview / Chromium / SwiftShader | 8 通过，含浏览器时钟驱动刷新、实际缩放边界及重试后的像素 | `cockpit-e2e-node-pixels.log` |
+| 暗色弹层回归 | 修改前 dist 上运行新增样式断言，再重新构建运行完整 E2E | 旧产物确为白底，断言失败；修复后 8 通过，1.6 分钟，1280×720 截图复核通过 | `cockpit-viewport-dark-baseline.log`、`cockpit-dark-dialog-build.log`、`cockpit-e2e-dark-dialog.log` |
 | Node 像素分析回归 | `pnpm --filter lumal-cockpit test`、独立 `tsc --ignoreConfig --noEmit --strict ... canvas-pixels.ts` | 应用单元 24 通过，含 4 项 PNG 取样测试；类型检查通过 | 本地终端 |
 | ESLint | `pnpm exec eslint .` | 通过 | `demo-lint-polished.log` |
 | 模板格式 | `pnpm format:check` | 通过 | `demo-format-check.log` |
@@ -151,7 +154,7 @@ trace 中点击后有真实加载态，但读取断言时已消失：`clock.inst
 | 站点 | 基线 JS / CSS | 本分支 JS / CSS | 原预算 JS / CSS |
 | --- | --- | --- | --- |
 | Admin | 313019 / 42591 | 332877 / 42797 | 335000 / 50000 |
-| Cockpit | 703778 / 71192 | 687525 / 71259 | 800000 / 80000 |
+| Cockpit | 703778 / 71192 | 687523 / 71265 | 800000 / 80000 |
 
 最终功能提交的远程产物也通过同一预算；两平台使用各自构建信息，gzip 允许自然字节差异：
 
@@ -160,7 +163,8 @@ trace 中点击后有真实加载态，但读取断言时已消失：`clock.inst
 | Ubuntu | 332895 / 42805 | 687533 / 71258 |
 | Windows | 332873 / 42797 | 687529 / 71261 |
 
-`pnpm release:budgets` 通过，日志 `demo-budgets-verified.log`。新增应用运行时依赖只有显式引用的
+`pnpm release:budgets` 通过，日志 `demo-budgets-verified.log`；暗色弹层修正后复测见
+`demo-budgets-dark-dialog.log`。新增应用运行时依赖只有显式引用的
 workspace 公共包：Cockpit 增 Viewport，Admin 增 Viewport / DataV / Cockpit；未增加第三方运行时依赖。
 测试进程新增 `pngjs@7.0.0` / `@types/pngjs@6.0.5` 两项根级 devDependencies，
 不进入应用入口或公共包依赖；frozen install 和独立类型检查通过。

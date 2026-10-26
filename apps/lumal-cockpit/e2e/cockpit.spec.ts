@@ -187,6 +187,8 @@ test('隔离 Viewport 实验的模式、尺寸、点击热区与窗口 resize', 
   await page.getByRole('tab', { name: '独立场景', exact: true }).click()
   await expect(page.locator('.standalone-center')).toBeVisible()
   await page.getByRole('button', { name: '打开视口实验' }).click()
+  // Teleport 弹层也必须使用独立应用的暗色语义色，不能只检查根节点主题标记。
+  await expect(page.getByRole('dialog', { name: '视口实验', exact: true }).locator('.el-dialog')).toHaveCSS('background-color', 'rgba(8, 31, 47, 0.98)')
   await expect(page.getByTestId('viewport-lab-metrics')).toContainText('比例 1.000')
   await page.getByLabel('模拟容器', { exact: true }).selectOption('portrait')
   await expect(page.getByTestId('viewport-lab-metrics')).toContainText('比例 0.500')
