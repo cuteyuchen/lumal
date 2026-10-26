@@ -34,7 +34,8 @@ pnpm add @lumal/cockpit@0.0.6-beta @lumal/core@0.0.6-beta @lumal/icons-vue@0.0.6
 
 ## v3 模型要点
 
-- `CockpitConfig` 仅含 `layouts` 与 `activeLayoutId`
+- `CockpitConfig` 必填字段为 `schemaVersion`、`id`、`title`、`layouts`，`activeLayoutId` 可选
+- v3 不再包含旧版 `categories` / `pages` 或中心场景配置
 - 布局含独立左、右区域；列宽像素、行高百分比（合计 100%）
 - 普通行每列一个槽；合并行作 Tab 容器
 - **中心内容不进配置**，由应用插槽提供

@@ -39,9 +39,7 @@ async function expectPaintedCanvas(canvas: Locator, sampleOnly = false): Promise
   expect(colorCount, '真实 Canvas 截图不能是空白或单色占位').toBeGreaterThan(10)
 }
 
-test('默认动画、独立场景交互、Widget 与 OpenLayers resize', async ({ browserDiagnostics, page }) => {
-  // OpenLayers 命中检测触发的浏览器性能建议，不是资源或执行错误；不放宽其他警告。
-  browserDiagnostics.allowConsoleWarning('Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently')
+test('默认动画、真实画布与 Widget 交互', async ({ page }) => {
   const failed: string[] = []
   page.on('response', (response) => {
     if (response.status() >= 400)
@@ -56,8 +54,21 @@ test('默认动画、独立场景交互、Widget 与 OpenLayers resize', async (
   await page.locator('[data-action="collapse-left"]').click()
   await expect(page.locator('[data-action="collapse-left"]')).toHaveAttribute('aria-expanded', 'false')
   await page.locator('[data-action="collapse-left"]').click()
+  await expect(page.locator('[data-action="collapse-left"]')).toHaveAttribute('aria-expanded', 'true')
+  expect(failed).toEqual([])
+})
 
-  // 普通场景交互归常规引擎切换验证，不与两次 WebGL 初始化共用恢复预算。
+test('独立场景交互与 OpenLayers 原实例 resize 和释放', async ({ browserDiagnostics, page }) => {
+  // 默认动画与全幅像素由上一用例验证；地图交互不与昂贵的软件 GPU 截图共用预算。
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  // OpenLayers 命中检测触发的浏览器性能建议，不是资源或执行错误；不放宽其他警告。
+  browserDiagnostics.allowConsoleWarning('Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently')
+  const failed: string[] = []
+  page.on('response', (response) => {
+    if (response.status() >= 400)
+      failed.push(`${response.status()} ${response.url()}`)
+  })
+  await page.goto('/')
   await page.getByRole('tab', { name: '独立场景', exact: true }).click()
   await expect(page.getByRole('img', { name: '中性场景区域预览' })).toBeVisible()
   await page.locator('.standalone-center__point-button').first().click()

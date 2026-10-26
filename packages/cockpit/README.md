@@ -6,7 +6,8 @@ Lumal 通用驾驶舱 v3 编排框架。包负责布局配置、左右模块运�
 
 ## v3 模型
 
-- `CockpitConfig` 只包含 `layouts` 和 `activeLayoutId`，不包含分类、页面或中央组件配置。
+- `CockpitConfig` 必填字段为 `schemaVersion`、`id`、`title`、`layouts`，`activeLayoutId` 可选。
+- v3 不再包含旧版 `categories` / `pages` 或中心场景配置。
 - 一个布局保存独立的左、右区域。
 - 区域由像素列宽和百分比行高组成；所有行高标准化后合计 `100%`。
 - 普通行每列对应一个空槽或模块；合并行跨满区域并作为 Tab 容器。

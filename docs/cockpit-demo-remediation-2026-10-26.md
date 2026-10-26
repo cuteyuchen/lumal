@@ -7,11 +7,10 @@ GitHub PR 测试使用合并引用 `fa71750a161b8d7ae70a58f0d008e49185c17b93`，
 [主 CI](https://github.com/cuteyuchen/lumal/actions/runs/40264662877)、
 [Build Validation](https://github.com/cuteyuchen/lumal/actions/runs/40264662712) 均已完成并通过；
 下文另列外部 Vercel Preview 的失败，不将它隐去。
-这些是 `5779229` 的阶段性证据。后续 `5ec6b86` 复跑在 Windows 出现累计截图超时，
-不是最新提交全部通过；`eb42cb4` 随后的 Windows 复测暴露了刷新用例的模拟时钟竞态，
-已保留失败证据并修复。`85df390` 的最新主 CI、Ubuntu Demo、Windows DataV 和消费者通过，
-但 Windows 恢复用例再次耗尽总预算，见下方 trace 分析；不以历史通过替代本轮结果。
-后续结果通过 PR 检查和附件逐次记录。
+这些是 `5779229` 的阶段性证据。后续复跑暴露了 Windows 累计截图超时和刷新用例的模拟时钟竞态，
+失败证据与逐次修复保留在下文。最近完成的 `73fde9f` 主 CI、Ubuntu Demo、Windows DataV 和消费者通过，
+但 Windows 首条综合浏览器用例仍耗尽总预算，不能以历史通过替代本轮结果。
+本次继续拆分默认动画与地图交互职责，本地九项通过；后续跨平台结果通过 PR 当前提交的检查和附件记录。
 
 ## 构建基线
 
@@ -180,6 +179,26 @@ trace 证明仅移动交互不足：本轮恢复 PNG 仍返回 290 色，但 Nod
 证据 `cockpit-e2e-central-map.log`、`cockpit-central-map-report.json`、
 `playwright/cockpit-recovery-central.png`、`demo-docs-central-map.log`。
 这些仍是本地证据，后续跨平台结果见 PR 当前提交的检查与附件。
+
+第八轮 `73fde9f`：主 CI `40276932604` 的 1106 项单元、lint、format、类型和公共包构建通过。
+Build Validation `40276932685` 的 Ubuntu 完整 Demo、Windows DataV 及消费者 / 模板 / 既有真实 zoom 通过；
+Ubuntu Cockpit 八项 / Admin 34 项通过，Windows Cockpit 为 7 通过 / 1 失败。
+两平台 frozen install、两种完整 Cockpit 构建、26 项应用单元及新增 E2E 严格类型均通过。
+Windows 恢复契约这次通过（59.7 秒），但首条默认动画 / Widget / 独立场景 / OpenLayers 综合用例
+在末尾退出 OpenLayers 时耗尽总预算，后续 Windows Admin / 文档 / 预算门禁仍跳过。
+证据 `ci-windows-demo-73fde9f.log`、`ci-73fde9f-windows/` 保留。
+trace 记录默认 ECharts 全幅截图 19.65 秒、Node 分析 17338.4ms，
+随后独立场景点击 7.38 秒、OpenLayers 点击 19.33 秒，加上导航和其余交互累计超出 90 秒，
+不能称为应用构建失败。
+因此将默认动画 / 全幅像素 / Widget 与独立场景 / OpenLayers 交互划为两个独立契约，共九项；
+前者保留默认动画，后者复用现有 reduced-motion 策略。所有原断言仍在，增加面板重新展开断言，
+不增加超时、重试或降低像素门槛，也不改应用或地图渲染质量。后续结果见 PR 当前提交检查。
+本地完整生产 E2E 九项通过（2.6 分钟），新增的两条分别为 12.1 / 14.9 秒；
+E2E 严格类型、97 项契约、针对性 ESLint 与严格文档构建通过。
+证据 `cockpit-e2e-isolated-rendering.log`、`cockpit-isolated-rendering-report.json`、
+`demo-docs-isolated-rendering.log`。本地结果不替代下一轮双平台门禁。
+只读审查另纠正两处旧文档：`CockpitConfig` 必须提供 `schemaVersion` / `id` / `title` / `layouts`，
+`activeLayoutId` 可选；没有新增或修改该公开类型。
 
 ## 包体与依赖
 
