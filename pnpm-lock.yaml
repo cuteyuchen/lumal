@@ -132,6 +132,9 @@ importers:
       '@lumal/icons-vue':
         specifier: 0.0.6-beta
         version: link:../../packages/icons-vue
+      '@lumal/viewport':
+        specifier: 0.0.6-beta
+        version: link:../../packages/viewport
       cesium:
         specifier: 1.143.0
         version: 1.143.0

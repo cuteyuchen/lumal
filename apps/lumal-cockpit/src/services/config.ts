@@ -172,22 +172,31 @@ function migrateInteractiveWidgets(config: CockpitConfig): CockpitConfig {
   return migrated
 }
 
-export function loadStandaloneConfig(): CockpitConfig {
-  if (typeof localStorage !== 'undefined') {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      try {
+export function loadStandaloneState(): { config: CockpitConfig, warning: string } {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
         const parsed = JSON.parse(raw) as { schemaVersion?: unknown }
         if (parsed.schemaVersion === COCKPIT_SCHEMA_VERSION)
-          return migrateInteractiveWidgets(prepareCockpitConfig(parsed))
+          return { config: migrateInteractiveWidgets(prepareCockpitConfig(parsed)), warning: '' }
+        throw new Error('配置版本不匹配')
       }
-      catch {
-        // 忽略损坏的本地配置。
-      }
-      localStorage.removeItem(STORAGE_KEY)
     }
   }
-  return addInteractiveWidgets(defaultConfig)
+  catch {
+    // 保留原存档以便排错；仅显式保存或恢复默认时覆盖，不静默销毁用户配置。
+    return { config: addInteractiveWidgets(defaultConfig), warning: '本地配置无法读取，已使用默认布局。可重新保存或恢复默认配置。' }
+  }
+  return { config: addInteractiveWidgets(defaultConfig), warning: '' }
+}
+
+export function loadStandaloneConfig(): CockpitConfig {
+  return loadStandaloneState().config
+}
+
+export function resetStandaloneConfig(): CockpitConfig {
+  return saveStandaloneConfig(addInteractiveWidgets(defaultConfig))
 }
 
 export function saveStandaloneConfig(config: CockpitConfig): CockpitConfig {

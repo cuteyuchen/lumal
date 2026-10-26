@@ -26,6 +26,16 @@ pnpm dev
 - 访问地址：http://127.0.0.1:5180
 - Cesium 运行时资源由 `vite-plugin-static-copy` 拷贝到 `cesiumStatic/`，`CESIUM_BASE_URL` 已在配置中指向该目录。
 
+## 交互入口
+
+- 顶部布局选择会保存到本地，设计器按打开时动态加载；取消不写入配置，保存后刷新恢复。
+- 自动刷新为 30 秒，可暂停或立即刷新；左右模块可折叠，Tab 可切换。
+- 顶部「视口实验」在真实视口 Dialog 内运行，演示 `@lumal/viewport` 的 contain / width / responsive、
+  实际容器尺寸和点击热区。它不包裹主驾驶舱，不会造成双重缩放。
+- 主驾驶舱保留 scale / vwvh / DataV 全屏容器三种用法；容器模式内部为 `external`。
+- 中心支持 ECharts、OpenLayers、Cesium 与独立 SVG 场景。窗口 resize 不重建地图。
+- 本地配置无法读取时显示恢复提示，保留原始存档；只有显式恢复或保存时覆盖。
+
 ## 目录结构
 
 ```
