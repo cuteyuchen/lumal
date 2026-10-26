@@ -51,7 +51,14 @@ pnpm install --frozen-lockfile
 
 Node.js 使用 22，pnpm 使用 `package.json` 中声明的 10.33.0。
 
-五站点沿用现有 Vercel Project，公开链接统一使用上表中的自定义域名；Cloudflare 使用 DNS-only CNAME，不负责产物托管。不使用受登录保护的部署长域名作为文档入口。Vercel 项目若从 Git 构建，仓库根目录下使用 `pnpm docs:build`，Output Directory 必须是 `apps/lumal-docs/dist`，不能写成根目录的 `dist`。
+五站点沿用现有 Vercel Project，公开链接统一使用上表中的自定义域名；Cloudflare 使用 DNS-only CNAME，不负责产物托管。不使用受登录保护的部署长域名作为文档入口。
+
+Vercel 项目若从 Git 构建，Root Directory 设为仓库根目录；Build Command 和 Output Directory 必须成对使用上表的值。
+例如 Cockpit 使用 `pnpm cockpit:build` 与 `apps/lumal-cockpit/dist`，Docs 使用 `pnpm docs:build` 与
+`apps/lumal-docs/dist`，不能统一写成根目录的 `dist`。不要沿用改名前的 package filter：
+pnpm 输出 `No projects matched the filters` 不代表应用已经构建，即使命令最终返回零也必须修正配置。
+平台设置不随源码中的包名自动更新；应分别检查项目当前设置和失败 Deployment 的设置快照。
+本轮只读发现的 Cockpit Preview 遗留配置及待授权操作见 [Demo 整改验收](../docs/cockpit-demo-remediation-2026-10-26.md#vercel-preview-配置审计)。
 
 正式发布使用 `scripts/prepare-vercel-output.mjs` 封装已验证的静态目录，再执行固定版本 Vercel CLI 的 `deploy --prebuilt --prod`，不在凭据作业重新构建。Docs 启用 `--clean-urls`，保留无扩展名深层路径、目录首页和 HTTP 404。完整说明见 [发布检查清单](../docs/release-checklist.md#部署配置)。
 
@@ -59,8 +66,8 @@ Node.js 使用 22，pnpm 使用 `package.json` 中声明的 10.33.0。
 
 | 工作流 | 触发 | 职责 |
 | --- | --- | --- |
-| `ci.yml` | push master / PR | lint、release:boundaries、test、typecheck、build |
-| `build-validation.yml` | push master / PR | 包构建 + create-lumal-admin 消费者校验 |
+| `ci.yml` | push master / PR | lint、format:check、发布边界与工作流安全、test、typecheck、build |
+| `build-validation.yml` | push master / PR | Ubuntu 消费者/真实 zoom、Windows DataV 视觉；Ubuntu + Windows 完整 Cockpit 两种构建入口、Cockpit/Admin 生产 E2E、文档死链接、原体积预算 |
 | `codeql.yml` | push master / PR / 每周 | 代码扫描 |
 | `release-gate.yml` | `v*` tag / 手动（默认 dry-run） | 完整 `release:check`（含生产 E2E、pack 验证）、Windows、各站点构建与预算，成功后才调用发布/部署 |
 | `deployment-artifacts.yml` | `v*` tag / 手动 | 仅上传静态产物、构建 mock-api 镜像，不部署 |

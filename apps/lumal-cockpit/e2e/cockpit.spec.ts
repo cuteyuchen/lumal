@@ -2,6 +2,17 @@ import type { Locator, Page } from '@playwright/test'
 import { expect, test } from '../../lumal-admin/e2e/fixtures'
 
 /***********************生产画布像素、网络和组件生命周期证据*********************/
+async function expectFittedStage(page: Page, width: number, height: number): Promise<void> {
+  const expectedScale = Math.min(width / 1920, height / 1080)
+  await expect(page.locator('.lumal-cockpit-canvas')).toHaveAttribute('data-scale', expectedScale.toFixed(3))
+  // ResizeObserver 与 RAF 合并更新完成后再记录截图，不能只断言旧地图仍然连接。
+  await expect.poll(async () => {
+    const bounds = await page.locator('.lumal-cockpit-canvas__stage').boundingBox()
+    return Boolean(bounds && bounds.x >= -1 && bounds.y >= -1
+      && bounds.x + bounds.width <= width + 1 && bounds.y + bounds.height <= height + 1)
+  }).toBe(true)
+}
+
 async function expectPaintedCanvas(page: Page, canvas: Locator): Promise<void> {
   await expect(canvas).toBeVisible()
   await expect.poll(async () => {
@@ -47,6 +58,7 @@ test('默认动画场景、Widget、Tab 折叠与 OpenLayers resize', async ({ b
   await expect(openlayers).toBeVisible()
   const original = await openlayers.elementHandle()
   await page.setViewportSize({ width: 1366, height: 768 })
+  await expectFittedStage(page, 1366, 768)
   await expect.poll(() => original!.evaluate(element => element.isConnected)).toBe(true)
   await expect(openlayers).toBeVisible()
   // 中央内容是全幅底图；点击中部实际空白区域，避开覆盖在两侧的模块。
@@ -77,6 +89,7 @@ test('Cesium 资源、像素、原实例 resize、中断重试与独立场景', 
   await expectPaintedCanvas(page, page.locator('.cesium-widget canvas'))
   const cesium = await page.locator('.cesium-widget canvas').elementHandle()
   await page.setViewportSize({ width: 1440, height: 900 })
+  await expectFittedStage(page, 1440, 900)
   await expect.poll(() => cesium!.evaluate(element => element.isConnected)).toBe(true)
   await expect.poll(() => workers.length).toBeGreaterThan(0)
   await page.screenshot({ path: 'output/playwright/cockpit-cesium-1440.png', animations: 'disabled' })
@@ -173,6 +186,7 @@ test('隔离 Viewport 实验的模式、尺寸、点击热区与窗口 resize', 
   }
   for (const [width, height] of [[1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]]) {
     await page.setViewportSize({ width, height })
+    await expectFittedStage(page, width, height)
     await expect(page.getByTestId('viewport-lab-metrics')).not.toContainText('容器 0 × 0')
     await page.screenshot({ path: `output/playwright/cockpit-viewport-${width}.png`, animations: 'disabled' })
   }

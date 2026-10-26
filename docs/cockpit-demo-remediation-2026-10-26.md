@@ -53,22 +53,34 @@
 | Cockpit 最终应用构建 | `pnpm --filter lumal-cockpit build:app` | 通过 | `cockpit-demo-build-polished.log` |
 | Admin 最终应用构建 | `pnpm --filter lumal-admin build` | 通过 | `admin-build-budget-fixed.log` |
 | Admin 生产 E2E | `pnpm test:e2e:release:built`，专用 preview / Chromium，34 用例 | 34 通过 | `admin-e2e-full-verified.log` |
-| Cockpit 生产 E2E | `pnpm test:e2e:cockpit:built`，preview / Chromium / SwiftShader | 4 通过，含浏览器时钟驱动刷新和尺寸保存 | `cockpit-e2e-polished.log` |
+| Cockpit 生产 E2E | `pnpm test:e2e:cockpit:built`，preview / Chromium / SwiftShader | 7 通过，含浏览器时钟驱动刷新、实际缩放边界及重试后的像素 | `cockpit-e2e-stage-bounds.log` |
 | ESLint | `pnpm exec eslint .` | 通过 | `demo-lint-polished.log` |
 | 模板格式 | `pnpm format:check` | 通过 | `demo-format-check.log` |
+| 测试 / 部署文档契约 | `pnpm exec vitest run --config vitest.config.ts scripts/docs-links.test.ts scripts/playwright-release.test.ts` | 30 通过 | 本地终端，脚本提交 `82e371f` 及后续文档提交 |
+| 全脚本回归 | `pnpm test:scripts`，Windows | 115 通过 | `demo-scripts-ci-followup.log` |
 | 文档 / 链接 | `pnpm docs:build`，ignoreDeadLinks=false | 通过 | `demo-docs-build-verified.log` |
 | 发布边界 / 工作流 | `pnpm release:boundaries` / `pnpm release:workflows` | 通过 | `demo-boundaries-verified.log`、`demo-workflows-check.log` |
 | 发布产物 | `node scripts/check-release-artifacts.mjs` | 通过，Admin 最大 JS 358470 B | `demo-artifacts-verified.log` |
 | 打包演练 | `pnpm pack:dry-run`，十包 | 通过，未发布 | `demo-pack-dry-run.log` |
 | Skill | `python -X utf8 .../quick_validate.py skills/lumal` | 通过；独立分发测试包含在 scripts | 终端结果、`demo-workspace-tests.log` |
-| Ubuntu / Windows CI | 新 Build Validation 双平台生产 Job | 待远程运行 | 不以本地 Windows 替代 Ubuntu |
+| Ubuntu / Windows CI 首轮 | Build Validation `40261401062`，Node 22.23.3 / pnpm 10.33.0 | 双平台 frozen install、两种完整 Cockpit 构建与应用单测通过；生产浏览器超时，整改后复测 | Actions Job `121374384086` / `121374383973` |
+| Ubuntu 消费者 / 既有 zoom | 同 run 的 `validate` Job | 通过，含完整脚手架消费者、独立模板、40 组工作区 / 8 组局部缩放 / 2 组实例与稳定窗口检查 | Job `121374384263`，`ci-consumers-f5a07ba.log` |
 | 线上部署 | 本轮只读核对，不执行部署 | 未部署本分支 | 下表 |
 
 生产 E2E 观察真实 Canvas 像素、地图引擎初始化/切换/释放、同一实例 resize、无静态资源 404，
 以及布局、Tab/折叠、全屏、Designer 取消/保存/刷新恢复、配置损坏恢复。
 Viewport 覆盖 1280×720、1366×768、1440×900、1920×1080、2560×1440。
-本轮没有新做真实浏览器 80% / 125% / 150% 缩放，不以 viewport 设置冒充浏览器缩放。
-Designer 复杂拖拽及替换的全组合仍主要由既有公共包测试保护，不宣称本轮四条 E2E 穷尽所有路径。
+本轮没有为 Cockpit 新增真实浏览器 80% / 125% / 150% 缩放矩阵，不以 viewport 设置冒充浏览器缩放。
+既有 Viewport 消费者的真实 zoom 检查由 Ubuntu CI 实际运行通过，不将它扩展为所有 Demo 已通过该矩阵。
+Designer 复杂拖拽及替换的全组合仍主要由既有公共包测试保护，不宣称本轮七条 E2E 穷尽所有路径。
+
+首轮远程生产浏览器测试实际失败：Ubuntu 2 失败 / 2 通过，Windows 3 失败 / 1 通过。
+下载的 trace 显示软件 GPU 环境中单次截图耗时约 24 秒、设计器单次操作约 14 秒，
+多个职责串在一条用例中耗尽 90 秒，并非构建失败。后续将地图、持久化、刷新和视口操作拆分，
+默认动画仍单独验证；其余场景使用应用已有的 reduced-motion 策略，刷新只推进必要的浏览器时钟。
+保留真实 Canvas 像素、地图实例、Worker、错误恢复、交互和全部尺寸断言，维持零重试及 90 秒超时。
+trace 保留 DOM / 网络 / 源码，停止持续逐帧截图，显式截图和失败截图仍保留。复测结果另行记录。
+`82e371f` 本地七条全部通过，2.0 分钟；远程双平台复测尚未完成，不能以该本地结果替代。
 
 ## 包体与依赖
 
@@ -99,6 +111,24 @@ Cockpit 自定义域名的 alias 确认仍指向旧 Deployment，不是本轮产
 当前文档域名直接 HTTP 响应包含 0.0.6-beta；搜索索引缓存可能仍展示旧文案，不作为部署证据。
 本轮不调整别名、不部署、不声称线上 E2E 通过；需授权后由受控流程更新站点并比对静态产物。
 
+## Vercel Preview 配置审计
+
+创建 PR 后既有 Git 集成自动生成 Preview，并非本轮主动执行生产部署。
+`dpl_D6uTeK2GZeZZv4ADN4zXwLpVfCF9` 对应源码 `f5a07ba`，状态 ERROR，
+错误码 `STATIC_BUILD_NO_OUT_DIR`，错误提示找不到 `dist`。读取项目设置及该 Deployment 设置快照确认：
+
+| 配置 | 平台实际值 | 应使用的值 |
+| --- | --- | --- |
+| Root Directory | 仓库根目录 | 保持仓库根目录 |
+| Build Command | `pnpm build && pnpm --filter luma-cockpit build` | `pnpm cockpit:build` |
+| Output Directory | `apps/luma-cockpit/dist` | `apps/lumal-cockpit/dist` |
+| Node | `24.x` | 满足仓库 `>=22.12.0`；PR CI 验证 22.x，本地验证 24.x |
+
+平台仍使用改名前的包名与目录；日志确有 `No projects matched the filters`，未执行当前 Cockpit 应用构建。
+这解释了该 Preview 失败，但不将它当作用户未提供日志的本地构建故障根因。
+只修改输出路径不足以修复错误过滤器。平台配置保持未修改，需获得授权后成对更新，
+经受控流程构建并核对资源后再部署；不通过仓库根 `vercel.json` 覆盖其他项目。
+
 ## CI 与交付
 
 Build Validation 新增双平台 demo-production Job：frozen install、两种完整 Cockpit 构建入口、
@@ -107,7 +137,9 @@ Build Validation 新增双平台 demo-production Job：frozen install、两种�
 静态安全测试防止后续删除平台或跳过生产浏览器，不新增 npm 或部署路径。
 
 主要提交：`1a562e4`（构建输入）、`b8677cb`（Cockpit 能力）、`0dd58a2`（Designer 补丁）、
-`b4c60cd`（Cesium 恢复）、`c47cbe0`（Admin 示例）。后续文档、CI 与验收提交以本分支 Git 记录为准。
+`b4c60cd`（Cesium 恢复）、`c47cbe0`（Admin 示例）、`dc181db`（图表初始化与嵌入布局）、
+`81659cc`（文档 / Skill）、`f5a07ba`（双平台门禁）、`82e371f`（软件渲染验收隔离）。
+Draft PR：[cuteyuchen/lumal#8](https://github.com/cuteyuchen/lumal/pull/8)，未合并。
 
 未完成/未授权：用户原始标准构建失败尚缺完整日志；真实浏览器缩放全矩阵、真实业务页、
 生产域名新版本验证、公共补丁 npm 发布、正式合并。两个真实消费者保持只读。

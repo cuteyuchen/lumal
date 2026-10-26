@@ -19,6 +19,21 @@ afterEach(() => {
 })
 
 describe('published documentation links', () => {
+  it.each([
+    ['docs:build', 'lumal-docs'],
+    ['admin:build', 'lumal-admin'],
+    ['cockpit:build', 'lumal-cockpit'],
+    ['datav-guide:build', 'lumal-datav-guide'],
+    ['compat:build', 'vben-compat-demo'],
+  ])('部署表 %s 引用实际根脚本与应用产物，而非过期的 package filter', (script, directory) => {
+    const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
+    const application = JSON.parse(readFileSync(join(root, 'apps', directory, 'package.json'), 'utf8'))
+    const guide = readFileSync(join(root, 'deploy/README.md'), 'utf8')
+    expect(manifest.scripts[script]).toBeTypeOf('string')
+    expect(application.scripts.build).toBeTypeOf('string')
+    expect(guide).toContain(`| \`pnpm ${script}\` | \`apps/${directory}/dist\` |`)
+  })
+
   it.each(siteTargets)('%s 默认使用已绑定的自定义域名', async (key, variable, url) => {
     vi.stubEnv(variable, '')
     const { siteLinks } = await import('../apps/lumal-docs/src/.vitepress/config/links')
