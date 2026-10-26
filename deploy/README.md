@@ -25,6 +25,9 @@
 维护者单独授权站点恢复后，先验证精确提交的全部 PR 门禁，再定向恢复对应站点；
 记录所用 Git 构建或 prebuilt 路径、生产环境配置、提交、READY、alias 和公网资源结果。
 本次恢复证据见 [0.0.7-beta 执行记录](../docs/npm-release-0.0.7-beta.md#pr-收尾与部署恢复)。
+Docs 仍保留 Ignored Build Step：Git 检查显示绿色的 Canceled 不算文档构建成功，
+需要单独授权后从精确源码构建固定快照、定向 prebuilt 上传并验证公开域名全部文件。
+首次恢复的合并 SHA、Deployment 与 HTTP 证据见该记录的「合并与站点实际验收」。
 
 ## GitHub Actions 配置
 

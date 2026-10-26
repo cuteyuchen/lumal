@@ -2,7 +2,9 @@
 
 公开 API 基于已发布并核验的 `0.0.7-beta`，包含 Designer 名称输入修复，
 见 [本版发布记录](./npm-release-0.0.7-beta.md)。Demo 页面和文档部署是独立步骤；
-本轮 npm 发布未部署生产，不能把包版本当成线上示例已更新的证明。
+正式 npm 发布时未部署生产；后续授权的站点更新已单独完成，
+见 [合并与站点实际验收](./npm-release-0.0.7-beta.md#合并与站点实际验收)。
+包版本不能替代线上提交和部署证据。
 
 ## 选型与运行
 
@@ -187,12 +189,13 @@ ECharts 调 `resize()`，不要重建地图、重复请求或恢复初始中心�
 
 ## Demo 入口与版本边界
 
-| 站点 | 已有公开入口 | 本分支新增入口 |
+| 站点 | 公开入口 | 可交互入口 |
 | --- | --- | --- |
 | Admin | https://lumal-admin.cuteyuchen.top/ | `/#/examples/viewport`、`/#/examples/datav`、`/#/examples/cockpit` |
 | Cockpit | https://lumal-cockpit.cuteyuchen.top/ | 顶部视口实验、布局恢复和错误反馈 |
 | DataV | https://lumal-datav.cuteyuchen.top/ | 继续使用完整组件指南 |
 | 文档 | https://lumal.cuteyuchen.top/ | 此指南和包功能覆盖表 |
 
-新增入口仅在本分支产物中验证，未经授权不更新生产域名。npm 版本、源码提交、构建产物、
-Vercel Deployment 和域名别名必须分别核对，不能用某一个成功替代全部上线验收。
+上述入口已随 PR #9 合入 master 并完成授权部署；首次生产验收基线为 `e2ac131`。
+npm 版本、源码提交、构建产物、Vercel Deployment 和域名别名仍须分别核对，
+不能用某一个成功替代全部上线验收。实际证据与未覆盖边界见本版发布记录。

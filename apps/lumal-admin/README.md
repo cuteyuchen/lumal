@@ -102,7 +102,10 @@ pnpm test:e2e:release:built apps/lumal-admin/e2e/visualization-examples.spec.ts
 ```
 
 完整接入说明见 [Demo 与业务接入](../../docs/demo-integration-guide.md)。
-新增示例属于本工作分支，未部署前不能使用线上地址验证本地改动。
+新增示例已随 PR #9 合入 master 并完成授权部署，
+首次生产验收基线为 `e2ac131`；实际 Deployment、菜单与资源证据见
+[本版发布记录](../../docs/npm-release-0.0.7-beta.md#合并与站点实际验收)。
+后续本地改动仍须独立构建、部署，不能凭 npm 版本推断线上已更新。
 
 ## 工作区三模式
 

@@ -6,7 +6,8 @@
 
 **十包已发布，registry 完整性、同次 CI 产物及六类独立消费者全部核验通过。**
 遵循本轮要求，先完成发包和消费验证，再更新当前文档、Skill 与 Admin Demo。
-没有本地直接 publish、重发、移动既有标签或部署生产站点。
+没有本地直接 publish、重发或移动既有标签。正式发布 run 未部署生产；
+下文单独记录后续授权的站点恢复。
 
 - 附注标签 `v0.0.7-beta` 指向 `5d190e2d726c192fdd3dc49a03190c4559906743`。
 - 发布前十包均不存在本版；版本、内部精确依赖和 frozen lockfile 一致。
@@ -165,7 +166,8 @@ SHA256 为 `afd2f874539ad3e86cff8d4ab0b10f9825b3db4cef58800eedc19e95f1a83e7c`。
 
 两个真实业务仓库保持只读。省级旧消费者原有失败与业务补丁仍以
 [兼容报告](./real-consumer-compatibility.md) 为准，不根据版本号直接宣称补丁均可删除。
-公开 Demo、文档构建与生产部署分别记录，本站点发布仍未执行。
+公开 Demo、文档构建与生产部署分别记录；当时尚未执行站点发布，
+后续结果见下方「合并与站点实际验收」。
 
 ## 发包后文档、Skill 与 Demo 验收
 
@@ -253,8 +255,8 @@ Admin JS 距原预算仅余 659 B，后续示例仍须保持动态加载边界�
 公共 `--lumal-viewport-min-font-size` 与 Demo 的应用专用
 `--lumal-workspace-min-font-size` 已在指南中区分。
 
-后置提交尚需其自身的远端 PR 门禁；正式 tag 的 Ubuntu/Windows 成功不替代该检查。
-当前记录不代表线上 Demo 或文档已切换到后置提交，未执行生产部署。
+上述本地复测不能替代后置提交的远端 PR 门禁，也不证明线上已更新。
+后续 PR 门禁、合并与生产部署的独立结果见下文。
 
 ## PR 收尾与部署恢复
 
@@ -290,7 +292,7 @@ Windows x64 / Node 24.14.1 / pnpm 10.33.0 本地复验：
 `b0914baa53080202335dacae95028e5c47f06eb7a8755d12b0c2c36081e999a9`。
 Cesium resize / 全幅像素 / 中断恢复分别耗时 13.632 / 14.309 / 14.970 秒；
 本机全幅仍检出 290 色，解码分析 59.9ms。不能将本机耗时冒充 Windows CI 复测结果。
-新提交的 Ubuntu / Windows 与 Vercel Preview 仍须实际通过后才合并。
+该修复随后以 `e1ad53d` 通过独立 Ubuntu / Windows 门禁，结果见下方表格。
 
 ### 云端构建与生产 API
 
@@ -300,7 +302,8 @@ Cockpit 失败 Preview `dpl_5UEqEc3GBd9EW5KT9suQrTATZYp4` 的实时日志为：
 filter 和输出目录，不是本次 Vite / Cesium 构建错误。
 已定向将该项目 Build Command 设为 `pnpm cockpit:build`、
 Output Directory 设为 `apps/lumal-cockpit/dist`，其余项目和设置保持不变。
-须以新 Preview 的构建日志及 READY 验证生效，不以设置更新成功替代构建验收。
+新 Preview `dpl_AQNS2Y8V4oTZeW1zcBNBxck7quED` 实际执行此完整构建链、
+复制 389 项资源并 READY，构建至就绪 57.223 秒；不是只检查设置更新成功。
 
 Admin 当前生产构建使用公开变量
 `VITE_API_BASE_URL=https://lumal-mock-api.vercel.app/api`；
@@ -314,3 +317,127 @@ Admin 当前生产构建使用公开变量
 本次维护者已明确授权验收后合并及更新文档和 Demo，
 仅在当前 PR 全部门禁通过后进行定向站点恢复，并逐站记录提交、READY、alias 与 HTTP 结果。
 不重跑已发布版本的 npm 链，不移动 `v0.0.7-beta`，不把历史部署快照当作本次线上证据。
+
+## 合并与站点实际验收
+
+本节为首次恢复的固定证据，不是对后续每次部署的永久状态承诺。
+2026-10-26 23:22:18（北京时间），PR #9 使用 merge commit 合入
+`master@e2ac131507a7a352749d62bbf0fefd4052803a0d`，保留全部提交历史。
+PR #8 于 23:22:21 因历史已完整包含而自动标记 MERGED。
+当时全部远程分支头均为新 master 的祖先，没有重复合并、删除旧分支或改写历史。
+合并树与通过验收的 head `e1ad53d` 相同。
+
+### 当前提交的远端门禁
+
+| 验证项 | 实际 run / job | 结果 |
+| --- | --- | --- |
+| PR 主 CI | `40344570989` / `121647946058` | 131 files / 1,207 tests；lint、format、边界、类型、构建通过 |
+| PR Ubuntu Demo | `40344570964` / `121647945854` | Cockpit 11 / Admin 38 生产 E2E、26 项应用单元、严格文档和原预算通过 |
+| PR Windows Demo | 同 run / `121647945327` | 同上，Cockpit 481.416 秒、Admin 2.8 分钟；无跳过或重试 |
+| PR Windows DataV | 同 run / `121647945808` | 21 passed，37.4 秒 |
+| PR 独立消费者 | 同 run / `121647945679` | 12 组 Admin、8 个 CLI cases、14 组 Blank/Screen、三级视口与真实 zoom 通过 |
+| 合并后主 CI | `40348667114` / `121662411103` | success，5 分 36 秒 |
+| 合并后 CodeQL | `40348667390` / `121662408725` | success，2 分 11 秒，分析已上传 |
+| 合并后 Build Validation | `40348667663` | failure：Ubuntu Demo、Windows DataV、独立消费者通过；Windows Cockpit 10 passed / 1 failed，后续 Admin / Docs / 预算未执行 |
+
+PR head 为 `e1ad53d579f66deba88f96e4d0e4addede5720f4`；
+Actions 检出的 PR merge ref 为 `96a7be2965060c08a3908455978abda201fdbf08`，
+不把它混称为最终 master SHA。
+Windows 为 Server 2025 / Node 22.23.4，Ubuntu 为 24.04 / Node 22.23.3，
+均使用 pnpm 10.33.0。Cockpit 两平台报告 expected 11，
+unexpected / skipped / flaky 均为 0。Ubuntu Cockpit 耗时 385.590 秒。
+消费者是脱敏隔离夹具，不代表两个业务系统已在线验收。
+
+CodeQL 原先被 GitHub 标为 `disabled_inactivity`，本次恢复现有工作流后，
+合并提交实际触发并成功；没有将未运行的历史状态记为通过。
+合并后的 Build Validation 独立运行，其 Windows 失败不冒用 PR head 的通过状态。
+失败 job `121662410063` 在 Cesium 中断恢复用例的首次组件就绪断言超时：
+trace 中 Cesium Tab 已选中，但惰性 Center JS 的 HTTP 200 请求耗时 23.169 秒，
+晚于 20 秒断言结束约 1.52 秒；期间 `Suspense` 仍保留旧 ECharts 分支。
+尚未执行到 WebGL 中断和恢复，不能据此认定 Cesium 恢复逻辑失败，
+也不能仅凭无 Console 异常将该用例记为通过。原日志和 trace 保留在
+`007-master-windows-e2ac131-job-121662410063.log` 与 artifact `12664570185`。
+后续修复须在保持原超时、重试和体积预算的条件下独立验收。
+
+后续 Demo 整改将 `SceneCenter` 的 `Suspense` 设为立即 fallback：
+切换惰性引擎时显示已有加载态，同时卸载旧画布；不修改公共包或增加运行时依赖。
+两项受控异步回归分别验证等待时释放旧图表，以及切回同步地图后迟到组件不得重新挂载。
+旧实现定向红测为 3 passed / 1 failed；修复后本机应用单测 6 files / 28 tests、
+生产 E2E 11 项通过（约 2.1 分钟），包含三项 Cesium 旧画布释放断言。
+`build:app`（含 vue-tsc）、浏览器测试类型检查、定向 ESLint 与严格文档构建通过。
+这证明本机行为契约，不单凭释放旧画布宣称 Windows 冷加载必然缩短至 20 秒以内；
+后续 PR 与 master 的远端结果须按其精确提交分别检查。
+
+### 生产部署
+
+以下五项为既有 Git 集成从精确 master SHA `e2ac131` 构建，
+均为 production / READY、`aliasError=null`，生产别名已核对：
+
+| 站点 | Deployment ID | 构建至就绪秒数 |
+| --- | --- | ---: |
+| Admin | `dpl_FuohfjbaV2RnHsfxZnBhsKRVoAeW` | 76.517 |
+| Cockpit | `dpl_Ejfmp7NJPr1iVaJZLjmg9t9J9Gjv` | 84.070 |
+| DataV | `dpl_3WASXHUVDi3Uonb3DTNiqc94ctKx` | 101.075 |
+| Compat | `dpl_T8n3BAu3fzRbiQgwVGtAvSabApGK` | 70.128 |
+| Mock API | `dpl_FRbZqao6NrmwNxMWoehQczLpus56` | 13.748 |
+
+耗时为 `ready - buildingAt`，不含排队及后续缓存上传，不等于 Vite 编译耗时。
+Git 自动生产依旧独立于 Actions；本次在全 PR 门禁通过后才合并，
+不能据此声称平台已具有强制等待 Release Gate 的配置。
+
+Docs 的 Git 部署被既有 Ignored Build Step 取消，GitHub 显示绿色也不代表构建成功。
+保留该策略，从干净 `e2ac131` 执行 `pnpm docs:build`，使用既有
+`prepare-vercel-output.mjs --clean-urls` 封装固定快照，再由 Vercel CLI 64.5.0
+定向 prebuilt 上传。没有拉取或打印项目秘密环境值、关闭保护或重发 npm。
+
+- Docs Deployment：`dpl_FFdr9BReKf4kcJqVEuUK5ATpXKXY`，production / READY / source=cli。
+- 正式别名：`https://lumal.cuteyuchen.top`，`aliasError=null`。
+- 快照：`F:/lumal-release-validation/deploy/docs-master-e2ac131-20261026/.vercel/output`。
+- 平台返回 `meta={}`，不伪造 Git metadata；来源链由干净源码、构建日志、
+  固定快照及下方公网逐文件哈希共同建立。
+
+### 公网 HTTP 与权限
+
+23:30 至 23:31 使用 Node 24.14.1 的显式环境代理执行；
+首次原生 fetch 未使用代理，在 `/status` 网络超时，未取得 HTTP 响应且未创建会话。
+诊断后经同一公开地址返回 HTTP 200，再以新报告复验；未把客户端网络阻塞伪装为 API 失败或成功。
+
+| 对象 | 实际命令 / 检查 | 结果 |
+| --- | --- | --- |
+| Docs 固定快照 | `node --use-env-proxy <既有 verify-docs-deployment.mjs> <公开域名> <固定快照>` | 279 / 279 文件 SHA256 一致，83 条 clean URL 映射、真实 404，失败 0 |
+| 四站静态资源 | `node --use-env-proxy output/release/verify-sites-007.mjs --sha e2ac131507a7a352749d62bbf0fefd4052803a0d --report <新文件>` | Admin 107、Cockpit 49、DataV 48、Compat 29，全部 HTTP / MIME / 解析通过 |
+| Mock 会话与权限 | `node --use-env-proxy output/release/verify-mock-007.mjs --report <新文件>` | CORS、admin 新菜单、Cockpit 权限、guest 后端 403，通过；两自建会话均 finally 退出 |
+
+Docs 快照整体 SHA256：
+`269e19a9ea8a597b5954292a5d22f9ff8522350707053c56fb9eaadfc22d888d`。
+四站验收遍历静态/动态 JS import 与 Vite 预载 CSS；
+Admin 的 `examples/icons/viewport/datav/cockpit` 均解析到可获取的真实 JS chunk，
+关于页元信息为 `commit=e2ac131`、`version=0.0.7-beta`，
+生产 Mock baseURL 保持正确。Cockpit 另核对 Worker、Assets JSON 和 Widgets CSS，
+拒绝以 HTML fallback 冒充静态资源。没有对公网执行 CRUD、重置或全套破坏性 E2E。
+
+HTTP 资源检查不替代真实浏览器交互，也不证明与另一次 CI 产物逐字节一致；
+浏览器证据来自上述精确 PR 的双平台生产 E2E。
+本次未在生产域名重跑完整浏览器套件或业务系统验收。
+
+证据均在忽略的 `output/release/`，不进入 npm：
+
+| 文件 | SHA256 |
+| --- | --- |
+| `007-docs-e2ac131-production-http.log` | `3eb4ca3539860e099075d8ec09214de44d05d66aace18634532c28f271f278e5` |
+| `sites-production-007-e2ac131.json` | `c8ad198aed425daf8e4f11ec282bad8d6824a83d9ebc0b18936a46c59839edec` |
+| `mock-production-007-e2ac131-proxy.json` | `e0cd51a47599f7faa1595ee9fc41c0256885a7b0abe9c9b28d3bb260bd425414` |
+
+部署元数据为 `vercel-production-e2ac131.json` 与 `vercel-docs-prebuilt-e2ac131.json`。
+本报告在首次部署后归档，不在该固定 Docs 快照中；后续文档归档部署需单独保留其快照，
+不能把报告提交号混称为首次站点构建号。
+
+### 体积与剩余边界
+
+PR Windows Admin 首屏 JS / CSS gzip 为 334,337 / 43,032 B，
+Ubuntu 为 334,348 / 43,041 B，原上限仍为 335,000 / 50,000 B。
+Cockpit 分别为 687,530 / 71,268 B 与 687,537 / 71,265 B，
+原上限仍为 800,000 / 80,000 B。无新增运行时依赖或预算调整。
+
+两个真实业务项目保持只读；未宣称业务 Dashboard、商业地图或真实后端已验收。
+十包版本与 `v0.0.7-beta` 保持不变，站点、文档和 Skill 后置修改不改写已发布 tarball。

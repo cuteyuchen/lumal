@@ -83,4 +83,7 @@ Viewport 实验与主画布隔离；测试的五种窗口尺寸不等同于真�
 
 完整安装、Cesium 资源与源码 alias / dist 边界见 [接入指南](../../docs/demo-integration-guide.md)。
 Designer 名称输入修复已随 `0.0.7-beta` 发布并完成 registry 核验，
-见 [本版发布记录](../../docs/npm-release-0.0.7-beta.md)；示例未部署前，线上域名不代表当前分支。
+示例已随 PR #9 合入 master 并完成授权部署；
+首次生产验收基线、Cesium 资源检查及未覆盖边界见
+[本版发布记录](../../docs/npm-release-0.0.7-beta.md#合并与站点实际验收)。
+后续包版本、源码和线上产物仍须分别核对。
