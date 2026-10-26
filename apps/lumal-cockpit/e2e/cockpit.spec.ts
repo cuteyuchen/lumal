@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test'
 import type { Buffer } from 'node:buffer'
 import { expect, test } from '../../lumal-admin/e2e/fixtures'
-import { canvasSampleClip, countCanvasColors } from './canvas-pixels'
+import { canvasFullClip, canvasSampleClip, countCanvasColors } from './canvas-pixels'
 
 /***********************生产画布像素、网络和组件生命周期证据*********************/
 async function expectFittedStage(page: Page, width: number, height: number): Promise<void> {
@@ -17,18 +17,30 @@ async function expectFittedStage(page: Page, width: number, height: number): Pro
 
 async function captureCanvas(canvas: Locator, sampleOnly = false): Promise<Buffer> {
   await expect(canvas).toBeVisible()
-  // 软件 GPU 的截图本身可能耗时 20 秒，不应占用轮询断言预算并丢弃已经绘制的结果。
-  let image: Buffer
-  if (sampleOnly) {
-    const bounds = await canvas.boundingBox()
-    expect(bounds, '中央画布必须有实际尺寸').not.toBeNull()
-    const clip = canvasSampleClip(bounds!)
-    image = await canvas.page().screenshot({ animations: 'disabled', clip })
-    test.info().annotations.push({ type: 'canvas-sample-size', description: `${clip.width}x${clip.height}` })
-  }
-  else {
-    image = await canvas.screenshot({ animations: 'disabled' })
-  }
+  // 可见性已单独验证，只读取几何数据；不为截图再次解析句柄、滚动并等待元素稳定。
+  const bounds = await canvas.evaluateAll((elements) => {
+    const target = elements[0]
+    if (elements.length !== 1 || !target.isConnected)
+      throw new Error('截图必须对应唯一且仍连接的画布')
+    const { x, y, width, height } = target.getBoundingClientRect()
+    return { x, y, width, height }
+  })
+  const viewport = canvas.page().viewportSize()
+  expect(viewport, '生产画布验收必须使用显式视口').not.toBeNull()
+  expect(bounds.width).toBeGreaterThan(0)
+  expect(bounds.height).toBeGreaterThan(0)
+  const fullClip = canvasFullClip(bounds)
+  expect(fullClip.x).toBeGreaterThanOrEqual(0)
+  expect(fullClip.y).toBeGreaterThanOrEqual(0)
+  expect(fullClip.x + fullClip.width, '整幅画布不能被视口裁切').toBeLessThanOrEqual(viewport!.width)
+  expect(fullClip.y + fullClip.height, '整幅画布不能被视口裁切').toBeLessThanOrEqual(viewport!.height)
+  // 全幅保留整个原画布；只有恢复用例沿用既有的中央采样范围。
+  const clip = sampleOnly ? canvasSampleClip(bounds) : fullClip
+  const image = await canvas.page().screenshot({ animations: 'disabled', clip })
+  test.info().annotations.push({
+    type: sampleOnly ? 'canvas-sample-size' : 'canvas-full-size',
+    description: `${clip.width}x${clip.height}`,
+  })
   await test.info().attach('canvas-pixel-sample', { body: image, contentType: 'image/png' })
   return image
 }
