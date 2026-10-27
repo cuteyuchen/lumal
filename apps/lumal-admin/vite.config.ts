@@ -1,9 +1,10 @@
 import process from 'node:process'
 import { fileURLToPath, URL } from 'node:url'
+import { createLumalAliases, createViewportTransformPlugin } from '@lumal/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
-import { createLumalAliases } from '../../packages/vite/src/aliases'
 import { createAdminBuildInfo } from './build/app-info'
+import { viewportDesign } from './viewport.config'
 
 const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
 const elementPlusDataComponents = new Set(['pagination', 'table', 'table-v2', 'tree', 'tree-v2'])
@@ -45,7 +46,20 @@ export default defineConfig(({ command, isPreview, mode }) => ({
   define: {
     __LUMAL_ADMIN_BUILD_INFO__: JSON.stringify(createAdminBuildInfo(mode)),
   },
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    createViewportTransformPlugin({
+      enabled: true,
+      // 仅转换独立视口示例，不影响 Admin 布局、第三方组件或用户工作区策略。
+      include: ['src/views/examples/viewport/**'],
+      viewportWidth: viewportDesign.designWidth,
+      output: 'runtime',
+      inlineStyles: true,
+      fontSize: false,
+      minSize: false,
+      excludeProperties: ['border*'],
+    }),
+  ],
   server: {
     // 固定端口，便于 admin 与 mock-api、datav-guide 之间的稳定联调
     port: 5170,

@@ -17,7 +17,4 @@ import { viewportPolicy } from '../../viewport.config';
   min-width: 0;
   min-height: 0;
 }
-.screen-viewport :deep([data-viewport-mode='vw'] .screen-view) {
-  padding: max(16px, calc(32 * var(--lumal-viewport-x-unit)));
-}
 </style>

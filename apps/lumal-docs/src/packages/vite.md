@@ -87,6 +87,7 @@ export default defineConfig({
     include: ['src/screen/**'],
     exclude: ['src/screen/canvas/**', '**/map/**'],
     viewportWidth: 1920,
+    output: 'runtime',
     includeProperties: ['width', 'height', 'top', 'left', 'padding*', '*gap'],
     excludeProperties: ['border*', 'margin*'],
     excludeSelectors: ['.runtime-canvas', /\.el-(?:dialog|popper)\b/],
@@ -112,15 +113,19 @@ export default defineConfig({
 原子化任意值类名及对应生成规则（如 `.w-\[192px\]`）都保留，普通属性选择器不受误伤。
 
 包含视口变量、动态尺寸函数或已有视口/容器单位的整条声明保留，避免重复转换。
-插件不能推断跨组件或外部 transform，整体缩放画布必须显式排除。
+默认 `output:'vw'` 直接生成浏览器 vw，可独立使用，整体缩放画布必须显式排除。
+可选 `output:'runtime'` 输出 `calc(192 * var(--lumal-viewport-unit, 1px))`；
+LumalViewport 的 vw 模式按浏览器宽度换算，其余模式恢复设计 px，避免画布重复缩放。
+无包装器或 Teleport 到包装器外时回退1px；外部 transform 仍需应用显式隔离。
 Dev 与 Build 使用相同入口；完整选项、优先级和 SCSS 来源限制见
 [屏幕适配](/reference/screen-viewport-guide)。
 
 运行时与构建可从项目自己的 `viewport.config.ts` 共享无依赖设计常量：
 `@lumal/viewport` policy 使用 `designWidth/designHeight`，
 Vite 使用同一对象的 `viewportWidth: viewportDesign.designWidth`。
-两包不互相依赖，Screen 视口模板不默认启用构建转换。
-浏览器 vw 不等于运行时容器单位，地图/ECharts resize 和弹窗仍显式采用运行时 API。
+两包不互相依赖，Screen 模板仅 `--viewport vw` 安装并启用协作转换，其他模式保持轻量。
+浏览器 vw 不等于容器宽度：vw 下宽高均按浏览器宽度 / 设计宽度换算，布局保持流式。
+字体/行高与最小尺寸默认仍保护；地图/ECharts resize 和弹窗显式采用运行时 API。
 
 Monorepo 的开发源码 alias 应限定为 `command === 'serve' && !isPreview`，
 并包含传递依赖 viewport；普通 npm 消费者不需要这些 alias。

@@ -26,7 +26,7 @@ pnpm add @lumal/viewport@0.0.6-beta vue@^3.5
 
 | 能力 | 用途 |
 | --- | --- |
-| `LumalViewport` | 基于自身实际容器的响应式、contain、width 或容器单位策略 |
+| `LumalViewport` | 实际容器测量、contain/width 画布与浏览器 vw 流式策略 |
 | `createViewportPlugin` | 提供应用默认值，不变换 DOM 根或强制注册路由守卫 |
 | `resolveViewportPolicy` / `useViewportPolicy` | 合并应用默认和局部显式覆盖 |
 | `useElementSize` / `useViewportScale` | 响应式尺寸与比例，管理 Observer、RAF 和生命周期 |
@@ -37,8 +37,18 @@ pnpm add @lumal/viewport@0.0.6-beta vue@^3.5
 
 应用默认、页面和容器是三个作用范围，策略单独选择：
 `disabled` 关闭，`responsive` 保持自然布局，`contain` 等比完整容纳并留白，
-`width` 等比填满宽度并允许宿主局部纵向滚动，`vw` 只提供实际容器尺寸变量。
+`width` 等比填满宽度并允许宿主局部纵向滚动。
+下一版未发布源码修正 `vw` 为浏览器宽度 / 设计宽度的流式策略，
+横纵单位使用同一宽度比例，不 transform；实际容器测量仍保留。
+只选运行时 vw 不会重写原有 px，需配合可选构建转换或显式单位表达式。
 容器需有明确宽高，`minScale/maxScale/minFontSize` 由消费方显式配置。
+
+`@lumal/vite` 的可选 `output:'runtime'` 将受控尺寸转为局部单位表达式，
+由包装器在 vw 下使用浏览器单位，其他模式恢复1px，避免画布二次缩放。
+项目根 `viewport.config.ts` 共享设计尺寸，两个包无需互相依赖。
+`minScale/maxScale` 只约束画布，字号/最小尺寸默认保护。
+动态图表/表格数值用已有 `useViewportScale({ designWidth, mode:'width' })`
+（不传 target）在 computed 中显式适配，不扫描脚本字符串。
 
 全局、路由/页面与容器接线示例集中维护在
 [屏幕与工作区适配](/reference/screen-viewport-guide)，

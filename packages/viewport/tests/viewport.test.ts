@@ -1,9 +1,12 @@
+import type { ElementSize, ViewportPolicy } from '../src'
 import { mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { computed, defineComponent, h, KeepAlive, nextTick, shallowRef, Teleport } from 'vue'
+import { computed, createSSRApp, defineComponent, h, KeepAlive, nextTick, shallowRef, Teleport } from 'vue'
+import { renderToString } from 'vue/server-renderer'
 import { computeViewportFontSize, computeViewportScale, createViewportPlugin, LumalViewport, resolveViewportPolicy, useViewportPolicy, useViewportScale } from '../src'
 
 afterEach(() => {
+  vi.restoreAllMocks()
   vi.unstubAllGlobals()
   vi.useRealTimers()
 })
@@ -200,7 +203,7 @@ describe('全局默认、页面和容器策略', () => {
     isolated.unmount()
   })
 
-  it('响应式和关闭不 transform，页面切换清除局部变量，Teleport 不继承画布样式', async () => {
+  it('响应式和关闭不 transform，页面切换重置局部单位，Teleport 不继承画布样式', async () => {
     const policy = shallowRef<false | { mode: 'vw' | 'responsive' }>({ mode: 'vw' })
     const wrapper = mount(defineComponent({
       setup: () => () => h(LumalViewport, { policy: policy.value }, () => [
@@ -215,9 +218,141 @@ describe('全局默认、页面和容器策略', () => {
     policy.value = false
     await nextTick()
     expect(wrapper.attributes('data-viewport-mode')).toBe('disabled')
-    expect(wrapper.attributes('style')).not.toContain('--lumal-viewport')
+    expect(wrapper.element.style.getPropertyValue('--lumal-viewport-unit')).toBe('1px')
+    expect(wrapper.element.style.getPropertyValue('--lumal-viewport-x-unit')).toBe('1px')
+    expect(wrapper.element.style.getPropertyValue('--lumal-viewport-y-unit')).toBe('1px')
     expect(wrapper.text()).toContain('page')
     wrapper.unmount()
     expect(document.querySelector('.viewport-test-dialog')).toBeNull()
+  })
+})
+
+describe('浏览器 vw 与构建单位协作', () => {
+  function measureContainer(width = 1000, height = 300) {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(width)
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(height)
+    vi.stubGlobal('ResizeObserver', class {
+      observe = vi.fn()
+      disconnect = vi.fn()
+    })
+  }
+
+  it('横纵尺寸按浏览器宽度缩放，实际容器测量与流式布局保持独立', async () => {
+    vi.useFakeTimers()
+    measureContainer()
+    vi.stubGlobal('innerWidth', 1440)
+    vi.stubGlobal('innerHeight', 400)
+    const wrapper = mount(LumalViewport, {
+      props: { policy: { mode: 'vw', designWidth: 1920, designHeight: 1080, minScale: 1, maxScale: 1, minFontSize: 12 } },
+      slots: {
+        default: ({ scale, size }: { scale: number, size: ElementSize }) => h('div', { class: 'probe' }, `${192 * scale}:${96 * scale}:${size.width}x${size.height}`),
+      },
+    })
+    await nextTick()
+    const style = wrapper.element.style
+    expect(style.getPropertyValue('--lumal-viewport-unit')).toBe(`${100 / 1920}vw`)
+    expect(style.getPropertyValue('--lumal-viewport-x-unit')).toBe(`${100 / 1920}vw`)
+    expect(style.getPropertyValue('--lumal-viewport-y-unit')).toBe(`${100 / 1920}vw`)
+    expect(style.getPropertyValue('--lumal-viewport-scale')).toBe('0.75')
+    expect(style.getPropertyValue('--lumal-viewport-min-font-size')).toBe('12px')
+    expect(wrapper.find('.probe').text()).toBe('144:72:1000x300')
+    expect(wrapper.find('.probe').element.parentElement?.style.transform).toBe('')
+    expect(wrapper.emitted('resize')).toEqual([[{ width: 1000, height: 300 }]])
+    expect(wrapper.vm.result.scale).toBe(0.75)
+    expect(wrapper.vm.result.containerWidth).toBe(1440)
+    expect(wrapper.vm.size).toEqual({ width: 1000, height: 300 })
+
+    vi.stubGlobal('innerWidth', 960)
+    window.dispatchEvent(new Event('resize'))
+    vi.runOnlyPendingTimers()
+    await nextTick()
+    expect(wrapper.find('.probe').text()).toBe('96:48:1000x300')
+    expect(style.getPropertyValue('--lumal-viewport-scale')).toBe('0.5')
+    expect(wrapper.emitted('resize')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('vw、画布、响应式和关闭之间切换不会重建内容或重复缩放，窗口监听随模式释放', async () => {
+    vi.useFakeTimers()
+    measureContainer(1000, 500)
+    vi.stubGlobal('innerWidth', 1280)
+    vi.stubGlobal('innerHeight', 720)
+    const add = vi.spyOn(window, 'addEventListener')
+    const remove = vi.spyOn(window, 'removeEventListener')
+    const policy = shallowRef<ViewportPolicy | false>({ mode: 'vw', minScale: 0.75 })
+    let setups = 0
+    const Page = defineComponent({
+      setup() {
+        setups++
+        return () => h('div', { class: 'persistent-page' }, 'page')
+      },
+    })
+    const wrapper = mount(defineComponent({
+      setup: () => () => h(LumalViewport, { policy: policy.value }, () => h(Page)),
+    }))
+    await nextTick()
+    const host = () => wrapper.getComponent(LumalViewport).element
+    expect(host().style.getPropertyValue('--lumal-viewport-scale')).toBe(String(1280 / 1920))
+    const listeners = () => add.mock.calls.filter(call => call[0] === 'resize')
+    expect(listeners()).toHaveLength(1)
+
+    policy.value = { mode: 'contain', minScale: 0.75 }
+    await nextTick()
+    expect(host().style.getPropertyValue('--lumal-viewport-unit')).toBe('1px')
+    expect(wrapper.find('.persistent-page').element.parentElement?.style.transform).toContain('scale(0.75)')
+    expect(remove).toHaveBeenCalledWith('resize', listeners()[0]![1])
+
+    policy.value = { mode: 'responsive' }
+    await nextTick()
+    expect(host().style.getPropertyValue('--lumal-viewport-unit')).toBe('1px')
+    expect(host().style.getPropertyValue('--lumal-viewport-x-unit')).toBe(`${1000 / 1920}px`)
+    expect(wrapper.find('.persistent-page').element.parentElement?.style.transform).toBe('')
+
+    policy.value = { mode: 'vw', designWidth: 1600 }
+    await nextTick()
+    expect(host().style.getPropertyValue('--lumal-viewport-unit')).toBe('0.0625vw')
+    expect(host().style.getPropertyValue('--lumal-viewport-scale')).toBe('0.8')
+    expect(listeners()).toHaveLength(2)
+    policy.value = false
+    await nextTick()
+    expect(host().style.getPropertyValue('--lumal-viewport-unit')).toBe('1px')
+    expect(host().style.getPropertyValue('--lumal-viewport-scale')).toBe('1')
+    expect(host().style.getPropertyValue('--lumal-viewport-x-unit')).toBe('1px')
+    expect(host().style.getPropertyValue('--lumal-viewport-y-unit')).toBe('1px')
+    expect(host().style.getPropertyValue('--lumal-viewport-min-font-size')).toBe('0px')
+    expect(remove).toHaveBeenCalledWith('resize', listeners()[1]![1])
+    expect(setups).toBe(1)
+    wrapper.unmount()
+    expect(remove.mock.calls.filter(call => call[0] === 'resize')).toHaveLength(2)
+  })
+
+  it('嵌套关闭、画布和局部 vw 显式覆盖外层单位，不将浏览器比例继承到画布', async () => {
+    measureContainer()
+    const wrapper = mount(defineComponent({
+      setup: () => () => h(LumalViewport, { policy: { mode: 'vw', designWidth: 1920 } }, () => [
+        h(LumalViewport, { policy: false }, () => h('div', 'disabled')),
+        h(LumalViewport, { policy: { mode: 'width', designWidth: 960 } }, () => h('div', 'canvas')),
+        h(LumalViewport, { policy: { mode: 'vw', designWidth: 3840 } }, () => h('div', 'local')),
+      ]),
+    }))
+    await nextTick()
+    const hosts = wrapper.findAll<HTMLElement>('[data-viewport-mode]')
+    expect(hosts.map(host => host.element.style.getPropertyValue('--lumal-viewport-unit')))
+      .toEqual([`${100 / 1920}vw`, '1px', '1px', `${100 / 3840}vw`])
+    expect(hosts[1]!.element.style.getPropertyValue('--lumal-viewport-x-unit')).toBe('1px')
+    expect(wrapper.text()).toBe('disabledcanvaslocal')
+    wrapper.unmount()
+  })
+
+  it('服务端渲染使用可立即生效的 vw 单位，不等待浏览器测量或隐藏流式内容', async () => {
+    vi.stubGlobal('window', undefined)
+    const html = await renderToString(createSSRApp({
+      render: () => h(LumalViewport, { policy: { mode: 'vw', designWidth: 1920 } }, () => h('div', 'server-page')),
+    }))
+    expect(html).toContain(`--lumal-viewport-unit:${100 / 1920}vw`)
+    expect(html).toContain(`--lumal-viewport-y-unit:${100 / 1920}vw`)
+    expect(html).toContain('server-page')
+    expect(html).not.toContain('transform:')
+    expect(html).not.toContain('visibility:hidden')
   })
 })

@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import type { ViewportPolicy } from '@lumal/viewport'
 import { computeViewportFontSize, LumalViewport, useViewportPolicy } from '@lumal/viewport'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 /***********************普通 Vue 消费者，只由 LumalViewport 缩放*********************/
 const props = defineProps<{ policy?: ViewportPolicy | false }>()
 const viewportPolicy = useViewportPolicy(() => props.policy)
 const selected = ref(0)
+const canvasScaled = computed(() => ['contain', 'width'].includes(viewportPolicy.value.mode))
+
+// 只有 transform 画布需要反算字号；vw 默认保留字体，不能再除以浏览器比例。
+function footerFontSize(scale: number) {
+  return canvasScaled.value
+    ? computeViewportFontSize(16, scale, viewportPolicy.value.minFontSize) / scale
+    : computeViewportFontSize(16, 1, viewportPolicy.value.minFontSize)
+}
 </script>
 
 <template>
@@ -21,7 +29,7 @@ const selected = ref(0)
       <div class="viewport-canvas__chart" aria-label="运行趋势">
         <i v-for="value in [38, 65, 42, 80, 59, 92, 72]" :key="value" :style="{ height: `${value}%` }" />
       </div>
-      <footer :style="{ fontSize: `${computeViewportFontSize(16, scale, viewportPolicy.minFontSize) / scale}px` }">
+      <footer :style="{ fontSize: `${footerFontSize(scale)}px` }">
         <span data-testid="viewport-font">告警确认</span>
         <button type="button" @click="selected++">
           确认 · {{ selected }}

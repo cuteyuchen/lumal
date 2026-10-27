@@ -20,6 +20,27 @@ describe('受控视口 CSS 转换', () => {
     expect(() => createViewportPostcssPlugin({ ...options, viewportWidth: 0 })).toThrow('viewportWidth')
     expect(() => createViewportPostcssPlugin({ ...options, minPixelValue: -1 })).toThrow('minPixelValue')
     expect(() => createViewportPostcssPlugin({ ...options, minPixelValue: Number.NaN })).toThrow('minPixelValue')
+    expect(() => createViewportPostcssPlugin({ ...options, output: 'rem' as 'vw' })).toThrow('output')
+  })
+  it('运行时协作输出保留设计坐标，默认直接vw的行为不变', async () => {
+    const css = '.panel{width:192px;height:96px;padding:24px 1px;margin-left:-19.23456px;top:calc(100% - 24px);font-size:14px;line-height:20px;min-width:320px;border:1px solid red}'
+    const result = await transform(css, undefined, { output: 'runtime', precision: 3 })
+    expect(result).toBe('.panel{width:calc(192 * var(--lumal-viewport-unit, 1px));height:calc(96 * var(--lumal-viewport-unit, 1px));padding:calc(24 * var(--lumal-viewport-unit, 1px)) 1px;margin-left:calc(-19.235 * var(--lumal-viewport-unit, 1px));top:calc(100% - calc(24 * var(--lumal-viewport-unit, 1px)));font-size:14px;line-height:20px;min-width:320px;border:1px solid red}')
+    expect(await transform('a{width:192px}')).toBe('a{width:10vw}')
+    // 二次处理（包括切换输出策略）不能重新转换已包含单位变量的声明。
+    expect(await transform(result, undefined, { output: 'runtime' })).toBe(result)
+    expect(await transform(result)).toBe(result)
+  })
+  it('协作输出仍服从属性、选择器、忽略标记及已有适配保护', async () => {
+    const css = '.panel{width:192px;height:96px;/* lumal-viewport-ignore */padding:24px;min-height:40px;font:14px/20px sans-serif;top:calc(var(--gap) + 24px);--lumal-viewport-unit:192px}.map{width:192px}'
+    const result = await transform(css, undefined, {
+      output: 'runtime',
+      customProperties: true,
+      includeProperties: ['*'],
+      excludeProperties: ['padding*'],
+      excludeSelectors: ['.map'],
+    })
+    expect(result).toBe(css.replace('width:192px', 'width:calc(192 * var(--lumal-viewport-unit, 1px))'))
   })
   it('默认同时保护字号、font简写与行高，显式开启后一起转换', async () => {
     const css = 'a{font-size:14px;line-height:20px;font:italic 14px/20px sans-serif;width:192px}'

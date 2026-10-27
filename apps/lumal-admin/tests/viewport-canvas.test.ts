@@ -15,6 +15,7 @@ const ViewportStub = defineComponent({
 describe('viewport 示例字号策略', () => {
   it('继承应用最小字号，并响应局部覆盖和恢复', async () => {
     const wrapper = mount(ViewportCanvas, {
+      props: { policy: { mode: 'contain' } },
       global: {
         plugins: [createViewportPlugin({ minFontSize: 12 })],
         stubs: { LumalViewport: ViewportStub },
@@ -23,9 +24,22 @@ describe('viewport 示例字号策略', () => {
     const fontSize = () => (wrapper.get('footer').element as HTMLElement).style.fontSize
 
     expect(fontSize()).toBe('24px')
-    await wrapper.setProps({ policy: { minFontSize: 20 } })
+    await wrapper.setProps({ policy: { mode: 'contain', minFontSize: 20 } })
     expect(fontSize()).toBe('40px')
-    await wrapper.setProps({ policy: undefined })
+    await wrapper.setProps({ policy: { mode: 'contain' } })
+    expect(fontSize()).toBe('24px')
+    wrapper.unmount()
+  })
+  it('vw流式模式保留字号，不执行画布的反向补偿', async () => {
+    const wrapper = mount(ViewportCanvas, {
+      props: { policy: { mode: 'vw', minFontSize: 12 } },
+      global: { stubs: { LumalViewport: ViewportStub } },
+    })
+    const fontSize = () => (wrapper.get('footer').element as HTMLElement).style.fontSize
+    expect(fontSize()).toBe('16px')
+    await wrapper.setProps({ policy: { mode: 'responsive', minFontSize: 20 } })
+    expect(fontSize()).toBe('20px')
+    await wrapper.setProps({ policy: { mode: 'contain', minFontSize: 12 } })
     expect(fontSize()).toBe('24px')
     wrapper.unmount()
   })

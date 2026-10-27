@@ -28,7 +28,9 @@ DataV数字/边框不安装ECharts。`--viewport disabled|responsive|contain|wid
 非Admin不能叠Admin base，不能靠先生成再删除无用文件实现轻量。
 
 未发布的Screen视口模板将设计尺寸和运行时策略集中到根 `viewport.config.ts`，
-供运行时包装器和按需接入的 `@lumal/vite` 共享；不会默认安装构建插件或双重缩放。
+供运行时包装器和 `@lumal/vite` 共享；仅--viewport vw安装同版构建插件并启用
+output:'runtime'/inlineStyles:true，将Screen设计px按浏览器宽度流式适配。
+其他模式不安装构建插件；协作单位在非vw模式恢复1px避免画布双重缩放。
 已发布旧CLI不包含这项模板调整，验证时使用候选tarball。
 
 新项目均生成独立ESLint/Prettier/EditorConfig、AI规范和统一check。

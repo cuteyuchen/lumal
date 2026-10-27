@@ -20,10 +20,20 @@ Blank 只安装 Vue 运行时。Screen 默认没有 Router、认证、API、Admi
 不加载 Designer；DataV 数字/边框不安装 ECharts。
 
 `--viewport disabled|responsive|contain|width|vw` 默认 responsive，无额外视口包。
-contain 按设计宽高完整等比缩放，width 可能纵向滚动，vw 提供实际容器单位、不全局转换CSS。
-历史实验参数 scale 是 contain 别名。设计尺寸在生成的 ScreenViewport 中显式配置，
+contain 按实际容器和设计宽高完整等比缩放，width 按实际容器宽度缩放、可能纵向滚动。
+vw 保持流式布局，不使用整块画布 transform；Screen 中的设计 px 按浏览器宽度 / 设计宽度换算。
+历史实验参数 scale 是 contain 别名。设计尺寸和运行时策略集中在生成的根目录 `viewport.config.ts`，
 登录栏独立占位，不能把整屏高度误当内容高度。详见仓库 `docs/screen-viewport-guide.md`。
 所有项目生成相同语义的 lint、format:check、typecheck、test、build 和 check。
+
+候选源码的 `--viewport vw` 会精确同版安装 `@lumal/vite` 开发依赖，在 Dev/Build 中
+仅转换 `src/screen/**` 的 CSS、SCSS 和可静态分析的 Vue `style/:style`。
+Vite 与运行时共享 `viewportDesign.designWidth`；`output: 'runtime'` 生成协作单位表达式，
+由 `LumalViewport` 在 vw 模式提供浏览器宽度单位，切换其他模式或离开包装范围时恢复设计 px。
+默认保留字体及行高、最小尺寸和细边框；原子化类名、第三方依赖与脚本不扫描。
+若字号也需要同比变化，应显式设置 `fontSize: true`，不能只让行高缩放。
+`contain/width` 不安装或开启构建转换，避免双重缩放。
+已有项目升级依赖不会自动更改配置，新增接线需使用本次构建的候选 tarball 验证。
 
 ## 使用
 

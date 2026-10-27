@@ -1,6 +1,7 @@
 import { createLumalAdmin } from '@lumal/core'
 import { registerAuthorityDirectives } from '@lumal/core/directives'
 import { createViewportPlugin } from '@lumal/viewport'
+import { viewportDesign } from '../viewport.config'
 import App from './App.vue'
 import { localIcons, registerAdminIcons } from './icons'
 import { router } from './router'
@@ -30,6 +31,6 @@ void createLumalAdmin({
   preset: 'admin-default',
   setup({ app }) {
     registerAuthorityDirectives(app, permissionStore)
-    app.use(createViewportPlugin({ mode: 'responsive', designWidth: 1920, designHeight: 1080 }))
+    app.use(createViewportPlugin({ ...viewportDesign, mode: 'responsive' }))
   },
 }).mount('#app')

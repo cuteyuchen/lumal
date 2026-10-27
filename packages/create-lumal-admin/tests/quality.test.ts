@@ -22,6 +22,7 @@ describe('生成工程的格式契约', () => {
     ['Admin Vben Compatible', { template: 'admin', preset: 'vben-compatible' }],
     ['Blank', { template: 'blank' }],
     ['Screen 能力组合', { template: 'screen', auth: 'http', data: 'http', routerMode: 'history', visualization: 'cockpit', viewport: 'contain' }],
+    ['Screen vw', { template: 'screen', viewport: 'vw' }],
   ] as const)('%s 合并后的运行时和开发依赖均有序', async (_label, input) => {
     const options = resolveProjectOptions({ ...input, name: 'quality-test', targetDir: 'unused' })
     const files = options.template === 'admin'

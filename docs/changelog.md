@@ -1,10 +1,17 @@
 # 更新日志
 
-## 未发布 (2026-10-26)
+## 未发布 (2026-10-27)
+
+- 修正运行时 `vw` 的浏览器宽度语义：宽高共用 `window.innerWidth / designWidth`，
+  保持流式布局，不按容器宽高分别换算、不 transform 整页；实际容器测量继续保留。
+- `@lumal/vite` 新增可选 `output: 'runtime'`，与局部单位协作，在 vw 外恢复设计 px，
+  切换 responsive/contain/width/disabled 不叠加缩放；默认直接 vw 输出保持兼容。
+- `--viewport vw` 生成的 Screen 真正启用构建与 Vue 行内样式转换，共享设计尺寸；
+  其他模式不增加构建依赖。Admin 视口示例补充 vw 及单层缩放演示。
 
 - `@lumal/vite` 新增属性名单、选择器排除、声明忽略与独立 Vue 行内样式转换开关；保护原子化任意值类名及其 CSS 规则。
 - 修复保留字号却缩小行高的问题，默认保护最小尺寸与已有适配表达式；保留文件、依赖、SCSS source map 和 Dev/Build 一致性边界。
-- Screen 视口模板共享项目级设计尺寸，不默认开启构建转换，不修改 `@lumal/viewport` 公共 API。
+- Screen 视口模板共享项目级设计尺寸，仅 vw 模式开启构建转换，不新增运行时公共函数。
 
 上述内容属于待发布源码，不包含在已发布的 `0.0.6-beta` 中。包版本保持不变，
 下一次正式版本准备时汇总 Changeset 并统一更新版本；本次不发布 npm、不部署生产。

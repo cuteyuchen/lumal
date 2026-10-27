@@ -69,6 +69,8 @@ export async function composeProjectTemplates(options: ResolvedScreenOptions): P
     layers.push(`screen-visualization-${options.visualization}`)
   if (viewport)
     layers.push('screen-viewport')
+  if (options.viewport === 'vw')
+    layers.push('screen-viewport-vw')
   const files = await readTemplateLayers(layers)
   const manifest = JSON.parse(files.get('package.json')!)
   const version = await getVersion()
@@ -79,6 +81,8 @@ export async function composeProjectTemplates(options: ResolvedScreenOptions): P
     manifest.dependencies['@lumal/core'] = version
   if (viewport)
     manifest.dependencies['@lumal/viewport'] = version
+  if (options.viewport === 'vw')
+    manifest.devDependencies['@lumal/vite'] = version
   if (options.visualization !== 'none')
     manifest.dependencies[`@lumal/${options.visualization}`] = version
   if (options.visualization === 'charts') {

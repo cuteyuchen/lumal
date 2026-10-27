@@ -21,7 +21,18 @@ const viewport: ViewportTransformOptions = {
   ],
 }
 
+const cooperative: ViewportTransformOptions = {
+  enabled: true,
+  include: ['src/cooperative/**'],
+  viewportWidth: design.designWidth,
+  output: 'runtime',
+  inlineStyles: true,
+  fontSize: false,
+  minSize: false,
+  excludeProperties: ['border*'],
+}
+
 export default defineConfig({
-  plugins: [createViewportTransformPlugin(viewport), vue()],
+  plugins: [createViewportTransformPlugin(viewport), createViewportTransformPlugin(cooperative), vue()],
   build: { minify: false, cssMinify: false, sourcemap: true },
 })

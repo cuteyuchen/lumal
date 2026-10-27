@@ -16,6 +16,8 @@ export interface ViewportTransformOptions {
   include: string[]
   exclude?: string[]
   viewportWidth?: number
+  /** 默认直接输出 vw；runtime 使用局部单位变量，仅在 LumalViewport 的 vw 模式换算。 */
+  output?: 'vw' | 'runtime'
   precision?: number
   /** 默认保留 <=1px，避免细边框消失。 */
   minPixelValue?: number

@@ -92,10 +92,14 @@ const viewport = createViewportTransformPlugin({
   无可靠map的跨文件Sass导入、无法解析语法或函数additionalData让该style跳过并警告；
   独立安全CSS/SCSS块仍可转换。低层PostCSS处理预编译SCSS/SFC也需原始map。
 
-同一内容树不能与运行时contain/width或外部transform双重缩放。无法自动推断跨组件缩放，
+默认 `output:'vw'` 直接输出浏览器vw，可独立使用，不能与画布transform叠加。
+可选 `output:'runtime'` 将设计px输出为 `calc(192 * var(--lumal-viewport-unit, 1px))`，
+LumalViewport在vw下设置浏览器宽度单位，其余模式恢复1px，无包装器/外部Teleport回退1px。
+切换协作模式不二次缩放；外部transform或已有raw vw仍需要显式隔离。无法自动推断跨组件缩放，
 显式排除画布文件/selector/声明。项目级普通 `viewport.config.ts` 可共享设计对象：
 运行时policy展开designWidth/designHeight，Vite使用viewportWidth=designWidth；
-不增加两个包间依赖。构建vw相对浏览器，运行时单位相对真实容器。
+不增加两个包间依赖。vw宽高统一相对浏览器宽度，实际容器测量仍独立。
+Screen仅--viewport vw自动安装并启用协作转换，其他模式不增加构建依赖。
 Admin/地图/Teleport浮层不要纳入宽泛转换；ECharts与动态尺寸继续显式使用运行时API。
 新选项默认关闭或保守保护，旧最小尺寸如需继续缩放必须显式minSize:true。
 

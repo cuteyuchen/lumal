@@ -5,6 +5,7 @@ import { resolveViewportPolicy, useElementSize, useViewportPolicy, useViewportSc
 import { ElButton, ElDialog, ElTable, ElTableColumn, ElTooltip } from 'element-plus'
 import { computed, ref, useTemplateRef } from 'vue'
 import { useRoute } from 'vue-router'
+import { viewportDesign } from '../../../viewport.config'
 import ViewportCanvas from './viewport/ViewportCanvas.vue'
 import canvasSource from './viewport/ViewportCanvas.vue?raw'
 
@@ -14,8 +15,8 @@ const defaults = useViewportPolicy()
 const routePolicy = computed(() => resolveViewportPolicy(defaults.value, route.meta.viewport as ViewportPolicy | undefined))
 const mode = ref<ViewportMode>('contain')
 const scope = ref('container')
-const designWidth = ref(960)
-const designHeight = ref(540)
+const designWidth = ref<number>(viewportDesign.designWidth)
+const designHeight = ref<number>(viewportDesign.designHeight)
 const minFontSize = ref(12)
 const simulation = ref('wide')
 const dialogVisible = ref(false)
@@ -39,7 +40,16 @@ const { scale } = useViewportScale({
   designHeight: () => policy.value.designHeight,
   mode: () => policy.value.mode === 'width' ? 'width' : 'contain',
 })
-const displayScale = computed(() => ['contain', 'width'].includes(policy.value.mode) ? scale.value : 1)
+// vw 与构建单位同取浏览器宽度，不以窄容器或可用高度计算比例。
+const { scale: windowScale } = useViewportScale({
+  designWidth: () => policy.value.designWidth,
+  designHeight: () => policy.value.designHeight,
+  mode: 'width',
+  enabled: () => policy.value.mode === 'vw',
+})
+const displayScale = computed(() => policy.value.mode === 'vw'
+  ? windowScale.value
+  : ['contain', 'width'].includes(policy.value.mode) ? scale.value : 1)
 const dimensions = computed(() => simulation.value === 'short'
   ? { width: '100%', height: '280px' }
   : simulation.value === 'narrow' ? { width: '480px', height: '420px' } : { width: '100%', height: '540px' })
@@ -55,7 +65,7 @@ const rows = computed(() => [
     <LumalPage title="Viewport">
       <div class="viewport-controls">
         <label>策略来源<select v-model="scope" aria-label="策略来源"><option value="global">全局默认</option><option value="route">路由页面</option><option value="container">容器覆盖</option></select></label>
-        <label>适配模式<select v-model="mode" aria-label="适配模式" :disabled="scope !== 'container'"><option value="contain">contain</option><option value="width">width</option><option value="responsive">responsive</option><option value="disabled">disabled</option></select></label>
+        <label>适配模式<select v-model="mode" aria-label="适配模式" :disabled="scope !== 'container'"><option value="contain">contain</option><option value="width">width</option><option value="vw">vw</option><option value="responsive">responsive</option><option value="disabled">disabled</option></select></label>
         <label>模拟尺寸<select v-model="simulation" aria-label="模拟尺寸"><option value="wide">宽屏</option><option value="short">矮屏</option><option value="narrow">窄屏</option></select></label>
         <label>设计宽<input v-model.number="designWidth" aria-label="设计宽" type="number" min="320" max="3840" :disabled="scope !== 'container'"></label>
         <label>设计高<input v-model.number="designHeight" aria-label="设计高" type="number" min="240" max="2160" :disabled="scope !== 'container'"></label>

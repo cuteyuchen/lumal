@@ -41,6 +41,7 @@ const viewport = createViewportTransformPlugin({
 | `minPixelValue` | `1` | 绝对值不大于阈值的 px 保留，保护细边框，必须为非负有限数 |
 | `precision` | `6` | 小数位数，范围 `0..10` |
 | `inlineStyles` | `false` | 独立开启 Vue 模板行内样式转换 |
+| `output` | `'vw'` | 直接输出浏览器 vw；`'runtime'` 输出由局部运行时策略控制的设计 px 表达式 |
 
 属性使用 CSS 连字符形式，普通 CSS 属性匹配不区分大小写；`padding*`、`border*`、
 `margin*` 和 `*gap` 可分别控制内边距、边框、外边距和间隙。
@@ -114,22 +115,53 @@ Tailwind/UnoCSS 的 `w-[192px]`、`h-[96px]` 等任意值类名不会改变，
 必须传入原始 source map，否则保守保留 px，不能根据入口路径猜测来源。
 
 不转换 TS/JS 字符串或坐标；动态数值布局使用响应式 viewport Composable。
-不提供旧插件的全依赖/全脚本扫描开关。不要将本插件与同一画布的 transform 双重缩放，
+不提供旧插件的全依赖/全脚本扫描开关。直接 vw 输出不要与同一画布的 transform 双重缩放，
 也不要让转换范围覆盖 Admin、Element Plus 或地图引擎样式。
 解析依赖仅供 Node 构建工具使用，不进入应用运行时。
 
 ### 与运行时协作
 
-`@lumal/vite` 的 vw 相对浏览器视口，`@lumal/viewport` 的测量和单位变量相对实际容器，
-两者不能互相代替。应用自己的 `viewport.config.ts` 可导出无依赖的
-`viewportDesign = { designWidth: 1920, designHeight: 1080 }`，运行时 policy 展开该对象，
-构建配置使用 `viewportWidth: viewportDesign.designWidth`，不必让两个包互相依赖。
-Screen 视口脚手架已使用这种共享方式，但不默认安装或开启构建转换。
+浏览器 vw 与实际容器测量不同。实现流式大屏时，宽、高、间距都按
+`浏览器宽度 / designWidth` 换算，不按容器宽度或可用高度缩放，不 transform 整个画布。
+字体、最小尺寸和细边框仍按前述安全策略保护，不是旧插件的无差别转换。
 
-运行时 `contain/width` 画布必须从构建 `include` 中分离，或显式用 `exclude`、
-`excludeSelectors` / 忽略标记保护。插件不能自动推断外部或跨组件的 transform。
+直接输出（默认 `output: 'vw'`）可单独使用；`192px → 10vw`，无需运行时包。
+此时 `contain/width` 画布必须从 `include` 分离，或显式排除选择器/声明。
+
+需要在同一页面切换 `vw/responsive/contain/width` 时，使用可选协作输出：
+
+```ts
+import { createViewportTransformPlugin } from '@lumal/vite'
+import { viewportDesign } from './viewport.config'
+
+const viewport = createViewportTransformPlugin({
+  enabled: true,
+  include: ['src/screen/**'],
+  viewportWidth: viewportDesign.designWidth,
+  output: 'runtime',
+  inlineStyles: true,
+  fontSize: false,
+  minSize: false,
+})
+```
+
+`192px` 输出为 `calc(192 * var(--lumal-viewport-unit, 1px))`，小数精度作用于设计 px 系数。
+`LumalViewport` 在 `vw` 模式设置单位为 `100 / designWidth vw`；设计宽1920、窗口宽1280时，
+宽192px与高96px最终为128px与64px，即10vw与5vw。容器宽1000也不会改变这个比例。
+其他模式设置单位为1px：responsive保持设计尺寸，contain/width只由画布 transform 一次。
+没有运行时包装器、嵌套禁用容器或 Teleport 到包装器外时回退为原设计 px。
+已有 raw vw、任意外部 transform 仍须显式隔离，协作单位不能撤销其他工具做过的缩放。
+同理，不能把 vw 区域嵌套在已 transform 的 contain/width 画布内部。
+
+应用自己的 `viewport.config.ts` 导出无依赖的
+`viewportDesign = { designWidth: 1920, designHeight: 1080 }`，运行时 policy 展开同一对象，
+构建配置使用 `viewportWidth: viewportDesign.designWidth`，两个包无需互相依赖。
+Screen 脚手架仅 `--viewport vw` 安装构建插件并启用上述协作配置；其他模式不增加该依赖。
+
 全局、路由和容器测量仍由现有运行时 API 配置；Admin、Screen、Blank 按需选择，
 ECharts 数值、地图和 Teleport 弹窗继续通过公开 API 显式测量和 resize。
+动态数值使用 `useViewportScale({ designWidth, mode: 'width' })`（不传 target）并在 computed
+中乘以比例；容器数值则显式传 target，不能混用浏览器 vw 和容器比例。
 
 旧配置保持有效，`inlineStyles` 默认关闭。此次安全修正会额外保留行高、最小尺寸及
 已有适配表达式；旧项目若确需转换最小尺寸，显式启用 `minSize`，不要扩大文件范围。

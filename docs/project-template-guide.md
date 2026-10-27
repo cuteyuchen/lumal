@@ -67,6 +67,11 @@ Charts 使用 ECharts；DataV 数字/边框不要求 ECharts；Cockpit 只使用
 不加载 Designer。`--viewport disabled|responsive|contain|width|vw` 单独控制适配，
 默认 responsive 不增加依赖；非默认适配才加入 `@lumal/viewport`。
 `scale` 保留为 contain 的别名，不是第二套算法。
+下一版未发布源码的 `--viewport vw` 同时安装同版 `@lumal/vite` 构建依赖，
+复用根 `viewport.config.ts`，把 Screen CSS/SCSS/模板 style 的 px 转为运行时协作表达式。
+在 vw 下按浏览器宽度流式适配，不 transform 固定画布；其他模式恢复设计 px。
+字体/行高、最小尺寸、原子化规则与第三方保护保留，不扫描脚本。
+其他适配模式不安装构建插件，Blank/默认Screen的轻量依赖不变。
 
 ```sh
 node packages/create-lumal-admin/dist/project-cli.js datav-screen --template screen --visualization datav --viewport contain --no-interactive

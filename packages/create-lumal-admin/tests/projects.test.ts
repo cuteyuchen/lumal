@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { createLumalProject } from '../src'
 import { parseCliArgs } from '../src/cli'
 import { resolveProjectOptions } from '../src/projects'
+import { getVersion } from '../src/templates'
 
 const temporary: string[] = []
 afterEach(async () => {
@@ -121,10 +122,30 @@ describe('通用项目生成器', () => {
       const wrapper = await readFile(join(targetDir, 'src/screen/ScreenViewport.vue'), 'utf8')
       expect(wrapper).toContain('import { viewportPolicy } from \'../../viewport.config\'')
       expect(wrapper).toContain(':policy="viewportPolicy"')
-      expect(wrapper).not.toMatch(/designWidth:|designHeight:/)
+      expect(wrapper).not.toMatch(/designWidth:|designHeight:|--lumal-viewport-x-unit/)
     }
     const manifest = JSON.parse(await readFile(join(targetDir, 'package.json'), 'utf8'))
-    expect(manifest.devDependencies).not.toHaveProperty('@lumal/vite')
-    expect(await readFile(join(targetDir, 'vite.config.ts'), 'utf8')).not.toContain('createViewportTransformPlugin')
+    const vite = await readFile(join(targetDir, 'vite.config.ts'), 'utf8')
+    if (viewport === 'vw') {
+      expect(manifest.devDependencies['@lumal/vite']).toBe(await getVersion())
+      expect(manifest.dependencies['@lumal/viewport']).toBe(manifest.devDependencies['@lumal/vite'])
+      expect(vite).toContain('createViewportTransformPlugin')
+      expect(vite).toContain('import { viewportDesign } from \'./viewport.config\'')
+      expect(vite).toContain('viewportWidth: viewportDesign.designWidth')
+      expect(vite).toContain('include: [\'src/screen/**\']')
+      expect(vite).toContain('output: \'runtime\'')
+      expect(vite).toContain('inlineStyles: true')
+      expect(vite).toContain('fontSize: false')
+      expect(vite).toContain('minSize: false')
+      expect(vite).not.toMatch(/command|apply:|transformNodeModules|script:/)
+      const screen = await readFile(join(targetDir, 'src/screen/ScreenView.vue'), 'utf8')
+      expect(screen).toContain('padding: 32px')
+      expect(screen).toContain('gap: 16px')
+      expect(screen).toContain('margin-bottom: 32px')
+    }
+    else {
+      expect(manifest.devDependencies).not.toHaveProperty('@lumal/vite')
+      expect(vite).not.toContain('createViewportTransformPlugin')
+    }
   })
 })
