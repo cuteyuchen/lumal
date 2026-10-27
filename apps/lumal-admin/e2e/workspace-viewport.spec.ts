@@ -8,6 +8,62 @@ const modeLabels = {
   width: '按宽缩放',
 } as const
 
+/***********************首屏菜单样式与真实操作*********************/
+for (const theme of ['light', 'dark'] as const) {
+  for (const viewport of [
+    { name: '桌面', width: 1440, height: 900 },
+    { name: '窄屏', width: 375, height: 720 },
+  ]) {
+    test(`首次打开的工作区适配菜单样式与状态正常（${viewport.name}/${theme}）`, async ({ page }, testInfo) => {
+      await page.setViewportSize(viewport)
+      await loginAsAdmin(page)
+      if (await page.locator('html').evaluate(element => element.classList.contains('dark')) !== (theme === 'dark'))
+        await page.getByRole('button', { name: /切换(?:深|浅)色模式/ }).click()
+
+      // 只在首次工作台打开菜单，不能依赖随后访问的业务页补齐按需样式。
+      const trigger = page.getByRole('button', { name: '工作区适配', exact: true })
+      await trigger.click()
+      const menu = page.getByRole('menu', { name: '工作区适配', exact: true })
+      const items = menu.getByRole('menuitem')
+      await expect(menu).toBeVisible()
+      await testInfo.attach('viewport-menu-first-open', {
+        body: await page.screenshot({ animations: 'disabled' }),
+        contentType: 'image/png',
+      })
+      await expect(menu).toHaveCSS('list-style-type', 'none')
+      await expect(items).toHaveCount(3)
+      for (const item of await items.all()) {
+        await expect(item).toHaveCSS('display', 'flex')
+        await expect(item).toBeInViewport({ ratio: 1 })
+      }
+      const bounds = await items.evaluateAll(elements => elements.map((element) => {
+        const rect = element.getBoundingClientRect()
+        return { height: rect.height, top: rect.top, bottom: rect.bottom }
+      }))
+      for (const [index, boundsOfItem] of bounds.entries()) {
+        expect(boundsOfItem.height).toBeGreaterThanOrEqual(32)
+        if (index > 0)
+          expect(boundsOfItem.top).toBeGreaterThanOrEqual(bounds[index - 1]!.bottom)
+      }
+      const current = menu.getByRole('menuitem', { name: modeLabels.responsive, exact: true })
+      await expect(current).toHaveAttribute('aria-current', 'true')
+      await expect(current).toHaveCSS('font-weight', '600')
+      await menu.getByRole('menuitem', { name: modeLabels.contain, exact: true }).click()
+      await expect(menu).toBeHidden()
+      await expect(trigger).toHaveAttribute('data-mode', 'contain')
+      await expect(page.getByTestId('admin-workspace-viewport')).toHaveAttribute('data-viewport-mode', 'contain')
+
+      await trigger.click()
+      const selected = menu.getByRole('menuitem', { name: modeLabels.contain, exact: true })
+      await expect(selected).toHaveAttribute('aria-current', 'true')
+      await expect(selected).toHaveCSS('font-weight', '600')
+      await selected.press('Escape')
+      await expect(menu).toBeHidden()
+      await expectNoPageOverflow(page)
+    })
+  }
+}
+
 /***********************用户模式选择与物理字号*********************/
 async function selectWorkspaceMode(page: Page, mode: keyof typeof modeLabels): Promise<void> {
   const trigger = page.getByRole('button', { name: '工作区适配', exact: true })

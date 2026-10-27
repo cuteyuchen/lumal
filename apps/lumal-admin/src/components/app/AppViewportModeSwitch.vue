@@ -4,6 +4,8 @@ import { ElDropdown, ElDropdownItem, ElDropdownMenu } from 'element-plus'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { adminViewportMode, adminViewportOptions, setAdminViewportMode } from '../../services/workspace-viewport'
+// Core 已提供基础和 Popper 样式，Dropdown 的专用样式由应用在首屏按需加载。
+import 'element-plus/theme-chalk/el-dropdown.css'
 
 /***********************工作区模式选择与路由覆盖*********************/
 const route = useRoute()
@@ -14,7 +16,13 @@ const title = computed(() => {
 </script>
 
 <template>
-  <ElDropdown placement="bottom-end" trigger="click" :teleported="true" @command="setAdminViewportMode">
+  <ElDropdown
+    placement="bottom-end"
+    popper-class="admin-viewport-dropdown"
+    trigger="click"
+    :teleported="true"
+    @command="setAdminViewportMode"
+  >
     <button
       class="admin-viewport-trigger"
       type="button"
@@ -63,6 +71,17 @@ const title = computed(() => {
 .admin-viewport-trigger:focus-visible {
   outline: 2px solid var(--el-color-primary);
   outline-offset: 2px;
+}
+
+/* 浮层 Teleport 到 body，以专属类隔离选中态，不受工作区缩放影响。 */
+:global(.admin-viewport-dropdown .el-dropdown-menu) {
+  min-width: 144px;
+}
+
+:global(.admin-viewport-dropdown .el-dropdown-menu__item[aria-current="true"]) {
+  color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {
