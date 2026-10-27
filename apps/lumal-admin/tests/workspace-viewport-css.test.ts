@@ -1,8 +1,9 @@
 // @vitest-environment node
 import type { ViteDevServer } from 'vite'
+import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createServer } from 'vite'
+import { createServer, normalizePath } from 'vite'
 import { describe, expect, it } from 'vitest'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
@@ -64,6 +65,13 @@ describe('工作区 vw 的真实 Vite 转换边界', () => {
       expect(header).toMatch(/height:\s*44px/)
       expect(header).toMatch(/width:\s*36px/)
       expect(header).not.toContain('var(--lumal-viewport-unit')
+
+      const themePath = createRequire(import.meta.url).resolve('@lumal/core/theme-chalk/index.scss')
+      const theme = await server.transformRequest(`/@fs/${normalizePath(themePath)}?direct`)
+      expect(theme).not.toBeNull()
+      expect(/\.el-dropdown-menu__item\s*\{[^}]*padding:\s*5px 16px/.test(theme!.code), '共享菜单保留整行点击区域').toBe(true)
+      expect(/\.el-dropdown-menu__item\s*\{[^}]*line-height:\s*22px/.test(theme!.code), '共享菜单不跟随工作区缩放').toBe(true)
+      expect(theme!.code).not.toContain('var(--lumal-viewport-unit')
 
       const chart = await style(server, '/src/views/examples/ChartView.vue', 'scss')
       expect(chart).toMatch(/height:\s*340px/)

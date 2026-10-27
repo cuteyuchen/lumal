@@ -1,8 +1,7 @@
 import type { VueWrapper } from '@vue/test-utils'
-import type { InjectionKey } from 'vue'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h, inject, nextTick, provide, shallowRef } from 'vue'
+import { defineComponent, h, nextTick, shallowRef } from 'vue'
 import AppViewportModeSwitch from '../src/components/app/AppViewportModeSwitch.vue'
 import AppWorkspaceViewport from '../src/components/app/AppWorkspaceViewport.vue'
 import {
@@ -17,25 +16,6 @@ import {
 import { viewportDesign } from '../viewport.config'
 
 const wrappers: VueWrapper[] = []
-const dropdownCommandKey: InjectionKey<(value: unknown) => void> = Symbol('workspace-dropdown-command')
-
-// 只替代 Element Plus 的菜单传递，不替代应用的命令处理和偏好状态。
-const DropdownStub = defineComponent({
-  name: 'ElDropdown',
-  emits: ['command'],
-  setup(_, { emit, slots }) {
-    provide(dropdownCommandKey, value => emit('command', value))
-    return () => h('div', [slots.default?.(), slots.dropdown?.()])
-  },
-})
-const DropdownItemStub = defineComponent({
-  name: 'ElDropdownItem',
-  props: { command: String },
-  setup(props, { slots }) {
-    const command = inject(dropdownCommandKey)!
-    return () => h('button', { 'type': 'button', 'data-command': props.command, 'onClick': () => command(props.command) }, slots.default?.())
-  },
-})
 
 function track<T extends VueWrapper>(wrapper: T): T {
   wrappers.push(wrapper)
@@ -125,24 +105,59 @@ describe('admin 工作区适配偏好', () => {
       expect(resolveAdminWorkspacePolicy(value, true).mode).toBe('responsive')
   })
 
-  it('header 的 vw 菜单命令更新选中状态、标题和本地偏好', async () => {
+  it('header 的真实菜单可连续切换全部模式，更新选中状态、标题和本地偏好并收起', async () => {
     const wrapper = track(mount(AppViewportModeSwitch, {
+      attachTo: document.body,
       global: {
-        stubs: {
-          LumalIcon: true,
-          ElDropdown: DropdownStub,
-          ElDropdownItem: DropdownItemStub,
-          ElDropdownMenu: defineComponent({ setup: (_, { slots }) => () => h('div', slots.default?.()) }),
-        },
+        stubs: { LumalIcon: true },
       },
     }))
-    expect(wrapper.findAll('[role="menuitemradio"]')).toHaveLength(4)
-    const option = adminViewportOptions.find(option => option.value === 'vw')!
-    await wrapper.get('[data-command="vw"]').trigger('click')
-    expect(wrapper.get('[aria-label="工作区适配"]').attributes('data-mode')).toBe('vw')
-    expect(wrapper.get('[aria-label="工作区适配"]').attributes('title')).toBe(`工作区适配：${option.label}`)
-    expect(wrapper.get('[data-command="vw"]').attributes('aria-checked')).toBe('true')
-    expect(wrapper.get('[data-command="responsive"]').attributes('aria-checked')).toBe('false')
+    const trigger = wrapper.get<HTMLButtonElement>('[aria-label="工作区适配"]')
+    // 查询真实 Teleport 的菜单，不以替身模拟 command 注入和点击关闭。
+    for (const value of ['vw', 'contain', 'width', 'responsive'] as const) {
+      trigger.element.click()
+      await flushPromises()
+      await vi.waitFor(() => expect(trigger.attributes('aria-expanded')).toBe('true'))
+      const menu = document.querySelector<HTMLElement>(`[role="menu"][aria-labelledby="${trigger.attributes('id')}"]`)!
+      expect(menu).not.toBeNull()
+      expect(wrapper.element.contains(menu)).toBe(false)
+      const items = [...menu.querySelectorAll<HTMLElement>('.el-dropdown-menu__item')]
+      expect(items).toHaveLength(adminViewportOptions.length)
+      const option = adminViewportOptions.find(option => option.value === value)!
+      const item = items.find(item => item.textContent?.trim() === option.label)!
+      expect(item).toBeDefined()
+      item.click()
+      await flushPromises()
+      expect(trigger.attributes('data-mode')).toBe(value)
+      expect(trigger.attributes('title')).toBe(`工作区适配：${option.label}`)
+      await vi.waitFor(() => expect(trigger.attributes('aria-expanded')).toBe('false'))
+      expect(item.getAttribute('role')).toBe('menuitem')
+      expect(item.getAttribute('aria-current')).toBe('true')
+      expect(items.filter(item => item.getAttribute('aria-current') === 'true')).toHaveLength(1)
+      expect(localStorage.getItem(adminViewportStorageKey)).toBe(value)
+    }
+  })
+
+  it('header 的真实菜单支持键盘打开与选择 vw', async () => {
+    const wrapper = track(mount(AppViewportModeSwitch, {
+      attachTo: document.body,
+      global: { stubs: { LumalIcon: true } },
+    }))
+    const trigger = wrapper.get<HTMLButtonElement>('[aria-label="工作区适配"]')
+    trigger.element.focus()
+    await trigger.trigger('keydown', { key: 'Enter', code: 'Enter' })
+    await flushPromises()
+    await vi.waitFor(() => expect(trigger.attributes('aria-expanded')).toBe('true'))
+    const menuSelector = `[role="menu"][aria-labelledby="${trigger.attributes('id')}"]`
+    await vi.waitFor(() => expect(document.querySelector(`${menuSelector} .el-dropdown-menu__item`)).not.toBeNull())
+    const item = [...document.querySelectorAll<HTMLElement>(`${menuSelector} .el-dropdown-menu__item`)]
+      .find(item => item.textContent?.trim() === 'vw 流式')!
+    expect(item).toBeDefined()
+    item.focus()
+    item.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true, cancelable: true }))
+    await flushPromises()
+    expect(trigger.attributes('data-mode')).toBe('vw')
+    await vi.waitFor(() => expect(trigger.attributes('aria-expanded')).toBe('false'))
     expect(localStorage.getItem(adminViewportStorageKey)).toBe('vw')
   })
 })

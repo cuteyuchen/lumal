@@ -2,6 +2,8 @@
 
 ## 未发布 (2026-10-27)
 
+- 补齐共享 Dropdown 主题样式，恢复 Admin Header 适配菜单的整行点击、悬停与焦点反馈；
+  显示当前模式，并以真实 Element Plus / Teleport 组件测试覆盖鼠标与键盘切换。
 - Admin Header 工作区菜单补充 `vw 流式`，接入共享设计宽度及自有页面的协作转换；
   保留原画布模式、标签缓存和第三方/自管理视口隔离，不再只有独立示例可体验 vw。
 - 修正运行时 `vw` 的浏览器宽度语义：宽高共用 `window.innerWidth / designWidth`，

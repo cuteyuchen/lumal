@@ -9,7 +9,7 @@ const title = computed(() => `工作区适配：${adminViewportOptions.find(opti
 </script>
 
 <template>
-  <ElDropdown placement="bottom-end" trigger="click" :teleported="true" @command="setAdminViewportMode">
+  <ElDropdown placement="bottom-end" popper-class="admin-viewport-menu" trigger="click" :teleported="true" @command="setAdminViewportMode">
     <button
       class="admin-viewport-trigger"
       type="button"
@@ -22,13 +22,12 @@ const title = computed(() => `工作区适配：${adminViewportOptions.find(opti
       <LumalIcon name="lumal:monitor" :size="18" />
     </button>
     <template #dropdown>
-      <ElDropdownMenu aria-label="工作区适配模式">
+      <ElDropdownMenu>
         <ElDropdownItem
           v-for="option in adminViewportOptions"
           :key="option.value"
           :command="option.value"
-          role="menuitemradio"
-          :aria-checked="adminViewportMode === option.value"
+          :aria-current="adminViewportMode === option.value ? 'true' : undefined"
         >
           {{ option.label }}
         </ElDropdownItem>
@@ -60,6 +59,12 @@ const title = computed(() => `工作区适配：${adminViewportOptions.find(opti
 .admin-viewport-trigger:focus-visible {
   outline: 2px solid var(--el-color-primary);
   outline-offset: 2px;
+}
+
+/* 菜单传送到 body，选中样式不能依赖 Header 的 DOM 层级。 */
+:global(.admin-viewport-menu .el-dropdown-menu__item[aria-current="true"]) {
+  color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
 }
 
 @media (max-width: 768px) {
