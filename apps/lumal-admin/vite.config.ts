@@ -50,14 +50,38 @@ export default defineConfig(({ command, isPreview, mode }) => ({
     vue(),
     createViewportTransformPlugin({
       enabled: true,
-      // 仅转换独立视口示例，不影响 Admin 布局、第三方组件或用户工作区策略。
-      include: ['src/views/examples/viewport/**'],
+      // 只转换自有内容页，Header/侧栏、依赖、独立画布与引擎尺寸不参与。
+      include: ['src/views/**', 'src/components/request/**', 'src/styles.scss'],
+      exclude: [
+        'src/views/login/**',
+        'src/views/shared/**',
+        'src/views/examples/ViewportView.vue',
+        'src/views/examples/DataVView.vue',
+        'src/views/examples/CockpitView.vue',
+        'src/views/examples/cockpit/**',
+        // 图表 height 属性由组件处理，不能只转换其外层 CSS 高度。
+        'src/views/examples/ChartView.vue',
+      ],
       viewportWidth: viewportDesign.designWidth,
       output: 'runtime',
       inlineStyles: true,
       fontSize: false,
       minSize: false,
-      excludeProperties: ['border*'],
+      // 保留边框、字号和网格轨道的最小可用尺寸，仅适配尺寸、定位及间距。
+      includeProperties: [
+        'width',
+        'height',
+        'max-width',
+        'max-height',
+        'padding*',
+        'margin*',
+        '*gap',
+        'top',
+        'right',
+        'bottom',
+        'left',
+        'inset*',
+      ],
     }),
   ],
   server: {

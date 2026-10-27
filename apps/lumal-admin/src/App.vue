@@ -13,6 +13,7 @@ import { computed, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeaderActions from './components/app/AppHeaderActions.vue'
 import AppSettingsDrawer from './components/app/AppSettingsDrawer.vue'
+import AppWorkspaceViewport from './components/app/AppWorkspaceViewport.vue'
 import LumalBrand from './components/app/LumalBrand.vue'
 import {
   createAdminSidebarMenus,
@@ -29,6 +30,7 @@ import {
 import { adminTabSnapshotStorageKey, currentUser, logout } from './services/session'
 import { adminSettingsVisible, openAdminSettings } from './services/settings'
 import { runAdminThemeTransition } from './services/theme-transition'
+import { adminViewportMode, resolveAdminWorkspacePolicy } from './services/workspace-viewport'
 
 /***********************基础状态*********************/
 const title = adminAppName
@@ -42,6 +44,13 @@ const cockpitUrl = import.meta.env.VITE_COCKPIT_URL?.trim() || 'https://lumal-co
 const route = useRoute()
 const router = useRouter()
 const isPublicLayout = computed(() => route.meta.layout === 'public')
+const workspacePolicy = computed(() => {
+  const mode = adminViewportMode.value
+  const canvas = mode === 'contain' || mode === 'width'
+  const unscaled = route.meta.workspaceViewport === 'self-managed'
+    || (canvas && route.meta.workspaceViewport === 'flow-only')
+  return resolveAdminWorkspacePolicy(mode, unscaled)
+})
 
 /***********************菜单状态*********************/
 const allMenus = computed(() => currentUser.value ? createAdminSidebarMenus(router) : [])
@@ -230,16 +239,18 @@ function handleTabsChange(tabs: LumalLayoutTabItem[]): void {
       </template>
 
       <template #default="{ tabs }">
-        <LumalRouterView
-          :view-key="routeViewKey"
-          :cache-keys="tabs.map((tab: LumalLayoutTabItem) => resolveRouteViewKey(tab.path))"
-          :progress="preferences.transition.progress"
-          :loading="preferences.transition.loading"
-          :cache="routeViewCache"
-          :cache-max="preferences.tabbar.maxCount"
-          :transition="preferences.transition.enable"
-          :transition-name="preferences.transition.name"
-        />
+        <AppWorkspaceViewport :policy="workspacePolicy" :font-size="preferences.theme.fontSize">
+          <LumalRouterView
+            :view-key="routeViewKey"
+            :cache-keys="tabs.map((tab: LumalLayoutTabItem) => resolveRouteViewKey(tab.path))"
+            :progress="preferences.transition.progress"
+            :loading="preferences.transition.loading"
+            :cache="routeViewCache"
+            :cache-max="preferences.tabbar.maxCount"
+            :transition="preferences.transition.enable"
+            :transition-name="preferences.transition.name"
+          />
+        </AppWorkspaceViewport>
 
         <AppSettingsDrawer
           v-model:visible="settingsVisible"

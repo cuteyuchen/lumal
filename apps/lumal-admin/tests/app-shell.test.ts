@@ -8,6 +8,7 @@ import AppSettingsDrawer from '../src/components/app/AppSettingsDrawer.vue'
 import { createAdminRouter } from '../src/router'
 import { createAdminPreferences, resetAdminSystemConfig } from '../src/services/preferences'
 import { login, logout } from '../src/services/session'
+import { setAdminViewportMode } from '../src/services/workspace-viewport'
 import { elementPlusStubs } from './helpers/element-plus-stubs'
 
 const LayoutStub = defineComponent({
@@ -86,6 +87,7 @@ const DrawerStub = defineComponent({
 
 describe('app shell', () => {
   afterEach(async () => {
+    setAdminViewportMode('responsive')
     resetAdminSystemConfig()
     await logout()
   })
@@ -172,6 +174,51 @@ describe('app shell', () => {
     expect(wrapper.find('.layout-stub').attributes('data-layout')).toBe('top-nav')
     expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('6')
     expect(document.title).toBe('Lumal Admin')
+  })
+
+  it('工作区 vw 跟随 Header 偏好，自管理画布和非传送编辑器按路由隔离', async () => {
+    await login('admin')
+    setAdminViewportMode('vw')
+    const router = createAdminRouter(createMemoryHistory())
+    await router.push('/dashboard')
+    await router.isReady()
+    const wrapper = mount(App, {
+      global: {
+        plugins: [router],
+        stubs: {
+          ...elementPlusStubs,
+          ElDrawer: DrawerStub,
+          LumalIcon: IconStub,
+          LumalLayout: LayoutStub,
+          LumalRouterView: RouterViewStub,
+        },
+      },
+    })
+    try {
+      const workspace = () => wrapper.get('[data-testid="admin-workspace-viewport"]')
+      expect(workspace().attributes('data-viewport-mode')).toBe('vw')
+      for (const path of ['/examples/viewport', '/examples/datav', '/examples/cockpit']) {
+        await router.push(path)
+        expect(workspace().attributes('data-viewport-mode')).toBe('responsive')
+      }
+      for (const path of ['/system/user', '/system/role', '/examples/crud-table']) {
+        await router.push(path)
+        expect(workspace().attributes('data-viewport-mode')).toBe('vw')
+        for (const mode of ['contain', 'width'] as const) {
+          setAdminViewportMode(mode)
+          await wrapper.vm.$nextTick()
+          expect(workspace().attributes('data-viewport-mode')).toBe('responsive')
+        }
+        setAdminViewportMode('vw')
+        await wrapper.vm.$nextTick()
+      }
+      setAdminViewportMode('contain')
+      await router.push('/dashboard')
+      expect(workspace().attributes('data-viewport-mode')).toBe('contain')
+    }
+    finally {
+      wrapper.unmount()
+    }
   })
 
   it('登录页使用 public layout，不渲染后台壳', async () => {

@@ -47,3 +47,13 @@ Admin 的 `examples/ViewportView.vue` 演示默认/路由/容器策略与vw，`v
 是可复制的组件；路由策略在应用可信映射中补入，后端菜单 DTO 不一定保留扩展 meta。
 独立 Cockpit 的 ViewportLab 与主驾驶舱隔离，不能将实验包装器再套在自缩放的 Cockpit 外。
 `computeViewportFontSize` 需显式用于目标文字，不会自动改变整个后台字号。
+
+Admin Header 的工作区菜单还提供 `vw 流式`，默认仍为 responsive。
+vw 与 Vite 共用项目根1920×1080设计配置，旧 contain/width 保留1280×720内容画布。
+自有页面受控输出 runtime 单位，工作区仅在 vw 下提供浏览器单位，其余模式恢复1px；
+只缩放内容区，不变换 Header/侧栏，不重建 RouterView 或标签缓存。
+字体/行高、最小尺寸、边框、网格轨道以及依赖样式保留，登录/iframe/引擎和独立画布隔离。
+自管理视口页面覆盖为 responsive，不能在 transform 祖先下再次开启 vw；
+动态数值和组件尺寸属性仍需显式适配，Teleport 浮层保持独立。
+用户/角色管理和 CRUD 示例在 contain/width 下回退 responsive，
+避免内容树内编辑器受 transform 影响；vw 不施加 transform，可继续使用。
