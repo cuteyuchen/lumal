@@ -111,6 +111,8 @@ pnpm test:e2e:release:built apps/lumal-admin/e2e/visualization-examples.spec.ts
 
 发包后的应用示例在顶栏切换 responsive、contain、width，默认 responsive。
 只适配内容区，Header、Tabbar、侧栏和 body Teleport 弹层不缩放。
+切换器显式加载 Element Plus Dropdown 的按需样式，并在浮层中标识当前模式；
+不依赖 Core 主题合集或后续访问的异步业务页面补齐菜单样式。
 设计工作区为 `1280 × 720`，最小比例 `.75`、目标物理字号下限 `12px`；
 窗口不足时局部滚动，模式偏好保存在应用本地，不修改 Core 默认值或根字号。
 
