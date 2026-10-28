@@ -45,6 +45,13 @@ Admin 使用 `pnpm test:e2e:release`。普通公共包 build 不证明 Demo 可�
 
 修改脚手架时在构建后执行 `pnpm test:create-consumer`。只有确需验证路由、焦点、画布等浏览器行为时再选择相关 Playwright 用例，不因文档或类型改动默认启动全部应用。
 
+修改 Vite 视口转换或 Screen 共享设计配置时，执行 `pnpm test:vite-consumer`。
+它串行重建并打包候选 Viewport / Vite，在独立 Vue 项目中验证 ESM/CJS、类型、SSR、
+CSS/SCSS、模板、来源边界及 Dev/Build 产物，不启动浏览器。
+`output/release/vite-viewport-report.json` 不能代替真实布局或缩放证据；
+涉及已有 Demo 的联合验收需从同一候选提交重建，再运行其生产 E2E 与原体积预算，
+不能用旧 dist 或历史 CI 通过代替当前结果。此检查属于 PR / Release Gate 的非浏览器消费者门禁。
+
 ## Skill 更新规则
 
 修改导出、组件协议、引擎依赖、轻量入口或脚手架行为时，更新相应 reference；新增公共包时补总入口选型表。不要复制整份 API 手册进总入口。

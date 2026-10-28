@@ -34,7 +34,8 @@ pnpm release:verify
 tag / workflow_dispatch (默认 dry_run=true)
   version-check：全部公共包 / lockfile / tag / YAML / 发布图
     ├─ release-check (Ubuntu)：完整 release:check
-    │    lint / format → 单测 → 类型 → 公共包构建 → Admin及14类tarball消费者
+    │    lint / format → 单测 → 类型 → 公共包构建 → Vite/Viewport独立tarball消费者
+    │    → Admin及14类模板tarball消费者
     │    → 三级视口 / Dev与Build真实浏览器zoom
     │    → Admin / Compat → 产物与预算 → Mock Node 构建
     │    → 完整生产 Chromium E2E → 全部公共包 pack dry-run
@@ -56,7 +57,8 @@ tag / workflow_dispatch (默认 dry_run=true)
 
 普通 CI 继续运行 lint/单测/类型/构建/边界，增加发布图与 actionlint；Build Validation 保留独立脚手架消费者校验。`deployment-artifacts.yml` 仅构建产物，不访问云部署。
 
-当前版本的 `release:check` 不允许遗漏 `format:check`、`test:create-projects` 或 `test:viewport`，
+当前候选源码的 `release:check` 不允许遗漏 `format:check`、`test:vite-consumer`、
+`test:create-projects` 或 `test:viewport`；普通 PR 的 Build Validation 同样必须执行独立 tarball 消费检查，
 Windows校验同样检查模板格式；`release-safety.test.mjs` 用移除/容错变体保护这些门禁。
 Ubuntu的生成器单测包含原有Linux PTY交互，不能以Windows执行替代其实际结果。
 新模板、Screen可选能力及真实缩放的报告/截图随消费者artifact上传，不需要发布权限。
@@ -128,6 +130,7 @@ pnpm release:boundaries
 pnpm test
 pnpm typecheck
 pnpm build
+pnpm test:vite-consumer
 pnpm test:create-consumer
 pnpm test:create-projects
 pnpm test:viewport
@@ -145,6 +148,13 @@ pnpm release:workflows
 ```
 
 只做代码验收时可以单独执行非浏览器命令，但必须注明“E2E 未验证”；不得据此声明完整 `release:check` 通过。
+
+`pnpm test:vite-consumer` 从候选源码重建 Viewport / Vite 并打包，在独立 Vue 项目中先安装生成锁文件，
+再 frozen 复装，验证 ESM/CJS、类型、SSR、CSS/SCSS、Vue 行内样式、来源边界、Source Map、
+幂等性及 Dev/Build 产物一致性。它不启动浏览器，结果写入 `output/release/vite-viewport-report.json`；
+不能据此声称地图点击、浮层位置、Canvas 或真实浏览器缩放已通过。
+修改这两个包或共享设计模板后，应使用同一候选提交重新构建受影响的 Admin/Cockpit，
+分别执行既有生产 E2E、视口消费者与原体积预算，保留未执行、失败和环境阻塞，不以历史产物替代联合验收。
 
 ## 发包 dry-run
 
