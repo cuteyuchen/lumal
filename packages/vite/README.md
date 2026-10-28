@@ -112,6 +112,8 @@ Core 自有主题初始化、切换、恢复和数字布局输入使用同一编
 
 局部 include 只控制编译来源，不是运行时路由模式。已编译的 vw 不能通过当前页面开关还原；
 需要 px 的文件/声明在编译时排除。地图实际宽高用于 resize，不再乘设计比例。
+`enabled`/`viewportWidth` 是项目级配置；文件过滤和 `frameworkStyles:false` 不关闭
+Core/DataV/Cockpit 内部的动态设计尺寸换算，后者只控制自有静态 CSS 的来源接入。
 
 ## 其他构建助手
 

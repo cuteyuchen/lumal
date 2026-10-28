@@ -268,7 +268,7 @@ async function main() {
             ...generatedPackage.pnpm,
             overrides: {
               ...generatedPackage.pnpm?.overrides,
-              ...Object.fromEntries(Object.entries(tarballs).filter(([name]) => name.startsWith('@lumal/')).map(([name, path]) => [name, toFileSpecifier(projectDir, path)])),
+              ...Object.fromEntries(Object.entries(tarballs).filter(([name]) => name.startsWith('@lumal/')).sort(([a], [b]) => a.localeCompare(b)).map(([name, path]) => [name, toFileSpecifier(projectDir, path)])),
             },
           }
 
@@ -327,7 +327,7 @@ async function main() {
       runPnpm(['exec', 'create-lumal-admin', projectDir, '--preset', preset, '--features', features, '--no-interactive'], runnerDir)
       const path = join(projectDir, 'package.json')
       const manifest = await readJson(path)
-      manifest.pnpm = { overrides: Object.fromEntries(Object.entries(tarballs).filter(([name]) => name.startsWith('@lumal/')).map(([name, path]) => [name, toFileSpecifier(projectDir, path)])) }
+      manifest.pnpm = { overrides: Object.fromEntries(Object.entries(tarballs).filter(([name]) => name.startsWith('@lumal/')).sort(([a], [b]) => a.localeCompare(b)).map(([name, path]) => [name, toFileSpecifier(projectDir, path)])) }
       manifest.devDependencies['@lumal/vite'] = toFileSpecifier(projectDir, tarballs['@lumal/vite'])
       const runtimeNames = ['@lumal/core', '@lumal/icons', '@lumal/icons-vue', '@lumal/viewport', ...(preset === 'vben-compatible' ? ['@lumal/vben-compat'] : [])]
       for (const name of runtimeNames) {

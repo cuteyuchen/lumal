@@ -100,8 +100,16 @@ async function verifyBrowser(projectDir, scenario, screenshots, api) {
         throw new Error(`${name} ${width}x${height} 页面溢出`)
       await expect(page.locator('[data-viewport-mode]')).toHaveCount(0)
       if (name.startsWith('screen') && name !== 'screen-px') {
-        const padding = await mainElement.evaluate(element => Number.parseFloat(getComputedStyle(element).paddingTop))
-        expect(Math.abs(padding - 32 * width / (scenario.designWidth ?? 1920))).toBeLessThan(0.1)
+        // Local Demo 的生产门禁仍停留在登录表单，不应拿尚未挂载的 ScreenView padding 验收。
+        if (scenario.auth === 'local-demo') {
+          const input = page.getByLabel('用户名', { exact: true })
+          const minHeight = await input.evaluate(element => Number.parseFloat(getComputedStyle(element).minHeight))
+          expect(Math.abs(minHeight - 40 * width / (scenario.designWidth ?? 1920))).toBeLessThan(0.1)
+        }
+        else {
+          const padding = await mainElement.evaluate(element => Number.parseFloat(getComputedStyle(element).paddingTop))
+          expect(Math.abs(padding - 32 * width / (scenario.designWidth ?? 1920))).toBeLessThan(0.1)
+        }
       }
       if (scenario.visualization === 'datav') {
         const fontSize = Number(await page.locator('.lumal-digital-flop text').getAttribute('font-size'))
@@ -168,7 +176,7 @@ async function main() {
       const manifestPath = join(projectDir, 'package.json')
       const manifest = await readJson(manifestPath)
       const dependencies = Object.keys(manifest.dependencies)
-      manifest.pnpm = { overrides: Object.fromEntries(Object.entries(tarballs).filter(([name]) => name.startsWith('@lumal/')).map(([name, path]) => [name, toFileSpecifier(projectDir, path)])) }
+      manifest.pnpm = { overrides: Object.fromEntries(Object.entries(tarballs).filter(([name]) => name.startsWith('@lumal/')).sort(([a], [b]) => a.localeCompare(b)).map(([name, path]) => [name, toFileSpecifier(projectDir, path)])) }
       for (const name of dependencies) {
         if (tarballs[name])
           manifest.dependencies[name] = toFileSpecifier(projectDir, tarballs[name])

@@ -33,13 +33,17 @@ describe('生成工程的格式契约', () => {
       const names = Object.keys(manifest[field])
       expect(names, field).toEqual([...names].sort((left, right) => left.localeCompare(right)))
     }
+    if (options.viewport) {
+      const vite = files.find(file => file.path === 'vite.config.ts')!.content
+      expect(vite.indexOf('from \'vite\'')).toBeLessThan(vite.indexOf('from \'./viewport.config\''))
+    }
   })
 
   it.each([
     { template: 'blank' },
     { template: 'screen' },
-    { template: 'screen', viewport: true },
-    { template: 'screen', viewport: true },
+    { template: 'screen', viewport: false },
+    { template: 'screen', viewport: true, designWidth: 1440 },
   ] as const)('%j 输出符合公共格式且无 Admin 规范', async (input) => {
     const options = resolveProjectOptions({ ...input, name: 'quality-test', targetDir: 'unused' })
     if (options.template === 'admin')

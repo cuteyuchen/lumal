@@ -34,7 +34,18 @@ async function readMetrics(page) {
         return [name, null]
       const rect = element.getBoundingClientRect()
       const style = getComputedStyle(element)
-      return [name, { x: rect.x, y: rect.y, width: rect.width, height: rect.height, fontSize: Number.parseFloat(style.fontSize), lineHeight: Number.parseFloat(style.lineHeight) || 0 }]
+      const borderHeight = (target) => {
+        const css = getComputedStyle(target)
+        return Number.parseFloat(css.borderTopWidth) + Number.parseFloat(css.borderBottomWidth)
+      }
+      // 卡片有两条物理边框；本例首行最高单元格由字典标签两边框和 td 底边框撑高。
+      // 它们按约定保留 1px，不属于承诺同比例变化的设计尺寸，单独记录而不放宽误差。
+      const heightBorders = name === 'row'
+        ? borderHeight(element.querySelector('td')) + borderHeight(element.querySelector('.lumal-schema-table__dictionary-tag'))
+        : borderHeight(element)
+      const frame = name === 'row' ? getComputedStyle(element.closest('.lumal-page')) : undefined
+      const widthBorders = frame ? Number.parseFloat(frame.borderLeftWidth) + Number.parseFloat(frame.borderRightWidth) : 0
+      return [name, { x: rect.x, y: rect.y, width: rect.width, widthBorders, height: rect.height, heightBorders, fontSize: Number.parseFloat(style.fontSize), lineHeight: Number.parseFloat(style.lineHeight) || 0 }]
     }))
     return {
       innerWidth,
@@ -46,6 +57,10 @@ async function readMetrics(page) {
       bodyTransform: getComputedStyle(document.body).transform,
       layoutTransform: getComputedStyle(document.querySelector('.lumal-layout')).transform,
       contentTransform: getComputedStyle(document.querySelector('.lumal-content')).transform,
+      fixedColumns: [...document.querySelectorAll('.el-table__body colgroup col')].slice(3, 4).map(element => ({
+        assigned: Number(element.getAttribute('width')),
+        actual: Number.parseFloat(getComputedStyle(element).width),
+      })),
       boxes,
     }
   })
@@ -107,6 +122,21 @@ async function main() {
           await expect.poll(() => page.evaluate(() => devicePixelRatio)).toBeCloseTo(baseline.devicePixelRatio * zoom, 2)
           // 等待响应式 DOM、字体和布局在真正的缩放事件后稳定。
           await expect.poll(async () => (await readMetrics(page)).boxes.header.height * actualZoom).toBeCloseTo(baseline.boxes.header.height, 0)
+          // Element Plus 按钮还会过渡 width/height/font-size；Header 就绪不代表这些过渡已结束。
+          await expect.poll(async () => {
+            const current = await readMetrics(page)
+            return Object.entries(baseline.boxes).flatMap(([name, original]) => {
+              if (!original)
+                return []
+              return ['height', 'fontSize', 'lineHeight'].flatMap((dimension) => {
+                const border = dimension === 'height' ? current.boxes[name].heightBorders : 0
+                const originalBorder = dimension === 'height' ? original.heightBorders : 0
+                return Math.abs((current.boxes[name][dimension] - border) * actualZoom - (original[dimension] - originalBorder)) < 1.1
+                  ? []
+                  : [`${name}.${dimension}: ${current.boxes[name][dimension]} × ${actualZoom} != ${original[dimension]}`]
+              })
+            })
+          }, { message: `${environment} ${width} ${zoom} 缩放后的设计尺寸稳定` }).toEqual([])
           const metrics = await readMetrics(page)
           const result = { environment, width, height, zoom: actualZoom, ...metrics }
           report.results.push(result)
@@ -118,11 +148,23 @@ async function main() {
             if (!original)
               continue
             for (const dimension of ['height', 'fontSize', 'lineHeight']) {
-              expect(Math.abs(metrics.boxes[name][dimension] * actualZoom - original[dimension]), `${environment} ${width} ${zoom} ${name}.${dimension}`).toBeLessThan(1.1)
+              const border = dimension === 'height' ? metrics.boxes[name].heightBorders : 0
+              const originalBorder = dimension === 'height' ? original.heightBorders : 0
+              expect(Math.abs((metrics.boxes[name][dimension] - border) * actualZoom - (original[dimension] - originalBorder)), `${environment} ${width} ${zoom} ${name}.${dimension}`).toBeLessThan(1.1)
             }
           }
           // 表格引擎的数值列宽必须显式适配，不能只让行高看起来一致。
-          await expect.poll(async () => Math.abs((await readMetrics(page)).boxes.row.width * actualZoom - baseline.boxes.row.width)).toBeLessThan(2)
+          await expect.poll(async () => {
+            const current = (await readMetrics(page)).boxes.row
+            return Math.abs((current.width + current.widthBorders) * actualZoom - (baseline.boxes.row.width + baseline.boxes.row.widthBorders))
+          }).toBeLessThan(2)
+          // 状态列为固定 100px 设计宽度；末列按既有表格契约吸收剩余空间，不能当作固定列。
+          // Element Plus 对输入取整数，浏览器原生 zoom 还会对实际列宽作亚像素舍入。
+          await expect.poll(async () => (await readMetrics(page)).fixedColumns.map(column => column.assigned))
+            .toEqual([Math.floor(100 * metrics.innerWidth / 1920)])
+          const fixedColumns = (await readMetrics(page)).fixedColumns
+          expect(fixedColumns).toHaveLength(1)
+          expect(fixedColumns[0].actual).toBeCloseTo(fixedColumns[0].assigned, 1)
           result.controls = await verifyControls(page)
           expect(Math.abs(result.controls.drawer.width * actualZoom - 384 * width / 1920)).toBeLessThan(1.1)
           if (environment === 'production')

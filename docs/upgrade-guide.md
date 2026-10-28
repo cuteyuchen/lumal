@@ -105,7 +105,7 @@ Parser 只在显式接入时解包。系统成功200与某业务接口成功0/20
 | 旧 default/standard Axios 请求客户端                    | `createRequestClient`、公开 Parser、`parsePageResult`                                     | 需替换接线：Fetch RequestInit/AbortSignal 与 Axios config/interceptor 不同     |
 | `useDict`/`installDict`/`createDictFetcherWithFallback` | `useDictionary`/`installDictionary`/`createDictionaryFetcherWithFallback`                 | 需适配返回形态、options字段和显式 fallback；不可给认证接口加演示兜底           |
 | 旧 viewport 尺寸函数 | `@lumal/viewport` 的 `viewportLength`/`useViewportWidth` | 普通CSS由Vite转换；数字设计尺寸按浏览器宽度，实际容器测量不换算 |
-| 旧 Vite `createViewportTransformPlugin`                 | `@lumal/vite` 同名可选插件                                                                | 名称相同但参数/范围不同；仅定向CSS，不扫描脚本、模板内联 style，默认不转依赖   |
+| 旧 Vite `createViewportTransformPlugin`                 | `@lumal/vite` 同名可选插件                                                                | 受控 CSS 与 Vue 模板 style/:style 使用 AST；不扫描脚本，第三方依赖须精确授权 |
 | `GrFrameworkResolver`                                   | `createLumalComponentResolver`，来自 `@lumal/vite`                                        | 改组件名和解析入口；通过独立构建验证，没有虚构 `/resolver` 子入口              |
 | 行业上下文字段、权限码、地图、AI与复杂业务弹窗          | 应用自己的 API/Store/组件                                                                 | 留业务层；不纳入公共框架兼容承诺                                               |
 
@@ -132,8 +132,9 @@ Parser 只在显式接入时解包。系统成功200与某业务接口成功0/20
 
 KeepAlive 是否保留地图由应用决定：希望切后台再回来保持地图时使用一致缓存 key，
 需要销毁轮询/地图时显式关闭缓存。后台标签不能顺便改变公开页面的 key 或清缓存策略。
-外层有画布缩放时 Cockpit 选 `viewport-mode="external"`，不再叠加一层缩放。
-三级配置与地图/Teleport约束见[屏幕适配指南](./screen-viewport-guide.md)。
+移除外层画布缩放及 Cockpit 旧模式配置。DataV 与 Cockpit 自身不再施加整画布缩放，
+统一通过项目的设计宽度生成 vw；嵌入容器也不改变换算基准。
+编译范围与地图/Teleport约束见[屏幕适配指南](./screen-viewport-guide.md)。
 
 ## 模板代码的维护边界
 
@@ -145,7 +146,8 @@ KeepAlive 是否保留地图由应用决定：希望切后台再回来保持地�
 | ESLint/Prettier/EditorConfig/AGENTS/DEVELOPMENT         | 项目规范基线；按目录形态调整边界，避免升级时无关全量格式化   |
 | 生成的 lockfile                                         | 首次安装产生，随业务版本审查；之后 frozen 安装复现           |
 
-CLI 旧 `create-lumal-admin` 命令和旧参数保留，新项目类型与可选能力见
+CLI 保留 `create-lumal-admin` 命令和 Admin preset；旧适配模式参数已删除，
+改用 `--viewport`/`--no-viewport` 与单一 `--design-width`。新项目类型与可选能力见
 [项目模板指南](./project-template-guide.md)。通用 `create-lumal` bin 由候选 `create-lumal-admin@0.1.0-beta.0` 分发，
 独立 `create-lumal` npm 包仍未发布，也没有删除或更名旧入口。后续新增 npm 名称时须另行核对 registry 与发布权限。
 

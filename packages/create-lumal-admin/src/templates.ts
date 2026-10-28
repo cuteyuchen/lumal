@@ -92,7 +92,8 @@ export function applyViewportTemplate(
   files.set('viewport.config.ts', `// 项目唯一设计基准；构建、框架动态 token 和数字工具共享此配置。\nexport const viewport = {\n  enabled: true,\n  viewportWidth: ${options.designWidth},\n} as const;\n`)
   const dependencies = manifest.dependencies['element-plus'] ? '      dependencies: [\'element-plus\'],\n' : ''
   files.set('vite.config.ts', files.get('vite.config.ts')!
-    .replace('import vue from \'@vitejs/plugin-vue\';', 'import { createViewportTransformPlugin } from \'@lumal/vite\';\nimport vue from \'@vitejs/plugin-vue\';\nimport { viewport } from \'./viewport.config\';')
+    .replace('import vue from \'@vitejs/plugin-vue\';', 'import { createViewportTransformPlugin } from \'@lumal/vite\';\nimport vue from \'@vitejs/plugin-vue\';')
+    .replace('import { defineConfig } from \'vite\';', 'import { defineConfig } from \'vite\';\nimport { viewport } from \'./viewport.config\';')
     .replace('plugins: [vue()]', `plugins: [
     vue(),
     createViewportTransformPlugin({

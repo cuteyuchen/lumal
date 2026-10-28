@@ -4,7 +4,7 @@ import { expectNoPageOverflow, loginAs, loginAsAdmin } from './helpers'
 /***********************懒加载示例与真实布局验收*********************/
 test('Viewport 普通 px 编译为 vw、同宽不同高、容器测量和浮层', async ({ page }) => {
   await loginAsAdmin(page)
-  const rootFontSize = await page.locator('html').evaluate(element => getComputedStyle(element).fontSize)
+  const rootFontSize = await page.locator('html').evaluate(element => element.style.fontSize)
   await page.goto('/#/examples/viewport')
   await expect(page.getByTestId('viewport-metrics')).toBeVisible()
   for (const [width, height] of [[1280, 720], [1366, 768], [1920, 920], [1920, 1080], [2560, 1440]]) {
@@ -38,7 +38,9 @@ test('Viewport 普通 px 编译为 vw、同宽不同高、容器测量和浮层'
   await page.goto('/#/system/user')
   await expect(page.getByRole('button', { name: '新增用户', exact: true })).toBeVisible()
   await expect(page.getByRole('columnheader', { name: '用户名', exact: true })).toBeVisible()
-  expect(await page.locator('html').evaluate(element => getComputedStyle(element).fontSize)).toBe(rootFontSize)
+  expect(await page.locator('html').evaluate(element => element.style.fontSize)).toBe(rootFontSize)
+  expect(Number.parseFloat(await page.locator('html').evaluate(element => getComputedStyle(element).fontSize)))
+    .toBeCloseTo(14 * page.viewportSize()!.width / 1920, 1)
   expect(await page.locator('html').evaluate(element => getComputedStyle(element).getPropertyValue('--lumal-viewport-scale'))).toBe('')
   await expect(page.locator('[data-viewport-mode]')).toHaveCount(0)
   await expect(page.locator('.lumal-layout')).toHaveCSS('transform', 'none')

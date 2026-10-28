@@ -7,7 +7,8 @@ test('Schema Form 保持范围日期样式、区块间距并支持图标选择',
 
   const toolbar = page.locator('.lumal-schema-form-demo__toolbar')
   await expect(toolbar).toBeVisible()
-  expect(await toolbar.evaluate(element => getComputedStyle(element).marginBottom)).toBe('20px')
+  expect(Number.parseFloat(await toolbar.evaluate(element => getComputedStyle(element).marginBottom)))
+    .toBeCloseTo(20 * page.viewportSize()!.width / 1920, 1)
 
   const rangeInput = page.locator('.el-date-editor--daterange .el-range-input').first()
   await expect(rangeInput).toBeVisible()
@@ -56,15 +57,20 @@ test('CRUD Table 可在弹窗与抽屉编辑器之间切换', async ({ page }) =
       return { height: rect.height, width: rect.width }
     }),
   )
-  expect(desktopToolBoxes).toEqual(desktopToolBoxes.map(() => ({ height: 30, width: 30 })))
+  for (const box of desktopToolBoxes) {
+    expect(box.height).toBeCloseTo(30 * page.viewportSize()!.width / 1920, 1)
+    expect(box.width).toBeCloseTo(30 * page.viewportSize()!.width / 1920, 1)
+  }
 
   await actions.getByRole('button', { name: '新增', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: '新增' })
   await expect(dialog).toBeVisible()
   const labelWidths = await dialog.locator('.lumal-schema-form__item .el-form-item__label').evaluateAll(labels =>
-    [...new Set(labels.map(label => getComputedStyle(label).width))],
+    labels.map(label => Number.parseFloat(getComputedStyle(label).width)),
   )
-  expect(labelWidths).toEqual(['88px'])
+  expect(labelWidths.length).toBeGreaterThan(0)
+  for (const width of labelWidths)
+    expect(width).toBeCloseTo(88 * page.viewportSize()!.width / 1920, 1)
   await dialog.getByRole('button', { name: '取消', exact: true }).click()
 
   await page.getByRole('button', { name: '编辑器：弹窗' }).click()
@@ -102,7 +108,7 @@ test('CRUD Table 收起筛选同行布局并让表格填满剩余高度', async 
   await expect(page.getByRole('button', { name: '显示筛选条件', exact: true })).toBeVisible()
 })
 
-test('CRUD Table 在移动端不会产生页面级溢出，弹窗标签改为上置', async ({ page }) => {
+test('CRUD Table 在窄视口保持设计布局、同比工具按钮和弹窗交互', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await loginAsAdmin(page)
   await page.goto('/#/examples/crud-table')
@@ -116,17 +122,17 @@ test('CRUD Table 在移动端不会产生页面级溢出，弹窗标签改为上
   const toolbarBox = await toolbar.boundingBox()
   expect(toolbarBox).not.toBeNull()
   expect((toolbarBox?.x ?? 0) + (toolbarBox?.width ?? 0)).toBeLessThanOrEqual(375)
-  await expect(page.locator('.lumal-crud-table__pagination .el-pagination__jump')).toBeHidden()
+  await expect(page.locator('.lumal-crud-table__pagination .el-pagination__jump')).toBeVisible()
+  await expect(page.locator('.lumal-crud-table')).not.toHaveClass(/is-responsive/)
 
   const refreshBox = await tools.getByRole('button', { name: '刷新', exact: true }).boundingBox()
   const fullscreenBox = await tools.getByRole('button', { name: '全屏', exact: true }).boundingBox()
   const queryToggleBox = await tools.getByRole('button', { name: '隐藏筛选条件', exact: true }).boundingBox()
-  expect(queryToggleBox?.height).toBeCloseTo(28, 3)
-  expect(queryToggleBox?.width).toBeCloseTo(28, 3)
-  expect(refreshBox?.height).toBeCloseTo(28, 3)
-  expect(refreshBox?.width).toBeCloseTo(28, 3)
-  expect(fullscreenBox?.height).toBeCloseTo(28, 3)
-  expect(fullscreenBox?.width).toBeCloseTo(28, 3)
+  for (const box of [queryToggleBox, refreshBox, fullscreenBox]) {
+    expect(box).not.toBeNull()
+    expect(box!.height).toBeCloseTo(30 * 375 / 1920, 1)
+    expect(box!.width).toBeCloseTo(30 * 375 / 1920, 1)
+  }
 
   await toolbar.getByRole('button', { name: '新增', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: '新增' })
@@ -141,7 +147,9 @@ test('CRUD Table 在移动端不会产生页面级溢出，弹窗标签改为上
   const contentBox = await nameField.locator('.el-form-item__content').boundingBox()
   expect(labelBox).not.toBeNull()
   expect(contentBox).not.toBeNull()
-  expect((labelBox?.y ?? 0) + (labelBox?.height ?? 0)).toBeLessThanOrEqual((contentBox?.y ?? 0) + 1)
+  expect(labelBox!.width).toBeCloseTo(88 * 375 / 1920, 1)
+  expect(labelBox!.x + labelBox!.width).toBeCloseTo(contentBox!.x, 1)
+  expect(Math.abs(labelBox!.y - contentBox!.y)).toBeLessThan(1)
 
   await dialog.getByRole('button', { name: '取消', exact: true }).click()
   await expect(dialogPanel).toBeHidden()

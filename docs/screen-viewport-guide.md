@@ -36,6 +36,8 @@ Admin/Screen 脚手架默认启用，`--no-viewport` 可关闭，`--design-width
 Blank 默认只含 Vue，不强制 Vite 转换包、Viewport、UI 或其他 Lumal 包。
 局部高级接入用 `include: ['src/screen/**']`，或 exclude/选择器/声明忽略。
 构建范围无法由运行时路由开关撤销，不再提供适配模式菜单或必需页面包装器。
+开关与设计宽度为项目级配置。局部 include/exclude 只控制编译来源；
+`frameworkStyles:false` 只关闭框架静态 CSS 接入，不撤销框架动态设计尺寸的项目级换算。
 
 `frameworkStyles:true` 默认让 Lumal 自有 CSS 与应用一起在消费者构建时转换。
 公共包发布产物仍保留 px，改 D1440也会重新换算。第三方只授权经验证的精确包名，

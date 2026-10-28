@@ -113,8 +113,10 @@ test('全局字号设置会持久化并影响核心与业务文本', async ({ pa
   await fontSizeInput.fill('18')
   await fontSizeInput.press('Enter')
 
-  // 自定义属性可保留 calc，验收最终字号而不是某种序列化表达式。
-  await expect(page.locator('html')).toHaveCSS('font-size', '18px')
+  // 用户仍输入设计字号，主题切换和恢复不能将 vw 覆盖回固定 px。
+  await expect.poll(async () => Number.parseFloat(
+    await page.locator('html').evaluate(element => getComputedStyle(element).fontSize),
+  )).toBeCloseTo(18 * page.viewportSize()!.width / 1920, 1)
   await expect.poll(async () => Number.parseFloat(
     await heading.evaluate(element => getComputedStyle(element).fontSize),
   )).toBeGreaterThan(initialSize)
@@ -122,4 +124,8 @@ test('全局字号设置会持久化并影响核心与业务文本', async ({ pa
     const stored = localStorage.getItem('lumal-admin:preferences')
     return stored ? JSON.parse(stored).theme?.fontSize : undefined
   })).toBe(18)
+  await page.reload()
+  await expect.poll(async () => Number.parseFloat(
+    await page.locator('html').evaluate(element => getComputedStyle(element).fontSize),
+  )).toBeCloseTo(18 * page.viewportSize()!.width / 1920, 1)
 })

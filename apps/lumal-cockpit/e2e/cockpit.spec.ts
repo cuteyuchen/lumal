@@ -13,9 +13,18 @@ async function expectFittedStage(page: Page, width: number, height: number): Pro
     return Boolean(bounds && Math.abs(bounds.width - width) < 1 && Math.abs(bounds.height - 1080 * width / 1920) < 1)
   }).toBe(true)
   // 高度不参与比例；矮屏由外层容器滚动承载同一内容。
-  if (height < 1080 * width / 1920) {
+  // scrollHeight/clientHeight 为整数；1366×768 的内容仅多 0.375px，不构成可滚动溢出。
+  if (1080 * width / 1920 - height > 1) {
     const container = page.locator('.lumal-full-screen-container')
     expect(await container.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true)
+    await expect(container).toHaveCSS('overflow-y', 'auto')
+    const scrollTop = await container.evaluate((element) => {
+      element.scrollTop = element.scrollHeight
+      const bottom = element.scrollTop
+      element.scrollTop = 0
+      return bottom
+    })
+    expect(scrollTop).toBeGreaterThan(0)
   }
 }
 
@@ -213,6 +222,44 @@ test('布局持久化、设计器取消、名称尺寸保存与刷新恢复', as
     const config = JSON.parse(localStorage.getItem('lumal-cockpit:config')!)
     return config.layouts.find((layout: { id: string }) => layout.id === config.activeLayoutId).left.width
   })).toBe(360)
+})
+
+test('窄视口 Designer 真实拖拽、保存和恢复不污染设计像素', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  await page.getByRole('tab', { name: '独立场景', exact: true }).click()
+  await page.getByRole('button', { name: '打开配置器', exact: true }).click()
+  const designer = page.getByRole('dialog', { name: '驾驶舱配置', exact: true })
+  const left = designer.locator('[data-side="left"]')
+  const width = designer.getByRole('spinbutton', { name: '左侧区域宽度像素', exact: true })
+  await width.fill('360')
+  await width.press('Tab')
+  const cell = left.locator('.lumal-cockpit-designer__grid-cells .lumal-cockpit-designer__drop-zone').first()
+  await cell.getByRole('button', { name: /^移除模块 / }).click()
+  await expect(cell.locator('[data-role="placed-widget"]')).toHaveCount(0)
+  const card = designer.locator('.lumal-cockpit-designer__library-card').first()
+  const type = await card.getAttribute('data-cockpit-library-type')
+  const title = await card.getAttribute('data-cockpit-library-title')
+  // 使用浏览器真实拖拽事件，不直接调用 Sortable 回调或改写草稿状态。
+  await card.dragTo(cell)
+  await expect(cell.locator('[data-role="placed-widget"]')).toContainText(title!)
+  await expect(designer.locator('.is-drag-ghost, .is-drag-chosen')).toHaveCount(0)
+  await designer.getByRole('button', { name: '保存', exact: true }).click()
+  await expect(designer).toHaveCount(0)
+  await page.reload()
+  const saved = await page.evaluate(() => {
+    const config = JSON.parse(localStorage.getItem('lumal-cockpit:config')!)
+    return config.layouts.find((layout: { id: string }) => layout.id === config.activeLayoutId).left
+  })
+  expect(saved.width).toBe(360)
+  expect(saved.rows[0].cells[0].widget.type).toBe(type)
+  await page.getByRole('button', { name: '打开配置器', exact: true }).click()
+  await expect(width).toHaveValue('360')
+  await expect(cell.locator('[data-role="placed-widget"]')).toContainText(title!)
+  await page.screenshot({ path: 'output/playwright/cockpit-designer-1366.png', animations: 'disabled' })
+  await designer.getByRole('button', { name: '取消', exact: true }).click()
+  await expect(designer).toHaveCount(0)
 })
 
 test('暂停、恢复定时刷新与立即刷新', async ({ page }) => {
