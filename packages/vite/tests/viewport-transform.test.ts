@@ -167,7 +167,7 @@ describe('受控视口 CSS 转换', () => {
     expect(await transform('a{width:192px}', file, { dependencies: ['another'] })).toContain('192px')
     expect(await transform('a{width:192px}', 'file:///C:/app/node_modules/.pnpm/@demo+ui@1.0.0/node_modules/@demo/ui/style.css', { dependencies: ['@demo/ui'] })).toContain('10vw')
   })
-  it('Lumal 公共 CSS 在消费端使用项目基准，框架 token 不影响普通业务表达式', async () => {
+  it('lumal 公共 CSS 在消费端使用项目基准，框架 token 不影响普通业务表达式', async () => {
     const css = ':root{--lumal-header-height:50px;--lumal-gap:var(--custom,24px)}.panel{width:192px}'
     const file = 'C:/app/node_modules/@lumal/core/dist/core.css'
     expect(await transform(css, file, { viewportWidth: 1440 }))

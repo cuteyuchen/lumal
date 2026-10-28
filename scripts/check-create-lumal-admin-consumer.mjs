@@ -11,6 +11,8 @@ import { createScaffoldTestApi, verifyScaffoldBrowsers } from './scaffold-verifi
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
 const packageDirectories = {
+  '@lumal/viewport': 'packages/viewport',
+  '@lumal/vite': 'packages/vite',
   '@lumal/icons': 'packages/icons',
   '@lumal/icons-vue': 'packages/icons-vue',
   '@lumal/core': 'packages/core',
@@ -18,6 +20,8 @@ const packageDirectories = {
   'create-lumal-admin': 'packages/create-lumal-admin',
 }
 const requiredBuildArtifacts = [
+  'packages/viewport/dist/index.js',
+  'packages/vite/dist/index.js',
   'packages/icons/dist/index.js',
   'packages/icons-vue/dist/index.js',
   'packages/core/dist/index.js',
@@ -137,7 +141,7 @@ async function checkMinimalConsumer(tempRoot, tarballs) {
     },
     devDependencies: { vite: '^8.0.0', typescript: '^6.0.0' },
     pnpm: {
-      overrides: Object.fromEntries(['@lumal/core', '@lumal/icons', '@lumal/icons-vue']
+      overrides: Object.fromEntries(['@lumal/core', '@lumal/icons', '@lumal/icons-vue', '@lumal/viewport']
         .map(name => [name, toFileSpecifier(projectDir, tarballs[name])])),
     },
   }
@@ -227,14 +231,15 @@ async function main() {
       for (const apiMode of ['local', 'http']) {
         for (const routerMode of ['hash', 'history']) {
           const projectDir = join(tempRoot, `generated-${preset}-${apiMode}-${routerMode}`)
-          runPnpm(['exec', 'create-lumal-admin', projectDir, '--preset', preset, '--api-mode', apiMode, '--router-mode', routerMode, '--no-interactive'], runnerDir)
+          const designWidth = routerMode === 'history' ? 1440 : 1920
+          runPnpm(['exec', 'create-lumal-admin', projectDir, '--preset', preset, '--api-mode', apiMode, '--router-mode', routerMode, '--design-width', String(designWidth), '--no-interactive'], runnerDir)
 
           const generatedPackagePath = join(projectDir, 'package.json')
           const generatedPackage = await readJson(generatedPackagePath)
           const generatedTsConfig = await readJson(join(projectDir, 'tsconfig.json'))
           const expectedLumalVersion = createPackage.version
 
-          const runtimeNames = ['@lumal/core', '@lumal/icons', '@lumal/icons-vue', ...(preset === 'vben-compatible' ? ['@lumal/vben-compat'] : [])]
+          const runtimeNames = ['@lumal/core', '@lumal/icons', '@lumal/icons-vue', '@lumal/viewport', ...(preset === 'vben-compatible' ? ['@lumal/vben-compat'] : [])]
           for (const packageName of runtimeNames) {
             if (generatedPackage.dependencies?.[packageName] !== expectedLumalVersion) {
               throw new Error(
@@ -263,6 +268,7 @@ async function main() {
             ...generatedPackage.pnpm,
             overrides: {
               ...generatedPackage.pnpm?.overrides,
+              ...Object.fromEntries(Object.entries(tarballs).filter(([name]) => name.startsWith('@lumal/')).map(([name, path]) => [name, toFileSpecifier(projectDir, path)])),
             },
           }
 
@@ -271,6 +277,7 @@ async function main() {
             generatedPackage.dependencies[packageName] = tarballSpecifier
             generatedPackage.pnpm.overrides[packageName] = tarballSpecifier
           }
+          generatedPackage.devDependencies['@lumal/vite'] = toFileSpecifier(projectDir, tarballs['@lumal/vite'])
 
           await writeFile(
             generatedPackagePath,
@@ -290,7 +297,7 @@ async function main() {
           })
           const metrics = await measureAdminBuild(projectDir)
           const boundaries = await assertLazyModuleBoundaries(projectDir)
-          const project = { projectDir, preset, apiMode, routerMode }
+          const project = { projectDir, preset, apiMode, routerMode, designWidth }
           projects.push(project)
           results.push({
             preset,
@@ -320,8 +327,9 @@ async function main() {
       runPnpm(['exec', 'create-lumal-admin', projectDir, '--preset', preset, '--features', features, '--no-interactive'], runnerDir)
       const path = join(projectDir, 'package.json')
       const manifest = await readJson(path)
-      manifest.pnpm = { overrides: {} }
-      const runtimeNames = ['@lumal/core', '@lumal/icons', '@lumal/icons-vue', ...(preset === 'vben-compatible' ? ['@lumal/vben-compat'] : [])]
+      manifest.pnpm = { overrides: Object.fromEntries(Object.entries(tarballs).filter(([name]) => name.startsWith('@lumal/')).map(([name, path]) => [name, toFileSpecifier(projectDir, path)])) }
+      manifest.devDependencies['@lumal/vite'] = toFileSpecifier(projectDir, tarballs['@lumal/vite'])
+      const runtimeNames = ['@lumal/core', '@lumal/icons', '@lumal/icons-vue', '@lumal/viewport', ...(preset === 'vben-compatible' ? ['@lumal/vben-compat'] : [])]
       for (const name of runtimeNames) {
         manifest.dependencies[name] = toFileSpecifier(projectDir, tarballs[name])
         manifest.pnpm.overrides[name] = manifest.dependencies[name]

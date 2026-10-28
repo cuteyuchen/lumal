@@ -206,7 +206,7 @@ describe('system menu view', () => {
     expect(form.props()).toMatchObject({
       columns: 2,
       gutter: 24,
-      labelWidth: '96px',
+      labelWidth: 96,
     })
     const schemas = form.props('schemas') as { field: string }[]
     expect(schemas.map(schema => schema.field)).toEqual([

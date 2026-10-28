@@ -15,7 +15,7 @@
 下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm add @lumal/core@0.0.6-beta @lumal/icons@0.0.6-beta @lumal/icons-vue@0.0.6-beta vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
+pnpm add @lumal/core@0.1.0-beta.0 @lumal/icons@0.1.0-beta.0 @lumal/icons-vue@0.1.0-beta.0 vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
 ```
 
 Pinia 按需安装。只使用 minimal / request 等纯服务入口时无需 UI peer，详见 [安装与包地址](/guide/essentials/installation)。
@@ -157,10 +157,9 @@ import { LumalLayout, LumalRouterView } from '@lumal/core/layout'
 
 布局支持侧栏 / 顶栏 / 混合导航、标签固定与淘汰策略、全局搜索、面包屑、移动抽屉等。字段与偏好细节见 [Core API](/reference/core-api)。
 
-未发布源码新增 `LumalLayout/LumalTabs` 的可选 `responsive`（默认 true）。
-显式整页 vw 时设置 false，使导航与标签拖拽不因页面缩放切换为移动交互；
-必须同时接入 CSS 断点策略，它不是独立适配开关。
-Header 默认使用主题高度，侧栏等设计尺寸使用 `--lumal-viewport-unit`（默认1px）。
+启用项目 vw 后，`LumalLayout/LumalTabs` 默认保持桌面编排，
+不因浏览器 zoom 改变 CSS 视口而切换移动导航。关闭适配仍保留原响应式断点。
+Header、侧栏、表格数字列宽与图标数字 size 由组件内部按同一设计宽度转换。
 
 ## 路由与菜单
 
@@ -209,11 +208,10 @@ const store = createPreferencesStore({
 store.patch({ theme: { mode: 'dark' } })
 ```
 
-未发布源码支持通过 `createPreferencesStore({ runtime: { document, cssLength, ... } })`
-或 `applyThemePreferences` 的 environment 传入 `cssLength: (pixels:number) => string`，
-显式格式化主题中的字号、间距、圆角、阴影和布局尺寸，默认仍为 px。
-`resolveThemeTokens` 的第二参数和 `applyThemeToElement` 的第三参数同样接受格式化器。
-不增加 Viewport 依赖；整页/局部策略与原生页面缩放接线见 [屏幕适配](/reference/screen-viewport-guide)。
+消费端 Vite 配置一次 `viewportWidth` 后，Core 通过轻量 Viewport 工具自动输出
+普通 vw token，覆盖字号、间距、圆角、阴影和布局尺寸，主题修改与恢复仍遵循同一规则。
+未开启时输出 px。不要求格式化器、根尺寸变量或页面包装器。
+文件范围与动态数值边界见 [屏幕适配](/reference/screen-viewport-guide)。
 
 ## 与示例对齐
 

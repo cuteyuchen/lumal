@@ -8,6 +8,7 @@ import type {
   LumalLayoutRouteTabResolver,
   LumalLayoutTabItem,
 } from './types'
+import { getViewportConfig } from '@lumal/viewport'
 import { ElContainer } from 'element-plus'
 import { computed, inject, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from 'vue'
 import { routeLocationKey, routerKey } from 'vue-router'
@@ -74,8 +75,8 @@ const props = withDefaults(defineProps<{
 }>(), {
   activeMenuPath: '',
   activeTabPath: '',
-  headerHeight: 'var(--lumal-header-height, 50px)',
-  responsive: true,
+  headerHeight: undefined,
+  responsive: () => !getViewportConfig().enabled,
   showHeader: true,
   menus: () => [],
   fixedTabs: () => [],
@@ -694,6 +695,7 @@ defineExpose({
     class="lumal-layout"
     :data-layout="preferences.app.layout"
     :class="{
+      'is-responsive': responsive,
       'is-sidebar-collapsed': collapsed,
       'is-sidebar-hidden': !hasSidebar,
       'is-mobile-menu-hidden': !mobileMenuOpen,
@@ -722,7 +724,7 @@ defineExpose({
             :menus="topMenus"
             :active-path="resolvedTopMenuActivePath"
             :align="preferences.header.menuAlign"
-            :max-width="`calc(${preferences.header.menuMaxWidth} * var(--lumal-viewport-unit, 1px))`"
+            :max-width="preferences.header.menuMaxWidth"
             :mode="resolvedTopMenuMode"
             @select="handleTopMenuSelect"
           />
@@ -770,8 +772,8 @@ defineExpose({
           :menus="sidebarMenus"
           :active-path="resolvedActiveMenuPath"
           :collapsed="collapsed"
-          :width="`calc(${preferences.sidebar.width} * var(--lumal-viewport-unit, 1px))`"
-          collapsed-width="calc(64 * var(--lumal-viewport-unit, 1px))"
+          :width="preferences.sidebar.width"
+          :collapsed-width="64"
           @select="handleMenuSelect"
         />
       </Transition>
@@ -785,8 +787,8 @@ defineExpose({
         :menus="mobileMenus"
         :active-path="resolvedActiveMenuPath"
         :collapsed="false"
-        :width="`calc(${preferences.sidebar.width} * var(--lumal-viewport-unit, 1px))`"
-        collapsed-width="calc(64 * var(--lumal-viewport-unit, 1px))"
+        :width="preferences.sidebar.width"
+        :collapsed-width="64"
         @select="handleMenuSelect"
       />
 
@@ -944,11 +946,11 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
-  .lumal-layout__desktop-sidebar {
+  .lumal-layout.is-responsive .lumal-layout__desktop-sidebar {
     display: none;
   }
 
-  .lumal-layout__mobile-sidebar {
+  .lumal-layout.is-responsive .lumal-layout__mobile-sidebar {
     position: absolute;
     inset: 0 auto 0 0;
     z-index: var(--lumal-z-drawer);
@@ -958,12 +960,12 @@ defineExpose({
     transform: translateX(0);
   }
 
-  .lumal-layout.is-mobile-menu-hidden .lumal-layout__mobile-sidebar {
+  .lumal-layout.is-responsive.is-mobile-menu-hidden .lumal-layout__mobile-sidebar {
     pointer-events: none;
     transform: translateX(-100%);
   }
 
-  .lumal-layout__sidebar-scrim {
+  .lumal-layout.is-responsive .lumal-layout__sidebar-scrim {
     position: absolute;
     inset: 0;
     z-index: var(--lumal-z-scrim);
@@ -974,11 +976,11 @@ defineExpose({
     cursor: pointer;
   }
 
-  .lumal-layout.is-mobile-menu-hidden .lumal-layout__sidebar-scrim {
+  .lumal-layout.is-responsive.is-mobile-menu-hidden .lumal-layout__sidebar-scrim {
     display: none;
   }
 
-  .lumal-layout__main {
+  .lumal-layout.is-responsive .lumal-layout__main {
     width: 100%;
   }
 }

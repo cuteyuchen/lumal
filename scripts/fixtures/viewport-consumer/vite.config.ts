@@ -1,15 +1,18 @@
 import type { ViewportTransformOptions } from '@lumal/vite'
+import process from 'node:process'
 import { createViewportTransformPlugin } from '@lumal/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 import { design } from './viewport.config'
 
+const designWidth = Number(process.env.CONSUMER_DESIGN_WIDTH ?? design.designWidth)
 const viewport: ViewportTransformOptions = {
   enabled: true,
   include: ['src/screen/**', 'src/runtime/**'],
   exclude: ['src/runtime/**'],
-  viewportWidth: design.designWidth,
+  viewportWidth: designWidth,
   fontSize: false,
+  minSize: false,
   inlineStyles: true,
   excludeProperties: ['border*', 'margin*'],
   excludeSelectors: [
@@ -24,8 +27,7 @@ const viewport: ViewportTransformOptions = {
 const cooperative: ViewportTransformOptions = {
   enabled: true,
   include: ['src/cooperative/**'],
-  viewportWidth: design.designWidth,
-  output: 'runtime',
+  viewportWidth: designWidth,
   inlineStyles: true,
   fontSize: false,
   minSize: false,
@@ -35,15 +37,13 @@ const cooperative: ViewportTransformOptions = {
 const fullPage: ViewportTransformOptions = {
   enabled: true,
   include: ['src/full-page/**'],
-  output: 'runtime',
-  viewportWidth: design.designWidth,
+  viewportWidth: designWidth,
   inlineStyles: true,
   fontSize: true,
   minSize: true,
   customProperties: true,
   variableFallbacks: true,
   minPixelValue: 0,
-  mediaQueries: { runtimeSelector: 'html[data-consumer-viewport="vw"]' },
 }
 
 export default defineConfig({

@@ -16,6 +16,7 @@ import type {
   SystemUserStatus,
 } from '../../api/system'
 import { LumalCrudTable, LumalSchemaForm } from '@lumal/core/components'
+import { getViewportConfig, viewportLength } from '@lumal/viewport'
 import {
   ElAlert,
   ElButton,
@@ -87,7 +88,7 @@ const batchRoleAssignment = shallowRef(false)
 const roleAssignmentModel = shallowRef<SchemaFormModel>({ roles: [] })
 const roleAssignmentSaving = shallowRef(false)
 const roleAssignmentError = shallowRef('')
-const isMobileViewport = shallowRef(typeof window !== 'undefined' && window.innerWidth <= 768)
+const isMobileViewport = shallowRef(!getViewportConfig().enabled && typeof window !== 'undefined' && window.innerWidth <= 768)
 const mobileOrganizationExpanded = shallowRef(false)
 let roleAssignmentClearSelection: ClearSelection | undefined
 let mobileMediaQuery: MediaQueryList | undefined
@@ -380,7 +381,7 @@ function syncMobileViewport(): void {
 }
 
 function setupMobileViewport(): void {
-  if (typeof window === 'undefined') {
+  if (getViewportConfig().enabled || typeof window === 'undefined') {
     return
   }
   if (typeof window.matchMedia !== 'function') {
@@ -762,7 +763,7 @@ onBeforeUnmount(() => {
       append-to-body
       class="lumal-admin-dialog"
       :title="roleAssignmentTitle"
-      width="520px"
+      :width="viewportLength(520)"
     >
       <ElAlert
         v-if="roleAssignmentError"
@@ -857,7 +858,7 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
-  .lumal-admin-user-page {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-user-page {
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -867,22 +868,22 @@ onBeforeUnmount(() => {
     grid-template-rows: none;
   }
 
-  .lumal-admin-user-page__organizations {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-user-page__organizations {
     flex: none;
     gap: 8px;
     padding: 12px;
     grid-template-rows: auto auto;
   }
 
-  .lumal-admin-user-page__organizations.is-collapsed {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-user-page__organizations.is-collapsed {
     grid-template-rows: auto;
   }
 
-  .lumal-admin-user-page__organization-header {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-user-page__organization-header {
     gap: 8px;
   }
 
-  .lumal-admin-user-page__organization-summary {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-user-page__organization-summary {
     display: flex;
     min-width: 0;
     flex: 1 1 auto;
@@ -893,29 +894,29 @@ onBeforeUnmount(() => {
     font-size: var(--lumal-font-size-small, var(--lumal-font-size-base, 12px));
   }
 
-  .lumal-admin-user-page__organization-summary > span {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-user-page__organization-summary > span {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .lumal-admin-user-page__organization-toggle {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-user-page__organization-toggle {
     flex: 0 0 auto;
     min-height: 32px;
     padding-inline: 8px;
   }
 
-  .lumal-admin-user-page__organization-content {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-user-page__organization-content {
     gap: 8px;
     grid-template-rows: auto auto;
   }
 
-  .lumal-admin-user-page__organization-tree {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-user-page__organization-tree {
     max-height: 160px;
   }
 
-  .lumal-admin-user-page :deep(.lumal-crud-table) {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-user-page :deep(.lumal-crud-table) {
     flex: none;
     height: auto;
     max-height: none;

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
 import type { FlylineChartConfig, FlylineChartPoint, FlylineImageStyle, FlylineTextStyle } from '../types'
+import { useViewportWidth } from '@lumal/viewport'
 import { computed, nextTick, shallowRef, useId, useTemplateRef, watch } from 'vue'
 import { useElementSize } from '../composables/useElementSize'
 import { useSvgAnimationPause } from '../composables/useSvgAnimationPause'
@@ -23,6 +24,8 @@ const emit = defineEmits<{
 const rootRef = useTemplateRef<HTMLElement>('rootRef')
 const svgRef = useTemplateRef<SVGSVGElement>('svgRef')
 const size = useElementSize(rootRef)
+// 相对/绝对点坐标沿用原协议，仅字号、图标与光晕等设计尺寸使用 vw 比例。
+const { pixels } = useViewportWidth()
 const animation = useSvgAnimationPause(rootRef, svgRef)
 const id = svgId('lumal-flyline', useId())
 
@@ -135,13 +138,13 @@ function handleClick(event: MouseEvent): void {
         <template v-for="path in paths" :key="`definition-${path.key}`">
           <path :id="`${id}-path-${path.key}`" :d="path.d" data-flyline-path fill="transparent" />
           <mask :id="`${id}-mask-${path.key}`">
-            <circle cx="0" cy="0" :r="resolvedConfig.flylineRadius" :fill="`url(#${id}-flyline-gradient)`">
+            <circle cx="0" cy="0" :r="pixels(resolvedConfig.flylineRadius)" :fill="`url(#${id}-flyline-gradient)`">
               <animateMotion :dur="path.time" :path="path.d" rotate="auto" repeatCount="indefinite" />
             </circle>
           </mask>
         </template>
         <circle v-if="paths[0]" :id="`${id}-halo`" :cx="paths[0].end[0]" :cy="paths[0].end[1]">
-          <animate attributeName="r" :values="`1;${resolvedConfig.halo.radius}`" :dur="`${haloDuration}s`" repeatCount="indefinite" />
+          <animate attributeName="r" :values="`1;${pixels(resolvedConfig.halo.radius)}`" :dur="`${haloDuration}s`" repeatCount="indefinite" />
           <animate attributeName="opacity" values="1;0" :dur="`${haloDuration}s`" repeatCount="indefinite" />
         </circle>
         <mask :id="`${id}-halo-mask`">
@@ -158,23 +161,23 @@ function handleClick(event: MouseEvent): void {
       <image
         v-if="paths[0] && resolvedConfig.centerImage.url"
         :href="resolvedConfig.centerImage.url"
-        :width="resolvedConfig.centerImage.width"
-        :height="resolvedConfig.centerImage.height"
-        :x="paths[0].end[0] - resolvedConfig.centerImage.width / 2"
-        :y="paths[0].end[1] - resolvedConfig.centerImage.height / 2"
+        :width="pixels(resolvedConfig.centerImage.width)"
+        :height="pixels(resolvedConfig.centerImage.height)"
+        :x="paths[0].end[0] - pixels(resolvedConfig.centerImage.width) / 2"
+        :y="paths[0].end[1] - pixels(resolvedConfig.centerImage.height) / 2"
       />
 
       <g v-for="path in paths" :key="path.key">
         <use
           v-if="pathLengths[path.key]"
           :href="`#${id}-path-${path.key}`"
-          :stroke-width="resolvedConfig.lineWidth"
+          :stroke-width="pixels(resolvedConfig.lineWidth)"
           :stroke="resolvedConfig.orbitColor"
           fill="none"
         />
         <use
           :href="`#${id}-path-${path.key}`"
-          :stroke-width="resolvedConfig.lineWidth"
+          :stroke-width="pixels(resolvedConfig.lineWidth)"
           :stroke="resolvedConfig.flylineColor"
           :mask="`url(#${id}-mask-${path.key})`"
           fill="none"
@@ -190,17 +193,17 @@ function handleClick(event: MouseEvent): void {
         <image
           v-if="resolvedConfig.pointImage.url"
           :href="resolvedConfig.pointImage.url"
-          :width="resolvedConfig.pointImage.width"
-          :height="resolvedConfig.pointImage.height"
-          :x="path.start[0] - resolvedConfig.pointImage.width / 2"
-          :y="path.start[1] - resolvedConfig.pointImage.height / 2"
+          :width="pixels(resolvedConfig.pointImage.width)"
+          :height="pixels(resolvedConfig.pointImage.height)"
+          :x="path.start[0] - pixels(resolvedConfig.pointImage.width) / 2"
+          :y="path.start[1] - pixels(resolvedConfig.pointImage.height) / 2"
         />
         <text
           v-if="resolvedConfig.text.show && path.text"
-          :x="path.start[0] + resolvedConfig.text.offset[0]"
-          :y="path.start[1] + resolvedConfig.text.offset[1]"
+          :x="path.start[0] + pixels(resolvedConfig.text.offset[0])"
+          :y="path.start[1] + pixels(resolvedConfig.text.offset[1])"
           :fill="resolvedConfig.text.color"
-          :font-size="resolvedConfig.text.fontSize"
+          :font-size="pixels(resolvedConfig.text.fontSize)"
         >{{ path.text }}</text>
       </g>
     </svg>

@@ -50,7 +50,7 @@ onMounted(async () => {
 
 .app-icon-group-select__error {
   color: var(--el-color-danger);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
   overflow-wrap: anywhere;
 }
 </style>

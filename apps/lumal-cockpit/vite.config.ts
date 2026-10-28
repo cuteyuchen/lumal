@@ -1,10 +1,10 @@
 import type { Target } from 'vite-plugin-static-copy'
 import { relative } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
+import { createLumalAliases, createViewportTransformPlugin } from '@lumal/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig, normalizePath } from 'vite'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
-import { createLumalAliases } from '../../packages/vite/src/aliases'
 
 const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
 const appRoot = fileURLToPath(new URL('.', import.meta.url))
@@ -35,6 +35,7 @@ export default defineConfig(({ command, isPreview }) => ({
   },
   plugins: [
     vue(),
+    createViewportTransformPlugin({ enabled: true, include: ['src/**'], viewportWidth: 1920, dependencies: ['element-plus'], customProperties: true }),
     viteStaticCopy({
       targets: cesiumDirectories.map(createCesiumCopyTarget),
     }),

@@ -4,13 +4,14 @@ Lumal 是一套供个人长期使用、同时开放给其他开发者的轻量 V
 
 `apps/lumal-admin` 是公开 API 的集成示例与验收入口；可复用能力必须沉淀到 `packages/*`，业务接口字段、状态码和页面逻辑不得进入框架包。
 
-当前工作区与本文 API 基线为 `0.0.6-beta`，十个公共包已发布并完成 registry 与同次发布产物核验，
-详见 [本版发布记录](docs/npm-release-0.0.6-beta.md)。下列 npm 命令显式选择本版，不依赖浮动标签。
+当前工作区与本文 API 基线为候选 `0.1.0-beta.0`，尚未发布 npm，
+详见 [本轮工作记录](docs/pure-vw-refactor-2026-10-28.md)。下列 npm 命令在正式发布后可用；
+当前以本地 tarball 验证，不依赖浮动标签。
 十包 `beta` 指向本版；既有九包的 `latest` 保持 `0.0.1-beta`，
-新增 `@lumal/viewport` 首次发布后的 `latest` 为 `0.0.6-beta`。公共包发布不等于业务验收或生产部署。
+新增 `@lumal/viewport` 首次发布后的 `latest` 为 `0.1.0-beta.0`。公共包发布不等于业务验收或生产部署。
 上一版九包 `0.0.5-beta` 的已核验发布事实保留在 [历史发布记录](docs/npm-release-0.0.5-beta.md)。
 
-## 0.0.6-beta 能力
+## 0.1.0-beta.0 能力
 
 - 统一 `create-lumal` bin 生成 Admin、Screen、Blank，旧 Admin 命令与参数保留。
 - 所有模板具备 ESLint、Prettier、EditorConfig、AI 规范和统一 `pnpm check`。
@@ -19,7 +20,7 @@ Lumal 是一套供个人长期使用、同时开放给其他开发者的轻量 V
 - 请求会话隔离与无业务字段序号列的修复，配套脱敏真实消费者契约。
 
 创建方式见 [项目模板](docs/project-template-guide.md)，
-三级适配见 [屏幕与工作区](docs/screen-viewport-guide.md)，
+统一宽度适配见 [屏幕与工作区](docs/screen-viewport-guide.md)，
 兼容边界见 [真实消费者](docs/real-consumer-compatibility.md) 与 [升级指南](docs/upgrade-guide.md)。
 通用 binary 仍由 `create-lumal-admin` 包分发，没有新增独立的 `create-lumal` npm 包；
 不要把 `pnpm create lumal` 当成已发布命令。
@@ -27,7 +28,7 @@ Lumal 是一套供个人长期使用、同时开放给其他开发者的轻量 V
 ## Demo 后续整改
 
 本工作分支补充 Cockpit 的直接 Viewport 实验、错误恢复和配置交互，
-以及 Admin 的 Viewport / DataV / 轻量 Cockpit Runtime 示例。公开 API 仍以 `0.0.6-beta` 为基线；
+以及 Admin 的 Viewport / DataV / 轻量 Cockpit Runtime 示例。公开 API 仍以 `0.1.0-beta.0` 为基线；
 Designer 名称输入补丁尚未发布，已有 Changeset。没有为 Demo 整改自动发布 npm 或更新生产站点。
 接入代码见 [Demo 指南](docs/demo-integration-guide.md)，十包能力见 [覆盖表](docs/public-package-coverage.md)，
 实际环境、构建与浏览器证据见 [整改验收](docs/cockpit-demo-remediation-2026-10-26.md)。
@@ -46,10 +47,10 @@ pnpm admin:dev
 创建新项目：
 
 ```bash
-pnpm create lumal-admin@0.0.6-beta my-admin --preset standard
+pnpm create lumal-admin@0.1.0-beta.0 my-admin --preset standard
 # 通用入口由现有包提供，明确选择 binary。
-pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-screen --template screen
-pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal my-blank --template blank
+pnpm --package=create-lumal-admin@0.1.0-beta.0 dlx create-lumal my-screen --template screen
+pnpm --package=create-lumal-admin@0.1.0-beta.0 dlx create-lumal my-blank --template blank
 ```
 
 应用侧最小接入：
@@ -104,13 +105,13 @@ await createLumalAdmin({
 create-lumal-admin  →  生成消费公开包入口的应用
 ```
 
-`@lumal/datav` 是独立可视化包，不依赖 `@lumal/core`；Vue 保持 peer，ECharts peer 为可选，只有实际使用 ECharts 图表才需安装。DataV `config` 模式声明 `@jiaminghi/charts` 运行时依赖。DataV/Cockpit 共享 `@lumal/viewport` 的算法与尺寸监听；旧缩放契约保持。三级适配与地图约定见[屏幕适配指南](docs/screen-viewport-guide.md)。
+`@lumal/datav` 是独立可视化包，不依赖 `@lumal/core`；Vue 保持 peer，ECharts peer 为可选，只有实际使用 ECharts 图表才需安装。DataV `config` 模式声明 `@jiaminghi/charts` 运行时依赖。DataV/Cockpit 共享 `@lumal/viewport` 的宽度数值工具与尺寸监听，旧多模式契约已删除。统一宽度适配与地图约定见[屏幕适配指南](docs/screen-viewport-guide.md)。
 
 需要严格轻量启动时使用 `@lumal/core/minimal`，只显式注册需要的组件；根入口保留默认 UI 便利接线。`@lumal/core/request` 等纯服务子入口无需 Element Plus。DataV 通用图表按模式动态加载引擎，无引擎组件可使用独立子入口。
 
 ## AI Skill
 
-[Lumal 总 Skill](skills/lumal/SKILL.md) 以 `0.0.6-beta` 为 API 基线，覆盖十个公共包，指导 AI 判断何时使用、如何接入及需要避免的误区。总入口负责包选型，详细示例按任务从 `references/` 读取，不要求每次加载整套文档。
+[Lumal 总 Skill](skills/lumal/SKILL.md) 以 `0.1.0-beta.0` 为 API 基线，覆盖十个公共包，指导 AI 判断何时使用、如何接入及需要避免的误区。总入口负责包选型，详细示例按任务从 `references/` 读取，不要求每次加载整套文档。
 
 将 `skills/lumal` 整个目录安装到 AI 工具支持的 Skill 目录后，可用 `$lumal` 显式调用。安装位置、示例请求与维护说明见 [AI Skill 指南](apps/lumal-docs/src/guide/essentials/ai-skills.md)。
 

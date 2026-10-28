@@ -2,6 +2,7 @@
 import type { LumalPreferences } from '@lumal/core/theme'
 import { LumalThemeSettingsPanel } from '@lumal/core/theme'
 import { LumalIcon } from '@lumal/icons-vue'
+import { viewportLength } from '@lumal/viewport'
 import { ElDrawer } from 'element-plus'
 import { computed } from 'vue'
 
@@ -46,7 +47,7 @@ function handleReset(nextPreferences: LumalPreferences): void {
     v-model="visibleModel"
     class="lumal-admin-settings-drawer"
     title="偏好设置"
-    size="calc(384 * var(--lumal-viewport-unit, 1px))"
+    :size="viewportLength(384)"
     append-to-body
     destroy-on-close
   >
@@ -119,25 +120,25 @@ function handleReset(nextPreferences: LumalPreferences): void {
 }
 
 .lumal-admin-settings-drawer__title-copy strong {
-  font-size: calc(var(--lumal-font-size-base, 14px) + 2px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 1.14285714);
   font-weight: 700;
   line-height: 1.25;
 }
 
 .lumal-admin-settings-drawer__title-copy small {
   color: var(--el-text-color-secondary);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 3px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.78571429);
   font-weight: 400;
   line-height: 1.25;
 }
 
 @media (max-width: 640px) {
-  .lumal-admin-settings-drawer {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-settings-drawer {
     width: min(384px, 100vw) !important;
   }
 
-  .lumal-admin-settings-drawer .el-drawer__header,
-  .lumal-admin-settings-drawer .el-drawer__body {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-settings-drawer .el-drawer__header,
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-settings-drawer .el-drawer__body {
     padding-right: 16px;
     padding-left: 16px;
   }

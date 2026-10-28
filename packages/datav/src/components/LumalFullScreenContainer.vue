@@ -1,76 +1,35 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
-import type { FullScreenContainerMode } from '../types'
-import { computed, useTemplateRef } from 'vue'
-import { useFullScreenScale } from '../composables/useFullScreenScale'
+import { getViewportConfig, viewportLength } from '@lumal/viewport'
+import { computed } from 'vue'
 
-/***********************全屏容器*********************/
-
+/***********************内容尺寸与滚动边界*********************/
 const props = withDefaults(defineProps<{
-  /** 设计稿宽度，缩放基准 */
+  /** 内容宽度（设计 px），不覆盖项目设计基准。 */
   width?: number
-  /** 设计稿高度，缩放基准 */
+  /** 内容高度（设计 px），始终按项目设计宽度转换。 */
   height?: number
-  /** 适配类别：width（宽度等比）/ scale（等比居中）/ vwvh（拉伸铺满） */
-  mode?: FullScreenContainerMode
-  /** 容器层级 */
+  overflow?: 'auto' | 'hidden'
+  embedded?: boolean
   zIndex?: number
 }>(), {
-  height: undefined,
-  mode: 'width',
   width: undefined,
+  height: undefined,
+  overflow: 'auto',
+  embedded: false,
   zIndex: 999,
 })
-
-const containerRef = useTemplateRef<HTMLElement>('containerRef')
-
-const designWidth = computed(() => props.width ?? (typeof screen === 'undefined' ? 1920 : screen.width))
-const designHeight = computed(() => props.height ?? (typeof screen === 'undefined' ? 1080 : screen.height))
-
-const { result, ready } = useFullScreenScale(containerRef, {
-  designHeight: () => designHeight.value,
-  designWidth: () => designWidth.value,
-})
-
-const stageStyle = computed<CSSProperties>(() => {
-  if (props.mode === 'vwvh') {
-    return {
-      'height': '100vh',
-      'width': '100vw',
-      '--lumal-fsc-x-unit': `${100 / Math.max(1, designWidth.value)}vw`,
-      '--lumal-fsc-y-unit': `${100 / Math.max(1, designHeight.value)}vh`,
-    }
-  }
-
-  if (props.mode === 'scale') {
-    return {
-      height: `${designHeight.value}px`,
-      transform: `translate(${result.value.offsetX}px, ${result.value.offsetY}px) scale(${result.value.scale})`,
-      transformOrigin: 'top left',
-      width: `${designWidth.value}px`,
-    }
-  }
-
-  // width：DataV 原生按宽度等比缩放（仅受容器宽度约束）
-  const widthScale = (result.value.containerWidth || designWidth.value) / Math.max(1, designWidth.value)
-  return {
-    height: `${designHeight.value}px`,
-    transform: `scale(${widthScale})`,
-    transformOrigin: 'left top',
-    width: `${designWidth.value}px`,
-  }
-})
+const stageStyle = computed<CSSProperties>(() => ({
+  width: viewportLength(props.width ?? getViewportConfig().designWidth),
+  height: props.height === undefined ? undefined : viewportLength(props.height),
+  minHeight: props.height === undefined ? '100%' : undefined,
+}))
 </script>
 
 <template>
-  <div
-    ref="containerRef"
-    class="lumal-full-screen-container"
-    :data-mode="mode"
-    :style="{ zIndex }"
-  >
+  <div class="lumal-full-screen-container" :class="{ 'is-embedded': embedded }" :style="{ zIndex, overflow }">
     <div class="lumal-full-screen-container__stage" :style="stageStyle">
-      <slot v-if="ready" />
+      <slot />
     </div>
   </div>
 </template>
@@ -78,22 +37,19 @@ const stageStyle = computed<CSSProperties>(() => {
 <style scoped>
 .lumal-full-screen-container {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .lumal-full-screen-container__stage {
-  position: absolute;
-  top: 0;
-  left: 0;
-  overflow: hidden;
-  will-change: transform;
+  position: relative;
 }
 
-.lumal-full-screen-container[data-mode='vwvh'] .lumal-full-screen-container__stage {
-  will-change: auto;
+.lumal-full-screen-container.is-embedded {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 </style>

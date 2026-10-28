@@ -121,7 +121,7 @@ async function copyIconName(): Promise<void> {
 
 .icons-picker-examples__selection h3 {
   margin: 16px 0 8px;
-  font-size: calc(var(--lumal-font-size-base, 14px) + 2px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 1.14285714);
 }
 
 .icons-picker-examples__key {
@@ -147,15 +147,15 @@ async function copyIconName(): Promise<void> {
 
 .icons-picker-examples__feedback {
   min-height: 20px;
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
 }
 
 @media (max-width: 800px) {
-  .icons-picker-examples {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .icons-picker-examples {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .icons-picker-examples__selection {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .icons-picker-examples__selection {
     padding: 20px 0 0;
     border-top: 1px solid var(--el-border-color-light);
     border-left: 0;

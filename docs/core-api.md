@@ -501,11 +501,10 @@ layout 只负责后台壳层结构和交互，不请求业务数据。`LumalLayo
 
 应用层不需要创建或传入 `topMenus`，也不需要自行计算顶栏激活项和侧栏菜单。点击 mixed-nav 一级菜单时，Layout 会自动解析首个可导航子项并通过 `menu-select` 输出最终路径。
 
-未发布源码新增 `LumalLayout/LumalTabs responsive?:boolean`，默认 true；
-false 供整页设计稿模式保持桌面导航和拖拽行为，必须同步接入 CSS 断点策略。
-Layout 透传该设置给内部 Tabs。默认 Header 高度使用 `var(--lumal-header-height,50px)`；
-侧栏宽度和顶部菜单最大宽度的设计数值使用 `--lumal-viewport-unit`，默认1px。
-不自动启用 vw，也不对根元素添加 transform，完整接线见 [屏幕适配](./screen-viewport-guide.md)。
+`LumalLayout/LumalTabs responsive?:boolean` 默认取项目 vw 开关的反值；
+开启 vw 后保持桌面编排，关闭适配时保留原响应式断点。Layout 透传给内部 Tabs。
+Header、侧栏和顶部菜单的设计尺寸由组件内部按同一项目配置输出 vw，
+不需业务单位变量，不对根元素添加 transform，完整接线见 [屏幕适配](./screen-viewport-guide.md)。
 
 启用 `route-driven` 后，Layout 还会从当前 Vue Router 路由创建访问标签，并支持：
 
@@ -760,19 +759,13 @@ preferences.dispose()
 
 Store 会清理损坏缓存、补齐新增默认字段，并只在主题模式为 `system` 时监听系统主题变化。全局字号限制为 12-20px，会同步 Lumal 和 Element Plus 的字号变量。
 
-未发布源码新增 `ThemeRuntimeEnvironment.cssLength?: (pixels:number) => string`。
-偏好 Store 的 `runtime`、`applyThemePreferences` 的 environment 均可传入；
-`resolveThemeTokens(state, cssLength)` 和 `applyThemeToElement(element,state,cssLength)` 同样接受。
-省略时保持原 px；显式整页适配可使用：
-
-```ts
-// 应用侧格式化器；根单位由应用按模式设置，Core 不测量视口。
-const cssLength = (pixels: number) => `calc(${pixels} * var(--lumal-viewport-unit, 1px))`
-```
-
-格式化覆盖字号、布局、间距、圆角与阴影长度，不改变颜色、动画时长和 z-index。
-Core 不依赖 Viewport；根定义的主题变量在根解析，不能靠局部单位恢复已经解析的值。
-自管理画布路由应整页回退普通单位，或先隔离主题定义。
+候选版本在消费端 `@lumal/vite` 配置一次 `viewportWidth` 后，
+Core 通过 `@lumal/viewport` 自动将字号、布局、间距、圆角和阴影中的设计尺寸写为普通 vw。
+`resolveThemeTokens(state)`、`applyThemeToElement(element,state)`、
+`applyThemePreferences` 与偏好 Store 初始化/切换/恢复使用同一配置。
+未开启时输出 px；不再提供主题长度格式化回调或要求业务维护根单位。
+颜色、动画时长、z-index、DOM 测量和定位坐标保持原义。
+构建已生成的 vw 不能由路由开关撤回；局部项目应明确选择文件或选择器范围。
 
 ## 可选生态包
 
@@ -781,7 +774,7 @@ Core 不依赖 Viewport；根定义的主题变量在根解析，不能靠局部
 - `@lumal/icons`：框架无关的图标 registry、单色 SVG 校验/合成、改色、渐变和 Data URI 缓存。
 - `@lumal/icons-vue`：`LumalIcon`、选择器和 Vue 响应式注册表适配，详见 `docs/icons.md`。
 - `@lumal/charts`：`LumalChart` 与 `LumalChartPanel`；面板支持查询、表格替代视图、导出、错误恢复和无障碍摘要。
-- `0.0.6-beta` 的 `@lumal/viewport`：无UI依赖的容器尺寸、画布策略与应用默认，不与Core主题字号混淆，详见 `docs/screen-viewport-guide.md`。
+- `@lumal/viewport`：无 UI 依赖的尺寸测量与唯一宽度数值工具，详见 `docs/screen-viewport-guide.md`。
 - `@lumal/vben-compat`：Vben 高频表单/Grid 写法到 Lumal Schema/CRUD 的迁移适配，详见 `docs/migration-from-vben.md`。
 - `@lumal/vite`：组件 resolver、工作区 source/dist alias 和可选 Devtools 接线。
 

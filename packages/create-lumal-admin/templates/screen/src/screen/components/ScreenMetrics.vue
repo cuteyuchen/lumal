@@ -34,7 +34,7 @@ defineProps<{ metrics: { label: string; value: number }[] }>();
 
 .screen-metrics__item dd {
   margin: 12px 0 0;
-  font-size: max(36px, var(--lumal-viewport-min-font-size, 14px));
+  font-size: 36px;
   font-weight: 600;
 }
 </style>

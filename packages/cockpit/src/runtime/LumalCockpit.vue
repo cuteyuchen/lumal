@@ -8,11 +8,11 @@ import type {
   CockpitNodeSelectPayload,
   CockpitRenderMode,
   CockpitThemeMode,
-  CockpitViewportMode,
 } from '../types'
 import type { CockpitCardComponent } from './card'
+import { getViewportConfig } from '@lumal/viewport'
 import { ElSwitch, ElTooltip } from 'element-plus'
-import { computed, provide, ref, shallowReactive, shallowRef, useSlots, watch, watchEffect } from 'vue'
+import { computed, provide, ref, shallowReactive, shallowRef, useSlots, useTemplateRef, watch, watchEffect } from 'vue'
 import { useCockpit } from '../composables/useCockpit'
 import {
   DEFAULT_COCKPIT_AUTO_REFRESH_INTERVAL_MS,
@@ -34,7 +34,6 @@ const props = withDefaults(defineProps<{
   baseHeight?: number
   cachePages?: boolean
   renderMode?: CockpitRenderMode
-  viewportMode?: CockpitViewportMode
   messageBus?: ReturnType<typeof createCockpitMessageBus>
   cardComponent?: CockpitCardComponent
   /** 是否启用右上角全局自动刷新开关（默认关闭，由消费方 opt-in）。 */
@@ -42,11 +41,10 @@ const props = withDefaults(defineProps<{
   /** 自动刷新间隔（ms），默认 5 分钟。 */
   autoRefreshIntervalMs?: number
 }>(), {
-  baseWidth: 1920,
+  baseWidth: () => getViewportConfig().designWidth,
   baseHeight: 1080,
   cachePages: true,
   renderMode: 'runtime',
-  viewportMode: 'scale',
   autoRefresh: false,
   autoRefreshIntervalMs: DEFAULT_COCKPIT_AUTO_REFRESH_INTERVAL_MS,
 })
@@ -158,7 +156,7 @@ const { refreshNow } = useCockpitAutoRefresh({
   enabled: autoRefreshTimerEnabled,
 })
 
-const rootRef = ref<HTMLElement | null>(null)
+const rootRef = useTemplateRef<HTMLElement>('rootRef')
 async function enterFullscreen(): Promise<void> {
   if (rootRef.value?.requestFullscreen)
     await rootRef.value.requestFullscreen()
@@ -199,7 +197,6 @@ function handleNodeClick(event: MouseEvent): void {
     class="lumal-cockpit"
     :data-mode="renderMode"
     :data-cockpit-theme="themeMode"
-    :data-viewport-mode="viewportMode"
     @click.capture="handleNodeClick"
   >
     <template v-if="normalizedResult.error">
@@ -221,7 +218,6 @@ function handleNodeClick(event: MouseEvent): void {
         :title="normalized!.title"
         :base-width="baseWidth"
         :base-height="baseHeight"
-        :viewport-mode="viewportMode"
         :layout="orchestration.activeLayout.value"
         :center-context="centerContext"
       >

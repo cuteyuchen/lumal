@@ -1,16 +1,17 @@
+import { viewportLength } from '@lumal/viewport'
 import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, nextTick } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
-import { adminViewportLength, setAdminViewportMode } from '../src/services/workspace-viewport'
 import ViewportView from '../src/views/examples/ViewportView.vue'
 import { elementPlusStubs } from './helpers/element-plus-stubs'
 
 describe('视口页面与内部演示的适配范围', () => {
-  it('模拟容器、表格和弹窗跟随 Admin vw，修改内部设计宽不影响外层比例', async () => {
+  afterEach(() => vi.unstubAllGlobals())
+  it('模拟容器不改变表格或弹窗的浏览器宽度基准', async () => {
     vi.stubGlobal('innerWidth', 1280)
     vi.stubGlobal('innerHeight', 720)
-    setAdminViewportMode('vw')
+    vi.stubGlobal('__LUMAL_VIEWPORT__', { enabled: true, designWidth: 1920 })
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [{ path: '/examples/viewport', component: ViewportView }],
@@ -40,22 +41,19 @@ describe('视口页面与内部演示的适配范围', () => {
       await nextTick()
       await wrapper.get('select[aria-label="模拟尺寸"]').setValue('narrow')
       const host = wrapper.get<HTMLElement>('.viewport-host')
-      expect(host.element.style.width).toBe(adminViewportLength(480))
-      expect(host.element.style.height).toBe(adminViewportLength(420))
+      expect(host.element.style.width).toBe(viewportLength(480))
+      expect(host.element.style.height).toBe(viewportLength(640))
       const columnWidth = () => Number(wrapper.get('[aria-label="测量项"]').attributes('data-width'))
-      expect(columnWidth()).toBeCloseTo(140 * 1280 / 1920)
-      await wrapper.get('input[aria-label="设计宽"]').setValue('960')
-      expect(columnWidth()).toBeCloseTo(140 * 1280 / 1920)
+      expect(columnWidth()).toBeCloseTo(180 * 1280 / 1920)
+      await wrapper.get('select[aria-label="模拟尺寸"]').setValue('short')
+      expect(host.element.style.height).toBe(viewportLength(280))
+      expect(columnWidth()).toBeCloseTo(180 * 1280 / 1920)
       await wrapper.get('button').trigger('click')
-      expect(wrapper.get('[role="dialog"]').attributes('data-width')).toBe(`min(${adminViewportLength(480)}, 90vw)`)
-      setAdminViewportMode('responsive')
-      await nextTick()
-      expect(columnWidth()).toBe(140)
+      expect(wrapper.get('[role="dialog"]').attributes('data-width')).toBe(viewportLength(480))
+      expect(wrapper.find('[data-viewport-mode]').exists()).toBe(false)
     }
     finally {
       wrapper.unmount()
-      setAdminViewportMode('responsive')
-      vi.unstubAllGlobals()
     }
   })
 })

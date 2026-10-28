@@ -113,8 +113,10 @@ describe('真实终端向导', () => {
     term.write('\r')
     await term.prompt('Screen 可视化')
     term.write('\x1B[B\x1B[B\r')
-    await term.prompt('Screen 适配')
-    term.write('\x1B[B\r')
+    await term.prompt('启用统一 px→vw 宽度适配？')
+    term.write('\r')
+    await term.prompt('设计宽度')
+    term.write('1440\r')
     await term.prompt('确认创建项目')
     expect(existsSync(join(term.cwd, 'screen-project'))).toBe(false)
     term.write('\r')
@@ -122,6 +124,7 @@ describe('真实终端向导', () => {
     const manifest = JSON.parse(await readFile(join(term.cwd, 'screen-project/package.json'), 'utf8'))
     expect(manifest.dependencies).toHaveProperty('@lumal/datav')
     expect(manifest.dependencies).not.toHaveProperty('@lumal/cockpit')
+    expect(await readFile(join(term.cwd, 'screen-project/viewport.config.ts'), 'utf8')).toContain('viewportWidth: 1440')
   }, 30_000)
   it('通用入口方向键选择 Blank，不询问或生成 Admin 能力', async () => {
     const term = await terminal(['blank-project'], cli.replace(/cli\.js$/, 'project-cli.js'))
@@ -158,6 +161,10 @@ describe('真实终端向导', () => {
     term.write('\x1B[B\r') // hash -> history
     await term.prompt('可选功能')
     term.write(' \x1B[B \x1B[A \r') // 关闭 system/examples，再启用 system
+    await term.prompt('启用统一 px→vw 宽度适配？')
+    term.write('\r')
+    await term.prompt('设计宽度')
+    term.write('\r')
     await term.prompt('确认创建项目')
     expect(existsSync(join(term.cwd, 'admin'))).toBe(false)
     term.write('\r')
@@ -170,7 +177,7 @@ describe('真实终端向导', () => {
   }, 30_000)
 
   it('默认值、参数预填以及 minimal 不展示可选模块', async () => {
-    const term = await terminal(['--preset', 'minimal', '--api-mode', 'local', '--router-mode', 'hash'])
+    const term = await terminal(['--preset', 'minimal', '--api-mode', 'local', '--router-mode', 'hash', '--no-viewport'])
     await term.prompt('项目目录')
     term.write('\r')
     await term.prompt('npm 项目名称')
@@ -192,7 +199,7 @@ describe('真实终端向导', () => {
   }, 20_000)
 
   it('拒绝确认不创建项目，--features none 不再次询问', async () => {
-    const term = await terminal(['cancelled', '--name', 'test-admin', '--preset', 'standard', '--api-mode', 'local', '--router-mode', 'hash', '--features', 'none'])
+    const term = await terminal(['cancelled', '--name', 'test-admin', '--preset', 'standard', '--api-mode', 'local', '--router-mode', 'hash', '--features', 'none', '--no-viewport'])
     await term.prompt('确认创建项目')
     term.write('n\r')
     const result = await term.finish()
@@ -202,7 +209,7 @@ describe('真实终端向导', () => {
   }, 20_000)
 
   it('npm 名称错误在终端内反馈并允许修正', async () => {
-    const term = await terminal(['admin', '--preset', 'minimal', '--api-mode', 'local', '--router-mode', 'hash'])
+    const term = await terminal(['admin', '--preset', 'minimal', '--api-mode', 'local', '--router-mode', 'hash', '--no-viewport'])
     await term.prompt('npm 项目名称')
     term.write('Bad Name\r')
     await term.prompt('非法 npm 项目名称', true)

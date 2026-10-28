@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
 import type { BorderBoxVariant } from '../types'
+import { useViewportWidth, viewportLength } from '@lumal/viewport'
 import {
   computed,
   useId,
@@ -61,6 +62,8 @@ const DEFAULT_DURATION: Partial<Record<BorderBoxVariant, number>> = {
 const rootRef = useTemplateRef<HTMLElement>('rootRef')
 const svgRef = useTemplateRef<SVGSVGElement>('svgRef')
 const elementSize = useElementSize(rootRef)
+const { pixels } = useViewportWidth()
+const titleWidth = computed(() => pixels(props.titleWidth))
 
 /**
  * Variants whose decorations were authored against a fixed pixel canvas (mixing
@@ -128,10 +131,10 @@ const rootStyle = computed<CSSProperties>(() => {
   if (props.variant === 7) {
     style.backgroundColor = resolvedBackground.value
     style.border = `1px solid ${primaryColor.value}`
-    style.boxShadow = `inset 0 0 40px ${primaryColor.value}`
+    style.boxShadow = `inset 0 0 ${viewportLength(40)} ${primaryColor.value}`
   }
   else if (props.variant === 10) {
-    style.boxShadow = `inset 0 0 25px 3px ${primaryColor.value}`
+    style.boxShadow = `inset 0 0 ${viewportLength(25)} ${viewportLength(3)} ${primaryColor.value}`
   }
 
   return style
@@ -392,7 +395,7 @@ function pulseMinimumOpacity(index: number): number {
         <polygon v-for="item in 3" :key="`right-${item}`" :fill="primaryColor" :filter="`url(#${filterId})`" :opacity="pulseOpacity(item)" :points="`${(width + titleWidth) / 2 + 30 + (item - 1) * 30}, 37 ${(width + titleWidth) / 2 + 9 + (item - 1) * 30}, 37 ${(width + titleWidth) / 2 + 3 + (item - 1) * 30}, 46 ${(width + titleWidth) / 2 + 24 + (item - 1) * 30}, 46`">
           <animate attributeName="opacity" begin="0s" :dur="durationSeconds" repeatCount="indefinite" :values="`${pulseOpacity(item)};${pulseMinimumOpacity(item)};${pulseOpacity(item)}`" />
         </polygon>
-        <text :x="width / 2" y="32" fill="#fff" font-size="18" text-anchor="middle" dominant-baseline="middle">{{ title }}</text>
+        <text :x="width / 2" :y="pixels(32)" fill="#fff" :font-size="pixels(18)" text-anchor="middle" dominant-baseline="middle">{{ title }}</text>
         <polygon :fill="primaryColor" :filter="`url(#${filterId})`" :points="`7, ${53 + (height - 167) / 2} 11, ${57 + (height - 167) / 2} 11, ${133 + (height - 167) / 2} 7, ${137 + (height - 167) / 2}`" />
         <polygon :fill="primaryColor" :filter="`url(#${filterId})`" :points="`${width - 7}, ${53 + (height - 167) / 2} ${width - 11}, ${57 + (height - 167) / 2} ${width - 11}, ${133 + (height - 167) / 2} ${width - 7}, ${137 + (height - 167) / 2}`" />
       </template>

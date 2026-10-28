@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ComponentPublicInstance } from 'vue'
 import { LumalIcon } from '@lumal/icons-vue'
+import { getViewportConfig, viewportLength } from '@lumal/viewport'
 import { ElButton, ElHeader } from 'element-plus'
 import { computed, useTemplateRef } from 'vue'
 
@@ -14,7 +15,7 @@ const props = withDefaults(defineProps<{
   toggleAfterTitle?: boolean
 }>(), {
   collapsed: false,
-  height: '50px',
+  height: undefined,
   mobileOnlyToggle: false,
   sidebarEnabled: true,
   toggleAfterTitle: false,
@@ -43,7 +44,7 @@ defineExpose({
 </script>
 
 <template>
-  <ElHeader ref="headerRef" class="lumal-header" :height="height">
+  <ElHeader ref="headerRef" class="lumal-header" :class="{ 'is-responsive': !getViewportConfig().enabled }" :height="height ?? viewportLength(50)">
     <div class="lumal-header__left">
       <slot name="logo">
         <span v-if="title" class="lumal-header__title">{{ title }}</span>
@@ -165,31 +166,31 @@ defineExpose({
 }
 
 @media (max-width: 1024px) {
-  .lumal-header {
+  .lumal-header.is-responsive {
     padding: 0 10px;
   }
 
-  .lumal-header__navigation,
-  .lumal-header__breadcrumb {
+  .lumal-header.is-responsive .lumal-header__navigation,
+  .lumal-header.is-responsive .lumal-header__breadcrumb {
     margin-left: 8px;
   }
 }
 
 @media (max-width: 768px) {
-  .lumal-header {
+  .lumal-header.is-responsive {
     padding: 0 10px;
   }
 
-  .lumal-header__navigation,
-  .lumal-header__breadcrumb {
+  .lumal-header.is-responsive .lumal-header__navigation,
+  .lumal-header.is-responsive .lumal-header__breadcrumb {
     display: none;
   }
 
-  .lumal-header__toggle.is-mobile-only {
+  .lumal-header.is-responsive .lumal-header__toggle.is-mobile-only {
     display: inline-flex;
   }
 
-  .lumal-header__left {
+  .lumal-header.is-responsive .lumal-header__left {
     flex: 1 1 auto;
   }
 }

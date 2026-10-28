@@ -3,6 +3,7 @@ import type { CrudDataSource, SchemaFormItem, SchemaTableColumn, SchemaTableRow 
 import type { Option } from '../../../shared/api';
 import type { User, UserQuery } from './types';
 import { LumalCrudTable, LumalPage } from '@lumal/core/components';
+import { getViewportConfig } from '@lumal/viewport';
 import { ElAlert, ElButton, ElMessage, ElMessageBox } from 'element-plus';
 import { computed, shallowRef, useTemplateRef, watch } from 'vue';
 import { permissionStore, service } from '../../../app/services/session';
@@ -189,7 +190,7 @@ async function rolesSaved(): Promise<void> {
       <ElButton link @click="references.reload"> 重试选项加载 </ElButton>
     </ElAlert>
     <ElAlert v-if="actionError" :title="actionError" type="error" role="alert" closable @close="actionError = ''" />
-    <div class="user-layout">
+    <div class="user-layout" :class="{ 'is-responsive': !getViewportConfig().enabled }">
       <UserOrganizationFilter v-model="organizationId" :options="references.data.value.organizations" />
       <LumalCrudTable
         ref="table"
@@ -290,7 +291,7 @@ async function rolesSaved(): Promise<void> {
   min-width: 0;
 }
 @media (max-width: 768px) {
-  .user-layout {
+  .user-layout:where(.is-responsive) {
     grid-template-columns: minmax(0, 1fr);
   }
 }

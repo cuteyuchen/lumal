@@ -52,7 +52,7 @@ onBeforeUnmount(() => controller?.abort());
   flex: 1;
   overflow: auto;
   padding: 32px;
-  font-size: max(14px, var(--lumal-viewport-min-font-size, 14px));
+  font-size: 14px;
 }
 .screen-view__header {
   display: flex;
@@ -64,6 +64,6 @@ onBeforeUnmount(() => controller?.abort());
 }
 .screen-view__header h1 {
   margin: 0;
-  font-size: max(28px, var(--lumal-viewport-min-font-size, 14px));
+  font-size: 28px;
 }
 </style>

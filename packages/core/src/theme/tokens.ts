@@ -1,4 +1,5 @@
 import type { ThemeState, ThemeTokens } from './types'
+import { viewportLength } from '@lumal/viewport'
 
 export const defaultThemeState: ThemeState = {
   colorPrimary: '#1677ff',
@@ -7,8 +8,9 @@ export const defaultThemeState: ThemeState = {
 }
 
 /***********************主题变量*********************/
-export function resolveThemeTokens(state: ThemeState, length = (pixels: number) => `${pixels}px`): ThemeTokens {
+export function resolveThemeTokens(state: ThemeState): ThemeTokens {
   const isDark = state.mode === 'dark'
+  const length = viewportLength
 
   return {
     '--lumal-color-bg': isDark ? '#0a0a0a' : '#f5f7fa',

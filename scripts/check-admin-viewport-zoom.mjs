@@ -13,14 +13,14 @@ const environments = [
   ['production', process.env.LUMAL_ADMIN_PREVIEW_URL || 'http://127.0.0.1:4177'],
   ['development', process.env.LUMAL_ADMIN_DEV_URL || 'http://127.0.0.1:5170'],
 ]
-const sizes = [[1280, 720], [1920, 1080]]
+const sizes = [[1280, 720], [1366, 768], [1920, 720], [1920, 920], [1920, 1080], [2560, 1440]]
 const zooms = [0.8, 1, 1.25, 1.5, 2]
 
 async function readMetrics(page) {
   return page.evaluate(() => {
     const selectors = {
       header: '.lumal-header',
-      trigger: '[data-action="workspace-viewport"]',
+      trigger: '[aria-label="偏好设置"]',
       title: '.lumal-page__title',
       metric: '.lumal-admin-workspace__metric',
       number: '.lumal-admin-workspace__metric strong',
@@ -40,42 +40,25 @@ async function readMetrics(page) {
       innerWidth,
       innerHeight,
       devicePixelRatio,
-      mode: document.documentElement.dataset.adminViewport,
       scrollWidth: document.documentElement.scrollWidth,
       gridColumns: getComputedStyle(document.querySelector('.lumal-admin-workspace__metrics')).gridTemplateColumns.split(' ').length,
       rootTransform: getComputedStyle(document.documentElement).transform,
       bodyTransform: getComputedStyle(document.body).transform,
-      stageTransform: getComputedStyle(document.querySelector('.admin-workspace-viewport__stage')).transform,
+      layoutTransform: getComputedStyle(document.querySelector('.lumal-layout')).transform,
+      contentTransform: getComputedStyle(document.querySelector('.lumal-content')).transform,
       boxes,
     }
   })
 }
 
-async function setMode(page, label) {
-  await page.getByRole('button', { name: '工作区适配', exact: true }).click()
-  const menu = page.getByRole('menu', { name: '工作区适配', exact: true })
-  await expect(menu).toBeVisible()
-  await menu.getByRole('menuitem', { name: label, exact: true }).click()
-}
-
 async function verifyControls(page) {
-  const trigger = page.getByRole('button', { name: '工作区适配', exact: true })
-  await trigger.click()
-  const menu = page.getByRole('menu', { name: '工作区适配', exact: true })
-  await expect(menu).toBeVisible()
-  const anchor = await trigger.boundingBox()
-  const box = await menu.boundingBox()
-  expect(box.y).toBeGreaterThanOrEqual(anchor.y)
-  expect(box.x + box.width).toBeLessThanOrEqual(await page.evaluate(() => innerWidth) + 1)
-  expect(Math.abs(box.y - anchor.y - anchor.height)).toBeLessThan(24)
-  await menu.getByRole('menuitem', { name: 'vw 流式', exact: true }).click()
   await page.getByRole('button', { name: '偏好设置', exact: true }).click()
   const drawer = page.getByRole('dialog', { name: '偏好设置', exact: true })
   await expect(drawer).toBeVisible()
   const drawerBox = await drawer.boundingBox()
   await page.keyboard.press('Escape')
   await expect(drawer).not.toBeVisible()
-  return { menu: box, drawer: drawerBox }
+  return { drawer: drawerBox }
 }
 
 async function main() {
@@ -108,7 +91,7 @@ async function main() {
       await page.goto(`${url}/#/login`)
       await page.getByTestId('login-submit').click()
       await expect(page.getByRole('heading', { name: '欢迎回来，超级管理员' })).toBeVisible()
-      await setMode(page, 'vw 流式')
+      await expect(page.getByRole('button', { name: '工作区适配', exact: true })).toHaveCount(0)
       for (const [width, height] of sizes) {
         await browserZoom(worker, url, 1)
         await resizeNativeWindow(page, cdp, windowId, width, height)
@@ -127,10 +110,9 @@ async function main() {
           const metrics = await readMetrics(page)
           const result = { environment, width, height, zoom: actualZoom, ...metrics }
           report.results.push(result)
-          expect(metrics.mode).toBe('vw')
           expect(metrics.gridColumns).toBe(4)
           expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.innerWidth + 1)
-          for (const transform of [metrics.rootTransform, metrics.bodyTransform, metrics.stageTransform])
+          for (const transform of [metrics.rootTransform, metrics.bodyTransform, metrics.layoutTransform, metrics.contentTransform])
             expect(transform).toBe('none')
           for (const [name, original] of Object.entries(baseline.boxes)) {
             if (!original)
@@ -159,29 +141,21 @@ async function main() {
         await expect.poll(async () => Math.abs((await sidebar.boundingBox()).width * actualZoom - 280 * 1280 / 1920)).toBeLessThan(1.1)
         report.sidebars.push({ environment, zoom: actualZoom, box: await sidebar.boundingBox(), status: 'passed' })
       }
-      // 在同一个放大后的 CSS 视口切回普通响应式，应恢复移动端导航与断点。
       await browserZoom(worker, url, 1)
-      await resizeNativeWindow(page, cdp, windowId, 1280, 720)
-      await browserZoom(worker, url, 2)
-      await setMode(page, '响应式')
-      await expect(page.getByRole('button', { name: '账户与更多操作' })).toBeVisible()
-      await expect(page.locator('html')).toHaveAttribute('data-admin-viewport', 'responsive')
-      await browserZoom(worker, url, 1)
-      await setMode(page, 'vw 流式')
       await page.goto(`${url}/#/examples/viewport`)
-      // Viewport 页只隔离内部画布，不能让壳层退出用户选中的 vw。
-      await expect(page.locator('html')).toHaveAttribute('data-admin-viewport', 'vw')
-      await expect(page.getByTestId('admin-workspace-viewport')).toHaveAttribute('data-viewport-mode', 'vw')
-      const canvas = page.locator('.viewport-host > [data-viewport-mode]')
-      await expect(canvas).toHaveAttribute('data-viewport-mode', 'contain')
-      await expect(canvas).toHaveCSS('--lumal-viewport-unit', '1px')
+      // 示例与壳层直接使用同一套 vw，没有路由策略、画布包装器或字号补偿。
+      const canvas = page.locator('.viewport-canvas')
+      await expect(canvas).toBeVisible()
       const headerHeight = (await page.locator('.lumal-header').boundingBox()).height
       for (const zoom of [1, 2]) {
         const actualZoom = await browserZoom(worker, url, zoom)
-        await expect(page.locator('html')).toHaveAttribute('data-admin-viewport', 'vw')
         await expect.poll(async () => Math.abs((await page.locator('.lumal-header').boundingBox()).height * actualZoom - headerHeight)).toBeLessThan(1.1)
-        await expect(page.locator('.admin-workspace-viewport__stage')).toHaveCSS('transform', 'none')
-        await expect(page.locator('.viewport-canvas')).toHaveCSS('font-size', '14px')
+        await expect(canvas).toHaveCSS('transform', 'none')
+        const width = await page.evaluate(() => innerWidth)
+        expect((await page.getByTestId('viewport-probe').boundingBox()).width).toBeCloseTo(192 * width / 1920, 1)
+        const text = await canvas.evaluate(el => ({ font: Number.parseFloat(getComputedStyle(el).fontSize), line: Number.parseFloat(getComputedStyle(el).lineHeight) }))
+        expect(text.font).toBeCloseTo(14 * width / 1920, 1)
+        expect(text.line).toBeCloseTo(20 * width / 1920, 1)
       }
       await browserZoom(worker, url, 1)
     }

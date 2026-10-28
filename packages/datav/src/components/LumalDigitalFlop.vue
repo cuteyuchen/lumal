@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
 import type { DigitalFlopConfig } from '../types'
+import { useViewportWidth } from '@lumal/viewport'
 import { computed, onBeforeUnmount, shallowRef, useId, useTemplateRef, watch } from 'vue'
 import { useAnimationPause } from '../composables/useAnimationPause'
 import { useReducedMotion } from '../composables/useReducedMotion'
@@ -27,6 +28,7 @@ const props = defineProps<{
 }>()
 
 const root = useTemplateRef<HTMLElement>('root')
+const { pixels } = useViewportWidth()
 const shadowFilterId = `lumal-digital-flop-shadow-${useId().replaceAll(':', '')}`
 const reducedMotion = useReducedMotion()
 const viewportPaused = useAnimationPause(root)
@@ -34,24 +36,24 @@ const configStyle = computed(() => props.config?.style)
 const animationCurve = computed(() => props.animationCurve ?? props.config?.animationCurve ?? 'easeOutCubic')
 const animationFrame = computed(() => props.animationFrame ?? props.config?.animationFrame ?? 50)
 const precision = computed(() => Math.min(100, Math.max(0, Math.floor(props.precision ?? props.config?.toFixed ?? 0))))
-const rowGap = computed(() => props.rowGap ?? props.config?.rowGap ?? 0)
+const rowGap = computed(() => pixels(props.rowGap ?? props.config?.rowGap ?? 0))
 const color = computed(() => props.color ?? configStyle.value?.fill ?? '#3de7c9')
 const fontFamily = computed(() => props.fontFamily ?? configStyle.value?.fontFamily ?? 'Arial')
-const fontSize = computed(() => props.fontSize ?? configStyle.value?.fontSize ?? 30)
+const fontSize = computed(() => pixels(props.fontSize ?? configStyle.value?.fontSize ?? 30))
 const fontStyle = computed(() => props.fontStyle ?? configStyle.value?.fontStyle ?? 'normal')
 const fontVariant = computed(() => configStyle.value?.fontVarient ?? 'normal')
 const fontWeight = computed(() => props.fontWeight ?? configStyle.value?.fontWeight ?? 'normal')
 const opacity = computed(() => configStyle.value?.opacity ?? 1)
 const stroke = computed(() => configStyle.value?.stroke ?? 'transparent')
 const lineCap = computed(() => configStyle.value?.lineCap)
-const lineDash = computed(() => configStyle.value?.lineDash)
-const lineDashOffset = computed(() => configStyle.value?.lineDashOffset ?? 0)
+const lineDash = computed(() => configStyle.value?.lineDash?.map(pixels))
+const lineDashOffset = computed(() => pixels(configStyle.value?.lineDashOffset ?? 0))
 const lineJoin = computed(() => configStyle.value?.lineJoin)
-const lineWidth = computed(() => configStyle.value?.lineWidth ?? 0)
-const shadowBlur = computed(() => Math.max(0, configStyle.value?.shadowBlur ?? 0))
+const lineWidth = computed(() => pixels(configStyle.value?.lineWidth ?? 0))
+const shadowBlur = computed(() => pixels(Math.max(0, configStyle.value?.shadowBlur ?? 0)))
 const shadowColor = computed(() => configStyle.value?.shadowColor ?? 'transparent')
-const shadowOffsetX = computed(() => configStyle.value?.shadowOffsetX ?? 0)
-const shadowOffsetY = computed(() => configStyle.value?.shadowOffsetY ?? 0)
+const shadowOffsetX = computed(() => pixels(configStyle.value?.shadowOffsetX ?? 0))
+const shadowOffsetY = computed(() => pixels(configStyle.value?.shadowOffsetY ?? 0))
 const hasShadow = computed(() => shadowBlur.value > 0 || shadowOffsetX.value !== 0 || shadowOffsetY.value !== 0)
 const textAlign = computed(() => props.textAlign ?? props.config?.textAlign ?? 'center')
 let frame: number | undefined

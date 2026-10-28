@@ -3,11 +3,9 @@ import type { SchemaTableColumn, SchemaTableRow } from '@lumal/core/components'
 import type { DictionaryOption } from '@lumal/core/dictionary'
 import type { SystemMenuRecord } from '../../api/system'
 import { LumalPage, LumalSchemaTable } from '@lumal/core/components'
-import { useViewportScale } from '@lumal/viewport'
 import { ElAlert, ElButton } from 'element-plus'
 import { computed, onMounted, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
-import { viewportDesign } from '../../../viewport.config'
 import {
   fetchDictionaryTypes,
   fetchSystemMenus,
@@ -16,7 +14,6 @@ import {
   fetchSystemUsers,
 } from '../../api/system'
 import { currentUser } from '../../services/session'
-import { adminViewportMode } from '../../services/workspace-viewport'
 
 interface DashboardMetric {
   label: string
@@ -44,15 +41,13 @@ const quickActions = computed(() => [
 ].filter(action => currentUser.value?.permissions.includes(action.authority)))
 
 /***********************表格数值尺寸*********************/
-// Element Plus 列宽是数值协议，显式使用窗口比例，不让构建插件扫描或改写脚本。
-const { scale } = useViewportScale({ ...viewportDesign, mode: 'width', enabled: () => adminViewportMode.value === 'vw' })
-const tablePixels = (pixels: number) => adminViewportMode.value === 'vw' ? pixels * scale.value : pixels
+// SchemaTable 的数字列宽为设计 px，由组件内部统一换算一次。
 const userColumns = computed<SchemaTableColumn[]>(() => [
-  { field: 'username', label: '用户名', minWidth: tablePixels(140) },
-  { field: 'nickname', label: '昵称', minWidth: tablePixels(140) },
-  { field: 'role', label: '角色', minWidth: tablePixels(120), options: roleOptions.value },
-  { dictionary: 'status', field: 'status', label: '状态', width: tablePixels(100) },
-  { field: 'createdAt', label: '创建时间', width: tablePixels(130) },
+  { field: 'username', label: '用户名', minWidth: 140 },
+  { field: 'nickname', label: '昵称', minWidth: 140 },
+  { field: 'role', label: '角色', minWidth: 120, options: roleOptions.value },
+  { dictionary: 'status', field: 'status', label: '状态', width: 100 },
+  { field: 'createdAt', label: '创建时间', width: 130 },
 ])
 
 /***********************数据加载与导航*********************/
@@ -197,7 +192,7 @@ onMounted(() => {
 
 .lumal-admin-workspace__metric strong {
   color: var(--el-text-color-primary);
-  font-size: calc(var(--lumal-font-size-base, 14px) + 14px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 2);
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
 }
@@ -221,22 +216,22 @@ onMounted(() => {
 }
 
 @media (max-width: 1024px) {
-  .lumal-admin-workspace__metrics {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-workspace__metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .lumal-admin-workspace__columns {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-workspace__columns {
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
 @media (max-width: 640px) {
-  .lumal-admin-workspace__metrics,
-  .lumal-admin-workspace__actions {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-workspace__metrics,
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-workspace__actions {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .lumal-admin-workspace__metric {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-workspace__metric {
     padding: 16px;
   }
 }

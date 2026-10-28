@@ -8,8 +8,15 @@ import SceneCenter from '../src/centers/scene-center/Center.vue'
 import { demoScene, metricSummaries } from '../src/data/demo-scene'
 import { cockpitTopics } from '../src/messages/topics'
 
+/***********************异步渲染器与销毁观测*********************/
+const rendererLifecycle = vi.hoisted(() => ({
+  cesiumReady: undefined as Promise<void> | undefined,
+  disposeEcharts: vi.fn(),
+  mountCesium: vi.fn(),
+}))
+
 vi.mock('vue-echarts', async () => {
-  const { defineComponent, h } = await import('vue')
+  const { defineComponent, h, onUnmounted } = await import('vue')
   return {
     default: defineComponent({
       name: 'VChartStub',
@@ -18,6 +25,7 @@ vi.mock('vue-echarts', async () => {
       emits: ['click'],
       setup(_, { expose }) {
         expose({ resize: vi.fn() })
+        onUnmounted(rendererLifecycle.disposeEcharts)
         return () => h('div', { class: 'v-chart-stub' })
       },
     }),
@@ -39,7 +47,7 @@ vi.mock('../src/centers/openlayers-center/Center.vue', async () => {
 })
 
 vi.mock('../src/centers/cesium-center/Center.vue', async () => {
-  const { defineComponent, h } = await import('vue')
+  const { defineComponent, h, onMounted } = await import('vue')
   return {
     __esModule: true,
     default: defineComponent({
@@ -53,11 +61,14 @@ vi.mock('../src/centers/cesium-center/Center.vue', async () => {
       },
       emits: ['select'],
       setup(_, { emit }) {
-        return () => h('button', {
+        onMounted(rendererLifecycle.mountCesium)
+        const render = () => h('button', {
           class: 'cesium-center-stub',
           type: 'button',
           onClick: () => emit('select', 'p-beijing'),
         }, 'Cesium stub')
+        // 保持渲染器就绪时机可控，不依赖实际磁盘和 CI 时序重现异步切换。
+        return rendererLifecycle.cesiumReady?.then(() => render) ?? render
       },
     }),
   }
@@ -85,6 +96,9 @@ function createContext(): CockpitCenterContext {
 
 describe('驾驶舱中央地图', () => {
   beforeEach(() => {
+    rendererLifecycle.cesiumReady = undefined
+    rendererLifecycle.disposeEcharts.mockClear()
+    rendererLifecycle.mountCesium.mockClear()
     vi.stubGlobal('ResizeObserver', ResizeObserverStub)
     // rAF 必须异步回调并推进时间戳：同步执行会让依赖 rAF 递归的动画
     //（如 LumalDigitalFlop）在同一调用栈里无限递归而爆栈
@@ -210,6 +224,82 @@ describe('驾驶舱中央地图', () => {
     wrapper.unmount()
   })
 
+  it('异步引擎等待期间卸载旧图表并显示加载反馈，就绪后渲染新引擎', async () => {
+    let finishCesiumLoad: (() => void) | undefined
+    rendererLifecycle.cesiumReady = new Promise<void>((resolve) => {
+      finishCesiumLoad = resolve
+    })
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(960)
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(540)
+
+    const wrapper = mount(SceneCenter, {
+      props: { context: createContext() },
+      attachTo: document.body,
+    })
+    try {
+      await flushPromises()
+      expect(wrapper.find('.v-chart-stub').exists()).toBe(true)
+
+      await wrapper.get('button[data-center-engine="cesium"]').trigger('click')
+      await flushPromises()
+
+      // 新引擎尚未就绪时，不能让旧 Canvas 继续占用绘制和 GPU 资源。
+      expect(wrapper.find('.v-chart-stub').exists()).toBe(false)
+      expect(rendererLifecycle.disposeEcharts).toHaveBeenCalledOnce()
+      expect(wrapper.get('.scene-center__loading').text()).toBe('地图载入中')
+      expect(wrapper.find('.cesium-center-stub').exists()).toBe(false)
+
+      finishCesiumLoad?.()
+      await flushPromises()
+      expect(wrapper.find('.scene-center__loading').exists()).toBe(false)
+      expect(wrapper.find('.cesium-center-stub').exists()).toBe(true)
+    }
+    finally {
+      // 失败路径也释放等待，防止挂起分支污染下一条测试。
+      finishCesiumLoad?.()
+      await flushPromises()
+      wrapper.unmount()
+    }
+  })
+
+  it('等待期间切回同步地图后，迟到的异步引擎不会重新挂载', async () => {
+    let finishCesiumLoad: (() => void) | undefined
+    rendererLifecycle.cesiumReady = new Promise<void>((resolve) => {
+      finishCesiumLoad = resolve
+    })
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(960)
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(540)
+
+    const wrapper = mount(SceneCenter, {
+      props: { context: createContext() },
+      attachTo: document.body,
+    })
+    try {
+      await flushPromises()
+      await wrapper.get('button[data-center-engine="cesium"]').trigger('click')
+      await flushPromises()
+      expect(wrapper.find('.scene-center__loading').exists()).toBe(true)
+      expect(rendererLifecycle.mountCesium).not.toHaveBeenCalled()
+
+      await wrapper.get('button[data-center-engine="echarts"]').trigger('click')
+      await flushPromises()
+      expect(wrapper.find('.v-chart-stub').exists()).toBe(true)
+      expect(wrapper.find('.scene-center__loading').exists()).toBe(false)
+
+      finishCesiumLoad?.()
+      await flushPromises()
+      expect(wrapper.find('.v-chart-stub').exists()).toBe(true)
+      expect(wrapper.find('.cesium-center-stub').exists()).toBe(false)
+      expect(rendererLifecycle.mountCesium).not.toHaveBeenCalled()
+      expect(rendererLifecycle.disposeEcharts).toHaveBeenCalledOnce()
+    }
+    finally {
+      finishCesiumLoad?.()
+      await flushPromises()
+      wrapper.unmount()
+    }
+  })
+
   it('echarts 渲染器启用飞线 effect 并发布地图选择', async () => {
     const region = demoScene.regions[0]
     const fadedRegion = demoScene.regions.find(item => item.status !== region.status)
@@ -255,5 +345,60 @@ describe('驾驶舱中央地图', () => {
     await nextTick()
     expect(wrapper.emitted('select')?.at(-1)).toEqual([region.id])
     wrapper.unmount()
+  })
+
+  it('减少动画时使用静态节点，保留地图数据、选择和动态偏好切换', async () => {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(960)
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(540)
+
+    const wrapper = mount(EchartsGeoCenter, {
+      attachTo: document.body,
+      props: {
+        selectedIds: [],
+        focusedId: '',
+        theme: 'dark',
+        reducedMotion: true,
+      },
+    })
+    try {
+      await nextTick()
+      const chart = wrapper.getComponent({ name: 'VChartStub' })
+      const readOption = () => chart.props('option') as {
+        animation: boolean
+        series: Array<{
+          name: string
+          type: string
+          effect?: { show?: boolean }
+          rippleEffect?: { number?: number }
+          data?: Array<{ id: string, value: number[] }>
+        }>
+      }
+      const option = readOption()
+      const nodes = option.series.find(series => series.name === '业务节点')
+      expect(option.animation).toBe(false)
+      expect(option.series.find(series => series.name === '实时飞线')?.effect?.show).toBe(false)
+      // 缩小波纹不等于停用循环绘制；保留节点渲染器并显式禁用全部波纹。
+      expect(nodes?.type).toBe('effectScatter')
+      expect(nodes?.rippleEffect?.number).toBe(0)
+      expect(nodes?.data).toEqual(expect.arrayContaining(demoScene.points.map(point => expect.objectContaining({
+        id: point.id,
+        value: [...point.coordinate, point.value],
+      }))))
+
+      const point = demoScene.points[0]
+      chart.vm.$emit('click', { data: { id: point.id } })
+      await nextTick()
+      expect(wrapper.emitted('select')?.at(-1)).toEqual([point.id])
+
+      await wrapper.setProps({ reducedMotion: false })
+      expect(readOption().series.find(series => series.name === '业务节点')?.rippleEffect?.number).toBe(3)
+      expect(readOption().series.find(series => series.name === '实时飞线')?.effect?.show).toBe(true)
+
+      await wrapper.setProps({ reducedMotion: true })
+      expect(readOption().series.find(series => series.name === '业务节点')?.rippleEffect?.number).toBe(0)
+    }
+    finally {
+      wrapper.unmount()
+    }
   })
 })

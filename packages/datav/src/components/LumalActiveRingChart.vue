@@ -9,6 +9,7 @@ import type {
   DigitalFlopConfig,
   DigitalFlopStyle,
 } from '../types'
+import { useViewportWidth, viewportLength } from '@lumal/viewport'
 import { computed, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from 'vue'
 import { useAnimationPause } from '../composables/useAnimationPause'
 import { useElementSize } from '../composables/useElementSize'
@@ -49,6 +50,7 @@ const DEFAULT_COLORS = [
 ] as const
 
 const activeKey = defineModel<DataValueKey>('activeKey')
+const { pixels } = useViewportWidth()
 const chartHostRef = useTemplateRef<HTMLElement>('chartHostRef')
 const size = useElementSize(chartHostRef)
 const reducedMotion = useReducedMotion()
@@ -72,7 +74,7 @@ const entries = computed<RingEntry[]>(() => props.items !== undefined
 const colors = computed(() => props.config.color
   ?? props.items?.map((item, index) => item.color ?? DEFAULT_COLORS[index % DEFAULT_COLORS.length]!)
   ?? DEFAULT_COLORS)
-const lineWidth = computed(() => props.config.lineWidth ?? 20)
+const lineWidth = computed(() => pixels(props.config.lineWidth ?? 20))
 const currentEntry = computed(() => entries.value[activeIndex.value])
 const displayValue = computed(() => {
   const value = currentEntry.value?.data.value ?? 0
@@ -96,13 +98,13 @@ const digitalFlopConfig = computed<DigitalFlopConfig>(() => ({
   style: digitalStyle.value,
   toFixed: props.config.digitalFlopToFixed ?? 0,
 }))
-const nameStyle = computed<CSSProperties>(() => ({ fontSize: `${digitalStyle.value.fontSize}px` }))
+const nameStyle = computed<CSSProperties>(() => ({ fontSize: viewportLength(digitalStyle.value.fontSize) }))
 const hasRenderableSize = computed(() => size.value.width > 0 && size.value.height > 0)
 
 function radiusPixels(radius: number | string | undefined, fallback: string): number {
   const value = radius ?? fallback
   const maxRadius = Math.min(size.value.width, size.value.height) / 2
-  return typeof value === 'number' ? value : Number.parseFloat(value) / 100 * maxRadius
+  return typeof value === 'number' ? pixels(value) : Number.parseFloat(value) / 100 * maxRadius
 }
 
 const chartOption = computed<EChartsOption>(() => {

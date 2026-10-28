@@ -2,7 +2,7 @@
 
 Lumal 通用驾驶舱 v3 编排框架。包负责布局配置、左右模块运行时、Designer、组件注册和消息总线；消费应用负责中心内容、业务模块、导航、主题皮肤、权限和持久化。
 
-本文 API 基线为 `0.0.6-beta`，实际版本可用性以 registry 为准；v3 是配置模型，不是 npm 版本。
+本文对应 `0.1.0-beta.0` 候选源码，尚未发布；v3 是配置模型，不是 npm 版本。
 
 ## v3 模型
 
@@ -48,7 +48,6 @@ registry.registerWidget({
   v-model:active-layout-id="activeLayoutId"
   :config="config"
   :registry="registry"
-  :viewport-mode="viewportMode"
 >
   <template #header-title="{ title }">
     <AppHeader :title="title" :layouts="config.layouts" />
@@ -62,8 +61,10 @@ registry.registerWidget({
 
 - 布局导航由消费应用负责。
 - 中心内容位于底层全宽画布，左右区域覆盖在其两侧。
-- `viewportMode="scale"` 使用 1920 × 1080 等比缩放；`viewportMode="vwvh"` 使用 VW/VH 单位适配；`viewportMode="external"` 由父容器负责缩放。
-- 外层使用 `LumalViewport` 或 DataV 全屏容器时，内层选择 `external`，同一内容树只缩放一次。
+- 仅按项目设计宽度将设计 px 输出为 vw，baseWidth/baseHeight 是内容尺寸，不作高度缩放除数。
+- 左右面板和列宽等数字仍写设计 px，行高百分比、排序和索引保留语义。
+- 外套 DataV 全屏容器也不产生第二层缩放，不再提供适配模式 prop、菜单或整画布 transform。
+- 高度不足正常滚动；项目 Vite 配置统一设计宽度，详见[统一接入](../../docs/screen-viewport-guide.md)。
 - 相同模块 type 可以创建多个拥有独立 `instanceId` 的实例。
 - Tab 切换保留全部模块实例状态。
 
@@ -89,8 +90,7 @@ registry.registerWidget({
 - 已放置模块共享 `mode: 'design'` 的消息总线；模块库预览保持隔离。
 - 保存事件输出 `{ config, layout }`，包不调用 HTTP 或写入 localStorage。
 
-当前工作分支修复了布局名称输入在保存前被还原的问题，已有回归测试与 Changeset，
-但该补丁尚未发布，不应将本地源码修复描述为 registry 的 `0.0.6-beta` 已包含。
+保存配置保留设计数值，不因当前浏览器宽度污染列宽；取消不写回草稿。
 
 ## 公共 Card
 

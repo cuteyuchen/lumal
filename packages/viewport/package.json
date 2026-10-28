@@ -1,7 +1,7 @@
 {
   "name": "@lumal/viewport",
   "type": "module",
-  "version": "0.0.6-beta",
+  "version": "0.1.0-beta.0",
   "description": "Lightweight Vue viewport measurement and canvas scaling without UI or chart dependencies.",
   "license": "MIT",
   "sideEffects": false,

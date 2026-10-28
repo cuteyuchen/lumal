@@ -8,6 +8,7 @@ import type {
 } from '@lumal/core/components'
 import type { SaveSystemOrganizationInput, SystemOrganizationRecord } from '../../api/system'
 import { LumalPage, LumalSchemaForm, LumalSchemaTable } from '@lumal/core/components'
+import { viewportLength } from '@lumal/viewport'
 import { ElAlert, ElButton, ElDialog, ElMessage } from 'element-plus'
 import { computed, onMounted, shallowRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
@@ -215,7 +216,7 @@ onMounted(() => {
         :rows="tableRows"
         :table-props="tableProps"
         row-key="id"
-        action-width="230"
+        :action-width="230"
       >
         <template #actions="{ row }">
           <ElButton
@@ -247,7 +248,7 @@ onMounted(() => {
       </LumalSchemaTable>
     </LumalPage>
 
-    <ElDialog v-model="dialogVisible" append-to-body class="lumal-admin-dialog" :title="dialogTitle" width="720px">
+    <ElDialog v-model="dialogVisible" append-to-body class="lumal-admin-dialog" :title="dialogTitle" :width="viewportLength(720)">
       <ElAlert
         v-if="operationError"
         class="lumal-admin-page__operation-error"

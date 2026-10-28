@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { LumalPreferences, LumalPreferencesDefaults } from '@lumal/core/theme';
 import { LumalThemeSettingsPanel } from '@lumal/core/theme';
+import { viewportLength } from '@lumal/viewport';
 import { ElDrawer } from 'element-plus';
 import { computed } from 'vue';
 
@@ -25,7 +26,7 @@ const visible = computed({
 </script>
 
 <template>
-  <ElDrawer v-model="visible" title="偏好设置" size="384px" append-to-body>
+  <ElDrawer v-model="visible" title="偏好设置" :size="viewportLength(384)" append-to-body>
     <LumalThemeSettingsPanel
       :defaults="defaults"
       :preferences="preferences"

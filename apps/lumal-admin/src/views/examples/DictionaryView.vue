@@ -26,7 +26,7 @@ const statusItems = computed(() => [
     <LumalPage title="Dictionary" description="表单 options 与表格回显都通过字典上下文完成。">
       <div class="lumal-admin-example__two-columns">
         <LumalSchemaForm v-model="queryModel" :schemas="exampleQuerySchemas" />
-        <LumalInfoTable :items="statusItems" label-width="88px" empty-text="-" />
+        <LumalInfoTable :items="statusItems" :label-width="88" empty-text="-" />
       </div>
     </LumalPage>
 

@@ -1,19 +1,19 @@
 # 项目模板
 
-本文面向已发布的 `0.0.6-beta`，扩展现有 `create-lumal-admin`，不新增独立 npm 包。包内提供
+本文面向候选源码 `0.1.0-beta.0`，扩展现有 `create-lumal-admin`，不新增独立 npm 包。包内提供
 `create-lumal` binary 和 `createLumalProject` API，保留旧 binary、API 与默认参数。
 `create-lumal` 名称在 2026-10-23 的 registry 查询返回 E404，不表示已取得发布权。
 当前仍没有独立的 `create-lumal` npm 包，不要把 `pnpm create lumal` 当成已发布命令。
 
 ## 版本与入口
 
-`create-lumal-admin@0.0.6-beta` 已发布，可精确选择包内的通用 binary；
-正式标签与逐包核验见 [本版发布记录](./npm-release-0.0.6-beta.md)：
+`create-lumal-admin@0.1.0-beta.0` 是候选版本，未发布。以下 registry 命令仅在正式发布后可用；
+当前从本地 tarball 验收，见 [工作记录](./pure-vw-refactor-2026-10-28.md)：
 
 ```sh
-pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal demo --template blank
-pnpm --package=create-lumal-admin@0.0.6-beta dlx create-lumal screen-demo --template screen
-pnpm create lumal-admin@0.0.6-beta admin-app --preset standard --api-mode local
+pnpm --package=create-lumal-admin@0.1.0-beta.0 dlx create-lumal demo --template blank
+pnpm --package=create-lumal-admin@0.1.0-beta.0 dlx create-lumal screen-demo --template screen
+pnpm create lumal-admin@0.1.0-beta.0 admin-app --preset standard --api-mode local
 ```
 
 安装前核对实际版本；验证未发布源码时使用本地 tarball，不用旧 CLI 代替新增能力。
@@ -64,18 +64,16 @@ HTTP 契约、超时、Token 存储和后端字段映射位于生成的 `API-CON
 
 `--visualization none|charts|datav|cockpit` 与认证、数据独立，只生成所选演示。
 Charts 使用 ECharts；DataV 数字/边框不要求 ECharts；Cockpit 只使用 runtime，
-不加载 Designer。`--viewport disabled|responsive|contain|width|vw` 单独控制适配，
-默认 responsive 不增加依赖；非默认适配才加入 `@lumal/viewport`。
-`scale` 保留为 contain 的别名，不是第二套算法。
-下一版未发布源码的 `--viewport vw` 同时安装同版 `@lumal/vite` 构建依赖，
-复用根 `viewport.config.ts`，把 Screen CSS/SCSS/模板 style 的 px 转为运行时协作表达式。
-在 vw 下按浏览器宽度流式适配，不 transform 固定画布；其他模式恢复设计 px。
-字体/行高、最小尺寸、原子化规则与第三方保护保留，不扫描脚本。
-其他适配模式不安装构建插件，Blank/默认Screen的轻量依赖不变。
+不加载 Designer。`--viewport` / `--no-viewport` 是唯一宽度规则的开关，
+Admin/Screen 默认开启，Blank 默认关闭；`--design-width` 默认1920。
+开启时安装同版 `@lumal/vite` 开发依赖，在根 `viewport.config.ts` 配置一次设计宽度，
+将 CSS/SCSS/模板 style 中参与适配的 px 转为普通 vw，并自动注入框架动态数值配置。
+字号/有单位行高、最小尺寸同步；原子化、忽略、细边框和第三方来源保护保留。
+不扫描脚本，不强制静态 Screen 安装 Viewport 运行时。
 
 ```sh
-node packages/create-lumal-admin/dist/project-cli.js datav-screen --template screen --visualization datav --viewport contain --no-interactive
-node packages/create-lumal-admin/dist/project-cli.js chart-screen --template screen --visualization charts --viewport responsive --no-interactive
+node packages/create-lumal-admin/dist/project-cli.js datav-screen --template screen --visualization datav --design-width 1440 --no-interactive
+node packages/create-lumal-admin/dist/project-cli.js chart-screen --template screen --visualization charts --no-viewport --no-interactive
 ```
 
 模板采用 `common + vue + blank/screen` 或 `base + common + Admin 功能层` 组合。
@@ -126,8 +124,8 @@ KeepAlive 停用时暂停页面轮询和尺寸监听，返回后恢复，不重�
 动态业务路由通过 `createRouteRegistry` 或菜单运行时管理，不在 watcher 中反复 addRoute。
 退出时按会话清理请求、权限、远程路由和标签，避免旧初始化覆盖新身份。
 
-页面适配使用 `route.meta.viewport` 或局部 `LumalViewport`，仅包住实际工作区；
-后台系统页面设为 false，不全局变换字体或 DOM 根。全局/页面/容器示例与 Teleport、
+局部适配通过构建 include/exclude、选择器或声明忽略控制，不再提供路由模式或页面包装器。
+编译后的 vw 不能由当前页面开关撤销。全局/局部范围示例与 Teleport、
 地图和图表边界见 [屏幕适配](./screen-viewport-guide.md)。
 
 可执行契约在 `packages/core/tests/hybrid-consumer.test.ts`：访客导航、登录回跳、

@@ -4,11 +4,11 @@ Lumal 可选图表包，基于 ECharts 与 vue-echarts 封装轻量图表组件�
 
 ## 安装
 
-下列命令对应 `0.0.6-beta`，以 registry 存在对应版本为前提。
+下列命令对应 `0.1.0-beta.0`，以 registry 存在对应版本为前提。
 发布核验前使用候选 tarball，也可从源码构建后 file 接入；不从本文推断浮动标签。
 
 ```bash
-pnpm add @lumal/charts@0.0.6-beta echarts@^6 vue-echarts@^8 vue
+pnpm add @lumal/charts@0.1.0-beta.0 echarts@^6 vue-echarts@^8 vue
 ```
 
 支持 ECharts 6、vue-echarts 8 和 Vue 3.5+。应用仍需按需注册图表、组件和渲染器。
@@ -31,7 +31,7 @@ import '@lumal/charts/style.css'
   summary="最近七天访问趋势"
   show-view-toggle
   show-export
-  height="320px"
+  :height="320"
   @retry="reload"
   @export="handleExport"
 >
@@ -49,4 +49,8 @@ import '@lumal/charts/style.css'
 
 `LumalChart` 的 class/style 保留在外层，其他 attrs 和事件传给 VChart；`@click` 接收 ECharts 参数，DOM 事件可使用 vue-echarts 的 `native:` 事件前缀。动画优先级为显式 `animation` prop > `options.animation` > reduced-motion 默认值。容器自适应只由 VChart 管理，`autoResize: false` 不安装额外尺寸监听。
 
-`LumalChartPanel.chartWidth` / `tableWidth` 分别控制图表与表格视图的实际宽度，数字按 px 处理、字符串保留 CSS 单位，均受父容器 `max-width: 100%` 约束。
+`LumalChart` 的 width/height、`LumalChartPanel` 的 height/chartWidth/tableWidth
+中，数字是设计 px，内部按消费端唯一设计宽度输出普通 vw，未启用时输出 px。
+显式字符串保留 CSS 单位，面板宽度受父容器 `max-width: 100%` 约束。
+ECharts option 中的动态设计字号/间距需用 `useViewportWidth().pixels()`；
+测得的 Canvas 实际尺寸直接用于 resize，不再乘比例。

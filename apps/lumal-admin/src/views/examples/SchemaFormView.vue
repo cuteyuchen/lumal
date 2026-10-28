@@ -103,7 +103,7 @@ function patchScore(): void {
         <LumalSchemaForm
           v-model="formModel"
           :columns="2"
-          label-width="92px"
+          :label-width="92"
           :mode="formMode"
           :loading="formLoading"
           :schemas="exampleFormSchemas"
@@ -131,8 +131,8 @@ function patchScore(): void {
         </LumalSchemaForm>
 
         <div class="lumal-admin-example__side-panel">
-          <LumalInfoTable :items="formMetaItems" label-width="72px" />
-          <LumalInfoTable :items="modelItems" label-width="92px" empty-text="-" />
+          <LumalInfoTable :items="formMetaItems" :label-width="72" />
+          <LumalInfoTable :items="modelItems" :label-width="92" empty-text="-" />
         </div>
       </div>
       <LumalIconPickerDialog v-model="selectedIcon" v-model:visible="iconPickerVisible" title="选择菜单图标">
@@ -200,7 +200,7 @@ function patchScore(): void {
 }
 
 @media (max-width: 1100px) {
-  .lumal-schema-form-demo {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-schema-form-demo {
     grid-template-columns: 1fr;
   }
 }

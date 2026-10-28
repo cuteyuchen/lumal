@@ -78,8 +78,6 @@ export type LumalPreferencesDefaults = DeepPartial<LumalPreferences>
 export interface ThemeRuntimeEnvironment {
   document?: Document
   matchMedia?: (query: string) => MediaQueryList
-  /** 显式格式化主题中的设计 px；默认原样 px，不依赖任何视口包。 */
-  cssLength?: (pixels: number) => string
 }
 
 export interface PreferencesStorage {

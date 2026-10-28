@@ -18,7 +18,7 @@ export default defineConfig({
     },
     rollupOptions: {
       // Morphicons 仅提供 ESM；保留动态 import，兼容 CJS 静态消费与按需加载。
-      external: id => ['vue', '@iconify/vue'].includes(id) || /^@lumal\/icons(?:\/|$)/.test(id) || /^morphicons(?:\/|$)/.test(id),
+      external: id => ['vue', '@iconify/vue', '@lumal/viewport'].includes(id) || /^@lumal\/icons(?:\/|$)/.test(id) || /^morphicons(?:\/|$)/.test(id),
     },
   },
 })

@@ -1,10 +1,11 @@
 import type { LumalPreferences, ResolvedThemeMode, ThemeRuntimeEnvironment, ThemeState } from './types'
+import { viewportLength } from '@lumal/viewport'
 import { normalizePreferences, resolveThemeMode } from './preferences'
 import { resolveThemeTokens } from './tokens'
 
 /***********************DOM 应用*********************/
-export function applyThemeToElement(element: HTMLElement, state: ThemeState, length?: ThemeRuntimeEnvironment['cssLength']): void {
-  const tokens = resolveThemeTokens(state, length)
+export function applyThemeToElement(element: HTMLElement, state: ThemeState): void {
+  const tokens = resolveThemeTokens(state)
 
   element.dataset.lumalTheme = state.mode
   element.dataset.lumalCompact = String(state.compact)
@@ -27,12 +28,12 @@ export function applyThemePreferences(
   }
 
   element.classList.toggle('dark', resolvedMode === 'dark')
-  const length = environment.cssLength ?? ((pixels: number) => `${pixels}px`)
+  const length = viewportLength
   applyThemeToElement(element, {
     colorPrimary: normalizedPreferences.theme.colorPrimary,
     compact: false,
     mode: resolvedMode,
-  }, length)
+  })
   applyElementPlusThemeVariables(element, normalizedPreferences, resolvedMode, length)
   applyLayoutThemeVariables(element, normalizedPreferences, length)
 

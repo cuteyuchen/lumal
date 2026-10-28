@@ -259,10 +259,8 @@ describe('lumal admin router', () => {
     await router.push(`${path}?source=refresh`)
     await router.isReady()
     expect(router.currentRoute.value.fullPath).toBe(`${path}?source=refresh`)
-    expect(router.currentRoute.value.meta.workspaceViewport).toBe(path === '/examples/viewport' ? 'flow-only' : 'self-managed')
-    expect(router.currentRoute.value.meta.viewport).toEqual(path === '/examples/viewport'
-      ? { mode: 'contain', designWidth: 960, designHeight: 540 }
-      : undefined)
+    expect(router.currentRoute.value.meta.workspaceViewport).toBeUndefined()
+    expect(router.currentRoute.value.meta.viewport).toBeUndefined()
   })
 
   it('guest 不因基础示例权限获得 Cockpit 访问权', async () => {

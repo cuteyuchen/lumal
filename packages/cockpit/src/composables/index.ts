@@ -1,12 +1,4 @@
 export {
-  computeCanvasScale,
-  useCanvasScale,
-} from './useCanvasScale'
-export type {
-  CanvasScaleResult,
-  UseCanvasScaleOptions,
-} from './useCanvasScale'
-export {
   useCockpit,
 } from './useCockpit'
 export type {

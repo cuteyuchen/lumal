@@ -4,7 +4,6 @@ import { createLumalAliases, createViewportTransformPlugin } from '@lumal/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig, normalizePath } from 'vite'
 import { createAdminBuildInfo } from './build/app-info'
-import { viewportDesign } from './viewport.config'
 
 // glob 使用正斜杠且不带尾部分隔符，避免 Windows 下工作区 CSS 漏转。
 const workspaceRoot = normalizePath(fileURLToPath(new URL('../..', import.meta.url))).replace(/\/$/, '')
@@ -51,33 +50,11 @@ export default defineConfig(({ command, isPreview, mode }) => ({
     vue(),
     createViewportTransformPlugin({
       enabled: true,
-      // vw 是整页设计稿适配；仅接入明确的 UI 依赖，不扫描脚本或放开所有 node_modules。
-      include: [
-        'src/views/**',
-        'src/components/**',
-        'src/styles.scss',
-        `${workspaceRoot}/packages/core/**`,
-        `${workspaceRoot}/packages/icons-vue/**`,
-      ],
-      dependencies: ['@lumal/core', '@lumal/icons-vue', 'element-plus'],
-      exclude: [
-        'src/views/login/**',
-        'src/views/shared/**',
-        'src/views/examples/DataVView.vue',
-        'src/views/examples/CockpitView.vue',
-        'src/views/examples/cockpit/**',
-        // 图表 height 属性由组件处理，不能只转换其外层 CSS 高度。
-        'src/views/examples/ChartView.vue',
-      ],
-      viewportWidth: viewportDesign.designWidth,
-      output: 'runtime',
-      inlineStyles: true,
-      fontSize: true,
-      minSize: true,
-      minPixelValue: 0,
+      // 一处定义设计宽度；自有包样式自动接入，第三方只授权已验证的 Element Plus。
+      include: ['src/**'],
+      dependencies: ['element-plus'],
+      viewportWidth: 1920,
       customProperties: true,
-      variableFallbacks: true,
-      mediaQueries: { runtimeSelector: 'html[data-admin-viewport="vw"]' },
     }),
   ],
   // 保留自有 SCSS 的调试映射；第三方主题逐 CSS 文件导入，不放宽混合 Sass 安全边界。

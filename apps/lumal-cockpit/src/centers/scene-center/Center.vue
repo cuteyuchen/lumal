@@ -142,7 +142,8 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="scene-center" :data-center-engine="activeEngine">
-    <Suspense>
+    <!-- 切换到惰性引擎时立即释放旧画布，避免等待期间继续占用绘制资源。 -->
+    <Suspense :timeout="0">
       <component
         :is="activeRenderer"
         v-bind="activeEngine === 'standalone' ? { context } : {}"

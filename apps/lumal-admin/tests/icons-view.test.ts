@@ -237,7 +237,7 @@ describe('admin icon examples', () => {
     await wrapper.get('[aria-label="图标尺寸"]').setValue('64')
     await wrapper.get('[aria-label="图标颜色"]').setValue('#e11d48')
     const preview = wrapper.get('[data-preview="name"] .lumal-icon')
-    expect(preview.attributes('style')).toContain('--lumal-icon-size: calc(64 * var(--lumal-viewport-unit, 1px))')
+    expect(preview.attributes('style')).toContain('--lumal-icon-size: 64px')
     expect(preview.find('svg').html()).toContain('#e11d48')
     await wrapper.get('[aria-label="SVG 渐变"]').setValue(true)
     expect(preview.find('linearGradient').exists()).toBe(true)

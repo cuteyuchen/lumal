@@ -26,21 +26,19 @@ async function installedVersion(name) {
 
 async function verifyGeneratedViewportProject(temporary, runner, tarballs) {
   const project = join(temporary, 'generated-screen-vw')
-  runPnpm(['exec', 'create-lumal', project, '--template', 'screen', '--viewport', 'vw', '--no-interactive'], runner)
+  runPnpm(['exec', 'create-lumal', project, '--template', 'screen', '--viewport', '--design-width', '1440', '--no-interactive'], runner)
   const manifestPath = join(project, 'package.json')
   const manifest = await readJson(manifestPath)
   const version = (await readJson(join(root, 'packages/create-lumal-admin/package.json'))).version
-  assert.equal(manifest.dependencies['@lumal/viewport'], version)
+  assert.equal(manifest.dependencies['@lumal/viewport'], undefined, '静态 CSS Screen 不需要运行时包')
   assert.equal(manifest.devDependencies['@lumal/vite'], version)
   assert.equal(manifest.dependencies['@lumal/core'], undefined, 'vw Screen 不应引入 Admin/Core')
   const viteConfig = await readFile(join(project, 'vite.config.ts'), 'utf8')
   const viewportConfig = await readFile(join(project, 'viewport.config.ts'), 'utf8')
-  assert.match(viteConfig, /output:\s*['"]runtime['"]/)
-  assert.match(viteConfig, /viewportWidth:\s*viewportDesign\.designWidth/)
-  assert.match(viteConfig, /inlineStyles:\s*true/)
-  assert.match(viewportConfig, /mode:\s*['"]vw['"]/)
+  assert.match(viteConfig, /createViewportTransformPlugin/)
+  assert.match(viteConfig, /\.\.\.viewport/)
+  assert.match(viewportConfig, /viewportWidth:\s*1440/)
   // 只替换包来源，不改生成的 Vite 配置或业务样式，以真实 tarball 验证默认接线。
-  manifest.dependencies['@lumal/viewport'] = toFileSpecifier(project, tarballs.viewport)
   manifest.devDependencies['@lumal/vite'] = toFileSpecifier(project, tarballs.vite)
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
   runPnpm(['install', '--frozen-lockfile=false', '--prefer-offline'], project)
@@ -51,13 +49,18 @@ async function verifyGeneratedViewportProject(temporary, runner, tarballs) {
   const css = (await Promise.all((await readdir(assets))
     .filter(name => name.endsWith('.css'))
     .map(name => readFile(join(assets, name), 'utf8')))).join('\n')
-  assert.match(css, /padding:\s*calc\(\s*32\s*\*\s*var\(--lumal-viewport-unit,\s*1px\)\s*\)/)
-  assert.match(css, /gap:\s*calc\(\s*16\s*\*\s*var\(--lumal-viewport-unit,\s*1px\)\s*\)/)
-  assert.match(css, /font-size:\s*max\(\s*14px/, '默认字号保护不应被模板转换绕过')
+  const panel = css.match(/\.screen-view\[[^\]]+\]\{([^}]+)\}/)?.[1]
+  assert.ok(panel, '缺少 Screen 内容样式')
+  // CSS 压缩器会删去前导零并舍入末位，按原转换精度核对数值。
+  assert.ok(Math.abs(Number(panel.match(/padding:([\d.]+)vw/)?.[1]) - 32 / 1440 * 100) < 0.00001)
+  assert.ok(Math.abs(Number(panel.match(/font-size:([\d.]+)vw/)?.[1]) - 14 / 1440 * 100) < 0.00001)
+  const header = css.match(/\.screen-view__header\[[^\]]+\]\{([^}]+)\}/)?.[1]
+  assert.ok(Math.abs(Number(header?.match(/gap:([\d.]+)vw/)?.[1]) - 16 / 1440 * 100) < 0.00001)
+  assert.doesNotMatch(css, /--lumal-viewport-unit|transform:\s*scale/)
   return {
     status: 'passed',
-    command: 'create-lumal --template screen --viewport vw --no-interactive',
-    checks: ['real-cli-tarball', 'shared-design-config', 'minimal-dependencies', 'install-frozen', 'vue-types', 'production-build', 'runtime-css-output', 'font-protection'],
+    command: 'create-lumal --template screen --viewport --design-width 1440 --no-interactive',
+    checks: ['real-cli-tarball', 'single-design-config', 'minimal-dependencies', 'install-frozen', 'vue-types', 'production-build', 'plain-vw-output', 'font-line-height'],
     version,
     validation: '真实生成的独立 Vue 项目，无浏览器或业务项目改动',
   }
@@ -102,8 +105,12 @@ async function main() {
     runPnpm(['install', '--frozen-lockfile', '--prefer-offline'], project)
     runPnpm(['exec', 'vue-tsc', '--noEmit', '-p', 'tsconfig.json'], project)
     runPnpm(['exec', 'node', 'verify.mjs'], project)
+    const defaultDesign = await readJson(join(project, 'consumer-report.json'))
+    runPnpm(['exec', 'node', 'verify.mjs'], project, false, { CONSUMER_DESIGN_WIDTH: '1440' })
+    const alternateDesign = await readJson(join(project, 'consumer-report.json'))
     const generatedProject = await verifyGeneratedViewportProject(temporary, project, { vite: viteTarball, viewport: viewportTarball })
-    Object.assign(report, await readJson(join(project, 'consumer-report.json')), {
+    Object.assign(report, defaultDesign, {
+      alternateDesign,
       dependencies,
       devDependencies,
       generatedProject,

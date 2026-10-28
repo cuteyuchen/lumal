@@ -1,6 +1,6 @@
 # lumal-cockpit
 
-独立驾驶舱应用，基于 `@lumal/* 0.0.6-beta` 演示运行时与设计器，并集成 Cesium、OpenLayers、ECharts GEO。应用不进入公共包 tarball；完整生产构建和生产浏览器纳入普通 PR 与 Release Gate。
+独立驾驶舱应用，基于 `@lumal/* 0.1.0-beta.0` 演示运行时与设计器，并集成 Cesium、OpenLayers、ECharts GEO。应用不进入公共包 tarball；完整生产构建和生产浏览器纳入普通 PR 与 Release Gate。
 
 ## 技术栈
 
@@ -30,10 +30,9 @@ pnpm dev
 
 - 顶部布局选择会保存到本地，设计器按打开时动态加载；取消不写入配置，保存后刷新恢复。
 - 自动刷新为 1 分钟，可暂停或立即刷新；左右模块可折叠，Tab 可切换。
-- 顶部「视口实验」在真实视口 Dialog 内运行，演示 `@lumal/viewport` 的 contain / width / responsive、
-  实际容器尺寸和点击热区。它不包裹主驾驶舱，不会造成双重缩放。
-- 主驾驶舱保留 scale / vwvh / DataV 全屏容器三种用法；容器模式内部为 `external`。
-- Demo 对整个文档请求全屏，确保 body Teleport 弹窗和兄弟 Designer 仍可交互；缩放仍由原画布负责。
+- 顶部「视口实验」在Dialog内显示真实容器和窗口宽度，普通192px探针与点击热区遵循相同vw规则。
+- 主驾驶舱、DataV容器和Designer统一设计宽度，没有适配模式菜单或整画布transform，高度不足滚动。
+- Demo对整个文档请求全屏，确保body Teleport弹窗和兄弟Designer仍可交互，不增加第二层缩放。
 - 中心支持 ECharts、OpenLayers、Cesium 与独立 SVG 场景。窗口 resize 不重建地图。
 - Cesium 的初始化、渲染或 WebGL 上下文错误显示可重试状态，并释放旧实例及监听器。
 - 本地配置无法读取时显示恢复提示，保留原始存档；只有显式恢复或保存时覆盖。

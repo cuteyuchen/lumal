@@ -2,6 +2,7 @@
 import type { EChartsOption } from 'echarts'
 import type { ComponentPublicInstance } from 'vue'
 import type { ChartPanelWidth } from './panel-style'
+import { getViewportConfig, viewportLength } from '@lumal/viewport'
 import { computed, useId, useTemplateRef } from 'vue'
 import LumalChart from './LumalChart.vue'
 import { resolveChartPanelStyle } from './panel-style'
@@ -13,7 +14,7 @@ const props = withDefaults(defineProps<{
   loading?: boolean
   noData?: boolean
   emptyText?: string
-  height?: string
+  height?: string | number
   chartWidth?: ChartPanelWidth
   tableWidth?: ChartPanelWidth
   error?: boolean | Error | string
@@ -29,7 +30,7 @@ const props = withDefaults(defineProps<{
   emptyText: '暂无数据',
   error: false,
   errorText: '数据加载失败',
-  height: '320px',
+  height: 320,
   loading: false,
   noData: false,
   options: undefined,
@@ -54,6 +55,7 @@ const resolvedErrorText = computed(() => props.error instanceof Error
   : typeof props.error === 'string' ? props.error : props.errorText)
 
 /***********************面板尺寸*********************/
+const contentHeight = computed(() => typeof props.height === 'number' ? viewportLength(props.height) : props.height)
 const panelStyle = computed(() => resolveChartPanelStyle({
   chartWidth: props.chartWidth,
   tableWidth: props.tableWidth,
@@ -65,7 +67,7 @@ defineExpose({
 </script>
 
 <template>
-  <section class="lumal-chart-panel" :style="panelStyle">
+  <section class="lumal-chart-panel" :class="{ 'is-responsive': !getViewportConfig().enabled }" :style="panelStyle">
     <div v-if="$slots.query" class="lumal-chart-panel__query">
       <slot name="query" />
     </div>
@@ -97,7 +99,7 @@ defineExpose({
     <div
       class="lumal-chart-panel__body"
       :class="`is-${view}`"
-      :style="{ height }"
+      :style="{ height: contentHeight }"
       :aria-busy="loading"
       :aria-describedby="summary ? summaryId : undefined"
     >
@@ -236,13 +238,13 @@ defineExpose({
 }
 
 @media (max-width: 640px) {
-  .lumal-chart-panel {
-    &__header {
+  .lumal-chart-panel.is-responsive {
+    .lumal-chart-panel__header {
       align-items: flex-start;
       flex-direction: column;
     }
 
-    &__actions {
+    .lumal-chart-panel__actions {
       width: 100%;
       justify-content: flex-start;
     }

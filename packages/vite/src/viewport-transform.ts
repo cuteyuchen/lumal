@@ -109,7 +109,7 @@ function createSourceFilter(options: ViewportTransformOptions, root: string) {
 
 function createPostcssPlugin(options: ViewportTransformOptions, root: string, sourceAllowed?: (id: string) => boolean): PostcssPlugin {
   const transformDeclaration = createViewportCssTransformer(options)
-  // 只对已授权来源中的框架 token 放开 fallback；普通业务 var/min/max/clamp 仍受保护。
+  // 已知框架拥有的 CSS 可转换设计 px/fallback；普通业务表达式与未知依赖仍保守保护。
   const transformToken = createViewportCssTransformer({ ...options, customProperties: true, variableFallbacks: true })
   const included = createSourceFilter(options, root)
   function originalSource(declaration: Declaration): string | undefined {
@@ -137,7 +137,7 @@ function createPostcssPlugin(options: ViewportTransformOptions, root: string, so
       if (!included(source))
         return
       const owner = sourcePackage(source!)
-      if ((frameworkPackages.has(owner) || owner === 'element-plus') && /^--(?:lumal|el)-/.test(declaration.prop))
+      if (frameworkPackages.has(owner) || owner === 'element-plus')
         transformToken(declaration)
       else
         transformDeclaration(declaration)
@@ -218,6 +218,16 @@ export function createViewportTransformPlugin(options: ViewportTransformOptions)
       // 同一常量贯通应用与公共包 JS；关闭时也显式注入 px 契约。
       const runtime = JSON.stringify({ enabled: options.enabled === true, designWidth: options.viewportWidth ?? 1920 })
       config.define = { ...config.define, __LUMAL_VIEWPORT__: runtime }
+      // SSR 的 Node 外置模块不会经过 define；只让受控 Lumal 包走同一编译配置。
+      config.ssr ??= {}
+      if (config.ssr.noExternal !== true) {
+        const existing = config.ssr.noExternal
+        config.ssr.noExternal = [
+          ...(Array.isArray(existing) ? existing : existing ? [existing] : []),
+          '@lumal/viewport',
+          ...frameworkPackages,
+        ]
+      }
       if (!options.enabled)
         return
       const root = resolve(config.root ?? process.cwd())

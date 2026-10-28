@@ -33,8 +33,8 @@ const ranking = [
         <a href="https://lumal-datav.cuteyuchen.top/" target="_blank" rel="noopener noreferrer">完整 DataV 指南</a>
       </div>
       <div class="datav-stage">
-        <!-- 只将兼容全屏容器定位在本地宿主，不覆盖 Admin Header 或菜单。 -->
-        <LumalFullScreenContainer :width="960" :height="540" mode="scale">
+        <!-- 嵌入只改变承载位置，设计尺寸仍使用项目的浏览器宽度规则。 -->
+        <LumalFullScreenContainer :width="960" :height="540" embedded>
           <div class="datav-canvas">
             <LumalDecoration :variant="2" class="datav-decoration" />
             <LumalBorderBox :variant="1" title="区域运行指数" class="datav-border">
@@ -50,8 +50,7 @@ const ranking = [
 
 <style scoped>
 .datav-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; margin-bottom: 16px; }
-.datav-stage { position: relative; height: 540px; overflow: hidden; background: #12282d; }
-.datav-stage :deep(.lumal-full-screen-container) { position: absolute; width: 100%; height: 100%; }
+.datav-stage { position: relative; height: 540px; overflow: auto; background: #12282d; }
 .datav-canvas { box-sizing: border-box; display: grid; gap: 12px; width: 100%; height: 100%; padding: 24px; color: #edf9f6; }
 .datav-decoration { height: 20px; }
 .datav-border { min-height: 0; }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ComponentPublicInstance } from 'vue'
 import type { PaginationChangePayload } from './types'
+import { getViewportConfig } from '@lumal/viewport'
 import { ElPagination } from 'element-plus'
 import { computed, useTemplateRef } from 'vue'
 
@@ -66,6 +67,7 @@ defineExpose({
   <ElPagination
     ref="paginationRef"
     class="lumal-pagination"
+    :class="{ 'is-responsive': !getViewportConfig().enabled }"
     background
     layout="total, sizes, prev, pager, next, jumper"
     :current-page="page"
@@ -89,16 +91,16 @@ defineExpose({
 }
 
 @media (max-width: 640px) {
-  .lumal-pagination {
+  .lumal-pagination.is-responsive {
     row-gap: 4px;
     justify-content: flex-start;
   }
 
-  .lumal-pagination :deep(.el-pagination__jump) {
+  .lumal-pagination.is-responsive :deep(.el-pagination__jump) {
     display: none;
   }
 
-  .lumal-pagination :deep(.el-pagination__sizes) {
+  .lumal-pagination.is-responsive :deep(.el-pagination__sizes) {
     margin-left: 0;
   }
 }

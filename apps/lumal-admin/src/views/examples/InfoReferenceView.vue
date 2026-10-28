@@ -23,14 +23,14 @@ const apiItems = computed(() => [{ label: '字段语义', value: 'label / value 
           {{ showEmpty ? '恢复数据' : '模拟空状态' }}
         </ElButton>
       </div>
-      <LumalInfoTable :items="infoItems" :columns="compact ? 1 : 2" label-width="96px" empty-text="没有匹配的信息项" />
+      <LumalInfoTable :items="infoItems" :columns="compact ? 1 : 2" :label-width="96" empty-text="没有匹配的信息项" />
     </LumalPage><LumalPage title="图标选择器" description="搜索并选择已注册图标，选择结果会同步到状态面板。">
       <LumalIconPicker v-model="selectedIcon">
         <template #group-select="slotProps">
           <AppIconGroupSelect v-bind="slotProps" />
         </template>
       </LumalIconPicker>
-      <LumalInfoTable class="info-state" :items="apiItems" :columns="2" label-width="96px" />
+      <LumalInfoTable class="info-state" :items="apiItems" :columns="2" :label-width="96" />
     </LumalPage>
   </main>
 </template>

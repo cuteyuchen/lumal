@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { IconDefinition } from '@lumal/icons'
 import type { LumalIconPickerGroupSelectSlotProps } from '../types'
+import { getViewportConfig } from '@lumal/viewport'
 import { computed, shallowRef, watch } from 'vue'
 import { useIconRegistry } from '../composables/useIconRegistry'
 import LumalIcon from './LumalIcon.vue'
@@ -96,7 +97,7 @@ function selectIcon(icon: IconDefinition): void {
 </script>
 
 <template>
-  <div class="lumal-icon-picker" :class="{ 'lumal-icon-picker--show-labels': showLabels }">
+  <div class="lumal-icon-picker" :class="{ 'is-responsive': !getViewportConfig().enabled, 'lumal-icon-picker--show-labels': showLabels }">
     <div class="lumal-icon-picker__toolbar">
       <label v-if="searchable" class="lumal-icon-picker__field">
         <span class="lumal-icon-picker__field-label">搜索图标</span>
@@ -275,7 +276,7 @@ function selectIcon(icon: IconDefinition): void {
 }
 
 @media (max-width: 640px) {
-  .lumal-icon-picker__toolbar {
+  .lumal-icon-picker.is-responsive .lumal-icon-picker__toolbar {
     grid-template-columns: minmax(0, 1fr);
   }
 }

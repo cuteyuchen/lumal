@@ -1,6 +1,6 @@
 # 十包文档与示例覆盖
 
-版本基准：`0.0.6-beta`；工作分支包含未发布的 Cockpit Designer 名称补丁、
+版本基准：`0.1.0-beta.0`；工作分支包含未发布的 Cockpit Designer 名称补丁、
 Vite 精细视口转换控制与 Vue 行内样式，以及 Screen 共享设计配置模板。
 本表是维护清单，不表示每个导出都经过浏览器测试或所有示例已部署。
 
@@ -8,7 +8,7 @@ Vite 精细视口转换控制与 Vue 行内样式，以及 Screen 共享设计�
 | --- | --- | --- | --- |
 | `@lumal/core` | 启动、布局、路由、权限、请求、主题、字典、Schema / CRUD | [Core](/packages/core)、[Core API](/reference/core-api) | Admin 原有页面、单元和生产 E2E；真实 API 字段留在 Adapter |
 | `@lumal/charts` | Chart / ChartPanel、数据状态与导出 | [Charts](/packages/charts) | Admin chart / chart-panel，Cockpit 趋势图 |
-| `@lumal/viewport` | 组件、plugin、policy、尺寸、比例、字号工具 | [Viewport](/packages/viewport)、[适配](/reference/screen-viewport-guide) | Admin Viewport、Cockpit lab、viewport-lab 隔离消费者 |
+| `@lumal/viewport` | 宽度数值工具、共享窗口监听、元素测量 | [Viewport](/packages/viewport)、[适配](/reference/screen-viewport-guide) | Admin Viewport、Cockpit lab、viewport-lab 隔离消费者 |
 | `@lumal/datav` | 边框、装饰、数字、滚动、图表适配、全屏容器 | [DataV](/packages/datav)、[示例](/reference/datav-examples) | DataV Guide、Admin DataV 页、视觉回归 |
 | `@lumal/cockpit` | Runtime、registry、消息、配置、Designer | [Cockpit](/packages/cockpit)、[Runtime](/components/cockpit/runtime)、[Designer](/components/cockpit/designer) | 独立 Demo 四中心、Admin 轻量嵌入、Designer 单元和生产 E2E |
 | `@lumal/icons` | 注册、SVG、URI、可选 morph | [Icons](/packages/icons) | Admin 图标页；动画独立入口，静态内核边界测试 |

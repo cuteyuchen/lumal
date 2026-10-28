@@ -3,8 +3,8 @@ import type { CockpitMessageBus } from '../messaging/types'
 import type { CockpitWidgetDefinition } from '../registry/types'
 import type { CockpitBaseContext } from '../types'
 import { LumalIcon } from '@lumal/icons-vue'
-import { computed, onBeforeUnmount, ref, shallowReactive, watchEffect } from 'vue'
-import { useCanvasScale } from '../composables/useCanvasScale'
+import { viewportLength } from '@lumal/viewport'
+import { computed, onBeforeUnmount, shallowReactive, watchEffect } from 'vue'
 import { provideCockpitContext } from '../composables/useCockpitContext'
 import { createCockpitMessageBus } from '../messaging/createCockpitMessageBus'
 import CockpitErrorBoundary from '../runtime/CockpitErrorBoundary.vue'
@@ -27,7 +27,6 @@ const props = withDefaults(defineProps<{
   live: false,
 })
 
-const previewRef = ref<HTMLElement | null>(null)
 const messages = props.messageBus ?? createCockpitMessageBus()
 const context = shallowReactive<CockpitBaseContext>({
   cockpitId: props.cockpitId,
@@ -46,16 +45,9 @@ watchEffect(() => {
 provideCockpitContext(context)
 
 const resolved = computed(() => resolveCockpitComponent(props.definition.component))
-const { result } = useCanvasScale(previewRef, {
-  baseWidth: () => props.baseWidth,
-  baseHeight: () => props.baseHeight,
-  enabled: () => props.live,
-})
 const stageStyle = computed(() => ({
-  width: `${props.baseWidth}px`,
-  height: `${props.baseHeight}px`,
-  transform: `translate(${result.value.offsetX}px, ${result.value.offsetY}px) scale(${result.value.scale})`,
-  transformOrigin: 'top left',
+  width: viewportLength(props.baseWidth),
+  height: viewportLength(props.baseHeight),
 }))
 
 onBeforeUnmount(() => {
@@ -64,7 +56,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="previewRef" class="lumal-cockpit-designer__widget-preview">
+  <div class="lumal-cockpit-designer__widget-preview">
     <img
       v-if="definition.thumbnail"
       :src="definition.thumbnail"

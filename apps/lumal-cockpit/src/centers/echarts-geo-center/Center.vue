@@ -199,6 +199,8 @@ const option = computed<EChartsOption>(() => {
           return (isSelected(item.data?.id ?? '') ? 4 : 0) + Math.max(7, Math.min(13, numeric / 8))
         },
         rippleEffect: {
+          // ECharts 波纹独立于全局 animation；scale=1 仍会循环改变透明度。
+          number: props.reducedMotion ? 0 : 3,
           brushType: 'stroke',
           scale: props.reducedMotion ? 1 : 2.8,
         },

@@ -2,6 +2,7 @@
 import type { FormInstance } from 'element-plus'
 import type { ComputedRef } from 'vue'
 import type { NormalizedSchemaFormItem, SchemaFormAuthority, SchemaFormContext, SchemaFormItem, SchemaFormMode, SchemaFormModel, SchemaFormRecord } from './types'
+import { getViewportConfig, useViewportWidth, viewportLength } from '@lumal/viewport'
 import {
   ElButton,
   ElCheckbox,
@@ -91,6 +92,7 @@ const model = defineModel<SchemaFormModel<T>>({
 })
 
 /***********************模板引用*********************/
+const viewport = useViewportWidth()
 const formRef = useTemplateRef<FormInstance>('formRef')
 const vLoading = ElLoading.directive
 
@@ -466,15 +468,15 @@ defineExpose({
     v-loading="props.loading"
     novalidate
     class="lumal-schema-form"
-    :class="{ 'is-compact': props.compact }"
+    :class="{ 'is-compact': props.compact, 'is-responsive': !getViewportConfig().enabled }"
     :disabled="props.disabled"
     :label-position="props.labelPosition"
-    :label-width="props.labelWidth"
+    :label-width="typeof props.labelWidth === 'number' ? viewportLength(props.labelWidth) : props.labelWidth"
     :model="normalizedModel"
     @keydown.enter="handleEnterSubmit"
     @submit.prevent="handleSubmit"
   >
-    <ElRow class="lumal-schema-form__row" :gutter="props.gutter" :data-columns="props.columns">
+    <ElRow class="lumal-schema-form__row" :gutter="viewport.pixels(props.gutter)" :data-columns="props.columns">
       <ElCol
         v-for="schema in renderableSchemas"
         v-show="schema.visible"
@@ -776,50 +778,50 @@ defineExpose({
 }
 
 @media (max-width: 1024px) {
-  .lumal-schema-form__row :deep(.el-col:not(.is-full-span)) {
+  .lumal-schema-form.is-responsive .lumal-schema-form__row :deep(.el-col:not(.is-full-span)) {
     max-width: 50%;
     flex: 0 0 50%;
   }
 }
 
 @media (max-width: 768px) {
-  .lumal-schema-form {
+  .lumal-schema-form.is-responsive {
     gap: 12px;
   }
 
-  .lumal-schema-form__row {
+  .lumal-schema-form.is-responsive .lumal-schema-form__row {
     row-gap: 10px;
   }
 
-  .lumal-schema-form__row :deep(.el-col.el-col) {
+  .lumal-schema-form.is-responsive .lumal-schema-form__row :deep(.el-col.el-col) {
     max-width: 100%;
     flex: 0 0 100%;
   }
 
-  .lumal-schema-form :deep(.el-input__wrapper),
-  .lumal-schema-form :deep(.el-select__wrapper),
-  .lumal-schema-form :deep(.el-input-number),
-  .lumal-schema-form :deep(.el-date-editor) {
+  .lumal-schema-form.is-responsive :deep(.el-input__wrapper),
+  .lumal-schema-form.is-responsive :deep(.el-select__wrapper),
+  .lumal-schema-form.is-responsive :deep(.el-input-number),
+  .lumal-schema-form.is-responsive :deep(.el-date-editor) {
     min-height: 32px;
   }
 
-  .lumal-schema-form__actions {
+  .lumal-schema-form.is-responsive .lumal-schema-form__actions {
     padding-top: 12px;
     justify-content: stretch;
   }
 
-  .lumal-schema-form__actions :deep(.el-button) {
+  .lumal-schema-form.is-responsive .lumal-schema-form__actions :deep(.el-button) {
     min-height: 32px;
     flex: 1 1 auto;
   }
 }
 
 @media (max-width: 480px) {
-  .lumal-schema-form__item {
+  .lumal-schema-form.is-responsive .lumal-schema-form__item {
     display: block;
   }
 
-  .lumal-schema-form__item :deep(.el-form-item__label) {
+  .lumal-schema-form.is-responsive .lumal-schema-form__item :deep(.el-form-item__label) {
     width: 100% !important;
     height: auto;
     justify-content: flex-start;
@@ -827,7 +829,7 @@ defineExpose({
     line-height: 20px;
   }
 
-  .lumal-schema-form__item :deep(.el-form-item__content) {
+  .lumal-schema-form.is-responsive .lumal-schema-form__item :deep(.el-form-item__content) {
     width: 100%;
     margin-left: 0 !important;
   }

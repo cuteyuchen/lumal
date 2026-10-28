@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ComponentPublicInstance } from 'vue'
 import type { LumalLayoutMenuItem } from './types'
+import { viewportLength } from '@lumal/viewport'
 import { ElAside, ElMenu, ElScrollbar } from 'element-plus'
 import { computed, useTemplateRef } from 'vue'
 import LumalSidebarMenuItem from './LumalSidebarMenuItem.vue'
@@ -11,15 +12,15 @@ const props = withDefaults(defineProps<{
   activePath?: string
   ariaLabel?: string
   collapsed?: boolean
-  width?: string
-  collapsedWidth?: string
+  width?: number | string
+  collapsedWidth?: number | string
 }>(), {
   activePath: '',
   ariaLabel: '侧边导航',
   collapsed: false,
-  collapsedWidth: '64px',
+  collapsedWidth: 64,
   menus: () => [],
-  width: '280px',
+  width: 280,
 })
 
 const emit = defineEmits<{
@@ -30,7 +31,10 @@ const emit = defineEmits<{
 const asideRef = useTemplateRef<ComponentPublicInstance>('asideRef')
 
 /***********************侧边栏状态*********************/
-const asideWidth = computed(() => props.collapsed ? props.collapsedWidth : props.width)
+const asideWidth = computed(() => {
+  const width = props.collapsed ? props.collapsedWidth : props.width
+  return typeof width === 'number' ? viewportLength(width) : width
+})
 
 /***********************事件处理*********************/
 function handleSelect(path: string): void {

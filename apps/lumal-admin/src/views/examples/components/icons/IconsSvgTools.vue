@@ -223,7 +223,7 @@ async function copyOutput(value: string, label: string): Promise<void> {
 
 .icons-svg-tools__swatch code {
   color: var(--el-text-color-regular);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
 }
 
 .icons-svg-tools__preview {
@@ -303,7 +303,7 @@ async function copyOutput(value: string, label: string): Promise<void> {
   color: var(--el-text-color-primary);
   background: var(--el-fill-color-blank);
   font-family: monospace;
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
   line-height: 1.6;
   overflow-wrap: anywhere;
   resize: vertical;
@@ -319,27 +319,27 @@ async function copyOutput(value: string, label: string): Promise<void> {
   min-height: 20px;
   margin: 0;
   color: var(--el-text-color-secondary);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
 }
 
 @media (max-width: 768px) {
-  .icons-svg-tools__controls,
-  .icons-svg-tools__outputs {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .icons-svg-tools__controls,
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .icons-svg-tools__outputs {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .icons-svg-tools__preview {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .icons-svg-tools__preview {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
     padding: 16px;
   }
 
-  .icons-svg-tools__result {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .icons-svg-tools__result {
     grid-column: 1 / -1;
     justify-content: start;
   }
 
-  .icons-svg-tools__copy {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .icons-svg-tools__copy {
     width: 44px;
     height: 44px;
   }

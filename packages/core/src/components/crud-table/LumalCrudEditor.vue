@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { getViewportConfig, viewportLength } from '@lumal/viewport'
 import { ElDialog, ElDrawer } from 'element-plus'
+import { computed } from 'vue'
 
-withDefaults(defineProps<{
+/***********************设计尺寸与浮层*********************/
+const props = withDefaults(defineProps<{
   beforeClose?: (done: () => void) => void
   closeOnClickModal?: boolean
   destroyOnClose?: boolean
@@ -12,10 +15,11 @@ withDefaults(defineProps<{
   closeOnClickModal: false,
   destroyOnClose: true,
   type: 'dialog',
-  width: 'min(920px, calc(100vw - 32px))',
+  width: 920,
 })
 
 const visible = defineModel<boolean>({ default: false })
+const editorWidth = computed(() => typeof props.width === 'number' ? viewportLength(props.width) : props.width)
 </script>
 
 <template>
@@ -23,7 +27,7 @@ const visible = defineModel<boolean>({ default: false })
     v-if="type === 'drawer'"
     v-model="visible"
     :title="title"
-    :size="width"
+    :size="editorWidth"
     :close-on-click-modal="closeOnClickModal"
     :destroy-on-close="destroyOnClose"
     :before-close="beforeClose"
@@ -38,11 +42,12 @@ const visible = defineModel<boolean>({ default: false })
     v-else
     v-model="visible"
     :title="title"
-    :width="width"
+    :width="editorWidth"
     :close-on-click-modal="closeOnClickModal"
     :destroy-on-close="destroyOnClose"
     :before-close="beforeClose"
     class="lumal-crud-table__dialog"
+    :class="{ 'is-responsive': !getViewportConfig().enabled }"
   >
     <slot />
     <template #footer>

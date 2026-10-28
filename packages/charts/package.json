@@ -1,7 +1,7 @@
 {
   "name": "@lumal/charts",
   "type": "module",
-  "version": "0.0.6-beta",
+  "version": "0.1.0-beta.0",
   "description": "Lumal optional ECharts-based chart components.",
   "license": "MIT",
   "keywords": [
@@ -42,6 +42,9 @@
     "echarts": "^6.0.0",
     "vue": "^3.5.0",
     "vue-echarts": "^8.0.0"
+  },
+  "dependencies": {
+    "@lumal/viewport": "workspace:*"
   },
   "devDependencies": {
     "echarts": "^6.1.0",

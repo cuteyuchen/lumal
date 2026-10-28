@@ -1,28 +1,19 @@
 <script setup lang="ts">
-import type { ViewportMode } from '@lumal/viewport'
-import { LumalViewport, useViewportScale } from '@lumal/viewport'
+import { useViewportWidth } from '@lumal/viewport'
 import { computed } from 'vue'
-import { cooperativePolicy, design } from '../../viewport.config'
 
 /***********************共享设计尺寸与动态数值的显式适配*********************/
-const props = withDefaults(defineProps<{ mode?: ViewportMode, designSize?: number }>(), {
-  mode: 'vw',
+const props = withDefaults(defineProps<{ designSize?: number }>(), {
   designSize: 192,
 })
-const policy = computed(() => ({ ...cooperativePolicy, mode: props.mode }))
-const { scale } = useViewportScale({
-  designWidth: design.designWidth,
-  designHeight: design.designHeight,
-  mode: 'width',
-  enabled: () => props.mode === 'vw',
-})
-const dynamicWidth = computed(() => `${props.designSize * (props.mode === 'vw' ? scale.value : 1)}px`)
+const viewport = useViewportWidth()
+const dynamicWidth = computed(() => viewport.length(props.designSize))
 const businessLabel = '192px'
 const active = true
 </script>
 
 <template>
-  <LumalViewport class="cooperative-host" :policy="policy">
+  <section class="cooperative-host">
     <section class="cooperative-panel">
       <div class="cooperative-static" style="width: 192px; height: 96px; font-size: 14px; line-height: 20px; min-width: 320px" />
       <div class="cooperative-object" :style="{ width: '192px', top: '24px', height: dynamicWidth }" />
@@ -34,14 +25,14 @@ const active = true
       <div class="cooperative-business w-[192px]" aria-label="192px">
         {{ businessLabel }}
       </div>
-      <LumalViewport class="cooperative-nested-responsive" :policy="{ mode: 'responsive' }">
+      <section class="cooperative-nested">
         <div class="cooperative-nested-content" style="width: 192px; height: 96px" />
-      </LumalViewport>
-      <LumalViewport class="cooperative-nested-disabled" :policy="false">
+      </section>
+      <section class="cooperative-nested">
         <div class="cooperative-disabled-content" style="width: 192px; height: 96px" />
-      </LumalViewport>
+      </section>
     </section>
-  </LumalViewport>
+  </section>
 </template>
 
 <style scoped lang="scss">

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-beta.0 (2026-10-28)
+
+- Breaking：删除多模式策略、画布包装器、缩放/居中/字号下限 API。
+- 仅保留元素测量与 `getViewportConfig`、`getViewportWidth`、`viewportLength`、`viewportPixels`、`useViewportWidth`。
+- 共享窗口监听及生命周期清理，数字尺寸与 CSS vw 使用同一浏览器宽度。
+
 ## 0.0.6-beta (2026-10-25)
 
 ### Minor Changes

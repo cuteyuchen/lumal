@@ -1,49 +1,37 @@
-import { viewportDesign } from '../viewport.config'
 import { expect, test } from './fixtures'
 import { expectNoPageOverflow, loginAs, loginAsAdmin } from './helpers'
 
 /***********************懒加载示例与真实布局验收*********************/
-test('Viewport 路由、策略覆盖、最小字号、浮层与离开后的样式恢复', async ({ page }) => {
+test('Viewport 普通 px 编译为 vw、同宽不同高、容器测量和浮层', async ({ page }) => {
   await loginAsAdmin(page)
   const rootFontSize = await page.locator('html').evaluate(element => getComputedStyle(element).fontSize)
   await page.goto('/#/examples/viewport')
-  await expect(page.getByTestId('viewport-metrics')).toContainText('contain')
+  await expect(page.getByTestId('viewport-metrics')).toBeVisible()
+  for (const [width, height] of [[1280, 720], [1366, 768], [1920, 920], [1920, 1080], [2560, 1440]]) {
+    await page.setViewportSize({ width, height })
+    const probe = page.getByTestId('viewport-probe')
+    await expect.poll(async () => (await probe.boundingBox())!.width).toBeCloseTo(192 * width / 1920, 1)
+    await expect.poll(async () => (await probe.boundingBox())!.height).toBeCloseTo(96 * width / 1920, 1)
+    const typography = await page.getByTestId('viewport-font').evaluate(element => ({
+      font: Number.parseFloat(getComputedStyle(element).fontSize),
+      line: Number.parseFloat(getComputedStyle(element).lineHeight),
+    }))
+    expect(typography.font).toBeCloseTo(14 * width / 1920, 1)
+    expect(typography.line).toBeCloseTo(20 * width / 1920, 1)
+    await expect(page.locator('.viewport-canvas')).toHaveCSS('transform', 'none')
+    await page.screenshot({ path: `output/playwright/admin-viewport-${width}x${height}.png`, animations: 'disabled' })
+  }
+  await page.setViewportSize({ width: 1920, height: 920 })
+  const original = await page.getByTestId('viewport-probe').boundingBox()
   await page.getByLabel('模拟尺寸', { exact: true }).selectOption('narrow')
-  const narrowScale = Math.min(480 / viewportDesign.designWidth, 420 / viewportDesign.designHeight)
-  await expect(page.getByTestId('viewport-metrics')).toContainText(`scale ${narrowScale.toFixed(3)}`)
+  expect((await page.getByTestId('viewport-probe').boundingBox())!.width).toBeCloseTo(original!.width, 1)
   await page.getByRole('button', { name: '确认 · 0', exact: true }).click()
   await expect(page.getByRole('button', { name: '确认 · 1', exact: true })).toBeVisible()
-  const physicalFont = () => page.getByTestId('viewport-font').evaluate((element) => {
-    const viewport = element.closest('[data-viewport-mode]') as HTMLElement
-    return Number.parseFloat(getComputedStyle(element).fontSize) * Number(getComputedStyle(viewport).getPropertyValue('--lumal-viewport-scale'))
-  })
-  expect(await physicalFont()).toBeGreaterThanOrEqual(12)
-  await page.getByLabel('最小字号', { exact: true }).fill('20')
-  await expect.poll(physicalFont).toBeCloseTo(20, 1)
-  await page.getByLabel('最小字号', { exact: true }).fill('12')
-  await expect.poll(physicalFont).toBeCloseTo(12, 1)
   await page.getByRole('button', { name: '容器信息', exact: true }).click()
   await expect(page.getByRole('dialog', { name: '容器信息' })).toBeInViewport()
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog', { name: '容器信息' })).toBeHidden()
-  for (const mode of ['width', 'responsive', 'disabled', 'contain']) {
-    await page.getByLabel('适配模式', { exact: true }).selectOption(mode)
-    await expect(page.locator('.viewport-host [data-viewport-mode]')).toHaveAttribute('data-viewport-mode', mode)
-  }
-  await page.getByLabel('策略来源', { exact: true }).selectOption('global')
-  await expect(page.getByTestId('viewport-metrics')).toContainText('responsive')
-  for (const label of ['设计宽', '设计高', '最小字号']) {
-    await expect(page.getByLabel(label, { exact: true })).toBeDisabled()
-  }
-  await page.getByLabel('策略来源', { exact: true }).selectOption('route')
-  await expect(page.getByTestId('viewport-metrics')).toContainText('contain')
-  for (const label of ['设计宽', '设计高', '最小字号']) {
-    await expect(page.getByLabel(label, { exact: true })).toBeDisabled()
-  }
-  await page.getByLabel('策略来源', { exact: true }).selectOption('container')
-  for (const label of ['设计宽', '设计高', '最小字号']) {
-    await expect(page.getByLabel(label, { exact: true })).toBeEnabled()
-  }
+  await expect(page.locator('[data-viewport-mode]')).toHaveCount(0)
   await page.reload()
   await expect(page.getByTestId('viewport-metrics')).toBeVisible()
   await page.screenshot({ path: 'output/playwright/admin-viewport.png', animations: 'disabled' })
@@ -52,10 +40,8 @@ test('Viewport 路由、策略覆盖、最小字号、浮层与离开后的样�
   await expect(page.getByRole('columnheader', { name: '用户名', exact: true })).toBeVisible()
   expect(await page.locator('html').evaluate(element => getComputedStyle(element).fontSize)).toBe(rootFontSize)
   expect(await page.locator('html').evaluate(element => getComputedStyle(element).getPropertyValue('--lumal-viewport-scale'))).toBe('')
-  await expect(page.getByTestId('admin-workspace-viewport')).toHaveAttribute('data-viewport-mode', 'responsive')
-  await expect(page.locator('.admin-workspace-viewport__stage')).toHaveCSS('transform', 'none')
-  expect(await page.getByRole('columnheader', { name: '用户名', exact: true })
-    .evaluate(element => element.closest('[data-viewport-mode="contain"],[data-viewport-mode="width"],[data-viewport-mode="vw"]'))).toBeNull()
+  await expect(page.locator('[data-viewport-mode]')).toHaveCount(0)
+  await expect(page.locator('.lumal-layout')).toHaveCSS('transform', 'none')
   await expectNoPageOverflow(page)
 })
 
@@ -72,7 +58,9 @@ test('DataV 组件可交互，Cockpit 实际嵌入且不加载地图或 Designer
   await page.reload()
   await expect(page.locator('.datav-number')).toBeVisible()
   await page.goto('/#/examples/cockpit')
-  await expect(page.locator('.embedded-stage .lumal-cockpit')).toHaveAttribute('data-viewport-mode', 'external')
+  await expect(page.locator('.embedded-stage .lumal-cockpit')).toBeVisible()
+  await expect(page.locator('.embedded-stage [data-viewport-mode]')).toHaveCount(0)
+  await expect(page.locator('.lumal-cockpit-canvas__stage')).toHaveCSS('transform', 'none')
   await page.getByRole('button', { name: '确认告警 · 0' }).click()
   await expect(page.getByRole('button', { name: '确认告警 · 1' })).toBeVisible()
   const runtime = page.locator('.embedded-stage .lumal-cockpit')

@@ -6,6 +6,17 @@ import { defineComponent, h, nextTick } from 'vue'
 import { LumalIcon, LumalIconPicker, LumalIconPickerDialog } from '../src'
 
 describe('lumalIcon', () => {
+  it('项目开启后数字尺寸输出普通 vw，字符串和物理单位仍由调用方明确指定', () => {
+    vi.stubGlobal('__LUMAL_VIEWPORT__', { enabled: true, designWidth: 1440 })
+    const wrapper = mount(LumalIcon, { props: { name: 'lumal:plus', size: 144 } })
+    try {
+      expect(wrapper.attributes('style')).toContain('--lumal-icon-size: 10vw')
+    }
+    finally {
+      wrapper.unmount()
+      vi.unstubAllGlobals()
+    }
+  })
   it('真实 Teleport 弹窗约束焦点，关闭和卸载都恢复原触发点', async () => {
     const trigger = document.createElement('button')
     document.body.append(trigger)
@@ -18,7 +29,7 @@ describe('lumalIcon', () => {
       await flushPromises()
       const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]')!
       expect(dialog.querySelector('[aria-label="关闭图标选择器"] .lumal-icon svg')).not.toBeNull()
-      expect(dialog.querySelector('[role="option"] .lumal-icon')?.getAttribute('style')).toContain('--lumal-icon-size: calc(28 * var(--lumal-viewport-unit, 1px))')
+      expect(dialog.querySelector('[role="option"] .lumal-icon')?.getAttribute('style')).toContain('--lumal-icon-size: 28px')
       expect(wrapper.element.contains(dialog)).toBe(false)
       expect(document.activeElement).toBe(dialog)
       const elements = [...dialog.querySelectorAll<HTMLElement>('button, input, select')]
@@ -93,7 +104,7 @@ describe('lumalIcon', () => {
 
     expect(wrapper.classes()).toContain('lumal-icon')
     expect(wrapper.html()).toContain('#1677ff')
-    expect(wrapper.attributes('style')).toContain('--lumal-icon-size: calc(20 * var(--lumal-viewport-unit, 1px))')
+    expect(wrapper.attributes('style')).toContain('--lumal-icon-size: 20px')
   })
   it('字符串尺寸保持原样，固定像素与已有适配值不再次转换', () => {
     for (const size of ['20px', '1em', '10vw']) {
@@ -139,7 +150,7 @@ describe('lumalIcon', () => {
     const search = wrapper.get('input[type="search"]')
     await search.setValue('响应式图标二')
     expect(wrapper.text()).toContain('共 1 个图标')
-    expect(wrapper.get('[role="option"] .lumal-icon').attributes('style')).toContain('--lumal-icon-size: calc(28 * var(--lumal-viewport-unit, 1px))')
+    expect(wrapper.get('[role="option"] .lumal-icon').attributes('style')).toContain('--lumal-icon-size: 28px')
     expect(wrapper.get('.lumal-icon-picker__item-label').text()).toBe('响应式图标二')
 
     await wrapper.get('[role="option"]').trigger('click')

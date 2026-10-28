@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PageLayoutProps } from './types'
+import { getViewportConfig } from '@lumal/viewport'
 import { ElButton } from 'element-plus'
 import { computed, useSlots, useTemplateRef } from 'vue'
 
@@ -50,6 +51,7 @@ defineExpose({
     :class="{
       'is-content-scrollable': contentScrollable,
       'is-fill': fill,
+      'is-responsive': !getViewportConfig().enabled,
       'is-surface': surface,
     }"
   >
@@ -172,22 +174,22 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
-  .lumal-page-layout {
+  .lumal-page-layout.is-responsive {
     gap: 12px;
   }
 
-  .lumal-page-layout__query,
-  .lumal-page-layout__toolbar,
-  .lumal-page-layout__pagination {
+  .lumal-page-layout.is-responsive .lumal-page-layout__query,
+  .lumal-page-layout.is-responsive .lumal-page-layout__toolbar,
+  .lumal-page-layout.is-responsive .lumal-page-layout__pagination {
     padding: 12px;
   }
 
-  .lumal-page-layout__query-actions,
-  .lumal-page-layout__pagination {
+  .lumal-page-layout.is-responsive .lumal-page-layout__query-actions,
+  .lumal-page-layout.is-responsive .lumal-page-layout__pagination {
     justify-content: flex-start;
   }
 
-  .lumal-page-layout__query-actions :deep(.el-button) {
+  .lumal-page-layout.is-responsive .lumal-page-layout__query-actions :deep(.el-button) {
     min-height: 32px;
     padding-inline: 12px;
   }

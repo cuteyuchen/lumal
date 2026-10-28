@@ -54,7 +54,6 @@ const activeLayoutId = shallowRef(config.value.activeLayoutId)
     v-model:active-layout-id="activeLayoutId"
     :config="config"
     :registry="registry"
-    viewport-mode="scale"
   >
     <template #center="{ context, layout }">
       <ApplicationCenter :context="context" :layout="layout" />
@@ -73,11 +72,11 @@ const activeLayoutId = shallowRef(config.value.activeLayoutId)
 - Designer 编辑草稿，不直接调用后端或写 localStorage。由应用校验权限、持久化成功后替换正式配置。
 - 使用 `prepareCockpitConfig/normalizeCockpitConfig/validateCockpitConfig` 与迁移工具接收旧配置；不要手动假装旧结构已是 v3。
 - 拖拽缩减包含模块的行列会被阻止，替换已占用槽需确认。新增能力不要绕开这些数据保护。
-- 工作分支修复了布局名称输入被还原的缺陷；该 Changeset 未发布前，不承诺 npm `0.0.6-beta` 已含修复。区分源码、tarball 与 registry。
+- 工作分支修复了布局名称输入被还原的缺陷；该 Changeset 未发布前，不承诺 npm `0.1.0-beta.0` 已含修复。区分源码、tarball 与 registry。
 
 ## 缩放、消息和主题
 
-- `scale`：内部按 1920×1080 等比缩放；`vwvh`：视口单位适配；`external`：父容器承担缩放，Cockpit 不再自缩放。
+- 设计px仅按项目统一宽度输出vw，baseHeight是内容高度，不参与比例。没有适配模式和整画布transform；DataV嵌套不重复缩放。
 - 与 `LumalFullScreenContainer` 组合时使用 `external`，避免双重缩放和点击偏移。
 - `enterFullscreen()` 只全屏组件根节点；body Teleport 和外部 Designer 不在其中。应用需选择包含浮层的全屏宿主，或打开浮层前退出全屏，不用第二次 CSS 缩放修复可见性。
 - 用 `useCockpitContext` 获取当前实例的 `messages/mode/instanceId`；不要为每个模块创建一个互不相通的全局消息总线。

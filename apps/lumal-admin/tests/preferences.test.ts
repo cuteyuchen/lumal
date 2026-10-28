@@ -127,6 +127,6 @@ describe('lumal admin preferences', () => {
       theme: { fontSize: 18, mode: 'dark' },
     })
     expect(adminResolvedThemeMode.value).toBe('dark')
-    expect(document.documentElement.style.getPropertyValue('--lumal-font-size-base')).toBe('calc(18 * var(--lumal-viewport-unit, 1px))')
+    expect(document.documentElement.style.getPropertyValue('--lumal-font-size-base')).toBe('18px')
   })
 })

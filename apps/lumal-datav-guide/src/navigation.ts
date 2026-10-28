@@ -83,7 +83,7 @@ export const navGroups: GuideNavGroup[] = [
     key: 'container',
     label: '容器与状态',
     items: [
-      { slug: 'full-screen-container', title: 'FullScreenContainer 全屏容器', component: 'LumalFullScreenContainer', summary: '等比缩放全屏适配' },
+      { slug: 'full-screen-container', title: 'FullScreenContainer 全屏容器', component: 'LumalFullScreenContainer', summary: '统一宽度 vw 与显式滚动边界' },
       { slug: 'loading', title: 'Loading 加载', component: 'LumalLoading', summary: '加载动画与状态' },
     ],
   },

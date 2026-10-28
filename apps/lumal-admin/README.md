@@ -1,6 +1,6 @@
 # lumal-admin
 
-Lumal 中后台管理台示例应用，基于 `@lumal/* 0.0.6-beta` 公开 API 搭建，演示登录鉴权、动态菜单、权限指令、SchemaForm/CrudTable、主题定制，以及局部视口、DataV 和 Cockpit Runtime 集成。
+Lumal 中后台管理台示例应用，基于 `@lumal/* 0.1.0-beta.0` 公开 API 搭建，演示登录鉴权、动态菜单、权限指令、SchemaForm/CrudTable、主题定制，以及局部视口、DataV 和 Cockpit Runtime 集成。
 
 ## 技术栈
 
@@ -86,12 +86,12 @@ src/
 
 | 路由 | 实际能力 | 授权 |
 | --- | --- | --- |
-| `/#/examples/viewport` | 应用默认、路由和容器策略；contain / width / responsive / disabled；实测尺寸、字号下限、独立弹窗和源码 | `examples:view` |
+| `/#/examples/viewport` | 普通px→vw、容器测量、192px探针、字号/行高、点击、独立弹窗和源码 | `examples:view` |
 | `/#/examples/datav` | 边框、装饰、数字翻牌、滚动榜单与局部全屏容器 | `examples:view` |
-| `/#/examples/cockpit` | 真实 Runtime、最小 Widget、主题切换；外层 Viewport 与内层 external | `cockpit:view` |
+| `/#/examples/cockpit` | 真实Runtime、最小Widget、主题切换；嵌入不二次缩放 | `cockpit:view` |
 
-页面全部通过组件白名单动态导入。远程菜单仍由 Mock 决定授权；Viewport 页的布局策略在
-`src/api/menu.ts` 按可信组件名补入，不依赖后端 DTO 透传任意 meta。
+页面全部通过组件白名单动态导入，远程菜单仍由Mock决定授权。
+Vite一次配置设计宽度，不由路由meta切换已编译的CSS。
 guest 不显示 Cockpit 集成入口，直接访问返回 403。首页不加载 DataV、Cockpit、Designer 或地图资源。
 
 在根目录执行 `pnpm test:e2e:release`，生产产物运行全部 Admin Playwright；

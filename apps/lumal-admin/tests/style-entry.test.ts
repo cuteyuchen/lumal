@@ -40,8 +40,8 @@ describe('lumal admin style entry', () => {
   it('独立 CSS 清单与 Core 主题一致，不能漏掉菜单、弹窗等组件样式', async () => {
     const coreTheme = await readFile(createRequire(import.meta.url).resolve('@lumal/core/theme-chalk/index.scss'), 'utf8')
     const appTheme = await readFile(join(process.cwd(), 'src/styles/element-plus.ts'), 'utf8')
-    const components = [...coreTheme.matchAll(/@use "element-plus\/theme-chalk\/src\/([^"]+)\.scss"/g)]
-      .map(match => `element-plus/theme-chalk/${match[1] === 'base' ? 'base' : `el-${match[1]}`}.css`)
+    const components = [...coreTheme.matchAll(/@import "(element-plus\/theme-chalk\/[^"]+\.css)"/g)]
+      .map(match => match[1]!)
     expect(components).not.toHaveLength(0)
     for (const component of components)
       expect(appTheme).toContain(`import '${component}'`)
@@ -64,9 +64,9 @@ describe('lumal admin style entry', () => {
     expect(appVue).toContain(':cache="routeViewCache"')
   })
 
-  it('可见文本字号会统一消费全局字号令牌', async () => {
+  it('偏好字号继续使用 token，普通 px 适配示例不要求业务尺寸协议', async () => {
     const sources = await readStyleSources(join(process.cwd(), 'src'))
-    const violations = sources.flatMap(({ path, source }) => (
+    const violations = sources.filter(({ path }) => !/[\\/]examples[\\/](?:viewport[\\/]|ViewportView\.vue)/.test(path)).flatMap(({ path, source }) => (
       [...source.matchAll(/font-size\s*:\s*([^;}\r\n]+)/g)]
         .filter(match => match[1]?.includes('px') && !match[1].includes('var(--lumal-font-size-base'))
         .map(match => `${path}:${source.slice(0, match.index).split(/\r?\n/).length}:${match[0]}`)
@@ -74,5 +74,7 @@ describe('lumal admin style entry', () => {
 
     expect(violations).toEqual([])
     expect(sources.some(({ source }) => source.includes('var(--lumal-font-size-base, 14px)'))).toBe(true)
+    const example = sources.find(({ path }) => path.endsWith('ViewportCanvas.vue'))!.source
+    expect(example).toContain('font-size: 14px; line-height: 20px')
   })
 })

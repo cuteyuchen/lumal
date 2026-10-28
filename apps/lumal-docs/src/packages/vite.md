@@ -1,162 +1,57 @@
 # @lumal/vite
 
-Vite 配置助手：组件 resolver、工作区源码 / 产物 alias、可选 Devtools 接线。
-
-| 项 | 值 |
-| --- | --- |
-| 包名 | `@lumal/vite` |
-| 本地路径 | `packages/vite` |
-| 在线文档 | https://lumal.cuteyuchen.top/packages/vite |
-| npm 地址 | `https://www.npmjs.com/package/@lumal/vite` |
-
-## 安装
-
-下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
+候选 `0.1.0-beta.0`：自动px→vw、组件resolver、工作区alias、可选Devtools。尚未发布npm。
 
 ```bash
-pnpm add -D @lumal/vite@0.0.6-beta
+pnpm add -D @lumal/vite@0.1.0-beta.0
 ```
 
-## 公开入口
-
-仅 `@lumal/vite`。
-
-## Workspace Alias
-
-```ts
-import { resolve } from 'node:path'
-import { createLumalAliases } from '@lumal/vite'
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-  resolve: {
-    alias: createLumalAliases({
-      workspaceRoot: resolve(__dirname, '../..'),
-      // 开发默认 source；CI 验证 dist 时可改为 'dist'
-      target: 'source',
-      // packages: ['viewport', 'core', 'icons', 'icons-vue', 'charts', 'datav', 'cockpit', 'vben-compat'],
-    }),
-  },
-})
-```
-
-`createLumalAliases` 会为各包主入口、子路径（如 `@lumal/core/layout`）与 `style.css` 生成别名，并按路径长度排序，避免前缀冲突。
-
-## 组件 Resolver
-
-配合 `unplugin-vue-components` 等：
-
-```ts
-import { createLumalComponentResolver } from '@lumal/vite'
-import Components from 'unplugin-vue-components/vite'
-
-export default {
-  plugins: [
-    Components({
-      resolvers: [
-        createLumalComponentResolver({ importStyle: true }),
-      ],
-    }),
-  ],
-}
-```
-
-内置解析（节选）：`LumalSchemaForm`、`LumalLayout`、`LumalIcon`、`LumalChart`、`LumalChartPanel` 等。`importStyle: true` 时附加对应 `style.css` sideEffects。
-
-可通过 `customComponents` 扩展名称 → 包名映射。
-
-## 定向视口转换
-
-`0.0.6-beta` 提供默认关闭的 `createViewportTransformPlugin` 和低层
-`createViewportPostcssPlugin`。启用时显式指定 `include: ['src/screen/**']`，
-Dev/Build 共用 CSS 声明转换，不扫描脚本或业务坐标。
-下列精细控制、Vue 行内样式和原子化 CSS 保护属于**下一版未发布源码**，
-需用本地构建的 tarball 验证，不能直接用已发布 `0.0.6-beta` 验收新增选项。
-默认不转换 node_modules、字号/行高、最小尺寸及自定义属性；依赖只通过精确包名白名单加入。
-保留已有 PostCSS 配置和来源边界，无法可靠定位预处理声明时跳过并警告。
-配置与限制见 [屏幕适配](/reference/screen-viewport-guide)。局部 Screen 不应覆盖 Admin、
-Element Plus 或地图样式；整页 vw 必须显式接线，也不能与同一画布的 transform 叠加。
+## 统一转换
 
 ```ts
 import { createViewportTransformPlugin } from '@lumal/vite'
-import { defineConfig } from 'vite'
 
-export default defineConfig({
-  plugins: [createViewportTransformPlugin({
-    enabled: true,
-    include: ['src/screen/**'],
-    exclude: ['src/screen/canvas/**', '**/map/**'],
-    viewportWidth: 1920,
-    output: 'runtime',
-    includeProperties: ['width', 'height', 'top', 'left', 'padding*', '*gap'],
-    excludeProperties: ['border*', 'margin*'],
-    excludeSelectors: ['.runtime-canvas', /\.el-(?:dialog|popper)\b/],
-    fontSize: false,
-    minSize: false,
-    inlineStyles: false,
-  })],
+const viewport = createViewportTransformPlugin({
+  enabled: true,
+  include: ['src/**'],
+  viewportWidth: 1920,
+  dependencies: ['element-plus'],
 })
 ```
 
-`includeProperties` 默认 `['*']`，空数组不转换；属性黑名单始终优先，不能靠白名单
-绕过字体、最小尺寸或自定义属性保护。`fontSize:false` 使 `14px` 字号和 `20px` 行高都保持原值。
-`minSize:true` 可显式恢复最小尺寸参与转换；边框和间距可通过名单独立控制。
-`/* lumal-viewport-ignore-next */` 保护紧随声明，紧邻后置
-`/* lumal-viewport-ignore */` 保护前一声明；Sass 压缩时用 `/*! ... */`。
+加入现有Vite plugins。业务正常写CSS/SCSS/模板style的px，输出 `P / D * 100 vw`；
+高度也按宽度，字号和有单位行高同步。无需main安装、页面包装器或业务单位变量。
+同一配置注入框架动态token/数字工具，公共CSS在消费者构建时转换，不在发布包写死1920。
 
-`inlineStyles:true` 使用 Vue 模板 AST 和 CSS AST 处理静态 `style` 及可静态分析的
-`:style` 对象/数组。例如设计宽度 1920 时，`width:'192px'` 变为 `10vw`。
-支持无插值模板字符串和 CSS fallback 字符串数组；条件/逻辑表达式内部不遍历。
-动态表达式、脚本变量、业务字符串、class、`:class` 和 `aria-label` 不修改；
-`<!-- lumal-viewport-ignore -->` 可排除紧随元素及子树。
-配置选择器排除但存在动态 class/id、data 等非 style 属性时，行内转换保守跳过该元素子树。
-原子化任意值类名及对应生成规则（如 `.w-\[192px\]`）都保留，普通属性选择器不受误伤。
+| 配置 | 默认与边界 |
+| --- | --- |
+| enabled / include / exclude | 默认关闭；明确源码范围，排除优先 |
+| frameworkStyles | true，自有公共CSS；第三方仅精确dependencies白名单 |
+| includeProperties / excludeProperties | 属性glob；黑名单优先 |
+| excludeSelectors | 子串或正则，分组/嵌套祖先命中整体保留 |
+| fontSize / minSize / inlineStyles | 默认true；字体关闭同时保护font、font-size、line-height |
+| customProperties / variableFallbacks | 业务默认false，保留var/min/max/clamp已有适配 |
+| minPixelValue / precision | 1 / 6，细边框保留 |
 
-默认包含视口变量、动态尺寸函数或已有视口/容器单位的整条声明保留，避免重复转换。
-默认 `output:'vw'` 直接生成浏览器 vw，可独立使用，整体缩放画布必须显式排除。
-可选 `output:'runtime'` 输出 `calc(192 * var(--lumal-viewport-unit, 1px))`；
-LumalViewport 的 vw 模式按浏览器宽度换算，其余模式恢复设计 px，避免画布重复缩放。
-无包装器或 Teleport 到包装器外时回退1px；外部 transform 仍需应用显式隔离。
-Dev 与 Build 使用相同入口；完整选项、优先级和 SCSS 来源限制见
-[屏幕适配](/reference/screen-viewport-guide)。
+声明前`/*! lumal-viewport-ignore-next */`或后`/* lumal-viewport-ignore */`保护单声明，
+模板`<!-- lumal-viewport-ignore -->`保护紧随元素子树。
+Vue模板AST与CSS AST只分析style/:style静态部分，动态表达式不执行。
+class/:class/aria/业务字符串/脚本数值不扫描；任意值原子类及生成CSS保留，普通属性选择器不误伤。
+媒体/容器断点不转换，vw不能由运行时路由开关撤销。
 
-运行时与构建可从项目自己的 `viewport.config.ts` 共享无依赖设计常量：
-`@lumal/viewport` policy 使用 `designWidth/designHeight`，
-Vite 使用同一对象的 `viewportWidth: viewportDesign.designWidth`。
-两包不互相依赖，Screen 模板仅 `--viewport vw` 安装并启用协作转换，其他模式保持轻量。
-浏览器 vw 不等于容器宽度：vw 下宽高均按浏览器宽度 / 设计宽度换算，布局保持流式。
-字体/行高与最小尺寸默认仍保护；地图/ECharts resize 和弹窗显式采用运行时 API。
+保留既有PostCSS配置、原始Source Map及SCSS来源保护。无法证明跨文件Sass来源时跳过并警告，
+不通过扫描全node_modules绕过边界。低层`createViewportPostcssPlugin`共用规则。
+旧runtime输出与媒体断点切换已删除，见[统一指南](/reference/screen-viewport-guide)。
 
-### 整页 vw
+## 构建助手
 
-需要浏览器页面缩放后视觉比例保持一致时，须让 Header、侧栏、文字、主题与浮层共用根单位，
-而非只处理内容区。Admin Demo 的 `vw 流式` 已采用该接线；默认仍为响应式。
-未发布源码增加两个默认关闭的选项：
+```ts
+import { createLumalAliases, createLumalComponentResolver } from '@lumal/vite'
 
-| 选项 | 默认 | 作用 |
-| --- | --- | --- |
-| `variableFallbacks` | `false` | 允许普通 `var()` fallback、`min/max/clamp` 中的 px 转换 |
-| `mediaQueries` | 关闭 | runtime 输出下用单个 html 根复合选择器切换设计稿宽高断点 |
+const aliases = createLumalAliases({ workspaceRoot: process.cwd(), target: 'source' })
+const resolver = createLumalComponentResolver({ importStyle: true })
+```
 
-整页配置显式开启 `fontSize/minSize/customProperties/inlineStyles/variableFallbacks`、
-`minPixelValue:0`，依赖只通过精确包名白名单接入。应用设置根模式属性和浏览器单位，
-其他模式恢复1px；退出应用恢复宿主原值。`mediaQueries: { runtimeSelector: 'html[data-app-viewport="vw"]' }`
-保留原 px 分支，复制顶层媒体/容器宽高查询为 vw 分支，由零优先级根条件切换。
-支持传统与范围语法；嵌套、原子化、排除规则或混合来源的查询保守跳过，
-motion/pointer 等非尺寸条件保持原样。
-
-已有视口变量/相对单位、URL、业务字符串和原子 CSS 继续保护。
-Core 运行时主题通过 `runtime.cssLength` 显式格式化尺寸，
-Layout/Tabs 通过 `responsive:false` 同步 JS 断点；默认行为均保持不变。
-表格列宽等数值协议仍用公开运行时 API 显式计算，不扫描脚本。
-根主题变量不能靠局部包装器重置，进入自管理大屏时整页回退，避免重复缩放。
-完整接线、Teleport 与原生页面缩放边界见 [屏幕适配](/reference/screen-viewport-guide)。
-
-Monorepo 的开发源码 alias 应限定为 `command === 'serve' && !isPreview`，
-并包含传递依赖 viewport；普通 npm 消费者不需要这些 alias。
-生产构建必须先生成公共包 dist，preview 不得借源码掩盖产物遗漏。
-
-## 边界
-
-- 不强制安装自动导入、Devtools 或 viewport 转换插件
-- 无 `@lumal/core` 运行时依赖
+alias仅用于真实Lumal工作区，npm消费者使用公开exports；生产preview读取dist。
+resolver加入已有自动导入插件，不强制安装该插件或全量UI。
+`resolveLumalDevtoolsPlugin({ enabled, factory })`仅开启时调用factory。

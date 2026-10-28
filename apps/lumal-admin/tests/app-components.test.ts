@@ -194,7 +194,7 @@ describe('app settings drawer', () => {
     })
 
     expect(wrapper.find('.el-drawer').attributes('data-title')).toBe('偏好设置')
-    expect(wrapper.find('.el-drawer').attributes('data-size')).toBe('calc(384 * var(--lumal-viewport-unit, 1px))')
+    expect(wrapper.find('.el-drawer').attributes('data-size')).toBe('384px')
     expect(wrapper.text()).toContain('自定义偏好设置 & 实时预览')
 
     await wrapper.find('.theme-panel-stub').trigger('click')

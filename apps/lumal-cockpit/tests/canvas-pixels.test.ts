@@ -2,9 +2,33 @@
 import { Buffer } from 'node:buffer'
 import { PNG } from 'pngjs'
 import { describe, expect, it } from 'vitest'
-import { canvasSampleClip, countCanvasColors } from '../e2e/canvas-pixels'
+import { canvasFullClip, canvasSampleClip, countCanvasColors } from '../e2e/canvas-pixels'
 
 describe('生产 Canvas 截图取样', () => {
+  it('全幅保留原有整数画幅，忽略计算误差', () => {
+    expect(canvasFullClip({ x: 17, y: 80, width: 1886, height: 962 })).toEqual({
+      x: 17,
+      y: 80,
+      width: 1886,
+      height: 962,
+    })
+    expect(canvasFullClip({ x: 17.0000001, y: 80.0000001, width: 1885.9999999, height: 961.9999999 })).toEqual({
+      x: 17,
+      y: 80,
+      width: 1886,
+      height: 962,
+    })
+  })
+
+  it('全幅对小数边界向外取整，不丢弃最外缘像素', () => {
+    expect(canvasFullClip({ x: 4.25, y: 8.75, width: 320.5, height: 180.1 })).toEqual({
+      x: 4,
+      y: 8,
+      width: 321,
+      height: 181,
+    })
+  })
+
   it('全幅画布只采样中央地图，保留实际页面偏移', () => {
     expect(canvasSampleClip({ x: 17, y: 80, width: 1886, height: 962 })).toEqual({
       x: 576,

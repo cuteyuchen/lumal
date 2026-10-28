@@ -49,7 +49,7 @@ const items = computed(() => [{ label: '当前工具', value: tool.value }, { la
             运行
           </ElButton>
         </div>
-        <LumalInfoTable :items="items" label-width="88px" /><p v-if="error" class="utils-error" role="alert">
+        <LumalInfoTable :items="items" :label-width="88" /><p v-if="error" class="utils-error" role="alert">
           {{ error }}
         </p>
       </div>
@@ -58,5 +58,5 @@ const items = computed(() => [{ label: '当前工具', value: tool.value }, { la
 </template>
 
 <style scoped lang="scss">
-.utils-lab{display:grid;grid-template-columns:minmax(280px,1fr) minmax(280px,1fr);gap:24px}.utils-inputs{display:flex;flex-direction:column;gap:14px}.utils-error{grid-column:1/-1;margin:0;color:var(--el-color-danger)}@media(max-width:760px){.utils-lab{grid-template-columns:1fr}}
+.utils-lab{display:grid;grid-template-columns:minmax(280px,1fr) minmax(280px,1fr);gap:24px}.utils-inputs{display:flex;flex-direction:column;gap:14px}.utils-error{grid-column:1/-1;margin:0;color:var(--el-color-danger)}@media(max-width:760px){:global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .utils-lab{grid-template-columns:1fr}}
 </style>

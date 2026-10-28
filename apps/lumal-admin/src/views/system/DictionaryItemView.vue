@@ -3,6 +3,7 @@ import type { SchemaFormItem, SchemaFormModel, SchemaTableColumn, SchemaTableRow
 import type { SaveSystemDictionaryItemInput, SystemDictionaryItemRecord, SystemDictionaryTypeRecord } from '../../api/system'
 import { LumalPage, LumalSchemaForm, LumalSchemaTable } from '@lumal/core/components'
 import { RequestError } from '@lumal/core/request'
+import { viewportLength } from '@lumal/viewport'
 import { ElAlert, ElButton, ElDialog, ElMessage, ElOption, ElSelect } from 'element-plus'
 import { computed, onMounted, shallowRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
@@ -156,7 +157,7 @@ onMounted(() => {
         <small>{{ currentType?.description || '选择分类后维护对应字典项' }}</small>
       </div>
 
-      <LumalSchemaTable :columns="columns" :rows="rows" :error="loadError" row-key="id" action-width="180" @retry="loadData">
+      <LumalSchemaTable :columns="columns" :rows="rows" :error="loadError" row-key="id" :action-width="180" @retry="loadData">
         <template #table-color="{ value }">
           <span class="lumal-dictionary-items__color"><i :style="{ backgroundColor: String(value || '#94a3b8') }" />{{ value || '-' }}</span>
         </template>
@@ -171,7 +172,7 @@ onMounted(() => {
       </LumalSchemaTable>
     </LumalPage>
 
-    <ElDialog v-model="dialogVisible" append-to-body class="lumal-admin-dialog" :title="formMode === 'edit' ? '编辑字典项' : '新增字典项'" width="720px">
+    <ElDialog v-model="dialogVisible" append-to-body class="lumal-admin-dialog" :title="formMode === 'edit' ? '编辑字典项' : '新增字典项'" :width="viewportLength(720)">
       <ElAlert v-if="operationError" :title="operationError" type="error" show-icon :closable="false" />
       <LumalSchemaForm v-model="formModel" :mode="formMode" :schemas="schemas" :columns="2" :submit-loading="saving" show-actions submit-text="保存字典项" @submit="save" />
     </ElDialog>
@@ -184,5 +185,5 @@ onMounted(() => {
 .lumal-dictionary-items__filter small { color:var(--el-text-color-secondary); }
 .lumal-dictionary-items__color { display:inline-flex; gap:8px; align-items:center; }
 .lumal-dictionary-items__color i { width:12px; height:12px; border-radius:3px; box-shadow:0 0 0 1px var(--el-border-color); }
-@media(max-width:768px){.lumal-dictionary-items__filter{grid-template-columns:1fr}.lumal-dictionary-items__filter :deep(.el-select){width:100%}}
+@media(max-width:768px){:global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-dictionary-items__filter{grid-template-columns:1fr}:global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-dictionary-items__filter :deep(.el-select){width:100%}}
 </style>

@@ -25,25 +25,25 @@ Element Plus 图标在 Admin 中从官方 `@element-plus/icons-vue` 预生成为
 
 ## 安装
 
-以下命令显式选择 `0.0.6-beta`；两个图标包保持同版，不依赖 npm 的 `latest` 标签。
+以下命令显式选择 `0.1.0-beta.0`；两个图标包保持同版，不依赖 npm 的 `latest` 标签。
 实际可用性以 registry 为准，候选发布核验前使用本地 tarball。
 
 只使用纯 TypeScript 能力：
 
 ```bash
-pnpm add @lumal/icons@0.0.6-beta
+pnpm add @lumal/icons@0.1.0-beta.0
 ```
 
 Vue 项目同时安装适配层：
 
 ```bash
-pnpm add @lumal/icons@0.0.6-beta @lumal/icons-vue@0.0.6-beta vue@^3.5 @iconify/vue@^5
+pnpm add @lumal/icons@0.1.0-beta.0 @lumal/icons-vue@0.1.0-beta.0 vue@^3.5 @iconify/vue@^5
 ```
 
 不使用 Vue，只使用通用形变时，显式安装可选 peer：
 
 ```bash
-pnpm add @lumal/icons@0.0.6-beta morphicons@2.0.0
+pnpm add @lumal/icons@0.1.0-beta.0 morphicons@2.0.0
 ```
 
 形变从 `/morph` 可选入口加载；使用其他版本时先核对其 `exports` 与类型声明，不把工作区新增 API 当作旧包能力。

@@ -200,11 +200,11 @@ describe('lumal tabs - mobile density', () => {
     expect(mobileEnd).toBeGreaterThan(mobileStart)
     expect(desktopStyles).toMatch(/\.lumal-tabs\s*\{[\s\S]*?height:\s*var\(--lumal-tabbar-height\);/)
     expect(desktopStyles).toMatch(/\.lumal-tabs__tool\s*\{[\s\S]*?flex:\s*0 0 36px;[\s\S]*?width:\s*36px;/)
-    expect(mobileStyles).toMatch(/\.lumal-tabs\s*\{\s*height:\s*40px;/)
+    expect(mobileStyles).toMatch(/\.lumal-tabs\.is-responsive\s*\{\s*height:\s*40px;/)
     expect(mobileStyles).toMatch(/\.lumal-tabs__item\s*\{\s*min-width:\s*72px;/)
     expect(mobileStyles).toMatch(/\.lumal-tabs__tab\s*\{[\s\S]*?padding:\s*0 22px 0 8px;/)
     expect(mobileStyles).toMatch(/\.lumal-tabs__tool\s*\{\s*flex-basis:\s*32px;\s*width:\s*32px;/)
-    expect(mobileStyles).toMatch(/\.lumal-tabs__tool--refresh,\s*\.lumal-tabs__tool--maximize\s*\{\s*display:\s*none;/)
+    expect(mobileStyles).toMatch(/\.lumal-tabs\.is-responsive \.lumal-tabs__tool--refresh,\s*\.lumal-tabs\.is-responsive \.lumal-tabs__tool--maximize\s*\{\s*display:\s*none;/)
   })
 })
 

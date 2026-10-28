@@ -9,9 +9,7 @@ import './style/designer-polish.scss'
 
 /***********************composables*********************/
 export {
-  computeCanvasScale,
   DEFAULT_COCKPIT_AUTO_REFRESH_INTERVAL_MS,
-  useCanvasScale,
   useCockpit,
   useCockpitAutoRefresh,
   useCockpitContext,
@@ -19,7 +17,6 @@ export {
 } from './composables'
 
 export type {
-  CanvasScaleResult,
   UseCockpitAutoRefreshOptions,
   UseCockpitAutoRefreshReturn,
   UseCockpitOptions,
@@ -105,7 +102,6 @@ export type {
   CockpitRenderMode,
   CockpitSide,
   CockpitThemeMode,
-  CockpitViewportMode,
   CockpitWidgetContext,
   CockpitWidgetInstance,
 } from './types'

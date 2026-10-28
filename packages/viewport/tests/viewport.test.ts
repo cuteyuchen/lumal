@@ -12,7 +12,7 @@ afterEach(() => {
 
 describe('唯一的宽度契约', () => {
   const config = { enabled: true, designWidth: 1920 }
-  it.each([[1280, 128], [1920, 192], [2560, 256]])('W=%s 时 192px 为 %s 实际像素', (width, expected) => {
+  it.each([[1280, 128], [1920, 192], [2560, 256]])('w=%s 时 192px 为 %s 实际像素', (width, expected) => {
     expect(viewportLength(192, config)).toBe('10vw')
     expect(viewportPixels(192, width, config)).toBe(expected)
     expect(viewportPixels(96, width, config)).toBe(expected / 2)
@@ -34,7 +34,7 @@ describe('唯一的宽度契约', () => {
     expect(getViewportWidth()).toBe(1263)
     expect(document.documentElement.children).toHaveLength(children)
   })
-  it('SSR 不触碰 DOM，CSS 长度可直接渲染', async () => {
+  it('sSR 不触碰 DOM，CSS 长度可直接渲染', async () => {
     vi.stubGlobal('window', undefined)
     expect(getViewportWidth()).toBe(0)
     const html = await renderToString(createSSRApp({
@@ -76,7 +76,7 @@ describe('共享窗口宽度与生命周期', () => {
     vi.runOnlyPendingTimers()
     expect(remove.mock.calls.filter(call => call[0] === 'resize')).toHaveLength(1)
   })
-  it('KeepAlive 停用释放窗口监听，激活后重测且不重建内容', async () => {
+  it('keepAlive 停用释放窗口监听，激活后重测且不重建内容', async () => {
     vi.stubGlobal('innerWidth', 1280)
     const visible = shallowRef(true)
     let setups = 0
@@ -158,7 +158,7 @@ describe('容器测量与宽度适配独立', () => {
     wrapper.unmount()
     expect(remove).toHaveBeenCalledWith('resize', resize[0]![1])
   })
-  it('KeepAlive 只重测容器，不以其宽度替换浏览器适配基准', async () => {
+  it('keepAlive 只重测容器，不以其宽度替换浏览器适配基准', async () => {
     vi.useFakeTimers()
     const observers: { callback: () => void, disconnect: ReturnType<typeof vi.fn> }[] = []
     vi.stubGlobal('ResizeObserver', class {

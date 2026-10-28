@@ -1,7 +1,5 @@
 import { registerAuthorityDirectives } from '@lumal/core/directives'
 import { createLumalAdmin } from '@lumal/core/minimal'
-import { createViewportPlugin } from '@lumal/viewport'
-import { viewportDesign } from '../viewport.config'
 import App from './App.vue'
 import { localIcons, registerAdminIcons } from './icons'
 import { router } from './router'
@@ -17,6 +15,13 @@ import './styles.scss'
 registerAdminIcons()
 
 /***********************应用启动*********************/
+try {
+  // 仅删除已移除的适配模式偏好，不触碰认证、业务和主题数据。
+  localStorage.removeItem('lumal-admin:workspace-viewport')
+}
+catch {
+  // 禁用本地存储不影响应用启动。
+}
 void createLumalAdmin({
   rootComponent: App,
   router,
@@ -29,6 +34,5 @@ void createLumalAdmin({
   permissionStore,
   setup({ app }) {
     registerAuthorityDirectives(app, permissionStore)
-    app.use(createViewportPlugin({ ...viewportDesign, mode: 'responsive' }))
   },
 }).mount('#app')

@@ -2,6 +2,7 @@
 import type { CSSProperties } from 'vue'
 import type { LumalLayoutTabItem, LumalTabStyle } from './types'
 import { LumalIcon } from '@lumal/icons-vue'
+import { getViewportConfig, viewportPixels } from '@lumal/viewport'
 import Sortable from 'sortablejs'
 import {
   computed,
@@ -50,7 +51,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   activePath: '',
   draggable: true,
-  responsive: true,
+  responsive: () => !getViewportConfig().enabled,
   fullscreenTarget: '[data-layout-fullscreen-target]',
   middleClickToClose: true,
   showIcon: true,
@@ -273,8 +274,9 @@ const MENU_MIN_HEIGHT = 220
 
 function clampMenuPosition(clientX: number, clientY: number): CSSProperties {
   return {
-    left: `${Math.max(8, Math.min(clientX, window.innerWidth - MENU_WIDTH - 8))}px`,
-    top: `${Math.max(8, Math.min(clientY, window.innerHeight - MENU_MIN_HEIGHT - 8))}px`,
+    // 指针是实际像素，仅换算菜单自身的设计宽高以约束边界。
+    left: `${Math.max(8, Math.min(clientX, window.innerWidth - viewportPixels(MENU_WIDTH) - 8))}px`,
+    top: `${Math.max(8, Math.min(clientY, window.innerHeight - viewportPixels(MENU_MIN_HEIGHT) - 8))}px`,
   }
 }
 
@@ -597,7 +599,7 @@ onBeforeUnmount(() => {
   <div
     v-if="visible && tabs.length"
     class="lumal-tabs"
-    :class="[`is-style-${styleType}`]"
+    :class="[`is-style-${styleType}`, { 'is-responsive': responsive }]"
   >
     <button
       v-show="showScrollButtons"
@@ -789,7 +791,7 @@ onBeforeUnmount(() => {
   position: relative;
   display: flex;
   min-width: 88px;
-  max-width: min(240px, 32vw);
+  max-width: 240px;
   align-items: center;
   border-radius: var(--lumal-radius-small) var(--lumal-radius-small) 0 0;
   color: var(--el-text-color-regular);
@@ -1011,36 +1013,36 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
-  .lumal-tabs {
+  .lumal-tabs.is-responsive {
     height: 40px;
   }
 
-  .lumal-tabs__list {
+  .lumal-tabs.is-responsive .lumal-tabs__list {
     gap: 1px;
     padding: 3px 4px 0;
   }
 
-  .lumal-tabs__item {
+  .lumal-tabs.is-responsive .lumal-tabs__item {
     min-width: 72px;
     max-width: min(180px, 42vw);
   }
 
-  .lumal-tabs__tab {
+  .lumal-tabs.is-responsive .lumal-tabs__tab {
     gap: 4px;
     padding: 0 22px 0 8px;
   }
 
-  .lumal-tabs__close {
+  .lumal-tabs.is-responsive .lumal-tabs__close {
     right: 5px;
   }
 
-  .lumal-tabs__tool {
+  .lumal-tabs.is-responsive .lumal-tabs__tool {
     flex-basis: 32px;
     width: 32px;
   }
 
-  .lumal-tabs__tool--refresh,
-  .lumal-tabs__tool--maximize {
+  .lumal-tabs.is-responsive .lumal-tabs__tool--refresh,
+  .lumal-tabs.is-responsive .lumal-tabs__tool--maximize {
     display: none;
   }
 }

@@ -15,6 +15,5 @@ export type {
   RouterMode,
   ScreenAuth,
   ScreenData,
-  ScreenViewport,
   ScreenVisualization,
 } from './types.js'

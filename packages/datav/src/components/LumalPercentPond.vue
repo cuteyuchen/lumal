@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PercentPondConfig } from '../types'
+import { useViewportWidth } from '@lumal/viewport'
 import { computed, useId, useTemplateRef } from 'vue'
 import { useElementSize } from '../composables/useElementSize'
 import { clampPercent } from '../utils'
@@ -26,6 +27,7 @@ const props = withDefaults(defineProps<{
 
 const root = useTemplateRef<HTMLElement>('root')
 const size = useElementSize(root)
+const { pixels } = useViewportWidth()
 const instanceId = useId().replaceAll(':', '')
 const borderGradientId = `lumal-percent-pond-border-${instanceId}`
 const progressGradientId = `lumal-percent-pond-progress-${instanceId}`
@@ -37,16 +39,16 @@ const colors = computed(() => props.colors ?? props.config?.colors ?? ['#3DE7C9'
 const shape = computed(() => props.shape ?? 'bar')
 const formatter = computed(() => props.formatter ?? props.config?.formatter ?? '{value}%')
 const showLabel = computed(() => props.showLabel ?? true)
-const lineDash = computed(() => props.lineDash ?? props.config?.lineDash ?? [5, 1])
+const lineDash = computed(() => (props.lineDash ?? props.config?.lineDash ?? [5, 1]).map(value => pixels(value)))
 const textColor = computed(() => props.textColor ?? props.config?.textColor ?? '#fff')
 const localGradient = computed(() => props.localGradient ?? props.config?.localGradient ?? false)
-const safeBorderWidth = computed(() => Math.max(0, props.borderWidth ?? props.config?.borderWidth ?? 3))
-const safeBorderGap = computed(() => Math.max(0, props.borderGap ?? props.config?.borderGap ?? 3))
+const safeBorderWidth = computed(() => pixels(Math.max(0, props.borderWidth ?? props.config?.borderWidth ?? 3)))
+const safeBorderGap = computed(() => pixels(Math.max(0, props.borderGap ?? props.config?.borderGap ?? 3)))
 const rectWidth = computed(() => Math.max(0, width.value - safeBorderWidth.value))
 const rectHeight = computed(() => Math.max(0, height.value - safeBorderWidth.value))
 const borderRadius = computed(() => shape.value === 'capsule'
   ? Math.max(0, height.value / 2)
-  : Math.max(0, props.borderRadius ?? props.config?.borderRadius ?? 5))
+  : pixels(Math.max(0, props.borderRadius ?? props.config?.borderRadius ?? 5)))
 
 /** DataV percentPond 原生几何：进度线不按圆角边框额外裁剪。 */
 const inset = computed(() => safeBorderWidth.value + safeBorderGap.value)

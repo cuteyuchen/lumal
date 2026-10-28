@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'vue'
 import type { DataValueItem, DataValueKey, ScrollBoardRowKey } from './types'
+import { viewportLength } from '@lumal/viewport'
 
 export function clampPercent(value: number): number {
   if (!Number.isFinite(value))
@@ -12,7 +13,7 @@ export function positiveInteger(value: number, fallback: number): number {
 }
 
 export function cssSize(value: number | string | undefined): string | undefined {
-  return typeof value === 'number' ? `${value}px` : value
+  return typeof value === 'number' ? viewportLength(value) : value
 }
 
 export function colorStyle(colors?: readonly [string, string], background?: string, duration?: number): CSSProperties {

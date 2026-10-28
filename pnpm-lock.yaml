@@ -81,25 +81,25 @@ importers:
         specifier: ^5.0.0
         version: 5.0.1(vue@3.5.39(typescript@6.0.3))
       '@lumal/charts':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/charts
       '@lumal/cockpit':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/cockpit
       '@lumal/core':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/core
       '@lumal/datav':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/datav
       '@lumal/icons':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/icons
       '@lumal/icons-vue':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/icons-vue
       '@lumal/viewport':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/viewport
       echarts:
         specifier: ^6.1.0
@@ -118,7 +118,7 @@ importers:
         version: 4.6.4(vue@3.5.39(typescript@6.0.3))
     devDependencies:
       '@lumal/vite':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/vite
       '@vitejs/plugin-vue':
         specifier: ^6.0.1
@@ -136,22 +136,22 @@ importers:
   apps/lumal-cockpit:
     dependencies:
       '@lumal/charts':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/charts
       '@lumal/cockpit':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/cockpit
       '@lumal/core':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/core
       '@lumal/datav':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/datav
       '@lumal/icons-vue':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/icons-vue
       '@lumal/viewport':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/viewport
       cesium:
         specifier: 1.143.0
@@ -178,6 +178,9 @@ importers:
         specifier: ^8.3.2
         version: 8.3.2(echarts@6.1.0)(vue@3.5.39(typescript@6.0.3))
     devDependencies:
+      '@lumal/vite':
+        specifier: 0.1.0-beta.0
+        version: link:../../packages/vite
       '@vitejs/plugin-vue':
         specifier: ^6.0.1
         version: 6.0.7(vite@8.1.4(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.49.0)(yaml@2.9.0))(vue@3.5.39(typescript@6.0.3))
@@ -197,16 +200,16 @@ importers:
   apps/lumal-datav-guide:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/core
       '@lumal/datav':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/datav
       '@lumal/icons':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/icons
       '@lumal/icons-vue':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/icons-vue
       echarts:
         specifier: ^6.1.0
@@ -221,6 +224,9 @@ importers:
         specifier: ^4.5.0
         version: 4.6.4(vue@3.5.39(typescript@6.0.3))
     devDependencies:
+      '@lumal/vite':
+        specifier: 0.1.0-beta.0
+        version: link:../../packages/vite
       '@vitejs/plugin-vue':
         specifier: ^6.0.1
         version: 6.0.7(vite@8.1.4(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.49.0)(yaml@2.9.0))(vue@3.5.39(typescript@6.0.3))
@@ -243,7 +249,7 @@ importers:
   apps/lumal-mock-api:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/core
       h3:
         specifier: 1.15.11
@@ -282,20 +288,24 @@ importers:
       vue-router:
         specifier: ^4.5.0
         version: 4.6.4(vue@3.5.39(typescript@6.0.3))
+    devDependencies:
+      '@lumal/vite':
+        specifier: 0.1.0-beta.0
+        version: link:../../packages/vite
 
   apps/vben-compat-demo:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/core
       '@lumal/icons':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/icons
       '@lumal/icons-vue':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/icons-vue
       '@lumal/vben-compat':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../../packages/vben-compat
       element-plus:
         specifier: ^2.11.0
@@ -304,6 +314,9 @@ importers:
         specifier: ^3.5.0
         version: 3.5.39(typescript@6.0.3)
     devDependencies:
+      '@lumal/vite':
+        specifier: 0.1.0-beta.0
+        version: link:../../packages/vite
       '@vitejs/plugin-vue':
         specifier: ^6.0.1
         version: 6.0.7(vite@8.1.4(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.49.0)(yaml@2.9.0))(vue@3.5.39(typescript@6.0.3))
@@ -319,6 +332,9 @@ importers:
 
   packages/charts:
     dependencies:
+      '@lumal/viewport':
+        specifier: workspace:*
+        version: link:../viewport
       vue:
         specifier: ^3.5.0
         version: 3.5.39(typescript@6.0.3)
@@ -333,13 +349,13 @@ importers:
   packages/cockpit:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../core
       '@lumal/icons-vue':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../icons-vue
       '@lumal/viewport':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../viewport
       element-plus:
         specifier: ^2.11.0
@@ -358,11 +374,14 @@ importers:
   packages/core:
     dependencies:
       '@lumal/icons':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../icons
       '@lumal/icons-vue':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../icons-vue
+      '@lumal/viewport':
+        specifier: 0.1.0-beta.0
+        version: link:../viewport
       element-plus:
         specifier: ^2.11.0
         version: 2.14.2(vue@3.5.39(typescript@6.0.3))
@@ -399,7 +418,7 @@ importers:
         specifier: 0.2.18
         version: 0.2.18
       '@lumal/viewport':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../viewport
       vue:
         specifier: ^3.5.0
@@ -421,8 +440,11 @@ importers:
         specifier: ^5.0.0
         version: 5.0.1(vue@3.5.39(typescript@6.0.3))
       '@lumal/icons':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../icons
+      '@lumal/viewport':
+        specifier: 0.1.0-beta.0
+        version: link:../viewport
       morphicons:
         specifier: 2.0.0
         version: 2.0.0(vue@3.5.39(typescript@6.0.3))
@@ -433,11 +455,14 @@ importers:
   packages/vben-compat:
     dependencies:
       '@lumal/core':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../core
       '@lumal/icons-vue':
-        specifier: 0.0.6-beta
+        specifier: 0.1.0-beta.0
         version: link:../icons-vue
+      '@lumal/viewport':
+        specifier: 0.1.0-beta.0
+        version: link:../viewport
       vue:
         specifier: ^3.5.0
         version: 3.5.39(typescript@6.0.3)

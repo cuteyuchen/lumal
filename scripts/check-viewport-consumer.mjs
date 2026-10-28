@@ -11,7 +11,7 @@ const root = resolve(import.meta.dirname, '..')
 const app = join(root, 'apps/lumal-viewport-lab')
 const evidence = join(root, 'output/playwright/viewport')
 const reportFile = join(root, 'output/release/viewport-report.json')
-const sizes = [[1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]]
+const sizes = [[1280, 720], [1366, 768], [1920, 720], [1920, 920], [1920, 1080], [2560, 1440]]
 const zooms = [0.8, 1, 1.25, 1.5]
 
 async function readMetrics(page) {
@@ -38,6 +38,10 @@ async function readMetrics(page) {
       bodyTransform: getComputedStyle(document.body).transform,
       rootFontSize: getComputedStyle(document.documentElement).fontSize,
       bodyFontSize: getComputedStyle(document.body).fontSize,
+      main: {
+        height: document.querySelector('.lab-main').clientHeight,
+        scrollHeight: document.querySelector('.lab-main').scrollHeight,
+      },
     }
   })
 }
@@ -60,32 +64,6 @@ async function changeMapView(page) {
   return state
 }
 
-async function legacyConstraintProbe(page) {
-  return page.getByTestId('workspace').evaluate((workspace) => {
-    const bounds = workspace.getBoundingClientRect()
-    const parent = document.createElement('div')
-    const child = document.createElement('div')
-    Object.assign(parent.style, { position: 'fixed', left: '-100000px', top: '0', width: `${bounds.width}px`, height: `${bounds.height}px`, overflow: 'auto' })
-    Object.assign(child.style, { width: '100%', height: '100%', minWidth: '1280px', minHeight: '660px' })
-    parent.append(child)
-    document.body.append(parent)
-    try {
-      return {
-        label: '合成旧约束探针，非实际业务系统运行结果',
-        availableWidth: bounds.width,
-        availableHeight: bounds.height,
-        scrollWidth: parent.scrollWidth,
-        scrollHeight: parent.scrollHeight,
-        horizontalOverflow: parent.scrollWidth > parent.clientWidth + 1,
-        verticalOverflow: parent.scrollHeight > parent.clientHeight + 1,
-      }
-    }
-    finally {
-      parent.remove()
-    }
-  })
-}
-
 async function verifyLayout(page, mapState) {
   expect(await readMapState(page)).toEqual(mapState)
   await expect.poll(async () => {
@@ -99,6 +77,9 @@ async function verifyLayout(page, mapState) {
   expect(metrics.rootTransform).toBe('none')
   expect(metrics.bodyTransform).toBe('none')
   const workspace = metrics.boxes.workspace
+  expect(workspace.height).toBeCloseTo(900 * metrics.innerWidth / 1920, 0)
+  if (workspace.height > metrics.main.height + 1)
+    expect(metrics.main.scrollHeight).toBeGreaterThan(metrics.main.height)
   for (const name of ['tools', 'risk', 'statistics', 'legend', 'trend']) {
     const box = metrics.boxes[name]
     expect(box.x).toBeGreaterThanOrEqual(workspace.x - 1)
@@ -106,14 +87,14 @@ async function verifyLayout(page, mapState) {
     expect(box.right).toBeLessThanOrEqual(workspace.right + 1)
     expect(box.bottom).toBeLessThanOrEqual(workspace.bottom + 1)
     expect(box.height).toBeGreaterThan(20)
-    expect(Number.parseFloat(box.fontSize)).toBeGreaterThanOrEqual(12)
+    expect(Number.parseFloat(box.fontSize)).toBeCloseTo(14 * metrics.innerWidth / 1920, 1)
   }
   expect(metrics.boxes.risk.bottom).toBeLessThan(metrics.boxes.legend.y)
   expect(metrics.boxes.statistics.bottom).toBeLessThan(metrics.boxes.trend.y)
   const map = page.getByTestId('map')
   const count = Number(await map.getAttribute('data-clicks'))
   // 点击未被浮层覆盖的地图中心，验证真实引擎的坐标反算精度。
-  await page.mouse.click(workspace.x + workspace.width / 2, workspace.y + workspace.height / 2)
+  await page.mouse.click(workspace.x + workspace.width / 2, metrics.boxes.tools.bottom + 24)
   await expect(map).toHaveAttribute('data-clicks', String(count + 1))
   expect(Number(await map.getAttribute('data-click-error'))).toBeLessThan(0.1)
   expect(await page.getByTestId('chart').locator('canvas').count()).toBeGreaterThan(0)
@@ -125,7 +106,7 @@ async function verifyLayout(page, mapState) {
     })
     expect(nonblank, `${name} Canvas 不得空白`).toBe(true)
   }
-  return { ...await readMetrics(page), legacyConstraintProbe: await legacyConstraintProbe(page) }
+  return readMetrics(page)
 }
 
 async function verifyOverlaysAndCache(page, mapState) {
@@ -153,8 +134,8 @@ async function verifyOverlaysAndCache(page, mapState) {
   await option.click()
   await page.getByRole('link', { name: '系统管理' }).click()
   await expect(page.getByTestId('system')).toBeVisible()
-  expect(await page.locator('[data-viewport-mode]').getAttribute('data-viewport-mode')).toBe('disabled')
-  expect(await page.getByTestId('system').evaluate(el => getComputedStyle(el).fontSize)).toBe('14px')
+  expect(await page.locator('[data-viewport-mode]').count()).toBe(0)
+  expect(Number.parseFloat(await page.getByTestId('system').evaluate(el => getComputedStyle(el).fontSize))).toBeCloseTo(14 * metrics.innerWidth / 1920, 1)
   await page.getByRole('link', { name: '工作台' }).click()
   await expect(page.getByTestId('workspace')).toBeVisible()
   expect(await readMapState(page)).toEqual(mapState)
@@ -186,26 +167,26 @@ async function verifyStableResizeCounters(page) {
   }
 }
 
-async function readScaleMetrics(page) {
+async function readWidthMetrics(page) {
   return page.evaluate(() => {
-    const boxes = Object.fromEntries(['scale-host', 'scale-canvas', 'scale-hotspot', 'scale-select', 'scale-dialog-trigger'].map((name) => {
+    const boxes = Object.fromEntries(['width-page', 'width-probe', 'width-hotspot', 'width-select', 'width-dialog-trigger'].map((name) => {
       const element = document.querySelector(`[data-testid="${name}"]`)
       const box = element.getBoundingClientRect()
       return [name, { x: box.x, y: box.y, width: box.width, height: box.height, right: box.right, bottom: box.bottom }]
     }))
-    const host = document.querySelector('[data-testid="scale-host"]')
+    const probe = document.querySelector('[data-testid="width-probe"]')
+    const main = document.querySelector('.lab-main')
     return {
       innerWidth,
       innerHeight,
       devicePixelRatio,
       boxes,
-      mode: host.dataset.viewportMode,
-      clientWidth: host.clientWidth,
-      clientHeight: host.clientHeight,
-      scrollWidth: host.scrollWidth,
-      scrollHeight: host.scrollHeight,
-      scrollLeft: host.scrollLeft,
-      scrollTop: host.scrollTop,
+      numericWidth: Number(document.querySelector('[data-testid="numeric-width"]').textContent),
+      fontSize: Number.parseFloat(getComputedStyle(probe).fontSize),
+      lineHeight: Number.parseFloat(getComputedStyle(probe).lineHeight),
+      transform: getComputedStyle(document.querySelector('[data-testid="width-page"]')).transform,
+      clientHeight: main.clientHeight,
+      scrollHeight: main.scrollHeight,
       pageScrollWidth: document.documentElement.scrollWidth,
       pageScrollHeight: document.documentElement.scrollHeight,
       rootTransform: getComputedStyle(document.documentElement).transform,
@@ -230,59 +211,46 @@ function expectAnchored(box, trigger) {
   expect(verticalGap).toBeLessThan(20)
 }
 
-async function verifyScaledOverlays(page, mode) {
-  await expect(page.getByTestId('scale-canvas')).toBeVisible()
-  await expect(page.getByTestId('scale-host')).toHaveAttribute('data-viewport-mode', mode)
-  await page.getByTestId('scale-host').evaluate((element) => {
+async function verifyWidthOverlays(page) {
+  await expect(page.getByTestId('width-page')).toBeVisible()
+  await page.locator('.lab-main').evaluate((element) => {
     element.scrollTop = 0
     element.scrollLeft = 0
   })
   await expect.poll(async () => {
-    const current = await readScaleMetrics(page)
-    const scale = mode === 'width' ? current.clientWidth / 1280 : Math.min(current.clientWidth / 1280, current.clientHeight / 720)
-    return Math.abs(current.boxes['scale-canvas'].width - 1280 * scale) < 1
-      && current.boxes['scale-hotspot'].height >= 35
-      && current.boxes['scale-select'].height >= 35
+    const current = await readWidthMetrics(page)
+    return Math.abs(current.boxes['width-probe'].width - current.numericWidth) < 0.1
   }).toBe(true)
-  const metrics = await readScaleMetrics(page)
+  const metrics = await readWidthMetrics(page)
+  const ratio = metrics.innerWidth / 1920
   expect(metrics.rootTransform).toBe('none')
   expect(metrics.bodyTransform).toBe('none')
-  expect(metrics.rootFontSize).toBe('16px')
-  expect(metrics.bodyFontSize).toBe('14px')
   expect(metrics.pageScrollWidth).toBeLessThanOrEqual(metrics.innerWidth + 1)
   expect(metrics.pageScrollHeight).toBeLessThanOrEqual(metrics.innerHeight + 1)
-  const host = metrics.boxes['scale-host']
-  const canvas = metrics.boxes['scale-canvas']
-  if (mode === 'contain') {
-    expect(canvas.x).toBeGreaterThanOrEqual(host.x - 1)
-    expect(canvas.y).toBeGreaterThanOrEqual(host.y - 1)
-    expect(canvas.right).toBeLessThanOrEqual(host.right + 1)
-    expect(canvas.bottom).toBeLessThanOrEqual(host.bottom + 1)
-    expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth + 1)
-    expect(metrics.scrollHeight).toBeLessThanOrEqual(metrics.clientHeight + 1)
-  }
-  else {
-    expect(Math.abs(canvas.width - metrics.clientWidth)).toBeLessThanOrEqual(1)
-    expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth + 1)
-  }
-  expect(canvas.width / canvas.height).toBeCloseTo(1280 / 720, 3)
-  expect(metrics.boxes['scale-hotspot'].height).toBeGreaterThanOrEqual(32)
-  expect(metrics.boxes['scale-select'].height).toBeGreaterThanOrEqual(32)
-  const hotspot = page.getByTestId('scale-hotspot')
+  expect(metrics.transform).toBe('none')
+  expect(metrics.boxes['width-page'].width).toBeCloseTo(1280 * ratio, 0)
+  expect(metrics.boxes['width-page'].height).toBeCloseTo(900 * ratio, 0)
+  expect(metrics.boxes['width-probe'].width).toBeCloseTo(192 * ratio, 1)
+  expect(metrics.boxes['width-probe'].height).toBeCloseTo(96 * ratio, 1)
+  expect(metrics.fontSize).toBeCloseTo(14 * ratio, 1)
+  expect(metrics.lineHeight).toBeCloseTo(20 * ratio, 1)
+  if (metrics.boxes['width-page'].height > metrics.clientHeight + 1)
+    expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight)
+  const hotspot = page.getByTestId('width-hotspot')
   const before = Number((await hotspot.textContent()).replace(/\D/g, ''))
   await hotspot.click()
   await expect(hotspot).toHaveText(`计数 ${before + 1}`)
-  await page.getByTestId('scale-select').click()
+  await page.getByTestId('width-select').click()
   const option = page.getByRole('option', { name: '画布分组 A' })
   await expect(option).toBeVisible()
   const dropdown = await page.locator('.el-select__popper:visible').boundingBox()
   expectInWindow(dropdown, metrics)
-  expectAnchored(dropdown, await page.getByTestId('scale-select').boundingBox())
+  expectAnchored(dropdown, await page.getByTestId('width-select').boundingBox())
   await option.click()
-  await expect(page.getByTestId('scale-selection')).toHaveText('a')
-  const trigger = page.getByTestId('scale-dialog-trigger')
+  await expect(page.getByTestId('width-selection')).toHaveText('a')
+  const trigger = page.getByTestId('width-dialog-trigger')
   await trigger.hover()
-  const tooltip = page.getByRole('tooltip', { name: '局部画布详情' })
+  const tooltip = page.getByRole('tooltip', { name: '业务面板详情' })
   await expect(tooltip).toBeVisible()
   const tooltipBox = await tooltip.boundingBox()
   expectInWindow(tooltipBox, metrics)
@@ -295,8 +263,9 @@ async function verifyScaledOverlays(page, mode) {
   await expect(dialogPanel).toBeVisible()
   const dialogBox = await dialogPanel.boundingBox()
   expectInWindow(dialogBox, metrics)
-  await expect(page.getByTestId('scale-dialog-action')).toHaveCSS('font-size', '14px')
-  await page.getByTestId('scale-dialog-action').click()
+  expect(dialogBox.width).toBeCloseTo(520 * ratio, 0)
+  expect(Number.parseFloat(await page.getByTestId('width-dialog-action').evaluate(el => getComputedStyle(el).fontSize))).toBeCloseTo(14 * ratio, 1)
+  await page.getByTestId('width-dialog-action').click()
   await expect(hotspot).toHaveText(`计数 ${before + 2}`)
   await page.keyboard.press('Escape')
   await expect(dialog).not.toBeVisible()
@@ -312,7 +281,8 @@ async function main() {
     sizes,
     zooms,
     results: [],
-    scaleResults: [],
+    widthResults: [],
+    scrollbarResults: [],
     lifecycleResults: [],
     runtimeErrors: [],
     pageErrors: [],
@@ -368,7 +338,12 @@ async function main() {
     cdp = await context.newCDPSession(page)
     const { windowId } = await cdp.send('Browser.getWindowForTarget')
     for (const [environment, url] of [['production', preview.url], ['development', devUrl]]) {
+      report.currentCheck = { environment, kind: 'initial-map-interaction' }
       await page.goto(url)
+      await browserZoom(worker, url, 1)
+      await resizeNativeWindow(page, cdp, windowId, 1280, 720)
+      // OpenLayers 的初始分辨率约束受容器大小影响，两轮从相同窗口重新创建夹具。
+      await page.reload()
       await expect(page.getByTestId('workspace')).toBeVisible()
       const mapState = await changeMapView(page)
       for (const [width, height] of sizes) {
@@ -392,20 +367,40 @@ async function main() {
       report.lifecycleResults.push({ environment, mapState, overlaysAndCache, ...await verifyStableResizeCounters(page), status: 'passed' })
       await browserZoom(worker, url, 1)
       await resizeNativeWindow(page, cdp, windowId, 1280, 720)
-      for (const mode of ['contain', 'width']) {
-        for (const zoom of [0.8, 1.5]) {
+      for (const [width, height] of sizes) {
+        await browserZoom(worker, url, 1)
+        await resizeNativeWindow(page, cdp, windowId, width, height)
+        for (const zoom of [0.8, 1, 1.5]) {
           const actualZoom = await browserZoom(worker, url, zoom)
-          await page.getByRole('link', { name: mode === 'contain' ? '完整缩放' : '宽度缩放' }).click()
-          report.currentCheck = { environment, kind: 'local-scale', mode, zoom }
-          const result = { environment, requestedWindowContent: { width: 1280, height: 720 }, requestedZoom: zoom, actualZoom, ...await verifyScaledOverlays(page, mode) }
+          await page.getByRole('link', { name: '宽度适配' }).click()
+          report.currentCheck = { environment, kind: 'width', width, height, zoom }
+          const result = { environment, requestedWindowContent: { width, height }, requestedZoom: zoom, actualZoom, ...await verifyWidthOverlays(page) }
           if (environment === 'production')
-            result.screenshotSize = await captureNativeScreenshot(cdp, join(evidence, `local-${mode}-${zoom}.png`))
-          report.scaleResults.push(result)
+            result.screenshotSize = await captureNativeScreenshot(cdp, join(evidence, `width-${width}x${height}-${zoom}.png`))
+          report.widthResults.push(result)
         }
       }
+      // 强制根滚动条和稳定 gutter，数字基准必须继续等于真正的 CSS vw。
+      for (const gutter of ['auto', 'stable']) {
+        await page.evaluate((gutter) => {
+          document.documentElement.style.overflowY = 'scroll'
+          document.documentElement.style.scrollbarGutter = gutter
+          window.dispatchEvent(new Event('resize'))
+        }, gutter)
+        await expect.poll(async () => {
+          const current = await readWidthMetrics(page)
+          return Math.abs(current.boxes['width-probe'].width - current.numericWidth)
+        }).toBeLessThan(0.1)
+        report.scrollbarResults.push({ environment, gutter, ...await readWidthMetrics(page), status: 'passed' })
+      }
+      await page.evaluate(() => {
+        document.documentElement.style.overflowY = ''
+        document.documentElement.style.scrollbarGutter = ''
+        window.dispatchEvent(new Event('resize'))
+      })
       await page.getByRole('link', { name: '系统管理' }).click()
       await expect(page.getByTestId('system')).toBeVisible()
-      expect(await page.getByTestId('system').evaluate(el => getComputedStyle(el).fontSize)).toBe('14px')
+      expect(Number.parseFloat(await page.getByTestId('system').evaluate(el => getComputedStyle(el).fontSize))).toBeCloseTo(14 * await page.evaluate(() => innerWidth) / 1920, 1)
       expect(await page.getByTestId('system').evaluate(el => getComputedStyle(el).transform)).toBe('none')
       const runtimeErrors = await page.evaluate(() => globalThis.__lumalRuntimeErrors)
       report.runtimeErrors.push({ environment, errors: runtimeErrors })
@@ -416,13 +411,13 @@ async function main() {
     report.status = 'passed'
     delete report.currentCheck
     await rm(join(evidence, 'failed.png'), { force: true })
-    console.log(`视口验收通过：${report.results.length} 组工作区、${report.scaleResults.length} 组局部缩放、${report.lifecycleResults.length} 组实例与稳定窗口检查。`)
+    console.log(`视口验收通过：${report.results.length} 组工作区、${report.widthResults.length} 组宽度与浮层、${report.lifecycleResults.length} 组实例与稳定窗口检查。`)
   }
   catch (error) {
     report.status = 'failed'
     report.failure = String(error)
     if (page) {
-      report.diagnostics = await readMetrics(page).catch(() => readScaleMetrics(page)).catch(() => null)
+      report.diagnostics = await readMetrics(page).catch(() => readWidthMetrics(page)).catch(() => null)
       report.runtimeErrorsOnFailure = await page.evaluate(() => globalThis.__lumalRuntimeErrors).catch(() => [])
       await captureNativeScreenshot(cdp, join(evidence, 'failed.png')).catch(() => {})
     }

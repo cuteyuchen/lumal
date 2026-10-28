@@ -7,10 +7,11 @@ import type {
   ScrollBoardEventPayload,
   ScrollBoardRowKey,
 } from '../types'
+import { useViewportWidth } from '@lumal/viewport'
 import { computed, shallowRef, useSlots, useTemplateRef, watch } from 'vue'
 import { useDataVScrollAnimation } from '../composables/useDataVScrollAnimation'
 import { useElementSize } from '../composables/useElementSize'
-import { cssSize, positiveInteger, resolveRowKey } from '../utils'
+import { positiveInteger, resolveRowKey } from '../utils'
 
 const props = withDefaults(defineProps<{
   config?: ScrollBoardConfig
@@ -63,6 +64,7 @@ interface RenderEntry extends BoardEntry {
 }
 
 const rootRef = useTemplateRef<HTMLElement>('rootRef')
+const { pixels } = useViewportWidth()
 const slots = useSlots()
 const size = useElementSize(rootRef)
 const configData = shallowRef<readonly (readonly unknown[])[]>(props.config.data ?? [])
@@ -106,8 +108,8 @@ const entries = computed<BoardEntry[]>(() => {
 const columnCount = computed(() => entries.value[0]?.cells.length ?? header.value.length)
 const widths = computed<Array<number | string | undefined>>(() => {
   if (!configMode.value)
-    return props.columns.map(column => column.width)
-  const specified = props.config.columnWidth ?? []
+    return props.columns.map(column => typeof column.width === 'number' ? pixels(column.width) : column.width)
+  const specified = (props.config.columnWidth ?? []).map(pixels)
   const usedWidth = specified.reduce((total, width) => total + width, 0)
   const unspecified = columnCount.value - specified.length
   const average = unspecified > 0 ? (size.value.width - usedWidth) / unspecified : 0
@@ -115,7 +117,7 @@ const widths = computed<Array<number | string | undefined>>(() => {
 })
 const aligns = computed(() => Array.from({ length: columnCount.value }, (_, index) =>
   configMode.value ? props.config.align?.[index] ?? 'left' : props.columns[index]?.align ?? 'left'))
-const headerHeight = computed(() => header.value.length ? Math.max(0, props.config.headerHeight ?? 35) : 0)
+const headerHeight = computed(() => header.value.length ? pixels(Math.max(0, props.config.headerHeight ?? 35)) : 0)
 const rowsHeight = computed(() => Math.max(0, size.value.height - headerHeight.value))
 const averageHeight = computed(() => rowsHeight.value / rowCount.value)
 
@@ -175,7 +177,8 @@ function columnStyle(index: number): CSSProperties {
   return {
     flex: width === undefined ? '1 1 0' : '0 0 auto',
     textAlign: aligns.value[index],
-    width: cssSize(width),
+    // 平均列宽来自真实容器，配置列宽已在上面换算，不能再走设计尺寸转换。
+    width: typeof width === 'number' ? `${width}px` : width,
   }
 }
 

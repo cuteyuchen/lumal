@@ -8,7 +8,6 @@ import AppSettingsDrawer from '../src/components/app/AppSettingsDrawer.vue'
 import { createAdminRouter } from '../src/router'
 import { createAdminPreferences, resetAdminSystemConfig } from '../src/services/preferences'
 import { login, logout } from '../src/services/session'
-import { setAdminViewportMode } from '../src/services/workspace-viewport'
 import { elementPlusStubs } from './helpers/element-plus-stubs'
 
 const LayoutStub = defineComponent({
@@ -89,7 +88,6 @@ const DrawerStub = defineComponent({
 
 describe('app shell', () => {
   afterEach(async () => {
-    setAdminViewportMode('responsive')
     resetAdminSystemConfig()
     await logout()
   })
@@ -178,9 +176,8 @@ describe('app shell', () => {
     expect(document.title).toBe('Lumal Admin')
   })
 
-  it('工作区 vw 跟随 Header 偏好，自管理画布和非传送编辑器按路由隔离', async () => {
+  it('所有页面直接使用相同壳，切换页面不会挂载模式包装器或模式菜单', async () => {
     await login('admin')
-    setAdminViewportMode('vw')
     const router = createAdminRouter(createMemoryHistory())
     await router.push('/dashboard')
     await router.isReady()
@@ -197,38 +194,22 @@ describe('app shell', () => {
       },
     })
     try {
-      const workspace = () => wrapper.get('[data-testid="admin-workspace-viewport"]')
-      expect(workspace().attributes('data-viewport-mode')).toBe('vw')
-      for (const path of ['/examples/datav', '/examples/cockpit']) {
+      const shell = wrapper.get('.layout-stub').element
+      for (const path of ['/examples/datav', '/examples/cockpit', '/examples/viewport', '/system/user', '/system/role', '/examples/crud-table']) {
         await router.push(path)
-        expect(workspace().attributes('data-viewport-mode')).toBe('responsive')
+        expect(wrapper.get('.layout-stub').element).toBe(shell)
+        expect(wrapper.find('[data-viewport-mode]').exists()).toBe(false)
+        expect(wrapper.find('[aria-label="工作区适配"]').exists()).toBe(false)
+        expect(wrapper.find('.router-view-stub').exists()).toBe(true)
       }
-      for (const path of ['/examples/viewport', '/system/user', '/system/role', '/examples/crud-table']) {
-        await router.push(path)
-        expect(workspace().attributes('data-viewport-mode')).toBe('vw')
-        expect(document.documentElement.dataset.adminViewport).toBe('vw')
-        expect(wrapper.get('.layout-stub').attributes('data-responsive')).toBe('false')
-        expect(wrapper.get<HTMLElement>('.admin-workspace-viewport__stage').element.style.transform).toBe('')
-        for (const mode of ['contain', 'width'] as const) {
-          setAdminViewportMode(mode)
-          await wrapper.vm.$nextTick()
-          expect(workspace().attributes('data-viewport-mode')).toBe('responsive')
-        }
-        setAdminViewportMode('vw')
-        await wrapper.vm.$nextTick()
-      }
-      setAdminViewportMode('contain')
-      await router.push('/dashboard')
-      expect(workspace().attributes('data-viewport-mode')).toBe('contain')
     }
     finally {
       wrapper.unmount()
     }
   })
 
-  it('直接打开 Viewport 深链仍保留整页 vw，离开及返回登录页正确恢复范围', async () => {
+  it('直接打开 Viewport 深链与返回登录页不注入全局布局补丁', async () => {
     await login('admin')
-    setAdminViewportMode('vw')
     const router = createAdminRouter(createMemoryHistory())
     await router.push('/examples/viewport?source=refresh')
     await router.isReady()
@@ -247,13 +228,13 @@ describe('app shell', () => {
     try {
       for (const path of ['/examples/viewport?source=refresh', '/dashboard', '/examples/viewport']) {
         await router.push(path)
-        expect(document.documentElement.dataset.adminViewport).toBe('vw')
-        expect(wrapper.get('[data-testid="admin-workspace-viewport"]').attributes('data-viewport-mode')).toBe('vw')
-        expect(wrapper.get('.layout-stub').attributes('data-responsive')).toBe('false')
+        expect(document.documentElement.dataset.adminViewport).toBeUndefined()
+        expect(wrapper.find('[data-viewport-mode]').exists()).toBe(false)
+        expect(wrapper.get('.layout-stub').exists()).toBe(true)
       }
       await logout()
       await router.push('/login')
-      expect(document.documentElement.dataset.adminViewport).toBe('responsive')
+      expect(document.documentElement.dataset.adminViewport).toBeUndefined()
       expect(wrapper.find('.layout-stub').exists()).toBe(false)
     }
     finally {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ApplicationService, DataRow } from '../../../app/services/contracts';
 import { AccessControl, useAccess, useVbenForm, useVbenVxeGrid } from '@lumal/vben-compat/v5';
+import { viewportLength } from '@lumal/viewport';
 import { ElButton, ElDialog, ElMessageBox } from 'element-plus';
 import { nextTick, shallowRef } from 'vue';
 
@@ -133,7 +134,12 @@ defineExpose({ gridApi });
         </ElButton>
       </template>
     </Grid>
-    <ElDialog v-model="visible" :title="editingId ? '编辑用户' : '新增用户'" destroy-on-close width="min(640px, 92vw)">
+    <ElDialog
+      v-model="visible"
+      :title="editingId ? '编辑用户' : '新增用户'"
+      destroy-on-close
+      :width="viewportLength(640)"
+    >
       <Form />
       <template #footer>
         <ElButton @click="visible = false"> 取消 </ElButton>

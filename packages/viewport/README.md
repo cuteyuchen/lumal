@@ -1,78 +1,82 @@
 # @lumal/viewport
 
-本文 API 基线为 `0.0.6-beta`，实际版本可用性以 registry 为准。
+宽度数值工具与元素测量。`0.1.0-beta.0` 为破坏性候选版本，未获授权不会发布 npm。
+静态 CSS-only 项目只需 `@lumal/vite`，不必安装本包。
 
-仅依赖 Vue peer，不依赖 Core、Element Plus、ECharts、DataV 或 Cockpit。
-独立包使纯 Screen 无需为了尺寸适配安装任何后台或图表框架，
-同时共享 DataV 与 Cockpit 的算法和监听生命周期。
+## 一次配置
+
+在项目的 Vite 配置中显式启用：
 
 ```ts
+import { createViewportTransformPlugin } from '@lumal/vite'
+
+const viewport = createViewportTransformPlugin({
+  enabled: true,
+  include: ['src/**'],
+  viewportWidth: 1920,
+  dependencies: ['element-plus'], // 使用并核验该 UI 主题时才加入
+})
+// 加入已有 plugins，保留 @vitejs/plugin-vue。
+```
+
+插件将同一配置注入浏览器及受控 Lumal SSR 模块。业务正常写 CSS/SCSS 和模板 style 的 px，
+不安装运行时插件、不加页面包装器、不手写尺寸变量。未启用构建转换时默认保持 px。
+
+## 公开 API
+
+```ts
+import {
+  getViewportConfig,
+  getViewportWidth,
+  useElementSize,
+  useViewportWidth,
+  viewportLength,
+  viewportPixels,
+} from '@lumal/viewport'
+```
+
+| API | 职责 |
+| --- | --- |
+| `getViewportConfig()` | 当前编译配置 `{ enabled, designWidth }`；默认关闭、1920 |
+| `viewportLength(192)` | 开启后为 `10vw`，关闭为 `192px` |
+| `getViewportWidth()` | 测量 CSS `100vw` 对应宽度；SSR 为 0，不使用 screen/DPR |
+| `viewportPixels(192, width?)` | 必须接受数字的设计尺寸，开启后返回 `192 * W / D` |
+| `useViewportWidth(config?)` | 共享窗口 width、ratio，以及响应式 `pixels()`、`length()`、`measure()` |
+| `useElementSize({ target?, enabled? })` | 实际元素/窗口尺寸，管理 ResizeObserver、RAF、目标替换和 KeepAlive 清理 |
+
+工具函数可显式传 `{ enabled: true, designWidth: 1440 }`，独立使用时由调用方维护一个配置。
+项目已使用 Vite 插件时不应再重复填写设计宽度。
+
+```vue
+<script setup lang="ts">
+import { useElementSize, useViewportWidth } from '@lumal/viewport'
 import { computed, useTemplateRef } from 'vue'
-import { useViewportScale } from '@lumal/viewport'
 
-const container = useTemplateRef<HTMLElement>('container')
-const { scale, size } = useViewportScale({ target: container, designWidth: 1920, designHeight: 1080 })
-const columnWidth = computed(() => 180 * scale.value)
+/***********************设计数值和实际测量分开*********************/
+const chartHost = useTemplateRef<HTMLElement>('chartHost')
+const { size } = useElementSize({ target: chartHost })
+const viewport = useViewportWidth()
+const chartOption = computed(() => ({
+  title: { text: '水位', textStyle: { fontSize: viewport.pixels(18) } },
+}))
+// size 是真实像素，直接用于 resize/updateSize，不能再乘比例。
+</script>
+
+<template>
+  <div ref="chartHost" style="height: 320px" :data-width="size.width" />
+</template>
 ```
 
-`columnWidth` 是响应式数值；不要在初始化时一次性读取 `scale.value`。
-`target` 不传时监听窗口，传入空 ref 时等待元素挂载。设计尺寸、mode、enabled
-支持值、ref 或 getter。卸载、目标变化、禁用时清理 ResizeObserver、窗口监听与待执行帧。
+CSS vw 永远相对浏览器布局视口，不相对容器。高度、纵向间距也按宽度计算；
+同宽不同高不会缩小内容，高度不足正常滚动或由页面明确裁切。
+监听在使用者间共享，最后一个使用者卸载/停用后移除监听及待执行 RAF。
 
-`computeViewportScale` 是纯算法；`contain` 保持比例、完整显示并居中，可能留白；
-`width` 只按设计宽度等比适配，内容可能超出容器高度。
-`LumalViewport :policy="{ mode: 'contain', designWidth: 1920, designHeight: 1080 }"`
-基于自己的实际容器适配。`responsive` 不缩放；`disabled` 或 `policy=false` 关闭；
-`width` 同前。下一版未发布源码修正 `vw` 为浏览器宽度语义，不施加 transform，
-`--lumal-viewport-unit/x-unit/y-unit` 统一为 `100 / designWidth vw`，宽高均按同一宽度比例。
-容器测量和 `resize` 事件仍返回实际可用空间，不把窄容器或高度当作 vw 基准。
-仅选择运行时 `vw` 不会改写已有 px；使用下述构建协作或显式单位表达式。
-容器需有明确宽高。`minScale/maxScale` 可限制比例，超出时保留局部滚动；
-`minFontSize` 只提供局部 CSS 变量，使用者决定哪些文字需要可读性下限。
-组件不修改全局字号，不接管地图或图表实例。
+## 迁移边界
 
-```ts
-import { createViewportPlugin } from '@lumal/viewport'
+本版本删除旧模式联合类型、策略插件、策略解析、画布组件及旧缩放/字号算法。
+迁移时移除旧包装器和模式配置，启用 Vite 转换；使用上述数字工具替代动态设计尺寸计算。
+不提供旧 API 别名或兼容实现。SVG viewBox、局部图形动画与地图实际测量不属于被删除的画布适配。
 
-app.use(createViewportPlugin({ mode: 'responsive', designWidth: 1920, designHeight: 1080 }))
-```
-
-插件只提供应用默认值，不修改根元素。页面或路由包装器通过 `policy` 覆盖；
-独立容器同样通过 `policy` 配置。包不依赖 Router，路由元信息由应用读取。
-监听在 KeepAlive 停用时暂停，激活时重新测量；不写入全局 CSS。
-`resize` 事件提供实际 CSS 尺寸，可调用现有地图 `updateSize()` 或图表 `resize()`。
-
-同一内容树只使用一个画布缩放责任方。Cockpit 放入本容器时使用
-`viewport-mode="external"`；地图优先按实际容器 resize，避免整体 transform。
-完整说明见仓库 `docs/screen-viewport-guide.md`。
-
-## 流式 vw 与构建协作
-
-设计稿仍写 px，使用 `@lumal/vite` 的可选 `output: 'runtime'` 和 `inlineStyles: true`
-转换选定 CSS/SCSS/Vue style。`192px` 变为
-`calc(192 * var(--lumal-viewport-unit, 1px))`：
-
-- `vw`：单位为浏览器 `100 / designWidth vw`，保留流式布局，无整体画布变换。
-- `responsive/contain/width/disabled`：单位为1px，恢复设计 px；画布模式只 transform 一次。
-- 未包装或 Teleport 到包装器外：回退1px。嵌套包装器重置单位，禁用区域不继承外层 vw。
-
-项目根 `viewport.config.ts` 共享无依赖的 `viewportDesign`，构建使用其 designWidth，
-运行时 policy 展开同一对象。两个包可独立使用，不增加包间依赖。
-默认直接 `px → vw` 的输出不受运行时单位控制；不能再套 contain/width 画布。
-任意外部 transform、自适应变量和已转换样式仍需显式排除。
-不要在 contain/width 画布内部再嵌套 vw 区域；局部单位无法撤销祖先的物理 transform。
-
-`vw` 的 slot.scale、`--lumal-viewport-scale` 和 expose.result 使用窗口宽度比例，
-不应用 `minScale/maxScale`，以保持与原生 vw 一致。`minFontSize` 不自动改写字体。
-`responsive` 的 x/y单位仍可显式实现原先的容器宽高独立适配。
-
-动态图表尺寸继续用已有公开 API，不扫描脚本：
-
-```ts
-// 无 target 表示窗口；这里必须显式 width，默认 contain 会同时受高度影响。
-const { scale } = useViewportScale({ designWidth: 1920, mode: 'width' })
-const columnWidth = computed(() => 180 * scale.value)
-```
-
-仅在 vw 流式内容中使用该结果；已 transform 的画布使用原设计坐标，
-图表/地图按实际 DOM 容器 resize，避免把同一数值缩放两次。
+地图经纬度、业务数值、DOM 测量、拖拽屏幕坐标、Popper 定位保持原值。
+外部 JS 动态样式不会被构建插件扫描；只对明确属于设计尺寸的数值显式使用工具。
+完整接入与公共 CSS 来源边界见 [统一指南](../../docs/screen-viewport-guide.md)。

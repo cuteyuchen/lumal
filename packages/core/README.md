@@ -2,7 +2,7 @@
 
 Lumal 后台核心包，提供应用安装器、布局、路由菜单辅助、权限、请求、主题和基础组件。
 
-本文 API 基线为 `0.0.6-beta`，实际版本可用性以 registry 为准。
+本文 API 基线为 `0.1.0-beta.0`，实际版本可用性以 registry 为准。
 
 ```ts
 import { createLumalAdmin } from '@lumal/core'
@@ -26,23 +26,20 @@ await createLumalAdmin({ rootComponent: App }).mount('#app')
 
 详细说明见仓库文档 `docs/core-api.md`。
 
-## 未发布：整页 vw 协作
+## 纯 vw 接入
 
-默认 px 与响应式行为不变，不新增 Viewport 依赖：
+在消费项目的 `@lumal/vite` 中启用转换并配置一次 `viewportWidth`。
+Core 依赖轻量 `@lumal/viewport` 工具，自有静态 CSS 和动态主题 token 使用同一设计宽度。
+未启用时保持 px；启用时，主题初始化、修改和恢复均输出普通 vw，不需要主题长度回调或尺寸变量协议。
 
-- `ThemeRuntimeEnvironment.cssLength?: (pixels: number) => string` 可通过偏好 Store 的
-  `runtime` 或 `applyThemePreferences` 的 environment 显式传入，统一字号、布局、间距、圆角与阴影尺寸。
-- `resolveThemeTokens(state, cssLength)`、`applyThemeToElement(element, state, cssLength)`
-  同样接受可选格式化器，省略时仍输出 px。
-- `LumalLayout` 和 `LumalTabs` 的 `responsive` 默认 true。整页设计稿模式可设置 false，
-  保持桌面导航/拖拽交互；须配合构建 CSS 断点策略，仅改这个 prop 不会启用 vw。
-- Header 默认读取 `--lumal-header-height`（回退50px），侧栏与菜单设计尺寸使用
-  `--lumal-viewport-unit`（回退1px），只有宿主明确提供单位时才缩放。
+Layout/Tabs 默认在启用 vw 时保留桌面编排，未启用时保留原响应式断点。
+表格数字列宽、表单数字标签宽度、编辑器数字尺寸和图标数字 size 是设计 px，由组件内部换算。
+显式 CSS 字符串保持原义；DOM 测量和 Popper 坐标不参与换算。
 
-整页示例与局部画布隔离见 `docs/screen-viewport-guide.md`；不对 html/body 做 transform，
-不扫描业务脚本，表格数值列宽等协议仍由应用显式适配。新增能力需用候选 tarball 验证。
+接线、选择范围与第三方样式授权见 `docs/screen-viewport-guide.md`。
+不扫描业务脚本、不缩放整页。候选版本尚未发布，需用当前 tarball 验证。
 
-## 0.0.6-beta 修复
+## 已有修复
 
 以下变更属于本版，不能通过重新安装历史同版本包取得；发布核验前使用候选 tarball：
 

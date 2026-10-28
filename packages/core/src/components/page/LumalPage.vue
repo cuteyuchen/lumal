@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getViewportConfig } from '@lumal/viewport'
 import { computed, useSlots, useTemplateRef } from 'vue'
 
 /***********************属性定义*********************/
@@ -36,7 +37,7 @@ defineExpose({
   <section
     ref="pageRef"
     class="lumal-page"
-    :class="{ 'is-fill': fill, 'is-no-padding': noPadding }"
+    :class="{ 'is-fill': fill, 'is-no-padding': noPadding, 'is-responsive': !getViewportConfig().enabled }"
   >
     <header v-if="hasHeader" class="lumal-page__header">
       <div class="lumal-page__heading">
@@ -146,16 +147,16 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
-  .lumal-page {
+  .lumal-page.is-responsive {
     gap: 12px;
     padding: 12px;
   }
 
-  .lumal-page__header {
+  .lumal-page.is-responsive .lumal-page__header {
     flex-direction: column;
   }
 
-  .lumal-page__actions {
+  .lumal-page.is-responsive .lumal-page__actions {
     width: 100%;
     flex-wrap: wrap;
   }

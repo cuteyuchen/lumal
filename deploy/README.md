@@ -4,9 +4,9 @@
 
 - GitHub：源码、Pull Request、CI、CodeQL、Changesets 发布 npm 包。
 - Vercel：文档与四个静态 Demo，每个应用一个 Project。
-- Node 服务：`apps/lumal-mock-api`。它使用 Nitro `node-server` preset，应作为长期运行的 Node 服务部署。
+- Mock API：`apps/lumal-mock-api`。默认使用 Nitro `vercel` preset；自托管 Node 服务使用 `build:test` 生成 `node-server` 产物。
 
-## 只在发版时部署
+## 发布与恢复边界
 
 唯一发布入口为 `.github/workflows/release-gate.yml`，接受 `v*` tag 或手动触发。手动默认 `dry_run=true`，不会发包或部署。`deploy.yml` 仅可由编排工作流调用，没有独立触发入口。
 
@@ -18,6 +18,16 @@
 ```
 
 任何门禁失败、取消或跳过都会阻断发布与部署。Vercel **控制台 Git 集成**独立于 Actions，必须另行关闭自动生产部署，避免绕过上述门禁；不要用“工作流成功”代替平台 READY 和公开访问验收。
+
+上述依赖约束描述 Actions 发布链，不证明平台 Git 自动部署已关闭。
+2026-10-26 的六项目 PR Preview 仍由 Git 集成触发；平台现状必须逐项目核实。
+公共包已经发布而站点落后时，不重发 npm、不移动 tag，也不为补部署重跑正式发布链。
+维护者单独授权站点恢复后，先验证精确提交的全部 PR 门禁，再定向恢复对应站点；
+记录所用 Git 构建或 prebuilt 路径、生产环境配置、提交、READY、alias 和公网资源结果。
+本次恢复证据见 [0.0.7-beta 执行记录](../docs/npm-release-0.0.7-beta.md#pr-收尾与部署恢复)。
+Docs 仍保留 Ignored Build Step：Git 检查显示绿色的 Canceled 不算文档构建成功，
+需要单独授权后从精确源码构建固定快照、定向 prebuilt 上传并验证公开域名全部文件。
+首次恢复的合并 SHA、Deployment 与 HTTP 证据见该记录的「合并与站点实际验收」。
 
 ## GitHub Actions 配置
 
@@ -49,7 +59,11 @@ Install Command 统一使用：
 pnpm install --frozen-lockfile
 ```
 
-Node.js 使用 22，pnpm 使用 `package.json` 中声明的 10.33.0。
+CI 与 Release Gate 使用 Node.js 22，pnpm 使用 `package.json` 中声明的 10.33.0；
+仓库 `engines.node` 的最低要求为 22.12.0。
+2026-10-27 只读核对时，六个 Vercel 项目的 `nodeVersion` 均显式为 `24.x`，
+与 CI 的 Node 22 环境应分别记录，不能将其中一方的通过结果称为另一方的验证。
+本次未修改平台 Node 配置；后续若调整版本，仍须核对精确提交的构建及公开资源。
 
 五站点沿用现有 Vercel Project，公开链接统一使用上表中的自定义域名；Cloudflare 使用 DNS-only CNAME，不负责产物托管。不使用受登录保护的部署长域名作为文档入口。
 
@@ -58,7 +72,8 @@ Vercel 项目若从 Git 构建，Root Directory 设为仓库根目录；Build Co
 `apps/lumal-docs/dist`，不能统一写成根目录的 `dist`。不要沿用改名前的 package filter：
 pnpm 输出 `No projects matched the filters` 不代表应用已经构建，即使命令最终返回零也必须修正配置。
 平台设置不随源码中的包名自动更新；应分别检查项目当前设置和失败 Deployment 的设置快照。
-本轮只读发现的 Cockpit Preview 遗留配置及待授权操作见 [Demo 整改验收](../docs/cockpit-demo-remediation-2026-10-26.md#vercel-preview-配置审计)。
+Cockpit 改名前配置的历史证据见 [Demo 整改验收](../docs/cockpit-demo-remediation-2026-10-26.md#vercel-preview-配置审计)，
+后续定向配置修复与复验状态见本版执行记录。
 
 正式发布使用 `scripts/prepare-vercel-output.mjs` 封装已验证的静态目录，再执行固定版本 Vercel CLI 的 `deploy --prebuilt --prod`，不在凭据作业重新构建。Docs 启用 `--clean-urls`，保留无扩展名深层路径、目录首页和 HTTP 404。完整说明见 [发布检查清单](../docs/release-checklist.md#部署配置)。
 
@@ -92,10 +107,18 @@ LUMAL_NPM_CORE ... LUMAL_NPM_CREATE
 
 ## Mock API
 
-Mock API 是演示用途，当前数据在内存中，不应当作生产数据库服务。容器启动命令为：
+Admin 的 `VITE_API_BASE_URL` 是构建时配置。线上使用独立公开 Mock 服务，
+没有同域 `/api` 反向代理；Vite 的开发/preview 代理不会随静态产物部署。
+不能把 CI 默认 `/api` 的产物直接覆盖生产：使用生产 Git 构建时保留平台公开配置，
+使用 prebuilt 时必须按相同生产配置重新构建并验证产物。
+更新远程菜单、权限或组件白名单时，Admin 和 Mock 应使用相容的提交，不能只部署静态页面。
+
+Mock API 是演示用途，当前数据在内存中，不应当作生产数据库服务。
+Vercel 使用默认 `pnpm --filter lumal-mock-api build`；
+本地长期运行的 Node 服务启动命令为：
 
 ```bash
-pnpm --filter lumal-mock-api build
+pnpm --filter lumal-mock-api build:test
 pnpm --filter lumal-mock-api start
 ```
 

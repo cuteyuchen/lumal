@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ConicalColumnChartConfig, DataValueItem } from '../types'
+import { useViewportWidth } from '@lumal/viewport'
 import { computed, useTemplateRef } from 'vue'
 import { useElementSize } from '../composables/useElementSize'
 
@@ -41,6 +42,7 @@ interface ConicalColumn extends DataValueItem {
 }
 
 const rootRef = useTemplateRef<HTMLElement>('rootRef')
+const { pixels } = useViewportWidth()
 const size = useElementSize(rootRef)
 
 function normalizeNonNegative(value: number, fallback = 0): number {
@@ -64,8 +66,8 @@ const chartItems = computed(() => {
 })
 
 const images = computed(() => props.images ?? props.config.img ?? [])
-const imageSideLength = computed(() => normalizeNonNegative(props.imageSideLength ?? props.config.imgSideLength ?? 30, 30))
-const fontSize = computed(() => normalizeNonNegative(props.fontSize ?? props.config.fontSize ?? 12, 12))
+const imageSideLength = computed(() => pixels(normalizeNonNegative(props.imageSideLength ?? props.config.imgSideLength ?? 30, 30)))
+const fontSize = computed(() => pixels(normalizeNonNegative(props.fontSize ?? props.config.fontSize ?? 12, 12)))
 const columnColor = computed(() => props.columnColor ?? props.config.columnColor ?? 'rgba(0, 194, 255, 0.4)')
 const textColor = computed(() => props.textColor ?? props.config.textColor ?? '#fff')
 const showValue = computed(() => props.showValue ?? props.config.showValue ?? false)

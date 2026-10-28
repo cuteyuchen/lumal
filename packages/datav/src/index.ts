@@ -64,16 +64,6 @@ export function install(app: App): void {
 
 export default { install }
 
-export {
-  computeFullScreenScale,
-  useFullScreenScale,
-} from './composables/useFullScreenScale'
-
-export type {
-  FullScreenScaleResult,
-  UseFullScreenScaleOptions,
-} from './composables/useFullScreenScale'
-
 export type {
   ActiveRingChartConfig,
   ActiveRingChartDataItem,
@@ -100,7 +90,6 @@ export type {
   FlylineImageStyle,
   FlylineLineStyle,
   FlylineTextStyle,
-  FullScreenContainerMode,
   LumalChartsOption,
   PercentPondConfig,
   RankingItem,

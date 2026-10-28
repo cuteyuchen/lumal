@@ -1,74 +1,38 @@
 # @lumal/viewport
 
-纯 Vue 的尺寸监听与工作区适配能力，供普通页面、独立 Screen 和 Admin 内嵌区域复用。
-不依赖 Core、Element Plus、ECharts、地图或 Cockpit。
-
-| 项 | 值 |
-| --- | --- |
-| 包名 | `@lumal/viewport` |
-| 本地路径 | `packages/viewport` |
-| 在线文档 | https://lumal.cuteyuchen.top/packages/viewport |
-| npm 地址 | `https://www.npmjs.com/package/@lumal/viewport` |
-| Peer | Vue `^3.5.0` |
-
-## 安装
-
-本文面向已发布的 `0.0.6-beta` API，下列命令显式选择本版。
-逐包核验见 [发布记录](/reference/npm-release-0.0.6-beta)，未发布源码接入见 [安装说明](/guide/essentials/installation)。
+候选 `0.1.0-beta.0`：宽度数值工具与实际尺寸测量，仅依赖Vue，不需要Core或UI。
+尚未发布npm，候选验收使用本地tarball。
 
 ```bash
-pnpm add @lumal/viewport@0.0.6-beta vue@^3.5
+pnpm add @lumal/viewport@0.1.0-beta.0 vue@^3.5
 ```
 
 ## 公开入口
 
-从 `@lumal/viewport` 导入以下能力和相应类型，不需要额外全局样式：
+全部从 `@lumal/viewport` 导入：
 
-| 能力 | 用途 |
+| API | 职责 |
 | --- | --- |
-| `LumalViewport` | 实际容器测量、contain/width 画布与浏览器 vw 流式策略 |
-| `createViewportPlugin` | 提供应用默认值，不变换 DOM 根或强制注册路由守卫 |
-| `resolveViewportPolicy` / `useViewportPolicy` | 合并应用默认和局部显式覆盖 |
-| `useElementSize` / `useViewportScale` | 响应式尺寸与比例，管理 Observer、RAF 和生命周期 |
-| `computeViewportScale` | 无 Vue 实例的纯缩放算法 |
-| `computeViewportFontSize` | 明确字号下限计算，不修改 Admin 用户字体偏好 |
+| `getViewportConfig()` | 获取一次配置的enabled/designWidth，未注入默认关闭、1920 |
+| `viewportLength(P)` | 开启后输出普通vw，关闭输出px |
+| `getViewportWidth()` | 实际CSS 100vw宽度，SSR为0，不用screen/DPR |
+| `viewportPixels(P, W?)` | 设计数值按 `P * W / D` 换算 |
+| `useViewportWidth(config?)` | 共享窗口width/ratio及pixels/length/measure |
+| `useElementSize({ target?, enabled? })` | 测量、目标切换、Observer/RAF/KeepAlive清理 |
 
-## 范围与策略
+```ts
+import { useViewportWidth, viewportLength } from '@lumal/viewport'
+import { computed } from 'vue'
 
-应用默认、页面和容器是三个作用范围，策略单独选择：
-`disabled` 关闭，`responsive` 保持自然布局，`contain` 等比完整容纳并留白，
-`width` 等比填满宽度并允许宿主局部纵向滚动。
-下一版未发布源码修正 `vw` 为浏览器宽度 / 设计宽度的流式策略，
-横纵单位使用同一宽度比例，不 transform；实际容器测量仍保留。
-只选运行时 vw 不会重写原有 px，需配合可选构建转换或显式单位表达式。
-容器需有明确宽高，`minScale/maxScale/minFontSize` 由消费方显式配置。
+const viewport = useViewportWidth()
+const option = computed(() => ({ title: { textStyle: { fontSize: viewport.pixels(18) } } }))
+const dialogWidth = viewportLength(520)
+```
 
-`@lumal/vite` 的可选 `output:'runtime'` 将受控尺寸转为局部单位表达式，
-由包装器在 vw 下使用浏览器单位，其他模式恢复1px，避免画布二次缩放。
-项目根 `viewport.config.ts` 共享设计尺寸，两个包无需互相依赖。
-`minScale/maxScale` 只约束画布，字号/最小尺寸默认保护。
-动态图表/表格数值用已有 `useViewportScale({ designWidth, mode:'width' })`
-（不传 target）在 computed 中显式适配，不扫描脚本字符串。
+项目由[Vite转换](/packages/vite)一次配置D，普通样式不调用数字工具、不写单位变量、不包页面组件。
+静态CSS-only项目不安装本包。独立运行时可传共享普通config，不引入构建依赖。
+高度与纵向间距仍按宽度，不根据高度缩小；高度不足滚动或显式裁切。
+容器测量不改变vw基准，地图/图表实际尺寸直接resize，业务数据/定位坐标不再换算。
 
-全局、路由/页面与容器接线示例集中维护在
-[屏幕与工作区适配](/reference/screen-viewport-guide)，
-Screen 与混合后台项目见 [项目模板](/reference/project-template-guide)。
-
-## 集成边界
-
-- 观察实际内容容器，不把含 Header / Tabbar 的页面一律按窗口高度计算。
-- 地图保持实际尺寸，变化时调用现有实例 `updateSize()`；图表调用 `resize()`。
-- 不在尺寸回调中重建引擎、重新拉取全部业务数据或重置中心位置。
-- 同一内容树只保留一个画布缩放责任方，内层 Cockpit 使用 `viewport-mode="external"`。
-- Teleport 到 body 的弹层不自动继承局部画布缩放，需独立核对位置、字号和点击。
-- KeepAlive 停用时暂停监听，激活后测量恢复；不向后续页面残留全局 CSS。
-
-脱敏夹具的真实地图、Canvas、Element Plus 与浏览器缩放证据见
-[隔离验收报告](/reference/screen-viewport-verification)，不能代替原业务页面验收。
-
-## 可运行示例
-
-仅 Vue + Viewport 的完整 App、Admin 页面与容器覆盖示例见
-[Demo 与业务接入](/reference/demo-integration-guide)。
-本分支 Admin 路径为 `/#/examples/viewport`，独立 Cockpit 顶部提供「视口实验」；
-新入口需本分支产物部署后才会出现在在线站点，当前可在本地生产 preview 运行。
+旧策略插件、画布组件、多模式、居中、画布缩放及字号补偿API已删除，不提供兼容别名。
+详见[统一接入](/reference/screen-viewport-guide)及[本轮验证](/reference/pure-vw-refactor-2026-10-28)。

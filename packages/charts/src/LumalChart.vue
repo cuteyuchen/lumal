@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { EChartsOption, SetOptionOpts } from 'echarts'
 import type { ComponentPublicInstance, StyleValue } from 'vue'
+import { viewportLength } from '@lumal/viewport'
 import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useAttrs, useTemplateRef } from 'vue'
 import VChart from 'vue-echarts'
 
@@ -13,8 +14,9 @@ const props = withDefaults(defineProps<{
   autoResize?: boolean
   animation?: boolean
   ariaLabel?: string
-  width?: string
-  height?: string
+  /** 数字为设计 px，显式单位字符串保持原义。 */
+  width?: string | number
+  height?: string | number
 }>(), {
   autoResize: true,
   animation: undefined,
@@ -25,6 +27,10 @@ const props = withDefaults(defineProps<{
 })
 
 /***********************渲染状态*********************/
+const dimensions = computed(() => ({
+  height: typeof props.height === 'number' ? viewportLength(props.height) : props.height,
+  width: typeof props.width === 'number' ? viewportLength(props.width) : props.width,
+}))
 // 延迟到挂载后渲染，规避容器尺寸为 0 时的初始布局问题
 const renderChart = shallowRef(false)
 const prefersReducedMotion = shallowRef(false)
@@ -71,7 +77,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="lumal-chart" :class="$attrs.class" role="img" :aria-label="ariaLabel" :style="[$attrs.style as StyleValue, { height, width }]">
+  <div class="lumal-chart" :class="$attrs.class" role="img" :aria-label="ariaLabel" :style="[$attrs.style as StyleValue, dimensions]">
     <VChart
       v-if="renderChart"
       ref="chartRef"

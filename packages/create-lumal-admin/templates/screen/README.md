@@ -5,10 +5,10 @@
 首次运行 `pnpm install`，开发使用 `pnpm dev`，提交前执行 `pnpm check`。
 工程规范见 [开发约定](docs/DEVELOPMENT.md)。
 
-选择 `contain`、`width` 或 `vw` 适配时，设计宽高与运行时策略位于根目录 `viewport.config.ts`。
-`contain/width` 按实际容器缩放设计画布，不启用构建转换。
-`vw` 保持流式布局，自动接入 `@lumal/vite`，仅转换 `src/screen/**` 的 CSS 和 Vue 行内样式；
-尺寸按浏览器宽度 / `viewportDesign.designWidth` 变化，不取侧栏扣除后的容器宽度。
-构建与运行时共享设计配置；协作输出在其他模式下恢复 px，不额外叠加画布缩放。
-默认保留字号、行高、最小尺寸和细边框，更多控制位于生成的 `vite.config.ts`。
-动态数值与 ECharts 使用 `useViewportScale` 等公开 API 显式计算，不扫描业务脚本或 class。
+默认启用 px→vw，`--no-viewport` 可生成普通 px 项目。
+启用时设计宽度只在根目录 `viewport.config.ts` 配置一次，默认1920。
+业务正常写 px，CSS/SCSS与模板静态style由Vite转换；高度也按宽度，不取容器宽度，不作整画布transform。
+字号/有单位行高、设计最小尺寸同步；细边框、原子化类/生成规则、明确忽略项与未知依赖保留。
+高度不足正常滚动；静态Screen不需要Viewport运行时。
+ECharts等必须接收数字的设计尺寸，可显式使用 `@lumal/viewport` 的 `useViewportWidth().pixels()`；
+业务数据、地图经纬度及实际测量不处理，不扫描脚本或class。

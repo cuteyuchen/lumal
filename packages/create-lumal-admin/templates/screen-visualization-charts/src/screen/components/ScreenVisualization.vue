@@ -18,5 +18,5 @@ const options: EChartsOption = {
 </script>
 
 <template>
-  <LumalChart :options="options" height="240px" />
+  <LumalChart :options="options" :height="240" />
 </template>

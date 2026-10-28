@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { LumalIconPickerGroupSelectSlotProps } from '../types'
+import { getViewportConfig } from '@lumal/viewport'
 import { nextTick, onBeforeUnmount, shallowRef, useTemplateRef, watch } from 'vue'
 import LumalIcon from './LumalIcon.vue'
 import LumalIconPicker from './LumalIconPicker.vue'
@@ -100,7 +101,7 @@ function confirm(): void {
 
 <template>
   <Teleport to="body">
-    <div v-if="visible" class="lumal-icon-picker-dialog" role="presentation" @mousedown.self="cancel">
+    <div v-if="visible" class="lumal-icon-picker-dialog" :class="{ 'is-responsive': !getViewportConfig().enabled }" role="presentation" @mousedown.self="cancel">
       <section
         ref="dialogRef"
         class="lumal-icon-picker-dialog__body"
@@ -221,25 +222,25 @@ function confirm(): void {
 }
 
 @media (max-width: 640px) {
-  .lumal-icon-picker-dialog {
+  .lumal-icon-picker-dialog.is-responsive {
     align-items: flex-end;
     padding: 0;
   }
 
-  .lumal-icon-picker-dialog__body {
+  .lumal-icon-picker-dialog.is-responsive .lumal-icon-picker-dialog__body {
     height: min(680px, 92dvh);
     border-radius: var(--lumal-radius-large, 12px) var(--lumal-radius-large, 12px) 0 0;
   }
 }
 
 @media (max-width: 480px) {
-  .lumal-icon-picker-dialog__content :deep(.lumal-icon-picker__grid) {
+  .lumal-icon-picker-dialog.is-responsive .lumal-icon-picker-dialog__content :deep(.lumal-icon-picker__grid) {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 360px) {
-  .lumal-icon-picker-dialog__content :deep(.lumal-icon-picker__grid) {
+  .lumal-icon-picker-dialog.is-responsive .lumal-icon-picker-dialog__content :deep(.lumal-icon-picker__grid) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

@@ -18,7 +18,7 @@ export default defineConfig({
     },
     rollupOptions: {
       // ECharts 与 vue-echarts 作为 peer，不打进产物
-      external: ['vue', 'echarts', 'vue-echarts'],
+      external: ['vue', 'echarts', 'vue-echarts', '@lumal/viewport'],
     },
   },
 })

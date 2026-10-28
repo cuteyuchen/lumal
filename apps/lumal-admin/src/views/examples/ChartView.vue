@@ -41,11 +41,11 @@ function handleClick(params: { name?: string, value?: unknown }): void {
         </ElButton>
       </div>
       <div v-if="rows.length" class="chart-canvas">
-        <LumalChart :options="options" height="340px" @click="handleClick" />
+        <LumalChart :options="options" :height="340" @click="handleClick" />
       </div><div v-else class="chart-empty">
         暂无图表数据，点击“恢复数据”继续体验。
       </div>
-      <LumalInfoTable :items="stateItems" :columns="2" label-width="88px" />
+      <LumalInfoTable :items="stateItems" :columns="2" :label-width="88" />
     </LumalPage>
   </main>
 </template>
