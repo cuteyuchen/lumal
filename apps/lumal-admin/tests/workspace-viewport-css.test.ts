@@ -108,4 +108,17 @@ describe('工作区 vw 的真实 Vite 转换边界', () => {
       expect(result!.code).toMatch(/["']min-width["']:\s*["']140["']/)
     })
   }, 30_000)
+
+  it('视口页工具栏参与 vw，内层画布在自己的单位作用域重新绑定设计字号', async () => {
+    await withAdminServer(async (server) => {
+      const page = await style(server, '/src/views/examples/ViewportView.vue')
+      expect(page).toContain(`gap: ${runtimeLength(12)}`)
+      expect(page).toContain(`height: ${runtimeLength(32)}`)
+      expect(page).toContain(`max-width: ${runtimeLength(140)}`)
+      const canvas = await style(server, '/src/views/examples/viewport/ViewportCanvas.vue')
+      expect(canvas).toContain(`--lumal-font-size-base: ${runtimeLength(14)}`)
+      expect(canvas).toContain('font-size: var(--lumal-font-size-base)')
+      expect(canvas).toContain(`gap: ${runtimeLength(24)}`)
+    })
+  }, 30_000)
 })

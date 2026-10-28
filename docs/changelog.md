@@ -2,9 +2,12 @@
 
 ## 未发布 (2026-10-28)
 
+- 修复进入 `examples/viewport` 时整页 vw 意外失效：示例改用 flow-only 路由边界，
+  Header、侧栏、工具栏、模拟宿主及浮层继续适配；内部画布独立绑定单位与设计字号，
+  contain/width 下仍避免双重缩放，并覆盖深链、往返导航及模式切换回归。
 - Admin `vw 流式` 补齐整页适配：Header、侧栏、字号/行高、主题、最小尺寸、细边框和
   body 浮层共用浏览器宽度单位，CSS/JS 断点同步，Dashboard 数值列宽显式计算；
-  保留响应式默认、自管理画布整页回退与标签缓存，不 transform 整页。
+  保留响应式默认、独立 DataV/Cockpit 画布整页回退与标签缓存，不 transform 整页。
 - `@lumal/vite` 新增默认关闭的 `variableFallbacks` 与 `mediaQueries`，
   分别处理已核对的变量 fallback/尺寸约束和根模式下的媒体/容器宽高断点；
   支持编译后的范围查询，不放宽原子化、来源或第三方依赖保护。

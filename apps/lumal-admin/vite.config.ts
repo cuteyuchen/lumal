@@ -63,7 +63,6 @@ export default defineConfig(({ command, isPreview, mode }) => ({
       exclude: [
         'src/views/login/**',
         'src/views/shared/**',
-        'src/views/examples/ViewportView.vue',
         'src/views/examples/DataVView.vue',
         'src/views/examples/CockpitView.vue',
         'src/views/examples/cockpit/**',

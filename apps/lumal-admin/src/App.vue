@@ -52,7 +52,7 @@ const workspacePolicy = computed(() => {
     || (canvas && route.meta.workspaceViewport === 'flow-only')
   return resolveAdminWorkspacePolicy(mode, unscaled)
 })
-// 自管理大屏和公开登录页整页回退，避免根主题变量与独立画布交叉缩放。
+// 独立大屏和登录页整页回退；Viewport 示例仅隔离内部画布，壳层仍可使用 vw。
 const fullPageViewport = computed(() => !isPublicLayout.value && workspacePolicy.value.mode === 'vw')
 useAdminViewport(fullPageViewport)
 

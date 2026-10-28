@@ -21,7 +21,10 @@ Admin Demo 顶部显示器菜单提供响应式、等比完整、按宽缩放和
   精确加入 Core、Icons Vue、Element Plus 样式白名单，不放开所有 node_modules。
   主题运行时通过 Core `cssLength` 使用同一单位；JS 与 CSS 断点同步保持桌面设计布局。
 - 登录页、外部 iframe、ChartView 的引擎尺寸、DataV/Cockpit 画布不参与转换。
-  视口示例仍由自身策略管理，根与工作区在自管理路由上一起恢复 responsive，避免外层重复缩放。
+  DataV/Cockpit 自管理路由的根与工作区一起恢复 responsive，避免外层重复缩放。
+  `examples/viewport` 使用 `flow-only`：vw 下 Header、侧栏、工具栏和浮层继续适配，
+  contain/width 下才关闭外层画布。内部 `LumalViewport` 独立管理单位和 transform，
+  并在画布内重新声明设计字号，不能只重置单位后继承根上已解析为 vw 的主题字号。
   整页 vw 的 Teleport 到 body 的弹窗继承根单位；组件数值属性仍不自动扫描。
   Dashboard 表格列宽显式使用无 target 的 `useViewportScale({ mode:'width', ... })`。
 - 用户管理、角色管理和 CRUD 示例的编辑器留在内容树内，因此在 contain/width 下

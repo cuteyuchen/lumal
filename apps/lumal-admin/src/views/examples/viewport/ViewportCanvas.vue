@@ -40,7 +40,8 @@ function footerFontSize(scale: number) {
 </template>
 
 <style scoped>
-.viewport-canvas { display: flex; box-sizing: border-box; height: 100%; flex-direction: column; gap: 24px; padding: 24px; background: #122c31; color: #e9f9f6; }
+/* 在内层单位作用域重建字号，避免继承已在 html 上解析为 vw 的主题尺寸后再做 transform。 */
+.viewport-canvas { --lumal-font-size-base: calc(14 * var(--lumal-viewport-unit, 1px)); display: flex; box-sizing: border-box; height: 100%; flex-direction: column; gap: 24px; padding: 24px; background: #122c31; color: #e9f9f6; font-size: var(--lumal-font-size-base); }
 header, footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 h2 { margin: 0; font-size: calc(var(--lumal-font-size-base, 14px) + 10px); }
 header span { color: #8dd1c2; }

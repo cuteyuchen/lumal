@@ -18,6 +18,7 @@ const LayoutStub = defineComponent({
     fixedTabs: Array,
     menus: Array,
     preferences: Object,
+    responsive: Boolean,
     routeDriven: Boolean,
     routeTabResolver: Function,
     tabFallbackPath: String,
@@ -28,6 +29,7 @@ const LayoutStub = defineComponent({
       class="layout-stub"
       :data-menu-count="menus?.length ?? 0"
       :data-layout="preferences?.app.layout"
+      :data-responsive="String(responsive)"
       :data-header-menu-align="preferences?.header.menuAlign"
       :data-header-menu-max-width="preferences?.header.menuMaxWidth"
       :data-show-tab-icons="String(preferences?.tabbar.showIcon)"
@@ -197,13 +199,16 @@ describe('app shell', () => {
     try {
       const workspace = () => wrapper.get('[data-testid="admin-workspace-viewport"]')
       expect(workspace().attributes('data-viewport-mode')).toBe('vw')
-      for (const path of ['/examples/viewport', '/examples/datav', '/examples/cockpit']) {
+      for (const path of ['/examples/datav', '/examples/cockpit']) {
         await router.push(path)
         expect(workspace().attributes('data-viewport-mode')).toBe('responsive')
       }
-      for (const path of ['/system/user', '/system/role', '/examples/crud-table']) {
+      for (const path of ['/examples/viewport', '/system/user', '/system/role', '/examples/crud-table']) {
         await router.push(path)
         expect(workspace().attributes('data-viewport-mode')).toBe('vw')
+        expect(document.documentElement.dataset.adminViewport).toBe('vw')
+        expect(wrapper.get('.layout-stub').attributes('data-responsive')).toBe('false')
+        expect(wrapper.get<HTMLElement>('.admin-workspace-viewport__stage').element.style.transform).toBe('')
         for (const mode of ['contain', 'width'] as const) {
           setAdminViewportMode(mode)
           await wrapper.vm.$nextTick()
@@ -215,6 +220,41 @@ describe('app shell', () => {
       setAdminViewportMode('contain')
       await router.push('/dashboard')
       expect(workspace().attributes('data-viewport-mode')).toBe('contain')
+    }
+    finally {
+      wrapper.unmount()
+    }
+  })
+
+  it('直接打开 Viewport 深链仍保留整页 vw，离开及返回登录页正确恢复范围', async () => {
+    await login('admin')
+    setAdminViewportMode('vw')
+    const router = createAdminRouter(createMemoryHistory())
+    await router.push('/examples/viewport?source=refresh')
+    await router.isReady()
+    const wrapper = mount(App, {
+      global: {
+        plugins: [router],
+        stubs: {
+          ...elementPlusStubs,
+          ElDrawer: DrawerStub,
+          LumalIcon: IconStub,
+          LumalLayout: LayoutStub,
+          LumalRouterView: RouterViewStub,
+        },
+      },
+    })
+    try {
+      for (const path of ['/examples/viewport?source=refresh', '/dashboard', '/examples/viewport']) {
+        await router.push(path)
+        expect(document.documentElement.dataset.adminViewport).toBe('vw')
+        expect(wrapper.get('[data-testid="admin-workspace-viewport"]').attributes('data-viewport-mode')).toBe('vw')
+        expect(wrapper.get('.layout-stub').attributes('data-responsive')).toBe('false')
+      }
+      await logout()
+      await router.push('/login')
+      expect(document.documentElement.dataset.adminViewport).toBe('responsive')
+      expect(wrapper.find('.layout-stub').exists()).toBe(false)
     }
     finally {
       wrapper.unmount()

@@ -2,9 +2,9 @@ import type { NormalizedMenuNode } from '@lumal/core/router'
 import { adminRequest } from '../services/request'
 import { parseAdminMenuData } from './adapters'
 
-const selfManagedViewports = new Set(['examples/viewport', 'examples/datav', 'examples/cockpit'])
-// 这些页面的 CRUD 编辑器留在内容树中，不放进整体 transform 画布；vw 流式模式不受限。
-const flowOnlyViewports = new Set(['system/user', 'system/role', 'examples/crud-table'])
+const selfManagedViewports = new Set(['examples/datav', 'examples/cockpit'])
+// Viewport 只隔离内部画布；它的工具栏和 CRUD 编辑器都不放进外层 transform，仍可使用 vw。
+const flowOnlyViewports = new Set(['examples/viewport', 'system/user', 'system/role', 'examples/crud-table'])
 
 export async function loadAdminMenus(): Promise<NormalizedMenuNode[]> {
   return applyPagePolicies(parseAdminMenuData(await adminRequest.get<Record<string, unknown>[]>('/menu')))

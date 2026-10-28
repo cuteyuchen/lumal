@@ -259,6 +259,7 @@ describe('lumal admin router', () => {
     await router.push(`${path}?source=refresh`)
     await router.isReady()
     expect(router.currentRoute.value.fullPath).toBe(`${path}?source=refresh`)
+    expect(router.currentRoute.value.meta.workspaceViewport).toBe(path === '/examples/viewport' ? 'flow-only' : 'self-managed')
     expect(router.currentRoute.value.meta.viewport).toEqual(path === '/examples/viewport'
       ? { mode: 'contain', designWidth: 960, designHeight: 540 }
       : undefined)

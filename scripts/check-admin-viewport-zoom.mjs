@@ -169,7 +169,21 @@ async function main() {
       await browserZoom(worker, url, 1)
       await setMode(page, 'vw 流式')
       await page.goto(`${url}/#/examples/viewport`)
-      await expect(page.locator('html')).toHaveAttribute('data-admin-viewport', 'responsive')
+      // Viewport 页只隔离内部画布，不能让壳层退出用户选中的 vw。
+      await expect(page.locator('html')).toHaveAttribute('data-admin-viewport', 'vw')
+      await expect(page.getByTestId('admin-workspace-viewport')).toHaveAttribute('data-viewport-mode', 'vw')
+      const canvas = page.locator('.viewport-host > [data-viewport-mode]')
+      await expect(canvas).toHaveAttribute('data-viewport-mode', 'contain')
+      await expect(canvas).toHaveCSS('--lumal-viewport-unit', '1px')
+      const headerHeight = (await page.locator('.lumal-header').boundingBox()).height
+      for (const zoom of [1, 2]) {
+        const actualZoom = await browserZoom(worker, url, zoom)
+        await expect(page.locator('html')).toHaveAttribute('data-admin-viewport', 'vw')
+        await expect.poll(async () => Math.abs((await page.locator('.lumal-header').boundingBox()).height * actualZoom - headerHeight)).toBeLessThan(1.1)
+        await expect(page.locator('.admin-workspace-viewport__stage')).toHaveCSS('transform', 'none')
+        await expect(page.locator('.viewport-canvas')).toHaveCSS('font-size', '14px')
+      }
+      await browserZoom(worker, url, 1)
     }
     expect(report.errors).toEqual([])
     expect(report.consoleErrors).toEqual([])

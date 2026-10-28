@@ -6,6 +6,7 @@ import { ElButton, ElDialog, ElTable, ElTableColumn, ElTooltip } from 'element-p
 import { computed, ref, useTemplateRef } from 'vue'
 import { useRoute } from 'vue-router'
 import { viewportDesign } from '../../../viewport.config'
+import { adminViewportLength, adminViewportMode } from '../../services/workspace-viewport'
 import ViewportCanvas from './viewport/ViewportCanvas.vue'
 import canvasSource from './viewport/ViewportCanvas.vue?raw'
 
@@ -50,9 +51,20 @@ const { scale: windowScale } = useViewportScale({
 const displayScale = computed(() => policy.value.mode === 'vw'
   ? windowScale.value
   : ['contain', 'width'].includes(policy.value.mode) ? scale.value : 1)
+
+/***********************后台壳层与示例宿主尺寸*********************/
+// 宿主与表格属于 Admin 页面，不使用可编辑的内部画布设计尺寸计算外层比例。
+const { scale: workspaceScale } = useViewportScale({
+  ...viewportDesign,
+  mode: 'width',
+  enabled: () => adminViewportMode.value === 'vw',
+})
+const labelColumnWidth = computed(() => adminViewportMode.value === 'vw' ? 140 * workspaceScale.value : 140)
 const dimensions = computed(() => simulation.value === 'short'
-  ? { width: '100%', height: '280px' }
-  : simulation.value === 'narrow' ? { width: '480px', height: '420px' } : { width: '100%', height: '540px' })
+  ? { width: '100%', height: adminViewportLength(280) }
+  : simulation.value === 'narrow'
+    ? { width: adminViewportLength(480), height: adminViewportLength(420) }
+    : { width: '100%', height: adminViewportLength(540) })
 const rows = computed(() => [
   { name: '实际容器', value: `${size.value.width} × ${size.value.height}` },
   { name: '设计尺寸', value: `${policy.value.designWidth} × ${policy.value.designHeight}` },
@@ -81,13 +93,13 @@ const rows = computed(() => [
         <ViewportCanvas :policy="policy" />
       </div>
       <ElTable :data="rows" aria-label="视口测量">
-        <ElTableColumn prop="name" label="测量项" width="140" /><ElTableColumn prop="value" label="当前值" />
+        <ElTableColumn prop="name" label="测量项" :width="labelColumnWidth" /><ElTableColumn prop="value" label="当前值" />
       </ElTable>
       <details><summary>Vue 源码</summary><pre><code>{{ canvasSource }}</code></pre></details>
       <a href="https://lumal.cuteyuchen.top/packages/viewport" target="_blank" rel="noopener noreferrer">Viewport 接入指南</a>
     </LumalPage>
-    <!-- 弹窗不在 transform 树中，不对 Admin 浮层和字号施加缩放。 -->
-    <ElDialog v-model="dialogVisible" title="容器信息" width="min(480px, 90vw)" append-to-body>
+    <!-- 弹窗继承 Admin 根单位，不进入内部示例的 transform 树。 -->
+    <ElDialog v-model="dialogVisible" title="容器信息" :width="`min(${adminViewportLength(480)}, 90vw)`" append-to-body>
       <dl v-for="row in rows" :key="row.name">
         <dt>{{ row.name }}</dt><dd>{{ row.value }}</dd>
       </dl>
