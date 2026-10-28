@@ -157,6 +157,11 @@ import { LumalLayout, LumalRouterView } from '@lumal/core/layout'
 
 布局支持侧栏 / 顶栏 / 混合导航、标签固定与淘汰策略、全局搜索、面包屑、移动抽屉等。字段与偏好细节见 [Core API](/reference/core-api)。
 
+未发布源码新增 `LumalLayout/LumalTabs` 的可选 `responsive`（默认 true）。
+显式整页 vw 时设置 false，使导航与标签拖拽不因页面缩放切换为移动交互；
+必须同时接入 CSS 断点策略，它不是独立适配开关。
+Header 默认使用主题高度，侧栏等设计尺寸使用 `--lumal-viewport-unit`（默认1px）。
+
 ## 路由与菜单
 
 ```ts
@@ -203,6 +208,12 @@ const store = createPreferencesStore({
 
 store.patch({ theme: { mode: 'dark' } })
 ```
+
+未发布源码支持通过 `createPreferencesStore({ runtime: { document, cssLength, ... } })`
+或 `applyThemePreferences` 的 environment 传入 `cssLength: (pixels:number) => string`，
+显式格式化主题中的字号、间距、圆角、阴影和布局尺寸，默认仍为 px。
+`resolveThemeTokens` 的第二参数和 `applyThemeToElement` 的第三参数同样接受格式化器。
+不增加 Viewport 依赖；整页/局部策略与原生页面缩放接线见 [屏幕适配](/reference/screen-viewport-guide)。
 
 ## 与示例对齐
 

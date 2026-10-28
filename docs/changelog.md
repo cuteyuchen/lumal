@@ -1,6 +1,17 @@
 # 更新日志
 
-## 未发布 (2026-10-27)
+## 未发布 (2026-10-28)
+
+- Admin `vw 流式` 补齐整页适配：Header、侧栏、字号/行高、主题、最小尺寸、细边框和
+  body 浮层共用浏览器宽度单位，CSS/JS 断点同步，Dashboard 数值列宽显式计算；
+  保留响应式默认、自管理画布整页回退与标签缓存，不 transform 整页。
+- `@lumal/vite` 新增默认关闭的 `variableFallbacks` 与 `mediaQueries`，
+  分别处理已核对的变量 fallback/尺寸约束和根模式下的媒体/容器宽高断点；
+  支持编译后的范围查询，不放宽原子化、来源或第三方依赖保护。
+- Core 增加可选主题 `cssLength`、Layout/Tabs `responsive`，图标数字尺寸支持协作单位，
+  默认 px/响应式行为和字符串图标尺寸不变，不改 Viewport 公共 API。
+- 补充独立 Vue tarball 场景及 Admin Dev/Build 的真实80%～200%页面缩放检查，
+  验证布局、菜单定位/点击、抽屉、表格和侧栏，不使用 CSS zoom/DPR 模拟。
 
 - 补齐共享 Dropdown 主题样式，恢复 Admin Header 适配菜单的整行点击、悬停与焦点反馈；
   显示当前模式，并以真实 Element Plus / Teleport 组件测试覆盖鼠标与键盘切换。

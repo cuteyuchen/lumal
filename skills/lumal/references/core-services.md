@@ -104,4 +104,10 @@ preferences.patch({
 - `reset()` 恢复偏好，`exportCurrent()` 输出配置；实例释放时 `dispose()` 清理监听。
 - 不假设偏好 Store 提供多语言系统或业务配置存储。
 
+未发布源码的 `ThemeRuntimeEnvironment.cssLength?: (pixels:number)=>string` 可通过偏好Store的runtime
+或applyThemePreferences的environment显式传入。resolveThemeTokens第二参数、
+applyThemeToElement第三参数也支持；默认仍为px，不增加Viewport依赖。
+整页vw可输出 `calc(N * var(--lumal-viewport-unit, 1px))`，统一字号/布局/间距/圆角/阴影；
+根单位由应用维护。根主题变量不能靠内层包装器重置，自管理画布需整页回退或隔离主题。
+
 仓库核对位置：`packages/core/src/{request,auth,dictionary,theme}` 下的公开入口、类型和测试。接口适配示例参考 Admin 的 `src/services`，不要将演示 API 当作通用包契约。

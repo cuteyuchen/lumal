@@ -11,6 +11,7 @@ import {
 } from '@lumal/core/theme'
 import { createMemoryStorage } from '@lumal/core/utils'
 import { readonly, shallowRef } from 'vue'
+import { adminViewportLength } from './workspace-viewport'
 
 export interface AdminSystemConfig {
   appName: string
@@ -155,6 +156,7 @@ export function resolveAdminThemeEnvironment(
 
   return {
     document: documentRef,
+    cssLength: adminViewportLength,
     matchMedia: typeof windowRef?.matchMedia === 'function'
       ? windowRef.matchMedia.bind(windowRef)
       : undefined,

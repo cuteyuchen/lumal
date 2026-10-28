@@ -113,7 +113,8 @@ test('全局字号设置会持久化并影响核心与业务文本', async ({ pa
   await fontSizeInput.fill('18')
   await fontSizeInput.press('Enter')
 
-  await expect(page.locator('html')).toHaveCSS('--lumal-font-size-base', '18px')
+  // 自定义属性可保留 calc，验收最终字号而不是某种序列化表达式。
+  await expect(page.locator('html')).toHaveCSS('font-size', '18px')
   await expect.poll(async () => Number.parseFloat(
     await heading.evaluate(element => getComputedStyle(element).fontSize),
   )).toBeGreaterThan(initialSize)

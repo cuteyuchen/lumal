@@ -3,8 +3,8 @@ import { normalizePreferences, resolveThemeMode } from './preferences'
 import { resolveThemeTokens } from './tokens'
 
 /***********************DOM 应用*********************/
-export function applyThemeToElement(element: HTMLElement, state: ThemeState): void {
-  const tokens = resolveThemeTokens(state)
+export function applyThemeToElement(element: HTMLElement, state: ThemeState, length?: ThemeRuntimeEnvironment['cssLength']): void {
+  const tokens = resolveThemeTokens(state, length)
 
   element.dataset.lumalTheme = state.mode
   element.dataset.lumalCompact = String(state.compact)
@@ -27,13 +27,14 @@ export function applyThemePreferences(
   }
 
   element.classList.toggle('dark', resolvedMode === 'dark')
+  const length = environment.cssLength ?? ((pixels: number) => `${pixels}px`)
   applyThemeToElement(element, {
     colorPrimary: normalizedPreferences.theme.colorPrimary,
     compact: false,
     mode: resolvedMode,
-  })
-  applyElementPlusThemeVariables(element, normalizedPreferences, resolvedMode)
-  applyLayoutThemeVariables(element, normalizedPreferences)
+  }, length)
+  applyElementPlusThemeVariables(element, normalizedPreferences, resolvedMode, length)
+  applyLayoutThemeVariables(element, normalizedPreferences, length)
 
   return resolvedMode
 }
@@ -61,6 +62,7 @@ function applyElementPlusThemeVariables(
   element: HTMLElement,
   preferences: LumalPreferences,
   mode: ResolvedThemeMode,
+  length: (pixels: number) => string,
 ): void {
   const color = preferences.theme.colorPrimary
 
@@ -71,24 +73,24 @@ function applyElementPlusThemeVariables(
   element.style.setProperty('--el-color-primary-light-9', mixHexColor(color, mode === 'dark' ? '#000000' : '#ffffff', 0.9))
   element.style.setProperty('--el-color-primary-dark-2', mixHexColor(color, mode === 'dark' ? '#ffffff' : '#000000', 0.2))
   element.style.setProperty('--lumal-radius-scale', String(preferences.theme.radiusScale))
-  element.style.setProperty('--el-border-radius-base', `${Math.round(8 * preferences.theme.radiusScale)}px`)
-  element.style.setProperty('--el-border-radius-small', `${Math.round(6 * preferences.theme.radiusScale)}px`)
+  element.style.setProperty('--el-border-radius-base', length(Math.round(8 * preferences.theme.radiusScale)))
+  element.style.setProperty('--el-border-radius-small', length(Math.round(6 * preferences.theme.radiusScale)))
 }
 
 /***********************布局变量*********************/
-function applyLayoutThemeVariables(element: HTMLElement, preferences: LumalPreferences): void {
-  const fontSize = `${preferences.theme.fontSize}px`
+function applyLayoutThemeVariables(element: HTMLElement, preferences: LumalPreferences, length: (pixels: number) => string): void {
+  const fontSize = length(preferences.theme.fontSize)
 
-  element.style.setProperty('--lumal-sidebar-width', `${preferences.sidebar.width}px`)
-  element.style.setProperty('--lumal-header-height', '50px')
-  element.style.setProperty('--lumal-tabbar-height', '40px')
-  element.style.setProperty('--lumal-page-gutter', '20px')
+  element.style.setProperty('--lumal-sidebar-width', length(preferences.sidebar.width))
+  element.style.setProperty('--lumal-header-height', length(50))
+  element.style.setProperty('--lumal-tabbar-height', length(40))
+  element.style.setProperty('--lumal-page-gutter', length(20))
   element.style.setProperty('--lumal-font-size-base', fontSize)
-  element.style.setProperty('--el-font-size-large', `${preferences.theme.fontSize + 4}px`)
-  element.style.setProperty('--el-font-size-medium', `${preferences.theme.fontSize + 2}px`)
+  element.style.setProperty('--el-font-size-large', length(preferences.theme.fontSize + 4))
+  element.style.setProperty('--el-font-size-medium', length(preferences.theme.fontSize + 2))
   element.style.setProperty('--el-font-size-base', fontSize)
-  element.style.setProperty('--el-font-size-small', `${Math.max(10, preferences.theme.fontSize - 1)}px`)
-  element.style.setProperty('--el-font-size-extra-small', `${Math.max(10, preferences.theme.fontSize - 2)}px`)
+  element.style.setProperty('--el-font-size-small', length(Math.max(10, preferences.theme.fontSize - 1)))
+  element.style.setProperty('--el-font-size-extra-small', length(Math.max(10, preferences.theme.fontSize - 2)))
   element.style.fontSize = fontSize
 }
 

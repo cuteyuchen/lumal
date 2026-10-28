@@ -32,7 +32,21 @@ const cooperative: ViewportTransformOptions = {
   excludeProperties: ['border*'],
 }
 
+const fullPage: ViewportTransformOptions = {
+  enabled: true,
+  include: ['src/full-page/**'],
+  output: 'runtime',
+  viewportWidth: design.designWidth,
+  inlineStyles: true,
+  fontSize: true,
+  minSize: true,
+  customProperties: true,
+  variableFallbacks: true,
+  minPixelValue: 0,
+  mediaQueries: { runtimeSelector: 'html[data-consumer-viewport="vw"]' },
+}
+
 export default defineConfig({
-  plugins: [createViewportTransformPlugin(viewport), createViewportTransformPlugin(cooperative), vue()],
+  plugins: [createViewportTransformPlugin(viewport), createViewportTransformPlugin(cooperative), createViewportTransformPlugin(fullPage), vue()],
   build: { minify: false, cssMinify: false, sourcemap: true },
 })

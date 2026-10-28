@@ -1,5 +1,5 @@
 // @vitest-environment node
-import type { Declaration } from 'postcss'
+import type { AtRule, Declaration } from 'postcss'
 import type { ViewportTransformOptions } from '../src'
 import { resolve } from 'node:path'
 import vue from '@vitejs/plugin-vue'
@@ -31,6 +31,18 @@ describe('受控视口 CSS 转换', () => {
     expect(await transform(result, undefined, { output: 'runtime' })).toBe(result)
     expect(await transform(result)).toBe(result)
   })
+  it('正斜杠绝对 glob 同时命中 Windows 工作区源码和包产物，不扩大相邻包范围', async () => {
+    const options = { include: ['F:/lumal/packages/core/**'], output: 'runtime' as const }
+    for (const file of [
+      'F:\\lumal\\packages\\core\\src\\Page.vue?vue&type=style&lang.css',
+      'F:/lumal/packages/core/dist/core.css',
+    ]) {
+      expect(await transform('.page{width:192px}', file, options))
+        .toContain('calc(192 * var(--lumal-viewport-unit, 1px))')
+    }
+    expect(await transform('.page{width:192px}', 'F:/lumal/packages/core-other/style.css', options))
+      .toBe('.page{width:192px}')
+  })
   it('协作输出仍服从属性、选择器、忽略标记及已有适配保护', async () => {
     const css = '.panel{width:192px;height:96px;/* lumal-viewport-ignore */padding:24px;min-height:40px;font:14px/20px sans-serif;top:calc(var(--gap) + 24px);--lumal-viewport-unit:192px}.map{width:192px}'
     const result = await transform(css, undefined, {
@@ -50,6 +62,107 @@ describe('受控视口 CSS 转换', () => {
       .toBe('a{font-size:0.729167vw;line-height:1.041667vw;font:italic 0.729167vw/1.041667vw sans-serif;width:10vw}')
     expect(await transform('a{line-height:1.5;font-size:14px}', undefined, { fontSize: true }))
       .toBe('a{line-height:1.5;font-size:0.729167vw}')
+  })
+  it('整页 opt-in 转换普通变量 fallback 和尺寸约束，仍保护已有适配、URL 与业务文字', async () => {
+    const css = '.ui{font-size:calc(var(--text,14px) + 2px);line-height:20px;min-width:240px;border:1px solid var(--border);width:min(640px,100%);gap:clamp(8px,2%,24px);padding:var(--gap,12px) 24px;--size:192px;top:calc(192px * var(--lumal-viewport-scale));left:calc(10vw + 24px);right:calc(env(safe-area-inset-right) + 24px);background:url("192px.svg");content:"192px"}'
+    const options = { output: 'runtime' as const, fontSize: true, minSize: true, customProperties: true, variableFallbacks: true, minPixelValue: 0 }
+    const result = await transform(css, undefined, options)
+    expect(result).toContain('font-size:calc(var(--text,calc(14 * var(--lumal-viewport-unit, 1px))) + calc(2 * var(--lumal-viewport-unit, 1px)))')
+    for (const size of [20, 240, 1, 640, 8, 24, 12, 192])
+      expect(result).toContain(`calc(${size} * var(--lumal-viewport-unit, 1px))`)
+    expect(result).toContain('top:calc(192px * var(--lumal-viewport-scale))')
+    expect(result).toContain('left:calc(10vw + 24px)')
+    expect(result).toContain('right:calc(env(safe-area-inset-right) + 24px)')
+    expect(result).toContain('background:url("192px.svg");content:"192px"')
+    expect(await transform(result, undefined, options)).toBe(result)
+    expect(await transform('.ui{font-size:var(--font,14px);line-height:20px;min-width:min(320px,100%)}', undefined, { ...options, fontSize: false, minSize: false }))
+      .toBe('.ui{font-size:var(--font,14px);line-height:20px;min-width:min(320px,100%)}')
+  })
+  it('可选设计稿断点仅在指定根模式下启用，响应式、媒体偏好、原子规则和来源边界不变', async () => {
+    const css = '@media (max-width:768px) and (prefers-reduced-motion:reduce){.header{height:44px}:root{--gap:12px}html.dark .content{width:192px}}@media (pointer:coarse){.touch{height:44px}}.normal{width:192px}'
+    const options = { output: 'runtime' as const, mediaQueries: { runtimeSelector: 'html[data-app-viewport="vw"]' } }
+    const result = await transform(css, undefined, options)
+    expect(result).toContain('@media (max-width:40vw) and (prefers-reduced-motion:reduce)')
+    expect(result).toContain(':where(html[data-app-viewport="vw"]) .header')
+    expect(result).toContain(':where(html:not(html[data-app-viewport="vw"])) .header')
+    expect(result).toContain(':where(html[data-app-viewport="vw"]){--gap:12px}')
+    expect(result).toContain(':where(html[data-app-viewport="vw"]).dark .content')
+    expect(result).toContain('@media (pointer:coarse){.touch{')
+    expect(await transform(result, undefined, options)).toBe(result)
+    expect(await transform(css, 'C:/app/src/admin.css', options)).toBe(css)
+    expect(await transform(css, 'C:/app/node_modules/unknown/styles.css', options)).toBe(css)
+    expect(await transform(css)).not.toContain('40vw')
+    expect(() => createViewportPostcssPlugin({ ...options, include: ['src/**'], output: 'vw' })).toThrow('runtime')
+  })
+  it('设计稿断点支持预编译范围语法，混合原子/排除规则、嵌套与其他查询保守保留', async () => {
+    const options = { output: 'runtime' as const, excludeSelectors: ['.fixed'], mediaQueries: { runtimeSelector: 'html[data-mode="vw"]' } }
+    for (const [query, expected] of [
+      ['width<=768px', 'width<=40vw'],
+      ['768px >= width', '40vw >= width'],
+      ['640px < width < 1920px', '33.333333vw < width < 100vw'],
+      ['height > 192px', 'height > 10vw'],
+      ['max-width: .5px', 'max-width: 0.026042vw'],
+    ]) {
+      const result = await transform(`@media (${query}){.plain[data-label="192px"]{width:192px}}`, undefined, options)
+      expect(result).toContain(`@media (${expected})`)
+      expect(result).toContain(':where(html[data-mode="vw"]) .plain')
+      expect(await transform(result, undefined, options)).toBe(result)
+    }
+    const container = await transform('@container settings (width<=320px){.plain{display:block}}', undefined, options)
+    expect(container).toContain('@container settings (width<=16.666667vw)')
+    expect(container).toContain(':where(html[data-mode="vw"]) .plain')
+    expect(await transform(container, undefined, options)).toBe(container)
+    for (const css of [
+      '@media (width<768px){.w-\\[192px\\]{width:192px}.plain{color:red}}',
+      '@media (width<768px){.fixed{width:192px}.plain{color:red}}',
+      '@media (width<768px){@supports (display:grid){.plain{color:red}}}',
+      '.host{@media (width<768px){.plain{color:red}}}',
+      '@media (width<768px){.host{& .plain{color:red}}}',
+      '@media (width < var(--breakpoint)){.plain{color:red}}',
+      '@media (width < 40em){.plain{color:red}}',
+      '@media (resolution:192dpi){.plain{color:red}}',
+    ]) {
+      expect(await transform(css, undefined, options)).toBe(css)
+    }
+    for (const runtimeSelector of ['body[data-mode="vw"]', 'html .screen', 'html,body', 'html:has(.screen)', ':root']) {
+      expect(() => createViewportPostcssPlugin({ ...options, include: ['src/**'], mediaQueries: { runtimeSelector } })).toThrow('html')
+    }
+  })
+  it('设计稿断点保留复制声明的 source map，混合范围外来源时不复制整个查询', async () => {
+    const file = 'C:/app/src/screen/page.css'
+    const plugin = createViewportPostcssPlugin({
+      ...options,
+      output: 'runtime',
+      mediaQueries: { runtimeSelector: 'html[data-mode="vw"]' },
+    }, 'C:/app')
+    const css = '@media (max-width:768px){.local{width:192px}}'
+    const result = await postcss([plugin]).process(css, {
+      from: file,
+      map: { inline: false, annotation: false },
+    })
+    const repeated = await postcss([plugin]).process(result.css, {
+      from: file,
+      map: { prev: result.map!.toJSON(), inline: false, annotation: false },
+    })
+    expect(repeated.css).toBe(result.css)
+    const origins: string[] = []
+    repeated.root.walkDecls('width', (declaration) => {
+      const source = declaration.source!
+      const origin = source.input.origin(source.start!.line, source.start!.column)
+      origins.push(origin?.file?.replaceAll('\\', '/') ?? '')
+    })
+    expect(origins).toEqual([file, file])
+
+    // 同一个查询包含入口外声明时，不能用入口的白名单授权整个媒体规则。
+    const root = postcss.parse(css, { from: file })
+    const foreign = postcss.parse('.foreign{width:192px}', { from: 'C:/app/src/admin.css' })
+    const media = root.first as AtRule
+    media.append(foreign.first!)
+    const mixed = await postcss([plugin]).process(root, { from: file })
+    expect(mixed.css).not.toContain('40vw')
+    expect(mixed.css).not.toContain(':where(')
+    expect(mixed.css).toContain('.foreign{width:192px}')
+    expect(mixed.css).toContain('.local{width:calc(192 * var(--lumal-viewport-unit, 1px))}')
   })
   it('默认保护物理与逻辑最小尺寸，可单独开启而不改变其他旧选项', async () => {
     const css = 'a{min-width:320px;min-height:40px;min-inline-size:320px;min-block-size:40px;width:384px;height:192px}'

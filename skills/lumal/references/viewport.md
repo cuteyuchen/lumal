@@ -50,10 +50,13 @@ Admin 的 `examples/ViewportView.vue` 演示默认/路由/容器策略与vw，`v
 
 Admin Header 的工作区菜单还提供 `vw 流式`，默认仍为 responsive。
 vw 与 Vite 共用项目根1920×1080设计配置，旧 contain/width 保留1280×720内容画布。
-自有页面受控输出 runtime 单位，工作区仅在 vw 下提供浏览器单位，其余模式恢复1px；
-只缩放内容区，不变换 Header/侧栏，不重建 RouterView 或标签缓存。
-字体/行高、最小尺寸、边框、网格轨道以及依赖样式保留，登录/iframe/引擎和独立画布隔离。
-自管理视口页面覆盖为 responsive，不能在 transform 祖先下再次开启 vw；
-动态数值和组件尺寸属性仍需显式适配，Teleport 浮层保持独立。
+整页vw显式开启字体/行高、最小尺寸、边框、网格及变量fallback转换，
+精确加入Core/Icons Vue/Element Plus样式白名单；根单位覆盖Header/侧栏和body浮层。
+主题使用Core的cssLength，CSS与JS断点同步，不重建RouterView或标签缓存、不transform整页。
+这是应用opt-in，构建插件的安全默认值不变。登录/iframe/引擎和独立画布仍隔离。
+自管理视口页面连根单位一起回退responsive，不能只靠子包装器重置根主题变量，
+也不能在transform祖先下再次开启vw。动态数值和组件尺寸属性仍需显式适配，
+Dashboard列宽用无target的useViewportScale({mode:'width',...})。
 用户/角色管理和 CRUD 示例在 contain/width 下回退 responsive，
 避免内容树内编辑器受 transform 影响；vw 不施加 transform，可继续使用。
+原生浏览器页面zoom与手机pinch zoom不同；只保证已接入的尺寸，不扫描业务脚本或原子px类名。

@@ -37,6 +37,11 @@ import '@lumal/icons-vue/style.css'
 </template>
 ```
 
+未发布源码中，数字 `size` 使用 `calc(N * var(--lumal-viewport-unit, 1px))`，
+默认视觉仍为 Npx；宿主提供单位后参与适配，不强制依赖 Viewport。
+字符串尺寸原样保留，需要固定像素可用 `size="20px"`。
+整页根单位、局部画布与 Teleport 边界见 [屏幕适配](/reference/screen-viewport-guide)。
+
 ## 与 createLumalAdmin 联用
 
 在 `createLumalAdmin({ icons: { localSvg: [...] } })` 中注册本地 SVG 后，可在菜单 `icon` 字段与 `LumalIcon` 中直接使用对应 `key`。

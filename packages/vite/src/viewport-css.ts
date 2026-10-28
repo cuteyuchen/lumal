@@ -52,8 +52,13 @@ export function createViewportCssTransformer(options: ViewportTransformOptions) 
     // 整条声明先检查适配信号，不能先把 var()/clamp() 旁的 px 局部转换。
     parsed.walk((node) => {
       if (node.type === 'function') {
-        if (/^(?:var|env|constant|attr|min|max|clamp)$/i.test(node.value))
+        const variable = /^var$/i.test(node.value)
+        const viewportVariable = variable && node.nodes.some(child => child.type === 'word' && child.value.startsWith('--lumal-viewport-'))
+        if (viewportVariable
+          || /^(?:env|constant|attr)$/i.test(node.value)
+          || (!options.variableFallbacks && /^(?:var|min|max|clamp)$/i.test(node.value))) {
           adapted = true
+        }
         if (adapted || /^url$/i.test(node.value))
           return false
       }

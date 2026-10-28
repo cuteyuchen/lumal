@@ -13,7 +13,7 @@ describe('lumalIcon morph SSR', () => {
     }))
     expect(html).toContain('<circle')
     expect(html).toContain('主题切换')
-    expect(html).toContain('--lumal-icon-size:20px')
+    expect(html).toContain('--lumal-icon-size:calc(20 * var(--lumal-viewport-unit, 1px))')
     expect(load).not.toHaveBeenCalled()
   })
 })

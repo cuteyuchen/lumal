@@ -73,7 +73,7 @@ describe('lumalIcon morph', () => {
     expect(frames.size).toBe(0)
     expect(wrapper.attributes('title')).toBe('切换状态')
     expect(wrapper.attributes('aria-hidden')).toBe('true')
-    expect(wrapper.attributes('style')).toContain('--lumal-icon-size: 20px')
+    expect(wrapper.attributes('style')).toContain('--lumal-icon-size: calc(20 * var(--lumal-viewport-unit, 1px))')
     await wrapper.setProps({ morph: false })
     expect(mediaListeners.size).toBe(0)
     expect(wrapper.find('svg.lumal-icon__component').exists()).toBe(false)

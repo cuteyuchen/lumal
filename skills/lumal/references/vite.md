@@ -76,7 +76,7 @@ const viewport = createViewportTransformPlugin({
 - 属性使用 CSS 连字符形式与 glob；白名单默认全部，`[]` 不转换，黑名单始终优先。
 - `fontSize:false` 同时保留 font/font-size/line-height；minSize默认false，保护物理及逻辑最小宽高。
   白名单不绕过这些开关。边框、间距按属性名单独立控制；<=1px默认保留。
-- 默认保留自定义属性，`--lumal-viewport-*` 始终保留。含var/env/attr/min/max/clamp、
+- 默认保留自定义属性，`--lumal-viewport-*` 始终保留。默认含var/env/attr/min/max/clamp、
   已有视口/容器/字体相对单位的整条声明保留，不转换表达式旁的px。
 - `excludeSelectors` 字符串按子串、正则按选择器匹配，分组或嵌套祖先命中则整条声明保留。
   紧邻前置 `/* lumal-viewport-ignore-next */` 或后置 `/* lumal-viewport-ignore */`
@@ -100,7 +100,30 @@ LumalViewport在vw下设置浏览器宽度单位，其余模式恢复1px，无�
 运行时policy展开designWidth/designHeight，Vite使用viewportWidth=designWidth；
 不增加两个包间依赖。vw宽高统一相对浏览器宽度，实际容器测量仍独立。
 Screen仅--viewport vw自动安装并启用协作转换，其他模式不增加构建依赖。
-Admin/地图/Teleport浮层不要纳入宽泛转换；ECharts与动态尺寸继续显式使用运行时API。
+局部适配不要把Admin/地图/Teleport浮层纳入宽泛转换；ECharts与动态尺寸继续显式使用运行时API。
 新选项默认关闭或保守保护，旧最小尺寸如需继续缩放必须显式minSize:true。
+
+## 整页 vw（未发布源码）
+
+仅转换内容间距不能保证浏览器页面缩放后视觉一致。整页 opt-in 必须统一 Header、侧栏、
+字体/行高、最小尺寸、细边框、主题变量、CSS/JS断点及Teleport单位：
+
+- 显式开启fontSize/minSize/customProperties/inlineStyles，minPixelValue:0；
+  dependencies仅列明确UI包，不放开全部node_modules。
+- 新 `variableFallbacks:true` 转换普通var fallback和min/max/clamp中的px，
+  仍服从属性开关；视口变量、已有相对单位、env/attr/constant、URL/字符串仍保护。
+  先确认普通变量没有经其他机制缩放。
+- 新 `mediaQueries:{ runtimeSelector:'html[data-app-viewport="vw"]' }` 只接受runtime输出和
+  单个html复合选择器。顶层media/container宽高查询保留px分支、复制vw分支，用零优先级根条件切换。
+  支持传统/范围/双边语法；嵌套、原子化、排除规则和混合范围外来源的查询保守跳过。
+  motion/pointer等其他条件不改。
+- 根单位由应用设置vw/1px并在卸载恢复。Core主题用runtime.cssLength，Layout/Tabs用responsive:false
+  同步JS断点。默认行为不变，不是仅切换一个prop就完成适配。
+- 根主题变量不能靠内层包装器重置；进入自管理画布路由需整页回退或隔离主题定义。
+  表格列宽/弹窗size等数值协议仍显式计算，原子px规则仍由原子工具适配。
+
+Admin Demo已采用此接线；本仓库scripts/check-admin-viewport-zoom.mjs验证真实页面zoom，
+而非CSS zoom或DPR模拟。不承诺手机pinch zoom或任意未接入业务脚本的视觉一致。
+完整配置见docs/screen-viewport-guide.md。
 
 仓库核对位置：`packages/vite/src/{index,component-resolver,aliases,devtools,viewport-transform}.ts`。

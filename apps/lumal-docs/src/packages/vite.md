@@ -74,8 +74,8 @@ Dev/Build 共用 CSS 声明转换，不扫描脚本或业务坐标。
 需用本地构建的 tarball 验证，不能直接用已发布 `0.0.6-beta` 验收新增选项。
 默认不转换 node_modules、字号/行高、最小尺寸及自定义属性；依赖只通过精确包名白名单加入。
 保留已有 PostCSS 配置和来源边界，无法可靠定位预处理声明时跳过并警告。
-配置与限制见 [屏幕适配](/reference/screen-viewport-guide)，不要覆盖 Admin、
-Element Plus 或地图样式，也不要与同一画布的 transform 叠加。
+配置与限制见 [屏幕适配](/reference/screen-viewport-guide)。局部 Screen 不应覆盖 Admin、
+Element Plus 或地图样式；整页 vw 必须显式接线，也不能与同一画布的 transform 叠加。
 
 ```ts
 import { createViewportTransformPlugin } from '@lumal/vite'
@@ -112,7 +112,7 @@ export default defineConfig({
 配置选择器排除但存在动态 class/id、data 等非 style 属性时，行内转换保守跳过该元素子树。
 原子化任意值类名及对应生成规则（如 `.w-\[192px\]`）都保留，普通属性选择器不受误伤。
 
-包含视口变量、动态尺寸函数或已有视口/容器单位的整条声明保留，避免重复转换。
+默认包含视口变量、动态尺寸函数或已有视口/容器单位的整条声明保留，避免重复转换。
 默认 `output:'vw'` 直接生成浏览器 vw，可独立使用，整体缩放画布必须显式排除。
 可选 `output:'runtime'` 输出 `calc(192 * var(--lumal-viewport-unit, 1px))`；
 LumalViewport 的 vw 模式按浏览器宽度换算，其余模式恢复设计 px，避免画布重复缩放。
@@ -126,6 +126,31 @@ Vite 使用同一对象的 `viewportWidth: viewportDesign.designWidth`。
 两包不互相依赖，Screen 模板仅 `--viewport vw` 安装并启用协作转换，其他模式保持轻量。
 浏览器 vw 不等于容器宽度：vw 下宽高均按浏览器宽度 / 设计宽度换算，布局保持流式。
 字体/行高与最小尺寸默认仍保护；地图/ECharts resize 和弹窗显式采用运行时 API。
+
+### 整页 vw
+
+需要浏览器页面缩放后视觉比例保持一致时，须让 Header、侧栏、文字、主题与浮层共用根单位，
+而非只处理内容区。Admin Demo 的 `vw 流式` 已采用该接线；默认仍为响应式。
+未发布源码增加两个默认关闭的选项：
+
+| 选项 | 默认 | 作用 |
+| --- | --- | --- |
+| `variableFallbacks` | `false` | 允许普通 `var()` fallback、`min/max/clamp` 中的 px 转换 |
+| `mediaQueries` | 关闭 | runtime 输出下用单个 html 根复合选择器切换设计稿宽高断点 |
+
+整页配置显式开启 `fontSize/minSize/customProperties/inlineStyles/variableFallbacks`、
+`minPixelValue:0`，依赖只通过精确包名白名单接入。应用设置根模式属性和浏览器单位，
+其他模式恢复1px；退出应用恢复宿主原值。`mediaQueries: { runtimeSelector: 'html[data-app-viewport="vw"]' }`
+保留原 px 分支，复制顶层媒体/容器宽高查询为 vw 分支，由零优先级根条件切换。
+支持传统与范围语法；嵌套、原子化、排除规则或混合来源的查询保守跳过，
+motion/pointer 等非尺寸条件保持原样。
+
+已有视口变量/相对单位、URL、业务字符串和原子 CSS 继续保护。
+Core 运行时主题通过 `runtime.cssLength` 显式格式化尺寸，
+Layout/Tabs 通过 `responsive:false` 同步 JS 断点；默认行为均保持不变。
+表格列宽等数值协议仍用公开运行时 API 显式计算，不扫描脚本。
+根主题变量不能靠局部包装器重置，进入自管理大屏时整页回退，避免重复缩放。
+完整接线、Teleport 与原生页面缩放边界见 [屏幕适配](/reference/screen-viewport-guide)。
 
 Monorepo 的开发源码 alias 应限定为 `command === 'serve' && !isPreview`，
 并包含传递依赖 viewport；普通 npm 消费者不需要这些 alias。

@@ -38,6 +38,8 @@ const viewport = createViewportTransformPlugin({
 | `fontSize` | `false` | 同时保护 `font-size`、`font`、`line-height` |
 | `minSize` | `false` | 保护 `min-width`、`min-height`、`min-inline-size`、`min-block-size` |
 | `customProperties` | `false` | 保护 CSS 自定义属性；保留的 `--lumal-viewport-*` 不允许再次转换 |
+| `variableFallbacks` | `false` | 显式转换普通 `var()` fallback 与 `min/max/clamp` 中的 px；已有适配信号仍保留 |
+| `mediaQueries` | 不启用 | `{ runtimeSelector: 'html[data-app-viewport="vw"]' }`，仅配合 runtime 输出切换设计稿断点 |
 | `minPixelValue` | `1` | 绝对值不大于阈值的 px 保留，保护细边框，必须为非负有限数 |
 | `precision` | `6` | 小数位数，范围 `0..10` |
 | `inlineStyles` | `false` | 独立开启 Vue 模板行内样式转换 |
@@ -70,7 +72,7 @@ const viewport = createViewportTransformPlugin({
 `/*! lumal-viewport-ignore */` 保留注释。
 选择器分组采用整条保留，不拆出部分选择器再缩放。
 
-含 `var()`、`env()`、`attr()`、`min()`、`max()`、`clamp()`、已有视口/容器/字体相对单位的
+默认含 `var()`、`env()`、`attr()`、`min()`、`max()`、`clamp()`、已有视口/容器/字体相对单位的
 声明整体保留，不会只转换动态表达式旁边的 px。例如
 `calc(192px * var(--lumal-viewport-scale))`、`calc(10vw + 24px)` 和
 `clamp(320px, 50vw, 960px)` 均保持原值。URL、引号字符串、普通数字不变，重复执行幂等。
@@ -116,7 +118,7 @@ Tailwind/UnoCSS 的 `w-[192px]`、`h-[96px]` 等任意值类名不会改变，
 
 不转换 TS/JS 字符串或坐标；动态数值布局使用响应式 viewport Composable。
 不提供旧插件的全依赖/全脚本扫描开关。直接 vw 输出不要与同一画布的 transform 双重缩放，
-也不要让转换范围覆盖 Admin、Element Plus 或地图引擎样式。
+局部 Screen 不要把范围扩展到 Admin、Element Plus 或地图引擎样式；整页适配需按下节显式接线。
 解析依赖仅供 Node 构建工具使用，不进入应用运行时。
 
 ### 与运行时协作
@@ -153,6 +155,54 @@ const viewport = createViewportTransformPlugin({
 已有 raw vw、任意外部 transform 仍须显式隔离，协作单位不能撤销其他工具做过的缩放。
 同理，不能把 vw 区域嵌套在已 transform 的 contain/width 画布内部。
 
+### 整页 vw 与浏览器缩放
+
+要在同一浏览器窗口内缩放页面后仍保持相同视觉比例，不能只转换内容区间距。
+Header、侧栏、字号/行高、主题变量、最小尺寸、边框和布局断点必须使用同一设计单位。
+这是**显式 opt-in**，不是新的默认行为：
+
+```ts
+const fullPageViewport = createViewportTransformPlugin({
+  enabled: true,
+  include: ['src/**'],
+  exclude: ['src/login/**', 'src/canvas/**', '**/map/**'],
+  dependencies: ['@lumal/core', '@lumal/icons-vue', 'element-plus'],
+  viewportWidth: viewportDesign.designWidth,
+  output: 'runtime',
+  inlineStyles: true,
+  fontSize: true,
+  minSize: true,
+  minPixelValue: 0,
+  customProperties: true,
+  variableFallbacks: true,
+  mediaQueries: { runtimeSelector: 'html[data-app-viewport="vw"]' },
+})
+```
+
+应用在 `html` 上设置 `data-app-viewport="vw"` 及
+`--lumal-viewport-unit: 0.052083333333333336vw`（设计宽1920）；退出时恢复1px并移除模式标记。
+根单位同时覆盖 Teleport 到 body 的 UI。局部包装器不自动设置根；根主题变量在定义处解析，
+不能靠子包装器恢复已解析的值。进入自管理画布路由时需整页退出该模式，或隔离主题定义。
+应用卸载时恢复宿主原值；示例接线见 Admin 的 `use-admin-viewport.ts`。
+
+`variableFallbacks:true` 允许转换 `var(--text,14px)`、`min(640px,100%)` 等已核对表达式，
+仍服从属性开关。含 `--lumal-viewport-*`、已有相对单位、`env/attr/constant` 的整条声明不变；
+URL 和字符串不变。应用应先核对普通变量没有由其他机制缩放。
+
+`mediaQueries` 仅支持单个 `html` 根元素复合选择器，不接受后代、分组或伪类。
+顶层 `@media/@container` 的宽高 px 查询（传统、范围与双边比较语法）保留原 px 分支，
+并复制带 vw 查询的分支，用 `:where()` 根选择器分别控制启用，不增加原选择器优先级。
+例如 `(max-width:768px)` 在模式内使用 `(max-width:40vw)`，避免浏览器放大后切到移动布局；
+退出模式仍使用768px。motion、pointer等条件不变；嵌套查询/规则、原子化或显式排除规则
+及混合范围外来源的查询整体保守跳过。不能依靠此选项转换任意第三方断点体系。
+
+运行时生成的主题尺寸使用 `@lumal/core/theme` 的可选 `runtime.cssLength`；
+Layout/Tabs 的 `responsive:false` 同步关闭基于 px 断点的 JS 交互切换。
+`LumalIcon` 数字 size 使用协作单位，字符串尺寸不改。以上能力均属于未发布源码。
+第三方组件数值协议（如表格列宽、弹窗 `size`）和 ECharts 仍需显式适配，不扫描脚本。
+原子化任意值 px 类名及生成规则继续保留，应由原子方案自行适配。
+此处指浏览器页面缩放，不是移动端手势 pinch zoom，也不保证任意未接入的业务尺寸自动适配。
+
 应用自己的 `viewport.config.ts` 导出无依赖的
 `viewportDesign = { designWidth: 1920, designHeight: 1080 }`，运行时 policy 展开同一对象，
 构建配置使用 `viewportWidth: viewportDesign.designWidth`，两个包无需互相依赖。
@@ -182,3 +232,4 @@ const resolver = createLumalComponentResolver({ importStyle: true })
 运行 `pnpm --filter @lumal/vite test` 和 `pnpm test:vite-consumer`：
 后者构建并打包候选包，在独立 Vue 项目中验证类型、SSR、SCSS、Source Map、
 Dev/Build 和运行时协作，不依赖工作区源码 alias，不启动浏览器。
+整页 Admin 原生浏览器缩放的独立命令、范围与证据见 `docs/admin-viewport-zoom-2026-10-28.md`。

@@ -34,44 +34,54 @@ async function style(server: ViteDevServer, path: string, language = 'css') {
 }
 
 describe('工作区 vw 的真实 Vite 转换边界', () => {
-  it('转换自有页面与公共示例间距，保留字号、最小尺寸、网格约束和边框', async () => {
+  it('显式整页适配同时转换字体、最小尺寸、网格约束、间距和边框', async () => {
     await withAdminServer(async (server) => {
       const dashboard = await style(server, '/src/views/dashboard/DashboardView.vue', 'scss')
       expect(dashboard).toContain(`padding: ${runtimeLength(20)}`)
       expect(dashboard).toContain(`gap: ${runtimeLength(16)}`)
-      expect(dashboard).toMatch(/grid-template-columns:\s*minmax\(0,\s*2fr\)\s*minmax\(280px,\s*1fr\)/)
-      expect(dashboard).toContain('font-size: calc(var(--lumal-font-size-base, 14px) + 14px)')
-      expect(dashboard).toMatch(/border:\s*1px solid var\(--el-border-color-lighter\)/)
+      expect(dashboard).toContain(`minmax(0, 2fr) minmax(${runtimeLength(280)}, 1fr)`)
+      expect(dashboard).toContain(`font-size: calc(var(--lumal-font-size-base, ${runtimeLength(14)}) + ${runtimeLength(14)})`)
+      expect(dashboard).toContain(`border: ${runtimeLength(1)} solid var(--el-border-color-lighter)`)
+      expect(dashboard).toContain(':where(html[data-admin-viewport="vw"])')
+      expect(dashboard).toContain(':where(html:not(html[data-admin-viewport="vw"]))')
 
       const user = await style(server, '/src/views/system/UserView.vue')
       expect(user).toContain(`padding: ${runtimeLength(16)}`)
-      expect(user).toMatch(/line-height:\s*20px/)
-      expect(user).toMatch(/min-height:\s*32px/)
-      expect(user).toMatch(/grid-template-columns:\s*minmax\(220px,\s*260px\)\s*minmax\(0,\s*1fr\)/)
-      expect(user).toMatch(/border:\s*1px solid var\(--el-border-color-lighter\)/)
+      expect(user).toContain(`line-height: ${runtimeLength(20)}`)
+      expect(user).toContain(`min-height: ${runtimeLength(32)}`)
+      expect(user).toContain(`minmax(${runtimeLength(220)}, ${runtimeLength(260)}) minmax(0, 1fr)`)
+      expect(user).toContain(`border: ${runtimeLength(1)} solid var(--el-border-color-lighter)`)
 
       const shared = await server.transformRequest('/src/styles.scss?direct')
       expect(shared).not.toBeNull()
       expect(shared!.code).toContain(`padding: ${runtimeLength(16)}`)
       expect(shared!.code).toContain(`gap: ${runtimeLength(12)}`)
-      expect(shared!.code).toMatch(/min-height:\s*40px/)
+      expect(shared!.code).toContain(`min-height: ${runtimeLength(40)}`)
     })
   }, 30_000)
 
-  it('顶部 Header 控件、固定图表高度和自管理大屏画布不参与工作区转换', async () => {
+  it('顶部导航和明确允许的 Element Plus 主题参与转换，固定图表和自管理画布仍排除', async () => {
     await withAdminServer(async (server) => {
       const header = await style(server, '/src/components/app/AppViewportModeSwitch.vue')
-      expect(header).toMatch(/width:\s*44px/)
-      expect(header).toMatch(/height:\s*44px/)
-      expect(header).toMatch(/width:\s*36px/)
-      expect(header).not.toContain('var(--lumal-viewport-unit')
+      expect(header).toContain(`width: ${runtimeLength(44)}`)
+      expect(header).toContain(`height: ${runtimeLength(44)}`)
+      expect(header).toContain(`width: ${runtimeLength(36)}`)
+      expect(header).toContain('@media (max-width: 40vw)')
 
-      const themePath = createRequire(import.meta.url).resolve('@lumal/core/theme-chalk/index.scss')
+      const require = createRequire(import.meta.url)
+      const themePath = require.resolve('element-plus/theme-chalk/el-dropdown.css')
       const theme = await server.transformRequest(`/@fs/${normalizePath(themePath)}?direct`)
       expect(theme).not.toBeNull()
-      expect(/\.el-dropdown-menu__item\s*\{[^}]*padding:\s*5px 16px/.test(theme!.code), '共享菜单保留整行点击区域').toBe(true)
-      expect(/\.el-dropdown-menu__item\s*\{[^}]*line-height:\s*22px/.test(theme!.code), '共享菜单不跟随工作区缩放').toBe(true)
-      expect(theme!.code).not.toContain('var(--lumal-viewport-unit')
+      expect(theme!.code).toContain(`padding:${runtimeLength(5)} ${runtimeLength(16)}`)
+      expect(theme!.code).toContain(`line-height:${runtimeLength(22)}`)
+      const base = await server.transformRequest(`/@fs/${normalizePath(require.resolve('element-plus/theme-chalk/base.css'))}?direct`)
+      expect(base!.code).toContain(`--el-font-size-base:${runtimeLength(14)}`)
+
+      // 公共样式入口解析到真实工作区绝对路径，不能只验证 src 与 node_modules。
+      const coreCss = await server.transformRequest(`/@fs/${normalizePath(require.resolve('@lumal/core/style.css'))}?direct`)
+      expect(coreCss!.code).toContain(runtimeLength(4))
+      expect(coreCss!.code).toContain('width<=40vw')
+      expect(coreCss!.code).toContain(':where(html[data-admin-viewport="vw"])')
 
       const chart = await style(server, '/src/views/examples/ChartView.vue', 'scss')
       expect(chart).toMatch(/height:\s*340px/)

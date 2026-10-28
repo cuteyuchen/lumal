@@ -76,6 +76,10 @@ const menus = createMenuRouteRuntime({
 
 `LumalLayout` 接收完整 `menus` 和 `preferences`。`sidebar-nav/top-nav/mixed-nav` 由偏好驱动，应用不必另造顶栏/侧栏菜单状态。
 
+未发布源码新增Layout/Tabs的 `responsive?:boolean`（默认true），false供显式整页vw保持
+桌面导航/拖拽，必须同步CSS断点策略，不是独立适配开关。
+Layout默认Header高度跟随主题变量，侧栏/菜单设计尺寸使用 `--lumal-viewport-unit`（默认1px）。
+
 启用 `route-driven` 后，让 Layout 管理访问标签；用 `fixed-tabs`、`route-tab-filter`、`route-tab-resolver` 扩展，不再维护第二份标签数组。
 
 缓存接线示意，`viewKey` 和 `cacheKeys` 必须使用同一套 `path:version` 规则：

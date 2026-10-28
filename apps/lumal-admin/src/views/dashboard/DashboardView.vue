@@ -3,9 +3,11 @@ import type { SchemaTableColumn, SchemaTableRow } from '@lumal/core/components'
 import type { DictionaryOption } from '@lumal/core/dictionary'
 import type { SystemMenuRecord } from '../../api/system'
 import { LumalPage, LumalSchemaTable } from '@lumal/core/components'
+import { useViewportScale } from '@lumal/viewport'
 import { ElAlert, ElButton } from 'element-plus'
 import { computed, onMounted, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
+import { viewportDesign } from '../../../viewport.config'
 import {
   fetchDictionaryTypes,
   fetchSystemMenus,
@@ -14,6 +16,7 @@ import {
   fetchSystemUsers,
 } from '../../api/system'
 import { currentUser } from '../../services/session'
+import { adminViewportMode } from '../../services/workspace-viewport'
 
 interface DashboardMetric {
   label: string
@@ -40,14 +43,19 @@ const quickActions = computed(() => [
   { authority: 'system:dict:list', label: '字典维护', path: '/system/dict' },
 ].filter(action => currentUser.value?.permissions.includes(action.authority)))
 
+/***********************表格数值尺寸*********************/
+// Element Plus 列宽是数值协议，显式使用窗口比例，不让构建插件扫描或改写脚本。
+const { scale } = useViewportScale({ ...viewportDesign, mode: 'width', enabled: () => adminViewportMode.value === 'vw' })
+const tablePixels = (pixels: number) => adminViewportMode.value === 'vw' ? pixels * scale.value : pixels
 const userColumns = computed<SchemaTableColumn[]>(() => [
-  { field: 'username', label: '用户名', minWidth: 140 },
-  { field: 'nickname', label: '昵称', minWidth: 140 },
-  { field: 'role', label: '角色', minWidth: 120, options: roleOptions.value },
-  { dictionary: 'status', field: 'status', label: '状态', width: 100 },
-  { field: 'createdAt', label: '创建时间', width: 130 },
+  { field: 'username', label: '用户名', minWidth: tablePixels(140) },
+  { field: 'nickname', label: '昵称', minWidth: tablePixels(140) },
+  { field: 'role', label: '角色', minWidth: tablePixels(120), options: roleOptions.value },
+  { dictionary: 'status', field: 'status', label: '状态', width: tablePixels(100) },
+  { field: 'createdAt', label: '创建时间', width: tablePixels(130) },
 ])
 
+/***********************数据加载与导航*********************/
 function countMenus(items: SystemMenuRecord[]): number {
   return items.reduce((total, item) =>
     total + (item.type === 'button' ? 0 : 1) + countMenus(item.children ?? []), 0)

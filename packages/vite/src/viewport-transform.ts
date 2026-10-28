@@ -1,4 +1,4 @@
-import type { Declaration, Plugin as PostcssPlugin } from 'postcss'
+import type { AtRule, Declaration, Plugin as PostcssPlugin } from 'postcss'
 import type { Plugin as VitePlugin } from 'vite'
 import { resolve } from 'node:path'
 import process from 'node:process'
@@ -7,6 +7,7 @@ import { parse } from 'postcss'
 import loadPostcssConfig from 'postcss-load-config'
 import valueParser from 'postcss-value-parser'
 import { createViewportCssTransformer } from './viewport-css'
+import { createViewportMediaTransformer } from './viewport-media'
 import { transformViewportTemplate } from './viewport-template'
 
 export interface ViewportTransformOptions {
@@ -16,7 +17,7 @@ export interface ViewportTransformOptions {
   include: string[]
   exclude?: string[]
   viewportWidth?: number
-  /** 默认直接输出 vw；runtime 使用局部单位变量，仅在 LumalViewport 的 vw 模式换算。 */
+  /** 默认直接输出 vw；runtime 由局部包装器或宿主根单位选择 vw / 1px。 */
   output?: 'vw' | 'runtime'
   precision?: number
   /** 默认保留 <=1px，避免细边框消失。 */
@@ -34,6 +35,10 @@ export interface ViewportTransformOptions {
   /** 默认保留 min-width/min-height 及对应逻辑属性，显式 true 才转换。 */
   minSize?: boolean
   customProperties?: boolean
+  /** 显式转换普通 var() fallback、min/max/clamp 中的 px；已有适配单位和视口变量仍受保护。 */
+  variableFallbacks?: boolean
+  /** runtime 输出下按根选择器切换媒体/容器宽高断点，未命中时保留原始响应式查询。 */
+  mediaQueries?: { runtimeSelector: string }
   /** 默认排除全部依赖；仅此处显式列出的包可以转换。 */
   dependencies?: string[]
 }
@@ -77,8 +82,9 @@ function createSourceFilter(options: ViewportTransformOptions, root: string) {
 
 function createPostcssPlugin(options: ViewportTransformOptions, root: string, sourceAllowed?: (id: string) => boolean): PostcssPlugin {
   const transformDeclaration = createViewportCssTransformer(options)
+  const transformMedia = createViewportMediaTransformer(options)
   const included = createSourceFilter(options, root)
-  function originalSource(declaration: Declaration): string | undefined {
+  function originalSource(declaration: Declaration | AtRule): string | undefined {
     const source = declaration.source
     if (!source)
       return undefined
@@ -101,6 +107,17 @@ function createPostcssPlugin(options: ViewportTransformOptions, root: string, so
     Declaration(declaration) {
       if (included(originalSource(declaration)))
         transformDeclaration(declaration)
+    },
+    AtRuleExit(rule) {
+      if (!transformMedia || !included(originalSource(rule)))
+        return
+      // 混合 Sass 来源不能通过媒体查询入口绕过逐声明范围保护。
+      let allowed = true
+      rule.walkDecls((declaration) => {
+        allowed &&= included(originalSource(declaration))
+      })
+      if (allowed)
+        transformMedia(rule)
     },
   }
 }

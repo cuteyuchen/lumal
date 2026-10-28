@@ -47,6 +47,11 @@ export function readAdminViewportMode(storage = browserStorage()): AdminViewport
 const mode = shallowRef<AdminViewportMode>(readAdminViewportMode())
 export const adminViewportMode = readonly(mode)
 
+/** 仅显式的样式尺寸使用协作单位，不扫描业务脚本和 ECharts 配置。 */
+export function adminViewportLength(pixels: number): string {
+  return `calc(${pixels} * var(--lumal-viewport-unit, 1px))`
+}
+
 export function setAdminViewportMode(value: unknown): void {
   if (!isAdminViewportMode(value))
     return

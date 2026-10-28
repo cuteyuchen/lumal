@@ -10,17 +10,20 @@
 ## Admin Header 工作区切换
 
 Admin Demo 顶部显示器菜单提供响应式、等比完整、按宽缩放和 `vw 流式`，
-仍默认响应式，选择保存在原工作区偏好键。切换只更新工作区样式，不重建 RouterView 或标签缓存。
+仍默认响应式，选择保存在原工作区偏好键。切换不重建 RouterView 或标签缓存。
 
 - `vw` 与构建共用项目根 `viewport.config.ts` 的1920×1080设计配置；
-  宽、高和间距以浏览器宽度为基准，侧栏收起不会改变比例，不做整体 transform。
+  Header、侧栏、宽高、字体/行高、边框和间距以浏览器宽度为基准，侧栏收起不会改变比例，
+  不做整体 transform。固定窗口内的浏览器页面缩放保持整页视觉比例和布局。
 - 原 contain/width 继续使用1280×720内容画布及0.75缩放下限，避免改变既有偏好效果。
   非 vw 模式的协作单位为1px，不叠加构建转换；字号补偿仅用于画布模式。
-- 构建只转换自有内容页、公共页面样式与请求示例的尺寸、定位、间距；保留字体、行高、边框、
-  最小尺寸和网格轨道，Header/Tabbar/侧栏及依赖样式不参与。
+- 这是整页 opt-in：显式开启字体、最小尺寸、细边框、自定义属性及普通变量 fallback 转换；
+  精确加入 Core、Icons Vue、Element Plus 样式白名单，不放开所有 node_modules。
+  主题运行时通过 Core `cssLength` 使用同一单位；JS 与 CSS 断点同步保持桌面设计布局。
 - 登录页、外部 iframe、ChartView 的引擎尺寸、DataV/Cockpit 画布不参与转换。
-  视口示例仍由自身策略管理，工作区在自管理路由上恢复 responsive，避免外层重复缩放。
-  Teleport 到 body 的弹窗不继承工作区单位，组件尺寸属性与脚本数值不做自动转换。
+  视口示例仍由自身策略管理，根与工作区在自管理路由上一起恢复 responsive，避免外层重复缩放。
+  整页 vw 的 Teleport 到 body 的弹窗继承根单位；组件数值属性仍不自动扫描。
+  Dashboard 表格列宽显式使用无 target 的 `useViewportScale({ mode:'width', ... })`。
 - 用户管理、角色管理和 CRUD 示例的编辑器留在内容树内，因此在 contain/width 下
   恢复响应式；在 vw 下仍使用流式适配，不把内部编辑器放进 transform 画布。
 
@@ -135,11 +138,13 @@ Screen 可让视口容器占满应用高度；Admin 内嵌容器则只占实际�
 - `--lumal-viewport-scale` 在画布模式为 transform 比例，vw 下为窗口宽度 / 设计宽度，responsive/disabled为1。
 - `--lumal-viewport-x-unit/y-unit` 在 vw 下同为浏览器宽度单位，其他启用模式仍为实际容器尺寸 / 设计尺寸。
 - `--lumal-viewport-min-font-size` 已反算设计坐标，可在画布内用 `max(14px, var(...))`。
-- 不自动转换全局字体、表格、输入框或弹窗。字号下限可能让文本换行，须保留合理空间。
+- 运行时包不自动转换全局字体、表格、输入框或弹窗。Admin 整页 opt-in 由应用另行接线；
+  普通局部模式仍隔离。字号下限可能让文本换行，须保留合理空间。
 - 数值布局使用 `computed(() => designPx * scale.value)`；纯函数 `computeViewportFontSize`
   可计算最终 CSS 字号下限，不会建立响应式依赖。
 
 Teleport 到 body 的弹窗不会继承局部缩放变量，这是刻意的隔离。
+整页 Admin 是应用显式提供根单位的例外，不是 LumalViewport 改写根元素。
 Element Plus Dialog 使用 append-to-body；Popper/Select/Tooltip 保持默认 teleport，
 由其引擎基于触发器的实际矩形定位。不要把已计算的屏幕坐标再次乘 scale。
 
@@ -184,7 +189,7 @@ vw 使用浏览器单位，其余模式恢复设计 px，contain/width 只 trans
 这份普通配置只是应用侧约定，不是新配置框架。
 Screen 视口脚手架生成的根 `viewport.config.ts` 已集中 `viewportDesign/viewportPolicy`；
 仅 `--viewport vw` 安装并启用 `@lumal/vite`，其他模式保持轻量。
-Admin 和 Blank 可以同样按需添加这份普通配置，不转换整个后台和第三方库。
+Admin 和 Blank 可以同样按需添加这份普通配置；局部适配不转换整个后台和第三方库。
 
 ## 可选构建转换
 
@@ -251,6 +256,8 @@ Teleport 到包装器外会回退为设计 px；自定义 body 全局单位、�
 | `fontSize` | `false` | `font-size`、`font`、`line-height` 一起保留 |
 | `minSize` | `false` | 保留物理和逻辑的宽高下限 |
 | `customProperties` | `false` | 保留自定义属性；`--lumal-viewport-*` 始终保留 |
+| `variableFallbacks` | `false` | 显式转换普通 `var()` fallback 与 `min/max/clamp` 的 px |
+| `mediaQueries` | 关闭 | runtime 下按单个 html 根复合选择器切换设计稿尺寸断点 |
 | `minPixelValue` | `1` | 保留绝对值不大于该值的 px，保护细边框 |
 | `precision` | `6` | 转换精度，`0..10` 位小数 |
 | `inlineStyles` | `false` | 独立开启 Vue 模板行内样式转换 |
@@ -280,7 +287,7 @@ Teleport 到包装器外会回退为设计 px；自定义 body 全局单位、�
 前置 `ignore-next` 只保护紧随声明，后置 `ignore` 只保护紧邻前一声明。
 Sass 压缩时使用 `/*! ... */` 保留标记。原始注释不会改写为运行时逻辑。
 
-含 `var/env/attr/min/max/clamp` 函数或已有视口、容器、字体相对单位的声明整体保留，
+默认含 `var/env/attr/min/max/clamp` 函数或已有视口、容器、字体相对单位的声明整体保留，
 不会把 `calc(192px * var(--lumal-viewport-scale))` 中的 192px 再变成 vw，
 也不把 `clamp(320px, 50vw, 960px)` 的上下限缩小。
 URL、引号字符串、普通数字不变，重复处理仍然幂等。
@@ -335,6 +342,59 @@ const tableColumnWidth = computed(() => 80 * scale.value)
 只在 vw 流式区域使用这种数值；contain/width 画布使用设计数值，交给 transform 一次缩放。
 地图和 ECharts 实例本身依旧按实际 DOM 容器 resize，不对引擎渲染结果再次缩放。
 
+### 整页设计稿模式
+
+只想适配局部 Screen 时，继续使用上述安全默认值。需要像小流域参考项目一样，
+在固定浏览器窗口中改变页面 zoom 后仍保持整页视觉比例时，应用必须明确选择整页策略：
+
+```ts
+// Vite 接线片段；viewportDesign 来自应用自己的 viewport.config.ts。
+const viewport = createViewportTransformPlugin({
+  enabled: true,
+  include: ['src/**'],
+  exclude: ['src/login/**', 'src/canvas/**', '**/map/**'],
+  dependencies: ['@lumal/core', '@lumal/icons-vue', 'element-plus'],
+  viewportWidth: viewportDesign.designWidth,
+  output: 'runtime',
+  inlineStyles: true,
+  fontSize: true,
+  minSize: true,
+  minPixelValue: 0,
+  customProperties: true,
+  variableFallbacks: true,
+  mediaQueries: { runtimeSelector: 'html[data-app-viewport="vw"]' },
+})
+```
+
+应用管理 `html[data-app-viewport="vw"]` 和根 `--lumal-viewport-unit`：
+开启时为 `100 / designWidth vw`，其他模式1px，卸载恢复宿主原值。所有 Teleport UI
+使用同一根单位，不能再对引擎返回的触发器坐标乘比例。不要对根添加 transform、CSS zoom
+或 DPR 补偿。Admin 的完整接线位于 `src/composables/use-admin-viewport.ts`。
+
+Core 偏好 Store 的 `runtime.cssLength`（或 `applyThemePreferences` 的 environment）接受
+`pixels => calc(pixels * var(--lumal-viewport-unit, 1px))` 格式化器。
+`resolveThemeTokens(state, cssLength)`、`applyThemeToElement(element,state,cssLength)` 同样支持；
+未提供时保持 px。Layout/Tabs 的 `responsive:false` 仅同步关闭 JS 的移动端切换，
+必须配合 CSS 断点策略；不是单独的 vw 开关。数字图标 size 使用单位，字符串不变。
+
+`variableFallbacks:true` 可转换 `var(--text,14px)`、`min(640px,100%)`，
+仍服从属性/字号/最小尺寸开关；含视口变量、已有相对单位或 env/attr/constant 的声明仍不变。
+必须先核对普通变量未被其他适配机制处理。原子 px 类名及对应 CSS 不变，
+第三方组件数值尺寸、地图与图表按各自公开协议显式适配，不承诺自动处理业务脚本。
+
+`mediaQueries` 要求 runtime 输出，根选择器只能为单个 html 复合选择器，
+不能含后代、分组或伪类。顶层 `@media/@container` 宽高 px 查询保留原响应式分支，
+复制设计稿 vw 分支，并用 `:where()` 根条件分别启用，不增加选择器优先级。
+支持 `(max-width:768px)`、`(width<=768px)` 和双边范围比较；vw 分支阈值为40vw。
+因此原生页面缩放变窄 CSS 视口时，不会意外触发设计稿移动布局。
+motion/pointer 等条件不变，嵌套查询/规则、原子化或显式排除规则、
+混合范围外来源的查询整体保守跳过。它不覆盖任意第三方响应式 JS 或复杂断点体系。
+
+根主题变量在根定义处已经解析，不能靠内层 `--lumal-viewport-unit:1px` 撤销。
+整页 vw 进入自管理 DataV/Cockpit 路由时，应整页回退普通模式（Admin 已这样接线），
+或将主题定义完整隔离后再启用局部画布。仅切换局部包装器不足以避免重复缩放。
+浏览器页面 zoom 与手机双指 pinch zoom 不同；这里只保证已接入尺寸的页面缩放策略。
+
 已有 PostCSS 插件与配置文件保留；配置错误明确失败，不忽略。
 
 SCSS等预处理输出有原始source map时，逐声明校验其来源，避免Screen入口合并
@@ -353,6 +413,8 @@ SCSS/SFC时也必须提供原始map；来源不明的声明保留px，不能扩�
 
 本次浏览器 vw 协作的代码测试、tarball 与真实 CLI 生成项目结果见
 [vw 协作验收](./viewport-vw-2026-10-27.md)；它不启动浏览器，不代替实际项目的视觉验收。
+整页 Admin 的后续真实浏览器缩放证据见
+[Admin 页面缩放验收](./admin-viewport-zoom-2026-10-28.md)。
 
 `apps/lumal-viewport-lab` 通过公开包名使用视口，使用真实 OpenLayers 矢量图、ECharts Canvas、
 Element Plus 表格/弹窗/下拉/Tooltip；全部数据为独立编写的通用示例，无业务服务。

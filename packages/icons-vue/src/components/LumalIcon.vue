@@ -92,7 +92,8 @@ onErrorCaptured(() => {
 
 /***********************渲染状态*********************/
 const iconStyle = computed(() => {
-  const size = typeof props.size === 'number' ? `${props.size}px` : props.size ?? '1em'
+  // 数值是设计尺寸；只有宿主显式提供单位才参与适配，字符串尺寸保持原约定。
+  const size = typeof props.size === 'number' ? `calc(${props.size} * var(--lumal-viewport-unit, 1px))` : props.size ?? '1em'
 
   return {
     '--lumal-icon-size': size,

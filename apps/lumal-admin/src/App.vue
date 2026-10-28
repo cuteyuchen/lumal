@@ -15,6 +15,7 @@ import AppHeaderActions from './components/app/AppHeaderActions.vue'
 import AppSettingsDrawer from './components/app/AppSettingsDrawer.vue'
 import AppWorkspaceViewport from './components/app/AppWorkspaceViewport.vue'
 import LumalBrand from './components/app/LumalBrand.vue'
+import { useAdminViewport } from './composables/use-admin-viewport'
 import {
   createAdminSidebarMenus,
   createAdminTabs,
@@ -51,6 +52,9 @@ const workspacePolicy = computed(() => {
     || (canvas && route.meta.workspaceViewport === 'flow-only')
   return resolveAdminWorkspacePolicy(mode, unscaled)
 })
+// 自管理大屏和公开登录页整页回退，避免根主题变量与独立画布交叉缩放。
+const fullPageViewport = computed(() => !isPublicLayout.value && workspacePolicy.value.mode === 'vw')
+useAdminViewport(fullPageViewport)
 
 /***********************菜单状态*********************/
 const allMenus = computed(() => currentUser.value ? createAdminSidebarMenus(router) : [])
@@ -210,6 +214,7 @@ function handleTabsChange(tabs: LumalLayoutTabItem[]): void {
       :title="title"
       :menus="allMenus"
       :preferences="preferences"
+      :responsive="!fullPageViewport"
       route-driven
       :fixed-tabs="fixedTabs"
       :route-tab-resolver="resolveAdminRouteTab"

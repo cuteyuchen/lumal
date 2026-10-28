@@ -62,6 +62,8 @@ const props = withDefaults(defineProps<{
   tabMaxCount?: number
   fixedTabs?: LumalLayoutTabItem[]
   headerHeight?: string
+  /** false 时保持桌面导航交互；CSS 断点需由应用的构建策略同步控制。 */
+  responsive?: boolean
   /** 是否显示顶部 Header。内嵌到其他壳层时可置为 false 以隐藏。 */
   showHeader?: boolean
   tabStorageKey?: string
@@ -72,7 +74,8 @@ const props = withDefaults(defineProps<{
 }>(), {
   activeMenuPath: '',
   activeTabPath: '',
-  headerHeight: '50px',
+  headerHeight: 'var(--lumal-header-height, 50px)',
+  responsive: true,
   showHeader: true,
   menus: () => [],
   fixedTabs: () => [],
@@ -107,7 +110,8 @@ const injectedRouter = inject(routerKey, undefined)
 /***********************模板引用*********************/
 const layoutRef = useTemplateRef<ComponentPublicInstance>('layoutRef')
 const tabsRef = useTemplateRef<InstanceType<typeof LumalTabs>>('tabsRef')
-const isMobileViewport = shallowRef(false)
+const mobileViewportMatches = shallowRef(false)
+const isMobileViewport = computed(() => props.responsive && mobileViewportMatches.value)
 const mobileMenuOpen = shallowRef(false)
 const isContentMaximized = shallowRef(false)
 const routeTabs = shallowRef<LumalLayoutTabItem[]>([])
@@ -427,7 +431,7 @@ function restoreFromSnapshot(): void {
 }
 
 function syncMobileViewport(event?: MediaQueryListEvent): void {
-  isMobileViewport.value = event?.matches ?? mobileMediaQuery?.matches ?? false
+  mobileViewportMatches.value = event?.matches ?? mobileMediaQuery?.matches ?? false
 
   if (isMobileViewport.value) {
     mobileMenuOpen.value = false
@@ -718,7 +722,7 @@ defineExpose({
             :menus="topMenus"
             :active-path="resolvedTopMenuActivePath"
             :align="preferences.header.menuAlign"
-            :max-width="preferences.header.menuMaxWidth"
+            :max-width="`calc(${preferences.header.menuMaxWidth} * var(--lumal-viewport-unit, 1px))`"
             :mode="resolvedTopMenuMode"
             @select="handleTopMenuSelect"
           />
@@ -766,8 +770,8 @@ defineExpose({
           :menus="sidebarMenus"
           :active-path="resolvedActiveMenuPath"
           :collapsed="collapsed"
-          :width="`${preferences.sidebar.width}px`"
-          collapsed-width="64px"
+          :width="`calc(${preferences.sidebar.width} * var(--lumal-viewport-unit, 1px))`"
+          collapsed-width="calc(64 * var(--lumal-viewport-unit, 1px))"
           @select="handleMenuSelect"
         />
       </Transition>
@@ -781,8 +785,8 @@ defineExpose({
         :menus="mobileMenus"
         :active-path="resolvedActiveMenuPath"
         :collapsed="false"
-        :width="`${preferences.sidebar.width}px`"
-        collapsed-width="64px"
+        :width="`calc(${preferences.sidebar.width} * var(--lumal-viewport-unit, 1px))`"
+        collapsed-width="calc(64 * var(--lumal-viewport-unit, 1px))"
         @select="handleMenuSelect"
       />
 
@@ -810,6 +814,7 @@ defineExpose({
           :show-more="preferences.tabbar.showMore"
           :show-refresh="preferences.tabbar.showRefresh"
           :draggable="preferences.tabbar.draggable"
+          :responsive="responsive"
           :wheelable="preferences.tabbar.wheelable"
           :middle-click-to-close="preferences.tabbar.middleClickToClose"
           :style-type="preferences.tabbar.styleType"

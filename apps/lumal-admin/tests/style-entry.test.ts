@@ -1,4 +1,5 @@
 import { readdir, readFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import { join } from 'node:path'
 
 interface StyleSource {
@@ -29,10 +30,22 @@ describe('lumal admin style entry', () => {
   it('会显式导入 Lumal 组件样式和主题样式', async () => {
     const mainTs = await readFile(join(process.cwd(), 'src/main.ts'), 'utf8')
 
-    expect(mainTs).toContain('import \'@lumal/core/theme-chalk/index.scss\'')
+    expect(mainTs).toContain('import \'./styles/element-plus\'')
     expect(mainTs).toContain('import \'@lumal/core/style.css\'')
     expect(mainTs).toContain('import \'@lumal/icons-vue/style.css\'')
     expect(mainTs).toContain('import \'./styles.scss\'')
+    expect(mainTs).toContain('from \'@lumal/core/minimal\'')
+    expect(mainTs).not.toContain('components: false')
+  })
+  it('独立 CSS 清单与 Core 主题一致，不能漏掉菜单、弹窗等组件样式', async () => {
+    const coreTheme = await readFile(createRequire(import.meta.url).resolve('@lumal/core/theme-chalk/index.scss'), 'utf8')
+    const appTheme = await readFile(join(process.cwd(), 'src/styles/element-plus.ts'), 'utf8')
+    const components = [...coreTheme.matchAll(/@use "element-plus\/theme-chalk\/src\/([^"]+)\.scss"/g)]
+      .map(match => `element-plus/theme-chalk/${match[1] === 'base' ? 'base' : `el-${match[1]}`}.css`)
+    expect(components).not.toHaveLength(0)
+    for (const component of components)
+      expect(appTheme).toContain(`import '${component}'`)
+    expect(appTheme).not.toContain('element-plus/dist/index.css')
   })
 
   it('会注册 authority 与 permission 应用级权限指令', async () => {

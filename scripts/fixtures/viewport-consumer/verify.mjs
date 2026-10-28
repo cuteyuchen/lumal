@@ -87,6 +87,25 @@ function verifyCooperativeCss(css) {
   return { panel, atomicWidth: '192px', ordinaryAttributeWidth: runtimeLength(192) }
 }
 
+function verifyFullPageCss(css) {
+  const panel = ruleValues(css, '.consumer-full-page')
+  assert.equal(panel['--gap'], runtimeLength(24))
+  assert.equal(panel['font-size'], `calc(var(--text, ${runtimeLength(14)}) + ${runtimeLength(2)})`)
+  assert.equal(panel['line-height'], runtimeLength(20))
+  assert.equal(panel['min-height'], runtimeLength(40))
+  assert.equal(panel['grid-template-columns'], `minmax(${runtimeLength(280)}, 1fr) 2fr`)
+  assert.equal(panel.border, `${runtimeLength(1)} solid var(--border)`)
+  assert.ok(css.includes(':where(html[data-consumer-viewport="vw"])'))
+  assert.ok(css.includes(':where(html:not(html[data-consumer-viewport="vw"]))'))
+  assert.match(css, /@media\s*\(max-width:\s*40vw\)/)
+  assert.match(css, /@media\s*\(max-width:\s*768px\)/)
+  assert.match(css, /@media\s*\(width\s*<=\s*40vw\)/)
+  assert.match(css, /@media\s*\(width\s*<=\s*768px\)/)
+  assert.match(css, /@container settings\s*\(width\s*<=\s*16\.666667vw\)/)
+  assert.match(css, /@container settings\s*\(width\s*<=\s*320px\)/)
+  return panel
+}
+
 function inlineValues(html, className) {
   const tag = html.match(new RegExp(`<[^>]*class="[^"]*\\b${className}\\b[^"]*"[^>]*>`))?.[0]
   assert.ok(tag, `SSR 缺少元素 ${className}`)
@@ -149,8 +168,11 @@ async function main() {
     styles.push(dependencyResult.css)
     const cooperativeStyle = await server.transformRequest('/src/cooperative/CooperativePanel.vue?vue&type=style&index=0&direct&scoped=cooperative&lang.scss')
     styles.push(cooperativeStyle.code)
+    const fullPageStyle = await server.transformRequest('/src/full-page/FullPage.vue?vue&type=style&index=0&direct&scoped=full-page&lang.scss')
+    styles.push(fullPageStyle.code)
     const development = verifyCss(styles.join('\n'))
     const cooperativeDevelopment = verifyCooperativeCss(styles.join('\n'))
+    const fullPageDevelopment = verifyFullPageCss(styles.join('\n'))
     const component = await server.ssrLoadModule('/src/screen/ScreenPanel.vue')
     const html = await renderToString(createSSRApp(component.default))
     assert.deepEqual(inlineValues(html, 'static-inline'), {
@@ -190,6 +212,13 @@ async function main() {
     assert.ok(runtimeHtml.includes('data-viewport-mode="responsive"'))
 
     const cooperativeComponent = await server.ssrLoadModule('/src/cooperative/CooperativePanel.vue')
+    const fullPageComponent = await server.ssrLoadModule('/src/full-page/FullPage.vue')
+    const fullPageHtml = await renderToString(createSSRApp(fullPageComponent.default))
+    assert.ok(fullPageHtml.includes(`font-size:${runtimeLength(14)}`))
+    assert.ok(fullPageHtml.includes(`line-height:${runtimeLength(20)}`))
+    assert.ok(fullPageHtml.includes(`min-width:${runtimeLength(240)}`))
+    assert.ok(fullPageHtml.includes('aria-label="192px"'))
+    assert.ok(fullPageHtml.includes('class="w-[192px]"'))
     const cooperativeHtml = await renderToString(createSSRApp(cooperativeComponent.default))
     assert.deepEqual(inlineValues(cooperativeHtml, 'cooperative-static'), {
       'width': runtimeLength(192),
@@ -244,6 +273,7 @@ async function main() {
     assert.deepEqual(production, development)
     const cooperativeProduction = verifyCooperativeCss(css)
     assert.deepEqual(cooperativeProduction, cooperativeDevelopment)
+    assert.deepEqual(verifyFullPageCss(css), fullPageDevelopment)
     const scripts = output.filter(item => item.type === 'chunk').map(item => item.code).join('\n')
     assert.ok(scripts.includes('w-[192px]'))
     assert.ok(scripts.includes('mt-[20px]'))
@@ -257,7 +287,7 @@ async function main() {
     assert.ok(maps.some(map => map.sourcesContent.some(source => source?.includes('width: \'192px\''))))
     await writeFile(resolve(root, 'consumer-report.json'), `${JSON.stringify({
       status: 'passed',
-      checks: ['esm', 'cjs', 'vue-types', 'css', 'scss', 'template-static', 'template-object-array', 'dynamic-preserved', 'atomic-css', 'selector-ignore', 'declaration-ignore', 'scope-dependencies', 'source-map', 'idempotence', 'dev-build', 'runtime-cooperation', 'runtime-output', 'vw-fluid-layout', 'nested-mode-isolation', 'browser-not-container-width'],
+      checks: ['esm', 'cjs', 'vue-types', 'css', 'scss', 'template-static', 'template-object-array', 'dynamic-preserved', 'atomic-css', 'selector-ignore', 'declaration-ignore', 'scope-dependencies', 'source-map', 'idempotence', 'dev-build', 'runtime-cooperation', 'runtime-output', 'vw-fluid-layout', 'nested-mode-isolation', 'browser-not-container-width', 'full-page-variables', 'media-range-container-queries'],
       development,
       production,
       inline: {
@@ -267,6 +297,11 @@ async function main() {
         dynamicSelector: inlineValues(html, 'dynamic-selector-inline'),
       },
       runtime: { design, scale, physicalWidth: 128, validation: '公开算法与真实 Vue SSR，不是浏览器测量结果' },
+      fullPage: {
+        development: fullPageDevelopment,
+        production: verifyFullPageCss(css),
+        validation: '显式整页选项、静态行内样式、传统/范围媒体查询与容器查询；默认保护保持不变',
+      },
       cooperative: {
         development: cooperativeDevelopment,
         production: cooperativeProduction,

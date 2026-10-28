@@ -193,6 +193,34 @@ describe('lumal layout', () => {
     expect(wrapper.emitted('menuSelect')?.[0]).toEqual(['/system/user'])
     wrapper.unmount()
   })
+  it('关闭响应式时窄 CSS 视口仍执行桌面折叠，切回响应式恢复移动抽屉', async () => {
+    vi.stubGlobal('matchMedia', vi.fn((query: string) => ({
+      matches: query.includes('max-width'),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })))
+    const wrapper = mount(LumalLayout, {
+      global: { stubs: elementPlusStubs },
+      props: { menus, tabs, preferences: createLayoutPreferences(), responsive: false },
+    })
+    try {
+      expect(wrapper.findComponent(LumalTabs).props('responsive')).toBe(false)
+      expect(wrapper.findComponent(LumalTabs).findAll('.lumal-tabs__item').every(item => !item.classes().includes('is-not-draggable'))).toBe(true)
+      await wrapper.get('[data-action="toggle-sidebar"]').trigger('click')
+      expect(wrapper.emitted('toggleSidebar')).toHaveLength(1)
+      expect(wrapper.classes()).toContain('is-mobile-menu-hidden')
+      await wrapper.setProps({ responsive: true })
+      expect(wrapper.findComponent(LumalTabs).props('responsive')).toBe(true)
+      expect(wrapper.findComponent(LumalTabs).findAll('.lumal-tabs__item').every(item => item.classes().includes('is-not-draggable'))).toBe(true)
+      await wrapper.get('[data-action="toggle-sidebar"]').trigger('click')
+      expect(wrapper.emitted('toggleSidebar')).toHaveLength(1)
+      expect(wrapper.classes()).not.toContain('is-mobile-menu-hidden')
+    }
+    finally {
+      wrapper.unmount()
+      vi.unstubAllGlobals()
+    }
+  })
 
   it('混合导航默认只切换顶级分组并展示其侧栏子菜单', async () => {
     const wrapper = mount(LumalLayout, {

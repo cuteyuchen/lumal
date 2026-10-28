@@ -33,6 +33,8 @@ interface MenuState {
 const props = withDefaults(defineProps<{
   activePath?: string
   draggable?: boolean
+  /** 关闭时不因 CSS 视口变窄禁用桌面拖拽，供显式设计稿适配使用。 */
+  responsive?: boolean
   fullscreenTarget?: string
   middleClickToClose?: boolean
   showIcon?: boolean
@@ -48,6 +50,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   activePath: '',
   draggable: true,
+  responsive: true,
   fullscreenTarget: '[data-layout-fullscreen-target]',
   middleClickToClose: true,
   showIcon: true,
@@ -123,7 +126,7 @@ function teardownDesktopViewport(): void {
   desktopMediaQuery = undefined
 }
 
-const draggableEnabled = computed(() => props.draggable && isDesktop.value)
+const draggableEnabled = computed(() => props.draggable && (!props.responsive || isDesktop.value))
 
 const canCloseAny = computed(() => props.tabs.some(tab => tab.closable !== false && tab.pinned !== true))
 

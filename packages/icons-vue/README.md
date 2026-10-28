@@ -17,6 +17,13 @@ import '@lumal/icons-vue/style.css'
 
 SVG 改色、渐变、合成、Data URI 和注册表等纯 TypeScript 能力由 `@lumal/icons` 提供。
 
+## 未发布：数值尺寸协作
+
+`LumalIcon` 的数字 `size` 输出 `calc(N * var(--lumal-viewport-unit, 1px))`，
+默认仍等效 Npx，不依赖 `@lumal/viewport`。宿主显式提供单位时，与文字、Header 和侧栏一起适配。
+字符串 `size="20px"`、`size="1em"` 等保持原样；需要固定像素时传字符串。
+整页模式由应用管理根单位，局部画布与 Teleport 的边界见 `docs/screen-viewport-guide.md`。
+
 ## 选择器布局
 
 `LumalIconPicker` 的 `pageSize` 默认 48；启用 `showLabels` 时格子会加宽，名称完整换行显示。搜索和原生分组控件高度一致，默认 32px，可跟随 `--el-component-size` 调整，不引入 Element Plus 运行时。

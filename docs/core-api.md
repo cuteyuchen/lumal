@@ -501,6 +501,12 @@ layout 只负责后台壳层结构和交互，不请求业务数据。`LumalLayo
 
 应用层不需要创建或传入 `topMenus`，也不需要自行计算顶栏激活项和侧栏菜单。点击 mixed-nav 一级菜单时，Layout 会自动解析首个可导航子项并通过 `menu-select` 输出最终路径。
 
+未发布源码新增 `LumalLayout/LumalTabs responsive?:boolean`，默认 true；
+false 供整页设计稿模式保持桌面导航和拖拽行为，必须同步接入 CSS 断点策略。
+Layout 透传该设置给内部 Tabs。默认 Header 高度使用 `var(--lumal-header-height,50px)`；
+侧栏宽度和顶部菜单最大宽度的设计数值使用 `--lumal-viewport-unit`，默认1px。
+不自动启用 vw，也不对根元素添加 transform，完整接线见 [屏幕适配](./screen-viewport-guide.md)。
+
 启用 `route-driven` 后，Layout 还会从当前 Vue Router 路由创建访问标签，并支持：
 
 - `route-tab-filter` / `route-tab-resolver`：过滤并解析路由标签。
@@ -753,6 +759,20 @@ preferences.dispose()
 ```
 
 Store 会清理损坏缓存、补齐新增默认字段，并只在主题模式为 `system` 时监听系统主题变化。全局字号限制为 12-20px，会同步 Lumal 和 Element Plus 的字号变量。
+
+未发布源码新增 `ThemeRuntimeEnvironment.cssLength?: (pixels:number) => string`。
+偏好 Store 的 `runtime`、`applyThemePreferences` 的 environment 均可传入；
+`resolveThemeTokens(state, cssLength)` 和 `applyThemeToElement(element,state,cssLength)` 同样接受。
+省略时保持原 px；显式整页适配可使用：
+
+```ts
+// 应用侧格式化器；根单位由应用按模式设置，Core 不测量视口。
+const cssLength = (pixels: number) => `calc(${pixels} * var(--lumal-viewport-unit, 1px))`
+```
+
+格式化覆盖字号、布局、间距、圆角与阴影长度，不改变颜色、动画时长和 z-index。
+Core 不依赖 Viewport；根定义的主题变量在根解析，不能靠局部单位恢复已经解析的值。
+自管理画布路由应整页回退普通单位，或先隔离主题定义。
 
 ## 可选生态包
 

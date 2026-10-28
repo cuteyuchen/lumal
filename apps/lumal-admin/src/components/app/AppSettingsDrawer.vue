@@ -46,7 +46,7 @@ function handleReset(nextPreferences: LumalPreferences): void {
     v-model="visibleModel"
     class="lumal-admin-settings-drawer"
     title="偏好设置"
-    size="384px"
+    size="calc(384 * var(--lumal-viewport-unit, 1px))"
     append-to-body
     destroy-on-close
   >

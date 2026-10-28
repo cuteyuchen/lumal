@@ -26,6 +26,22 @@ await createLumalAdmin({ rootComponent: App }).mount('#app')
 
 详细说明见仓库文档 `docs/core-api.md`。
 
+## 未发布：整页 vw 协作
+
+默认 px 与响应式行为不变，不新增 Viewport 依赖：
+
+- `ThemeRuntimeEnvironment.cssLength?: (pixels: number) => string` 可通过偏好 Store 的
+  `runtime` 或 `applyThemePreferences` 的 environment 显式传入，统一字号、布局、间距、圆角与阴影尺寸。
+- `resolveThemeTokens(state, cssLength)`、`applyThemeToElement(element, state, cssLength)`
+  同样接受可选格式化器，省略时仍输出 px。
+- `LumalLayout` 和 `LumalTabs` 的 `responsive` 默认 true。整页设计稿模式可设置 false，
+  保持桌面导航/拖拽交互；须配合构建 CSS 断点策略，仅改这个 prop 不会启用 vw。
+- Header 默认读取 `--lumal-header-height`（回退50px），侧栏与菜单设计尺寸使用
+  `--lumal-viewport-unit`（回退1px），只有宿主明确提供单位时才缩放。
+
+整页示例与局部画布隔离见 `docs/screen-viewport-guide.md`；不对 html/body 做 transform，
+不扫描业务脚本，表格数值列宽等协议仍由应用显式适配。新增能力需用候选 tarball 验证。
+
 ## 0.0.6-beta 修复
 
 以下变更属于本版，不能通过重新安装历史同版本包取得；发布核验前使用候选 tarball：

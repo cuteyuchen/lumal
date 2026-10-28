@@ -1,3 +1,4 @@
+import { viewportDesign } from '../viewport.config'
 import { expect, test } from './fixtures'
 import { expectNoPageOverflow, loginAs, loginAsAdmin } from './helpers'
 
@@ -8,7 +9,8 @@ test('Viewport 路由、策略覆盖、最小字号、浮层与离开后的样�
   await page.goto('/#/examples/viewport')
   await expect(page.getByTestId('viewport-metrics')).toContainText('contain')
   await page.getByLabel('模拟尺寸', { exact: true }).selectOption('narrow')
-  await expect(page.getByTestId('viewport-metrics')).toContainText('scale 0.500')
+  const narrowScale = Math.min(480 / viewportDesign.designWidth, 420 / viewportDesign.designHeight)
+  await expect(page.getByTestId('viewport-metrics')).toContainText(`scale ${narrowScale.toFixed(3)}`)
   await page.getByRole('button', { name: '确认 · 0', exact: true }).click()
   await expect(page.getByRole('button', { name: '确认 · 1', exact: true })).toBeVisible()
   const physicalFont = () => page.getByTestId('viewport-font').evaluate((element) => {
@@ -50,8 +52,10 @@ test('Viewport 路由、策略覆盖、最小字号、浮层与离开后的样�
   await expect(page.getByRole('columnheader', { name: '用户名', exact: true })).toBeVisible()
   expect(await page.locator('html').evaluate(element => getComputedStyle(element).fontSize)).toBe(rootFontSize)
   expect(await page.locator('html').evaluate(element => getComputedStyle(element).getPropertyValue('--lumal-viewport-scale'))).toBe('')
+  await expect(page.getByTestId('admin-workspace-viewport')).toHaveAttribute('data-viewport-mode', 'responsive')
+  await expect(page.locator('.admin-workspace-viewport__stage')).toHaveCSS('transform', 'none')
   expect(await page.getByRole('columnheader', { name: '用户名', exact: true })
-    .evaluate(element => element.closest('[data-viewport-mode]'))).toBeNull()
+    .evaluate(element => element.closest('[data-viewport-mode="contain"],[data-viewport-mode="width"],[data-viewport-mode="vw"]'))).toBeNull()
   await expectNoPageOverflow(page)
 })
 

@@ -252,6 +252,25 @@ describe('theme runtime', () => {
     expect(sources.every(source => source.includes('var(--lumal-font-size-base, 14px)'))).toBe(true)
     expect(sources.some(source => /font-size:\s*(?:12|13|14|16|18)px/.test(source))).toBe(false)
   })
+  it('显式主题长度格式化覆盖字体、行列尺寸、圆角及阴影，默认 px API 不变', () => {
+    const element = document.createElement('html')
+    const length = (pixels: number) => `calc(${pixels} * var(--lumal-viewport-unit, 1px))`
+    applyThemePreferences(createDefaultPreferences({ theme: { fontSize: 18 }, sidebar: { width: 256 } }), {
+      document: { documentElement: element } as Document,
+      cssLength: length,
+    })
+    expect(element.style.getPropertyValue('--lumal-font-size-base')).toBe(length(18))
+    expect(element.style.getPropertyValue('--el-font-size-large')).toBe(length(22))
+    expect(element.style.getPropertyValue('--lumal-sidebar-width')).toBe(length(256))
+    expect(element.style.getPropertyValue('--lumal-header-height')).toBe(length(50))
+    expect(element.style.getPropertyValue('--lumal-tabbar-height')).toBe(length(40))
+    expect(element.style.getPropertyValue('--el-border-radius-base')).toBe(length(6))
+    expect(element.style.getPropertyValue('--lumal-shadow-base')).toContain(length(24))
+    expect(element.style.getPropertyValue('--lumal-spacing-md')).toBe(length(16))
+    applyThemePreferences(createDefaultPreferences(), { document: { documentElement: element } as Document })
+    expect(element.style.getPropertyValue('--lumal-font-size-base')).toBe('14px')
+    expect(element.style.getPropertyValue('--lumal-shadow-base')).toBe('0 8px 24px rgb(15 23 42 / 8%)')
+  })
 
   it('会按布局模式统一解析设置项可用性', () => {
     expect(resolvePreferenceAvailability(createDefaultPreferences({

@@ -1,5 +1,5 @@
-import { createLumalAdmin } from '@lumal/core'
 import { registerAuthorityDirectives } from '@lumal/core/directives'
+import { createLumalAdmin } from '@lumal/core/minimal'
 import { createViewportPlugin } from '@lumal/viewport'
 import { viewportDesign } from '../viewport.config'
 import App from './App.vue'
@@ -7,7 +7,7 @@ import { localIcons, registerAdminIcons } from './icons'
 import { router } from './router'
 import { permissionStore } from './services/permission'
 import { mockDictionaryFetcher } from './views/examples/dictionary'
-import '@lumal/core/theme-chalk/index.scss'
+import './styles/element-plus'
 import '@lumal/core/style.css'
 import '@lumal/icons-vue/style.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
@@ -18,7 +18,6 @@ registerAdminIcons()
 
 /***********************应用启动*********************/
 void createLumalAdmin({
-  components: false,
   rootComponent: App,
   router,
   dictionary: {
@@ -28,7 +27,6 @@ void createLumalAdmin({
     localSvg: localIcons,
   },
   permissionStore,
-  preset: 'admin-default',
   setup({ app }) {
     registerAuthorityDirectives(app, permissionStore)
     app.use(createViewportPlugin({ ...viewportDesign, mode: 'responsive' }))

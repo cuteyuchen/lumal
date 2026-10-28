@@ -2,11 +2,12 @@ import process from 'node:process'
 import { fileURLToPath, URL } from 'node:url'
 import { createLumalAliases, createViewportTransformPlugin } from '@lumal/vite'
 import vue from '@vitejs/plugin-vue'
-import { defineConfig } from 'vite'
+import { defineConfig, normalizePath } from 'vite'
 import { createAdminBuildInfo } from './build/app-info'
 import { viewportDesign } from './viewport.config'
 
-const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
+// glob 使用正斜杠且不带尾部分隔符，避免 Windows 下工作区 CSS 漏转。
+const workspaceRoot = normalizePath(fileURLToPath(new URL('../..', import.meta.url))).replace(/\/$/, '')
 const elementPlusDataComponents = new Set(['pagination', 'table', 'table-v2', 'tree', 'tree-v2'])
 const elementPlusFormComponents = new Set([
   'autocomplete',
@@ -50,8 +51,15 @@ export default defineConfig(({ command, isPreview, mode }) => ({
     vue(),
     createViewportTransformPlugin({
       enabled: true,
-      // 只转换自有内容页，Header/侧栏、依赖、独立画布与引擎尺寸不参与。
-      include: ['src/views/**', 'src/components/request/**', 'src/styles.scss'],
+      // vw 是整页设计稿适配；仅接入明确的 UI 依赖，不扫描脚本或放开所有 node_modules。
+      include: [
+        'src/views/**',
+        'src/components/**',
+        'src/styles.scss',
+        `${workspaceRoot}/packages/core/**`,
+        `${workspaceRoot}/packages/icons-vue/**`,
+      ],
+      dependencies: ['@lumal/core', '@lumal/icons-vue', 'element-plus'],
       exclude: [
         'src/views/login/**',
         'src/views/shared/**',
@@ -65,25 +73,16 @@ export default defineConfig(({ command, isPreview, mode }) => ({
       viewportWidth: viewportDesign.designWidth,
       output: 'runtime',
       inlineStyles: true,
-      fontSize: false,
-      minSize: false,
-      // 保留边框、字号和网格轨道的最小可用尺寸，仅适配尺寸、定位及间距。
-      includeProperties: [
-        'width',
-        'height',
-        'max-width',
-        'max-height',
-        'padding*',
-        'margin*',
-        '*gap',
-        'top',
-        'right',
-        'bottom',
-        'left',
-        'inset*',
-      ],
+      fontSize: true,
+      minSize: true,
+      minPixelValue: 0,
+      customProperties: true,
+      variableFallbacks: true,
+      mediaQueries: { runtimeSelector: 'html[data-admin-viewport="vw"]' },
     }),
   ],
+  // 保留自有 SCSS 的调试映射；第三方主题逐 CSS 文件导入，不放宽混合 Sass 安全边界。
+  css: { devSourcemap: true },
   server: {
     // 固定端口，便于 admin 与 mock-api、datav-guide 之间的稳定联调
     port: 5170,
@@ -114,6 +113,9 @@ export default defineConfig(({ command, isPreview, mode }) => ({
                 return 'vendor-lumal-datav'
               if (/\/(?:packages\/|node_modules\/@lumal\/)cockpit\//.test(normalizedId))
                 return 'vendor-lumal-cockpit'
+              // 页面组件保持按路由加载，不能因主题/布局同属 Core 而进入首屏闭包。
+              if (/\/(?:packages\/core|node_modules\/@lumal\/core)\/dist\/components(?:-[^/]+)?\.js$/.test(normalizedId))
+                return 'vendor-lumal-components'
               if (normalizedId.includes('/packages/core/') || normalizedId.includes('/packages/icons') || /\/node_modules\/@lumal\/(?:core|icons|icons-vue)\//.test(normalizedId))
                 return 'vendor-lumal'
             },
