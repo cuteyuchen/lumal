@@ -1,13 +1,13 @@
-import type { AtRule, Declaration, Plugin as PostcssPlugin } from 'postcss'
+import type { Declaration, Plugin as PostcssPlugin } from 'postcss'
 import type { Plugin as VitePlugin } from 'vite'
-import { resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
 import process from 'node:process'
 import picomatch from 'picomatch'
 import { parse } from 'postcss'
 import loadPostcssConfig from 'postcss-load-config'
 import valueParser from 'postcss-value-parser'
 import { createViewportCssTransformer } from './viewport-css'
-import { createViewportMediaTransformer } from './viewport-media'
 import { transformViewportTemplate } from './viewport-template'
 
 export interface ViewportTransformOptions {
@@ -17,8 +17,6 @@ export interface ViewportTransformOptions {
   include: string[]
   exclude?: string[]
   viewportWidth?: number
-  /** 默认直接输出 vw；runtime 由局部包装器或宿主根单位选择 vw / 1px。 */
-  output?: 'vw' | 'runtime'
   precision?: number
   /** 默认保留 <=1px，避免细边框消失。 */
   minPixelValue?: number
@@ -28,17 +26,17 @@ export interface ViewportTransformOptions {
   excludeProperties?: string[]
   /** 字符串按选择器子串匹配；任一分组或祖先规则命中时整条声明保留。 */
   excludeSelectors?: (string | RegExp)[]
-  /** 独立启用 Vue 模板 style/:style 的静态分析，默认 false；从不扫描脚本。 */
+  /** Vue 模板 style/:style 的静态分析，默认 true；false 关闭，从不扫描脚本。 */
   inlineStyles?: boolean
-  /** 默认同时保留 font-size、font 和 line-height。 */
+  /** 默认同步转换 font-size、font 和有单位行高；false 同时保护三者。 */
   fontSize?: boolean
-  /** 默认保留 min-width/min-height 及对应逻辑属性，显式 true 才转换。 */
+  /** 默认转换设计最小宽高；物理操作下限请通过声明忽略显式保留。 */
   minSize?: boolean
   customProperties?: boolean
   /** 显式转换普通 var() fallback、min/max/clamp 中的 px；已有适配单位和视口变量仍受保护。 */
   variableFallbacks?: boolean
-  /** runtime 输出下按根选择器切换媒体/容器宽高断点，未命中时保留原始响应式查询。 */
-  mediaQueries?: { runtimeSelector: string }
+  /** 默认接入 Lumal 自有样式（包括源码 alias）；第三方仍须 dependencies 白名单。 */
+  frameworkStyles?: boolean
   /** 默认排除全部依赖；仅此处显式列出的包可以转换。 */
   dependencies?: string[]
 }
@@ -54,6 +52,36 @@ function normalize(path: string) {
 }
 
 const preprocessorLanguages = ['scss', 'sass', 'less', 'styl', 'stylus'] as const
+const frameworkPackages = new Set(['@lumal/core', '@lumal/icons-vue', '@lumal/charts', '@lumal/datav', '@lumal/cockpit', '@lumal/vben-compat'])
+
+const packageNames = new Map<string, string>()
+function sourcePackage(id: string): string {
+  const path = normalize(id)
+  const dependency = path.split('/node_modules/').at(-1)!
+  if (dependency !== path) {
+    const parts = dependency.split('/')
+    return parts[0]!.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0]!
+  }
+  let directory = dirname(path)
+  const visited: string[] = []
+  while (!packageNames.has(directory)) {
+    visited.push(directory)
+    try {
+      const name = JSON.parse(readFileSync(resolve(directory, 'package.json'), 'utf8')).name ?? ''
+      visited.forEach(path => packageNames.set(path, name))
+      return name
+    }
+    catch {
+      const parent = dirname(directory)
+      if (directory === parent)
+        break
+      directory = parent
+    }
+  }
+  const name = packageNames.get(directory) ?? ''
+  visited.forEach(path => packageNames.set(path, name))
+  return name
+}
 
 function preprocessorLanguage(id: string) {
   return id.match(/\.(scss|sass|less|styl|stylus)(?:$|[?&])/i)?.[1]?.toLowerCase() as typeof preprocessorLanguages[number] | undefined
@@ -70,21 +98,21 @@ function createSourceFilter(options: ViewportTransformOptions, root: string) {
     const relative = path.toLowerCase().startsWith(`${normalizedRoot.toLowerCase()}/`) ? path.slice(normalizedRoot.length + 1) : path
     if (exclude(path) || exclude(relative))
       return false
-    const dependencyPath = path.split('/node_modules/').at(-1)!
-    if (dependencyPath !== path) {
-      const parts = dependencyPath.split('/')
-      const name = parts[0]!.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0]!
+    const name = sourcePackage(path)
+    if (options.frameworkStyles !== false && frameworkPackages.has(name))
+      return true
+    if (path.includes('/node_modules/'))
       return options.dependencies?.includes(name) ?? false
-    }
     return match(relative) || match(path)
   }
 }
 
 function createPostcssPlugin(options: ViewportTransformOptions, root: string, sourceAllowed?: (id: string) => boolean): PostcssPlugin {
   const transformDeclaration = createViewportCssTransformer(options)
-  const transformMedia = createViewportMediaTransformer(options)
+  // 只对已授权来源中的框架 token 放开 fallback；普通业务 var/min/max/clamp 仍受保护。
+  const transformToken = createViewportCssTransformer({ ...options, customProperties: true, variableFallbacks: true })
   const included = createSourceFilter(options, root)
-  function originalSource(declaration: Declaration | AtRule): string | undefined {
+  function originalSource(declaration: Declaration): string | undefined {
     const source = declaration.source
     if (!source)
       return undefined
@@ -105,19 +133,14 @@ function createPostcssPlugin(options: ViewportTransformOptions, root: string, so
   return {
     postcssPlugin: 'lumal-scoped-viewport',
     Declaration(declaration) {
-      if (included(originalSource(declaration)))
-        transformDeclaration(declaration)
-    },
-    AtRuleExit(rule) {
-      if (!transformMedia || !included(originalSource(rule)))
+      const source = originalSource(declaration)
+      if (!included(source))
         return
-      // 混合 Sass 来源不能通过媒体查询入口绕过逐声明范围保护。
-      let allowed = true
-      rule.walkDecls((declaration) => {
-        allowed &&= included(originalSource(declaration))
-      })
-      if (allowed)
-        transformMedia(rule)
+      const owner = sourcePackage(source!)
+      if ((frameworkPackages.has(owner) || owner === 'element-plus') && /^--(?:lumal|el)-/.test(declaration.prop))
+        transformToken(declaration)
+      else
+        transformDeclaration(declaration)
     },
   }
 }
@@ -169,7 +192,7 @@ export function createViewportTransformPlugin(options: ViewportTransformOptions)
     name: 'lumal-scoped-viewport',
     enforce: 'pre',
     transform(code, id) {
-      if (options.inlineStyles && included(id) && /\.vue$/i.test(id))
+      if (options.inlineStyles !== false && included(id) && /\.vue$/i.test(id))
         return transformViewportTemplate(code, id, options)
       const language = preprocessorLanguage(id)
       const cssStyle = /[?&]lang\.css(?:&|$)/i.test(id)
@@ -192,6 +215,9 @@ export function createViewportTransformPlugin(options: ViewportTransformOptions)
       }
     },
     async config(config) {
+      // 同一常量贯通应用与公共包 JS；关闭时也显式注入 px 契约。
+      const runtime = JSON.stringify({ enabled: options.enabled === true, designWidth: options.viewportWidth ?? 1920 })
+      config.define = { ...config.define, __LUMAL_VIEWPORT__: runtime }
       if (!options.enabled)
         return
       const root = resolve(config.root ?? process.cwd())

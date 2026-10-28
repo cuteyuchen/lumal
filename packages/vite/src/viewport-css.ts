@@ -7,13 +7,10 @@ import { createViewportSelectorFilter } from './viewport-selector'
 /** CSS 文件与模板行内样式共用声明策略，不推断任何运行时变量的值。 */
 export function createViewportCssTransformer(options: ViewportTransformOptions) {
   const viewportWidth = options.viewportWidth ?? 1920
-  const output = options.output ?? 'vw'
   const precision = options.precision ?? 6
   const minPixelValue = options.minPixelValue ?? 1
   if (!(viewportWidth > 0) || !Number.isFinite(viewportWidth))
     throw new Error('viewportWidth 必须为正数')
-  if (output !== 'vw' && output !== 'runtime')
-    throw new Error('output 必须为 vw 或 runtime')
   if (!Number.isInteger(precision) || precision < 0 || precision > 10)
     throw new Error('precision 必须为0到10的整数')
   if (!Number.isFinite(minPixelValue) || minPixelValue < 0)
@@ -42,8 +39,8 @@ export function createViewportCssTransformer(options: ViewportTransformOptions) 
       || propertyExcluded(declaration.prop)
       || (!options.customProperties && declaration.prop.startsWith('--'))
       || declaration.prop.startsWith('--lumal-viewport-')
-      || (!options.fontSize && /^(?:font|font-size|line-height)$/i.test(declaration.prop))
-      || (!options.minSize && /^min-(?:width|height|inline-size|block-size)$/i.test(declaration.prop))
+      || (options.fontSize === false && /^(?:font|font-size|line-height)$/i.test(declaration.prop))
+      || (options.minSize === false && /^min-(?:width|height|inline-size|block-size)$/i.test(declaration.prop))
       || excludedDeclaration(declaration)) {
       return
     }
@@ -80,10 +77,7 @@ export function createViewportCssTransformer(options: ViewportTransformOptions) 
       const viewportValue = pixels / viewportWidth * 100
       if (!Number.isFinite(viewportValue) || Math.abs(pixels) <= minPixelValue)
         return
-      // 协作模式保留设计 px 系数，由包装器选择浏览器 vw 或 1px，切换画布策略不重复缩放。
-      node.value = output === 'runtime'
-        ? `calc(${Number(pixels.toFixed(precision))} * var(--lumal-viewport-unit, 1px))`
-        : `${Number(viewportValue.toFixed(precision))}vw`
+      node.value = `${Number(viewportValue.toFixed(precision))}vw`
       changed = true
     })
     if (changed)

@@ -7,7 +7,7 @@ import { parse } from '@vue/compiler-sfc'
 import { describe, expect, it } from 'vitest'
 import { transformViewportTemplate } from '../src/viewport-template'
 
-const options: ViewportTransformOptions = { enabled: true, include: ['src/screen/**'], inlineStyles: true }
+const options: ViewportTransformOptions = { enabled: true, include: ['src/screen/**'], inlineStyles: true, fontSize: false, minSize: false }
 const id = '/app/src/screen/Panel.vue'
 function transform(source: string, overrides: Partial<ViewportTransformOptions> = {}) {
   return transformViewportTemplate(source, id, { ...options, ...overrides })?.code ?? source
@@ -58,17 +58,17 @@ const active = true
     expect(transform(source, { includeProperties: [] })).toBe(source)
     expect(styles(transform(source, { fontSize: true, minSize: true }))[0]).toContain('line-height:1.041667vw')
   })
-  it('协作输出在静态style与对象数组使用同一局部单位，不扫描脚本或class', () => {
+  it('静态style与对象数组输出普通 vw，不扫描脚本或class', () => {
     const source = `<script setup>const business = '192px'</script>
 <template><div class="w-[192px]" aria-label="192px" style="width:192px;height:96px;font-size:14px;line-height:20px;min-width:320px" :style="[{ top: '24px', height: measured }, runtimeStyle]" /></template>`
-    const result = transform(source, { output: 'runtime' })
+    const result = transform(source)
     expect(styles(result)).toEqual([
-      'width:calc(192 * var(--lumal-viewport-unit, 1px));height:calc(96 * var(--lumal-viewport-unit, 1px));font-size:14px;line-height:20px;min-width:320px',
-      '[{ top: "calc(24 * var(--lumal-viewport-unit, 1px))", height: measured }, runtimeStyle]',
+      'width:10vw;height:5vw;font-size:14px;line-height:20px;min-width:320px',
+      '[{ top: "1.25vw", height: measured }, runtimeStyle]',
     ])
     expect(result).toContain('const business = \'192px\'')
     expect(result).toContain('class="w-[192px]" aria-label="192px"')
-    expect(transform(result, { output: 'runtime' })).toBe(result)
+    expect(transform(result)).toBe(result)
   })
   it('只转换对象中静态可分析的样式值，动态属性名、变量、调用和业务值保留', () => {
     const source = `<template><div :style="{ width: '192px', top: '24px', fontSize: '14px', lineHeight: '20px', minWidth: '320px', borderWidth: '2px', padding: '24px', height: measured, left: getSize('192px'), [field]: '192px', zIndex: 192, '--size': '192px' }" /></template>`
