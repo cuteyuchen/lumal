@@ -1,6 +1,8 @@
 // @vitest-environment node
 import type { Declaration } from 'postcss'
 import type { ViewportTransformOptions } from '../src'
+import { mkdtemp, rm, symlink } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 import vue from '@vitejs/plugin-vue'
 import postcss from 'postcss'
@@ -40,6 +42,56 @@ describe('受控视口 CSS 转换', () => {
     }
     expect(await transform('.page{width:192px}', 'F:/lumal/packages/core-other/style.css', options))
       .toBe('.page{width:192px}')
+  })
+  it('目录链接 root 与真实来源共用相对范围，Dev/Build 不遗漏 CSS 或模板', async () => {
+    const root = resolve(import.meta.dirname, 'fixtures/viewport')
+    const temporary = await mkdtemp(resolve(tmpdir(), 'lumal-viewport-root-'))
+    const linkedRoot = resolve(temporary, 'project')
+    // Windows junction 与 8.3 短路径都可能让 Vite 返回不同于配置 root 的真实来源。
+    await symlink(root, linkedRoot, 'junction')
+    try {
+      const plugin = createViewportPostcssPlugin(options, linkedRoot)
+      for (const sourceRoot of [root, linkedRoot]) {
+        const result = await postcss([plugin]).process('.panel{width:192px}', {
+          from: resolve(sourceRoot, 'src/screen/page.css'),
+        })
+        expect(result.css).toBe('.panel{width:10vw}')
+        for (const file of ['src/admin.css', 'src/screen/map.css', 'node_modules/unlisted/style.css']) {
+          const excluded = await postcss([createViewportPostcssPlugin({
+            ...options,
+            exclude: ['**/map.css'],
+          }, linkedRoot)]).process('.panel{width:192px}', { from: resolve(sourceRoot, file) })
+          expect(excluded.css).toBe('.panel{width:192px}')
+        }
+      }
+      const config = {
+        root: linkedRoot,
+        configFile: false as const,
+        plugins: [vue(), createViewportTransformPlugin(options)],
+        logLevel: 'silent' as const,
+        server: { fs: { allow: [root, linkedRoot] } },
+        build: { write: false, minify: false, rollupOptions: { input: resolve(root, 'src/controlled.ts') } },
+      }
+      const server = await createServer(config)
+      try {
+        const style = await server.transformRequest('/src/screen/Panel.vue?vue&type=style&index=0&lang.scss')
+        expect(style!.code).toContain('10vw')
+        const template = await server.transformRequest('/src/screen/Controlled.vue')
+        expect(template!.code).toContain('10vw')
+        const built = await build(config)
+        const outputs = (Array.isArray(built) ? built[0]! : built) as { output: { fileName: string, source?: string, code?: string }[] }
+        const css = outputs.output.filter(item => item.fileName.endsWith('.css')).map(item => String(item.source)).join('\n')
+        expect(css).toMatch(/\.screen-controlled[^{}]*\{[^}]*width:\s*20vw/)
+        expect(css).toMatch(/\.admin-scoped-style\s*\{\s*height:\s*192px/)
+        expect(outputs.output.filter(item => item.code).map(item => item.code).join('\n')).toContain('10vw')
+      }
+      finally {
+        await server.close()
+      }
+    }
+    finally {
+      await rm(temporary, { recursive: true, force: true })
+    }
   })
   it('输出服从属性、选择器、忽略标记及已有适配保护', async () => {
     const css = '.panel{width:192px;height:96px;/* lumal-viewport-ignore */padding:24px;min-height:40px;font:14px/20px sans-serif;top:calc(var(--gap) + 24px);--lumal-viewport-unit:192px}.map{width:192px}'

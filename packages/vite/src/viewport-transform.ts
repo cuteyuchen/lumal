@@ -1,6 +1,6 @@
 import type { Declaration, Plugin as PostcssPlugin } from 'postcss'
 import type { Plugin as VitePlugin } from 'vite'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, realpathSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import process from 'node:process'
 import picomatch from 'picomatch'
@@ -88,14 +88,18 @@ function preprocessorLanguage(id: string) {
 }
 
 function createSourceFilter(options: ViewportTransformOptions, root: string) {
-  const normalizedRoot = normalize(/^[a-z]:[/\\]/i.test(root) ? root : resolve(root)).replace(/\/$/, '')
+  const absoluteRoot = /^[a-z]:[/\\]/i.test(root) ? root : resolve(root)
+  // Vite 会解析目录链接及 Windows 短路径；两种 root 拼写必须使用同一相对范围。
+  const roots = [absoluteRoot, existsSync(absoluteRoot) ? realpathSync.native(absoluteRoot) : absoluteRoot]
+    .map(path => normalize(path).replace(/\/$/, '').toLowerCase())
   const match = picomatch(options.include ?? [], { dot: true })
   const exclude = picomatch(options.exclude ?? [], { dot: true })
   return (id: string | undefined) => {
     if (!id || !options.enabled)
       return false
     const path = normalize(id)
-    const relative = path.toLowerCase().startsWith(`${normalizedRoot.toLowerCase()}/`) ? path.slice(normalizedRoot.length + 1) : path
+    const normalizedRoot = roots.find(root => path.toLowerCase().startsWith(`${root}/`))
+    const relative = normalizedRoot ? path.slice(normalizedRoot.length + 1) : path
     if (exclude(path) || exclude(relative))
       return false
     const name = sourcePackage(path)
