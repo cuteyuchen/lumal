@@ -204,3 +204,23 @@ CSS分别990/1035/1043B；D变化由消费CSS表达，未强制增加Viewport运
 `0.1.0-beta`。上文保留当时的候选与验收事实，不将旧 SHA 的通过结果作为新提交证明。
 本轮授权为合并 PR、确认 master 新提交 CI、执行正式 Release Gate，通过后发布 npm；
 不包含手动生产部署、移动已有 tag 或覆盖已发布版本。
+
+## 合并后发布前检查（2026-10-29）
+
+PR #14 合并为 `dac631b11dba598d79f9a8a86880ac4fd71f97e4`。
+该提交 CI `40822148122` 的 Ubuntu / Windows 各 1,237 项测试、类型与构建成功，
+CodeQL 成功；Build Validation `40822148205` 的两平台 Demo、Vite tarball 和 DataV
+视觉成功，但消费者 job `123276831629` 的 Screen DataV 字号采样失败，后续视口检查未运行。
+
+失败值为 `26.666666666666668`，即旧宽度 1280 / D1440 的 30px；
+期望为新宽度 1366 对应的 `28.458333333333332`。隔离 tarball 项目中使用 Playwright Clock
+冻结 RAF 可确定复现，推进 32ms 后即得到正确值；不是运行时公式缺陷。
+消费者改为等待字号提交后使用原 `toBeCloseTo(..., 1)` 断言，并新增组件级 RAF 回归；
+不修改公共运行时、容差、作业超时、重试或预算。原失败日志和只读复现证据保留在
+`output/release/master-dac631b-build-failed.log` 与 `dac631b-datav-raf-confirmed.json`。
+发布流程停在 master 检查，尚未创建版本 tag 或执行发布；修复后须重新验证最终提交。
+
+修复本地验证：DataV 75 项、脚本 152 项、Lint、模板格式、版本一致性与文档构建通过；
+`LUMAL_PROJECT_CASES=screen-datav,screen-cockpit pnpm test:create-projects` 的两个独立
+tarball 项目完成安装、Lint、格式、类型、单测、构建及七组生产浏览器视口检查。
+这些定向结果不替代修复提交、合并后的 master 和 Release Gate 的完整远端验收。

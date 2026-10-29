@@ -31,6 +31,25 @@ async function flushFrames() {
 }
 
 describe('内部设计数值与测量边界', () => {
+  it('数字字号在 resize 的 RAF 提交后更新，不能以已重排的 CSS 作为数值更新完成信号', async () => {
+    vi.stubGlobal('__LUMAL_VIEWPORT__', { enabled: true, designWidth: 1440 })
+    vi.stubGlobal('innerWidth', 1280)
+    const digital = mount(LumalDigitalFlop, { props: { value: 128, fontSize: 30, duration: 0 } })
+    await flushFrames()
+    const text = digital.get('text')
+    expect(Number(text.attributes('font-size'))).toBeCloseTo(30 * 1280 / 1440)
+
+    vi.stubGlobal('innerWidth', 1366)
+    window.dispatchEvent(new Event('resize'))
+    await nextTick()
+    // 单独等待 Vue 微任务不会执行共享的窗口测量 RAF。
+    expect(Number(text.attributes('font-size'))).toBeCloseTo(30 * 1280 / 1440)
+    await flushFrames()
+    expect(Number(text.attributes('font-size'))).toBeCloseTo(30 * 1366 / 1440)
+    expect(text.text()).toBe('128')
+    digital.unmount()
+  })
+
   it.each([1920, 1440])('设计宽度 %s 的数字、图形与表格宽度随窗口变化，业务值和实际测量不重复转换', async (designWidth) => {
     vi.stubGlobal('__LUMAL_VIEWPORT__', { enabled: true, designWidth })
     vi.stubGlobal('innerWidth', 1920)

@@ -112,8 +112,10 @@ async function verifyBrowser(projectDir, scenario, screenshots, api) {
         }
       }
       if (scenario.visualization === 'datav') {
-        const fontSize = Number(await page.locator('.lumal-digital-flop text').getAttribute('font-size'))
-        expect(fontSize).toBeCloseTo(30 * width / scenario.designWidth, 1)
+        // CSS 已响应新视口时，共享 RAF 和 Vue 仍可能尚未提交数值字号。
+        await expect.poll(async () =>
+          Number(await page.locator('.lumal-digital-flop text').getAttribute('font-size')),
+        ).toBeCloseTo(30 * width / scenario.designWidth, 1)
       }
       if (scenario.visualization === 'cockpit') {
         await expect(page.locator('.lumal-cockpit-canvas__stage')).toHaveCSS('transform', 'none')
