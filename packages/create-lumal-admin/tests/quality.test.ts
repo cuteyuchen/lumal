@@ -16,6 +16,13 @@ const config = {
 }
 
 describe('生成工程的格式契约', () => {
+  it.each(['minimal', 'standard', 'vben-compatible'] as const)('%s 的生产分包保持组件注册执行顺序', async (preset) => {
+    const files = await composeTemplates(resolveOptions({ preset, name: 'quality-test', targetDir: 'unused' }))
+    const vite = files.find(file => file.path === 'vite.config.ts')!.content
+    expect(vite).toContain('strictExecutionOrder: true')
+    expect(vite).toContain('maxSize: 420 * 1024')
+  })
+
   it.each([
     ['Admin Minimal', { template: 'admin', preset: 'minimal' }],
     ['Admin Standard', { template: 'admin', preset: 'standard' }],

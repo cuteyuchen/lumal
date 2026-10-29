@@ -54,6 +54,9 @@ export async function verifyScaffoldSystem(page, path, project, api) {
   await save()
   await row('验收只读角色').getByRole('button', { name: '授权', exact: true }).click()
   await expect(dialog().locator('.el-tree-node')).not.toHaveCount(0)
+  // Tree 的本地 Checkbox 注册不能因生产分块而退化为未解析的原生标签。
+  await expect(dialog().locator('el-checkbox')).toHaveCount(0)
+  await expect(dialog().locator('.el-tree-node__content .el-checkbox').first()).toBeVisible()
   const roleGroup = dialog().locator('.el-tree-node__content').filter({ hasText: /^角色管理$/ }).locator('..')
   const treeLeaf = roleGroup.locator('.el-tree-node__content').filter({ hasText: /^(查询角色|list)$/ })
   await treeLeaf.locator('.el-checkbox').click()

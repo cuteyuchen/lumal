@@ -89,6 +89,14 @@ describe('release dependency graph', () => {
     expect(upload?.with['include-hidden-files']).toBe(true)
   })
 
+  it('正式门禁失败时保留脚手架消费者的页面、trace 与已完成组合报告', () => {
+    const job = readWorkflows()['release-gate.yml'].jobs['release-check']
+    const upload = job.steps.find(step => step.uses?.startsWith('actions/upload-artifact@')
+      && step.if === 'failure()')
+    expect(upload?.with.path).toContain('output/playwright/scaffold/')
+    expect(upload?.with.path).toContain('output/release/scaffold-report.json')
+  })
+
   it('消费者生产浏览器校验之前必须准备 Chromium', () => {
     const current = readWorkflows()
     expect(current['build-validation.yml'].jobs.validate.steps.some(step =>
