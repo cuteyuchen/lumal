@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
-import { realpath, writeFile } from 'node:fs/promises'
+import { writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
-import { resolve, sep } from 'node:path'
+import { resolve } from 'node:path'
 import process from 'node:process'
 import { getViewportConfig, viewportLength, viewportPixels } from '@lumal/viewport'
 import { createViewportPostcssPlugin, createViewportTransformPlugin } from '@lumal/vite'
@@ -10,6 +10,7 @@ import { compile } from 'sass-embedded'
 import { build, createServer } from 'vite'
 import { createSSRApp } from 'vue'
 import { renderToString } from 'vue/server-renderer'
+import { assertConsumerPackage } from './assert-consumer-package.mjs'
 
 const root = process.cwd()
 const require = createRequire(import.meta.url)
@@ -114,8 +115,7 @@ async function main() {
   const commonjs = require('@lumal/vite')
   assert.equal(typeof commonjs.createViewportTransformPlugin, 'function')
   assert.equal(typeof createViewportTransformPlugin, 'function')
-  const resolved = await realpath(require.resolve('@lumal/vite'))
-  assert.ok(resolved.startsWith(`${resolve(root)}${sep}`), '消费者必须从自己的 node_modules 解析 tarball')
+  await assertConsumerPackage(require.resolve('@lumal/vite'), root)
   for (const [format, api] of [['esm', { createViewportPostcssPlugin }], ['cjs', commonjs]]) {
     const result = await postcss([api.createViewportPostcssPlugin(options, root)])
       .process('.format{width:192px;font-size:14px;line-height:20px;min-height:40px}', { from: resolve(root, 'src/screen/format.css') })
