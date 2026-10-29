@@ -204,3 +204,49 @@ CSS分别990/1035/1043B；D变化由消费CSS表达，未强制增加Viewport运
 `0.1.0-beta`。上文保留当时的候选与验收事实，不将旧 SHA 的通过结果作为新提交证明。
 本轮授权为合并 PR、确认 master 新提交 CI、执行正式 Release Gate，通过后发布 npm；
 不包含手动生产部署、移动已有 tag 或覆盖已发布版本。
+
+## 合并后发布前检查（2026-10-29）
+
+PR #14 合并为 `dac631b11dba598d79f9a8a86880ac4fd71f97e4`。
+该提交 CI `40822148122` 的 Ubuntu / Windows 各 1,237 项测试、类型与构建成功，
+CodeQL 成功；Build Validation `40822148205` 的两平台 Demo、Vite tarball 和 DataV
+视觉成功，但消费者 job `123276831629` 的 Screen DataV 字号采样失败，后续视口检查未运行。
+
+失败值为 `26.666666666666668`，即旧宽度 1280 / D1440 的 30px；
+期望为新宽度 1366 对应的 `28.458333333333332`。隔离 tarball 项目中使用 Playwright Clock
+冻结 RAF 可确定复现，推进 32ms 后即得到正确值；不是运行时公式缺陷。
+消费者改为等待字号提交后使用原 `toBeCloseTo(..., 1)` 断言，并新增组件级 RAF 回归；
+不修改公共运行时、容差、作业超时、重试或预算。原失败日志和只读复现证据保留在
+`output/release/master-dac631b-build-failed.log` 与 `dac631b-datav-raf-confirmed.json`。
+发布流程停在 master 检查，尚未创建版本 tag 或执行发布；修复后须重新验证最终提交。
+
+修复本地验证：DataV 75 项、脚本 152 项、Lint、模板格式、版本一致性与文档构建通过；
+`LUMAL_PROJECT_CASES=screen-datav,screen-cockpit pnpm test:create-projects` 的两个独立
+tarball 项目完成安装、Lint、格式、类型、单测、构建及七组生产浏览器视口检查。
+这些定向结果不替代修复提交、合并后的 master 和 Release Gate 的完整远端验收。
+
+PR #15 首轮 `342e74c` 的两平台 CI 各 1,238 项、CodeQL、两平台 Vite tarball、
+Windows DataV 视觉、Ubuntu 生产 Demo 和完整消费者（含十四模板与真实 zoom）通过；
+Build Validation `40827176958` 的 Windows Cockpit 浏览器 11 项通过，Cesium 恢复用例
+超过原 90 秒预算，后续 Windows Admin 未执行。未合并此 PR，未运行 Release Gate 或发布。
+原 trace 显示恢复后的 768×512 Canvas 已采样成功（20 色），重复可见性检查耗时约 24 秒，
+截图约 20 秒，切换引擎时触及测试总预算。去掉截图 helper 的重复可见性等待，
+由三个调用方各自确认一次就绪，保留唯一画布、真实像素、错误反馈和退出清理断言；
+不改运行时、视口尺寸、截图范围、预算、超时、重试或跳过规则，须重新完整验证。
+调整后本地 `pnpm test:e2e:cockpit` 从包依赖重新构建，完整 12 项通过（3.2 分钟），
+恢复用例 21.2 秒；另通过 Cockpit 31 项单测、E2E 类型检查和 Lint。
+本地机器与 GitHub Windows 性能不同，不能用此结果代替新提交的完整远端检查。
+
+`e3c7cf6` 的完整消费者、双平台 CI / Vite tarball、CodeQL、Windows DataV 视觉与 Ubuntu
+生产 Demo 通过，Windows 恢复用例也通过（52.7 秒）；但 Build Validation `40830461373`
+的 Cesium resize 用例失败，旧 Canvas 已断开，页面出现“Cesium 渲染中断”，后续 Windows
+Admin 未运行。这不是先前的恢复超时，不能通过增加等待或重试视为解决。
+原日志、截图和 trace 保留在 `output/release/pr15-e3c7-windows-demo/`。
+先保留 Cesium renderError / contextlost 的底层信息并增加错误及旧监听清理回归，
+以便区分真实渲染缺陷与环境错误；尚未确定根因，PR 和发布继续阻断。
+
+诊断提交 `6794afc` 本地 Cockpit 32 项单测、类型、Lint、生产构建和文档构建通过；
+完整生产 E2E 12 项通过，resize 独立连续三轮通过。额外 4 倍 CPU 降速下五组视口
+在截图后仍保留原画布且无错误。新一轮两平台 Cockpit 检查通过，但这不是已确认
+底层渲染故障修复的证据。补充 resize 截图后的同帧契约：原 Canvas 仍连接、绘图尺寸
+等于实际 CSS 尺寸、没有错误提示；不增加等待、重试或预算，最终提交须重跑完整 CI。
