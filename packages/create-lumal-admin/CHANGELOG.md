@@ -1,5 +1,9 @@
 # create-lumal-admin
 
+## 未发布修复 (2026-10-30)
+
+- 生成的 Admin 生产配置保持模块执行顺序，修复循环分包导致角色授权树内部 Checkbox 未初始化的问题；保留原有懒加载、vendor 分组和体积限制。
+
 ## 0.1.0-beta (2026-10-28)
 
 - Breaking：删除适配模式枚举和模板，改为 `--viewport` / `--no-viewport` 与 `--design-width`。

@@ -29,6 +29,11 @@ function mountTabsWithStyle(style: LumalTabStyle, activePath = '/work', newProps
 }
 
 describe('lumal tabs - styles', () => {
+  it('原生标签按钮继承主题字体，避免固定 UA 字号绕过 vw 适配', async () => {
+    const source = await readFile(join(process.cwd(), 'src/layout/LumalTabs.vue'), 'utf8')
+    expect(source).toMatch(/\.lumal-tabs__tab\s*\{[^}]*font:\s*inherit;/)
+  })
+
   it('chrome 风格会渲染带弧形的容器并隐藏相邻分隔线', () => {
     const wrapper = mountTabsWithStyle('chrome')
     expect(wrapper.classes()).toContain('is-style-chrome')

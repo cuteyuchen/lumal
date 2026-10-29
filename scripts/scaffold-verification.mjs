@@ -76,11 +76,18 @@ export async function verifyScaffoldBrowsers(projects, api, screenshotDirectory)
         await expect(page.getByRole('button', { name: '退出登录', exact: true })).toBeVisible()
         // 从公开 tarball 消费，验证 Core 静态 CSS 与运行时主题共享消费端设计基准。
         const designWidth = project.designWidth ?? 1920
-        for (const [width, height] of [[1280, 720], [1366, 768], [1920, 920], [1920, 1080], [2560, 1440]]) {
+        for (const [width, height] of [[1280, 720], [1366, 768], [1920, 920], [1920, 1080], [2560, 1440], [390, 844]]) {
           await page.setViewportSize({ width, height })
           await expect.poll(async () => (await page.locator('.lumal-header').boundingBox()).height).toBeCloseTo(50 * width / designWidth, 1)
           const rootFont = await page.locator('html').evaluate(element => Number.parseFloat(getComputedStyle(element).fontSize))
           expect(rootFont).toBeCloseTo(14 * width / designWidth, 1)
+          // 原生 button 的 UA 字号不会自动继承，需验证公共 CSS 的实际字体。
+          if (project.preset !== 'minimal') {
+            for (const selector of ['.lumal-tabs__tab', '.lumal-tabs__label']) {
+              await expect.poll(async () => page.locator(selector).first().evaluate(element =>
+                Number.parseFloat(getComputedStyle(element).fontSize))).toBeCloseTo(14 * width / designWidth, 1)
+            }
+          }
           await expect(page.locator('.lumal-layout')).toHaveCSS('transform', 'none')
         }
         await page.setViewportSize({ width: 1280, height: 720 })

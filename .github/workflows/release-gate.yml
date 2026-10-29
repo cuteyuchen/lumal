@@ -100,6 +100,8 @@ jobs:
           path: |
             .playwright-results/
             playwright-report/
+            output/playwright/scaffold/
+            output/release/scaffold-report.json
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7

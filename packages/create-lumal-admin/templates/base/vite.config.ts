@@ -11,6 +11,8 @@ export default defineConfig({
     chunkSizeWarningLimit: 500,
     rolldownOptions: {
       output: {
+        // 保持组件初始化顺序，避免循环分包捕获尚未初始化的子组件。
+        strictExecutionOrder: true,
         codeSplitting: {
           groups: [
             {

@@ -88,7 +88,7 @@ pnpm preview
 - 工作台、403 与独立 404 页面。
 - 主题切换、布局与标签偏好持久化、全局设置抽屉。
 - 统一应用服务、真实 HTTP 认证与显式后端 adapter。
-- Element Plus、Vue 和 Lumal 公共能力的明确 vendor 分包配置。
+- Element Plus、Vue 和 Lumal 公共能力的明确 vendor 分包配置；保留 `strictExecutionOrder`，避免循环分包破坏组件初始化顺序。
 - `src/app` 基础设施、`modules` 独立业务、`shared` 共享能力；每个 module.ts 注册菜单、懒加载器与真实权限。
 - 系统管理父路由及七个独立页面；用户批量/角色分配、独立授权树、菜单和机构树、字典关联、配置表单。
 - standard 工作台和个人中心；examples 与 vben-migration 各有独立目录和父菜单。
