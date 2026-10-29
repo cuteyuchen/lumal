@@ -21,7 +21,7 @@ export default defineConfig({
       fileName: (format, entryName) => `${entryName}.${format === 'cjs' ? 'cjs' : 'js'}`,
     },
     rollupOptions: {
-      external: id => id === 'vue' || id === '@lumal/core' || id.startsWith('@lumal/core/') || id === '@lumal/icons-vue',
+      external: id => id === 'vue' || id === '@lumal/core' || id.startsWith('@lumal/core/') || id === '@lumal/icons-vue' || id === '@lumal/viewport',
     },
   },
 })

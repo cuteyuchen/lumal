@@ -286,20 +286,20 @@ onMounted(() => void loadProfile())
   border-radius: 50%;
   color: var(--el-color-white);
   background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-primary-light-3));
-  font-size: calc(var(--lumal-font-size-base, 14px) + 12px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 1.85714286);
   font-weight: 700;
 }
 
 .lumal-admin-profile__summary h2 {
   margin: 0;
   color: var(--el-text-color-primary);
-  font-size: calc(var(--lumal-font-size-base, 14px) + 4px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 1.28571429);
 }
 
 .lumal-admin-profile__summary p {
   margin: 6px 0 20px;
   color: var(--el-text-color-secondary);
-  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
 }
 
 .lumal-admin-profile__summary dl {
@@ -318,14 +318,14 @@ onMounted(() => void loadProfile())
 
 .lumal-admin-profile__summary dt {
   color: var(--el-text-color-secondary);
-  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
 }
 
 .lumal-admin-profile__summary dd {
   min-width: 0;
   margin: 0;
   color: var(--el-text-color-regular);
-  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
   overflow-wrap: anywhere;
 }
 
@@ -345,12 +345,12 @@ onMounted(() => void loadProfile())
 .lumal-admin-profile__hint {
   margin: -2px 0 16px;
   color: var(--el-text-color-secondary);
-  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 2px));
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.85714286);
   line-height: 1.6;
 }
 
 @media (max-width: 768px) {
-  .lumal-admin-profile__grid {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-profile__grid {
     grid-template-columns: 1fr;
   }
 }

@@ -10,7 +10,7 @@ import {
 } from 'element-plus'
 import { computed, inject } from 'vue'
 import { useAdminThemeIcon } from '../../composables/use-admin-theme-icon'
-import AppViewportModeSwitch from './AppViewportModeSwitch.vue'
+import AppViewportSwitch from './AppViewportSwitch.vue'
 
 /***********************属性定义*********************/
 const props = withDefaults(defineProps<{
@@ -77,7 +77,7 @@ function handleMobileMenuCommand(command: unknown): void {
 
 <template>
   <div class="lumal-admin-header-actions">
-    <AppViewportModeSwitch />
+    <AppViewportSwitch />
     <ElButton
       circle
       text
@@ -219,7 +219,7 @@ function handleMobileMenuCommand(command: unknown): void {
   color: var(--el-text-color-regular);
   cursor: pointer;
   background: transparent;
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -242,7 +242,7 @@ function handleMobileMenuCommand(command: unknown): void {
   border-radius: 50%;
   color: var(--el-color-white);
   background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-primary-light-3));
-  font-size: calc(var(--lumal-font-size-base, 14px) - 2px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.85714286);
 }
 
 .lumal-admin-header-actions__divider {
@@ -281,19 +281,19 @@ function handleMobileMenuCommand(command: unknown): void {
 }
 
 @media (max-width: 768px) {
-  .lumal-admin-header-actions {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-header-actions {
     gap: 2px;
   }
 
-  .lumal-admin-header-actions__desktop-only {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-header-actions__desktop-only {
     display: none;
   }
 
-  .lumal-admin-header-actions__mobile-menu {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-header-actions__mobile-menu {
     display: inline-flex;
   }
 
-  .lumal-admin-header-actions :deep(.el-button) {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-header-actions :deep(.el-button) {
     width: 36px;
     height: 36px;
   }

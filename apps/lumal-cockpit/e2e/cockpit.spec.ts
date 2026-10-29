@@ -5,14 +5,27 @@ import { canvasFullClip, canvasSampleClip, countCanvasColors } from './canvas-pi
 
 /***********************生产画布像素、网络和组件生命周期证据*********************/
 async function expectFittedStage(page: Page, width: number, height: number): Promise<void> {
-  const expectedScale = Math.min(width / 1920, height / 1080)
-  await expect(page.locator('.lumal-cockpit-canvas')).toHaveAttribute('data-scale', expectedScale.toFixed(3))
+  await expect(page.locator('[data-viewport-mode], [data-scale]')).toHaveCount(0)
+  await expect(page.locator('.lumal-cockpit-canvas__stage')).toHaveCSS('transform', 'none')
   // ResizeObserver 与 RAF 合并更新完成后再记录截图，不能只断言旧地图仍然连接。
   await expect.poll(async () => {
     const bounds = await page.locator('.lumal-cockpit-canvas__stage').boundingBox()
-    return Boolean(bounds && bounds.x >= -1 && bounds.y >= -1
-      && bounds.x + bounds.width <= width + 1 && bounds.y + bounds.height <= height + 1)
+    return Boolean(bounds && Math.abs(bounds.width - width) < 1 && Math.abs(bounds.height - 1080 * width / 1920) < 1)
   }).toBe(true)
+  // 高度不参与比例；矮屏由外层容器滚动承载同一内容。
+  // scrollHeight/clientHeight 为整数；1366×768 的内容仅多 0.375px，不构成可滚动溢出。
+  if (1080 * width / 1920 - height > 1) {
+    const container = page.locator('.lumal-full-screen-container')
+    expect(await container.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true)
+    await expect(container).toHaveCSS('overflow-y', 'auto')
+    const scrollTop = await container.evaluate((element) => {
+      element.scrollTop = element.scrollHeight
+      const bottom = element.scrollTop
+      element.scrollTop = 0
+      return bottom
+    })
+    expect(scrollTop).toBeGreaterThan(0)
+  }
 }
 
 async function captureCanvas(canvas: Locator, sampleOnly = false): Promise<Buffer> {
@@ -29,13 +42,17 @@ async function captureCanvas(canvas: Locator, sampleOnly = false): Promise<Buffe
   expect(viewport, '生产画布验收必须使用显式视口').not.toBeNull()
   expect(bounds.width).toBeGreaterThan(0)
   expect(bounds.height).toBeGreaterThan(0)
-  const fullClip = canvasFullClip(bounds)
+  const fullClip = canvasFullClip({
+    ...bounds,
+    width: Math.min(bounds.width, viewport!.width - bounds.x),
+    height: Math.min(bounds.height, viewport!.height - bounds.y),
+  })
   expect(fullClip.x).toBeGreaterThanOrEqual(0)
   expect(fullClip.y).toBeGreaterThanOrEqual(0)
-  expect(fullClip.x + fullClip.width, '整幅画布不能被视口裁切').toBeLessThanOrEqual(viewport!.width)
-  expect(fullClip.y + fullClip.height, '整幅画布不能被视口裁切').toBeLessThanOrEqual(viewport!.height)
-  // 全幅保留整个原画布；只有恢复用例沿用既有的中央采样范围。
-  const clip = sampleOnly ? canvasSampleClip(bounds) : fullClip
+  expect(fullClip.x + fullClip.width).toBeLessThanOrEqual(viewport!.width)
+  expect(fullClip.y + fullClip.height).toBeLessThanOrEqual(viewport!.height)
+  // 仅采样可见画布；矮屏不能为了截图而引入高度缩放。
+  const clip = sampleOnly ? canvasSampleClip(fullClip) : fullClip
   const image = await canvas.page().screenshot({ animations: 'disabled', clip })
   test.info().annotations.push({
     type: sampleOnly ? 'canvas-sample-size' : 'canvas-full-size',
@@ -207,6 +224,44 @@ test('布局持久化、设计器取消、名称尺寸保存与刷新恢复', as
   })).toBe(360)
 })
 
+test('窄视口 Designer 真实拖拽、保存和恢复不污染设计像素', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  await page.getByRole('tab', { name: '独立场景', exact: true }).click()
+  await page.getByRole('button', { name: '打开配置器', exact: true }).click()
+  const designer = page.getByRole('dialog', { name: '驾驶舱配置', exact: true })
+  const left = designer.locator('[data-side="left"]')
+  const width = designer.getByRole('spinbutton', { name: '左侧区域宽度像素', exact: true })
+  await width.fill('360')
+  await width.press('Tab')
+  const cell = left.locator('.lumal-cockpit-designer__grid-cells .lumal-cockpit-designer__drop-zone').first()
+  await cell.getByRole('button', { name: /^移除模块 / }).click()
+  await expect(cell.locator('[data-role="placed-widget"]')).toHaveCount(0)
+  const card = designer.locator('.lumal-cockpit-designer__library-card').first()
+  const type = await card.getAttribute('data-cockpit-library-type')
+  const title = await card.getAttribute('data-cockpit-library-title')
+  // 使用浏览器真实拖拽事件，不直接调用 Sortable 回调或改写草稿状态。
+  await card.dragTo(cell)
+  await expect(cell.locator('[data-role="placed-widget"]')).toContainText(title!)
+  await expect(designer.locator('.is-drag-ghost, .is-drag-chosen')).toHaveCount(0)
+  await designer.getByRole('button', { name: '保存', exact: true }).click()
+  await expect(designer).toHaveCount(0)
+  await page.reload()
+  const saved = await page.evaluate(() => {
+    const config = JSON.parse(localStorage.getItem('lumal-cockpit:config')!)
+    return config.layouts.find((layout: { id: string }) => layout.id === config.activeLayoutId).left
+  })
+  expect(saved.width).toBe(360)
+  expect(saved.rows[0].cells[0].widget.type).toBe(type)
+  await page.getByRole('button', { name: '打开配置器', exact: true }).click()
+  await expect(width).toHaveValue('360')
+  await expect(cell.locator('[data-role="placed-widget"]')).toContainText(title!)
+  await page.screenshot({ path: 'output/playwright/cockpit-designer-1366.png', animations: 'disabled' })
+  await designer.getByRole('button', { name: '取消', exact: true }).click()
+  await expect(designer).toHaveCount(0)
+})
+
 test('暂停、恢复定时刷新与立即刷新', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.clock.install({ time: new Date('2026-10-26T00:00:00Z') })
@@ -231,13 +286,11 @@ test('暂停、恢复定时刷新与立即刷新', async ({ page }) => {
   await expect(page.locator('.widget-state')).toHaveCount(0)
 })
 
-test('三种既有视口与全屏退出', async ({ page }) => {
+test('统一宽度规则与全屏退出', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
-  for (const mode of ['vwvh', 'external', 'scale']) {
-    await page.getByRole('button', { name: '切换大屏适配模式' }).click()
-    await expect(page.locator('.lumal-cockpit')).toHaveAttribute('data-viewport-mode', mode)
-  }
+  await expect(page.getByRole('button', { name: '切换大屏适配模式' })).toHaveCount(0)
+  await expectFittedStage(page, 1920, 1080)
   await page.getByRole('button', { name: '进入全屏', exact: true }).click()
   await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(true)
   await page.getByRole('button', { name: '退出全屏', exact: true }).click()
@@ -280,7 +333,7 @@ test('全屏浮层的视口实验点击热区与设计器取消', async ({ page 
   await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(false)
 })
 
-test('隔离 Viewport 实验的模式、尺寸、点击热区与窗口 resize', async ({ page }) => {
+test('隔离 Viewport 实验的尺寸、点击热区与窗口 resize', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   await page.getByRole('tab', { name: '独立场景', exact: true }).click()
@@ -288,18 +341,17 @@ test('隔离 Viewport 实验的模式、尺寸、点击热区与窗口 resize', 
   await page.getByRole('button', { name: '打开视口实验' }).click()
   // Teleport 弹层也必须使用独立应用的暗色语义色，不能只检查根节点主题标记。
   await expect(page.getByRole('dialog', { name: '视口实验', exact: true }).locator('.el-dialog')).toHaveCSS('background-color', 'rgba(8, 31, 47, 0.98)')
-  await expect(page.getByTestId('viewport-lab-metrics')).toContainText('比例 1.000')
-  await page.getByLabel('模拟容器', { exact: true }).selectOption('portrait')
-  await expect(page.getByTestId('viewport-lab-metrics')).toContainText('比例 0.500')
+  await expect(page.getByTestId('viewport-lab-metrics')).toBeVisible()
+  const originalWidth = (await page.locator('.viewport-lab__sample').boundingBox())!.width
+  await expect(page.getByTestId('viewport-lab-metrics')).toContainText('D 1920')
+  expect(originalWidth).toBeCloseTo(192, 1)
   await page.getByRole('button', { name: '确认节点 · 0' }).click()
   await expect(page.getByRole('button', { name: '确认节点 · 1' })).toBeVisible()
-  for (const mode of ['width', 'responsive', 'contain']) {
-    await page.getByLabel('实验适配策略', { exact: true }).selectOption(mode)
-    await expect(page.locator('.viewport-lab [data-viewport-mode]')).toHaveAttribute('data-viewport-mode', mode)
-  }
-  for (const [width, height] of [[1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]]) {
+  await expect(page.getByLabel('实验适配策略', { exact: true })).toHaveCount(0)
+  for (const [width, height] of [[1280, 720], [1366, 768], [1920, 920], [1920, 1080], [2560, 1440]]) {
     await page.setViewportSize({ width, height })
     await expectFittedStage(page, width, height)
+    expect((await page.locator('.viewport-lab__sample').boundingBox())!.width).toBeCloseTo(192 * width / 1920, 1)
     await expect(page.getByTestId('viewport-lab-metrics')).not.toContainText('容器 0 × 0')
     await page.screenshot({ path: `output/playwright/cockpit-viewport-${width}.png`, animations: 'disabled' })
   }

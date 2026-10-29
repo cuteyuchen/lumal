@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { cp, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, resolve } from 'node:path'
 import process from 'node:process'
@@ -24,6 +24,48 @@ async function installedVersion(name) {
   throw new Error(`未找到本地验证依赖 ${name}，请先安装仓库依赖`)
 }
 
+async function verifyGeneratedViewportProject(temporary, runner, tarballs) {
+  const project = join(temporary, 'generated-screen-vw')
+  runPnpm(['exec', 'create-lumal', project, '--template', 'screen', '--viewport', '--design-width', '1440', '--no-interactive'], runner)
+  const manifestPath = join(project, 'package.json')
+  const manifest = await readJson(manifestPath)
+  const version = (await readJson(join(root, 'packages/create-lumal-admin/package.json'))).version
+  assert.equal(manifest.dependencies['@lumal/viewport'], undefined, '静态 CSS Screen 不需要运行时包')
+  assert.equal(manifest.devDependencies['@lumal/vite'], version)
+  assert.equal(manifest.dependencies['@lumal/core'], undefined, 'vw Screen 不应引入 Admin/Core')
+  const viteConfig = await readFile(join(project, 'vite.config.ts'), 'utf8')
+  const viewportConfig = await readFile(join(project, 'viewport.config.ts'), 'utf8')
+  assert.match(viteConfig, /createViewportTransformPlugin/)
+  assert.match(viteConfig, /\.\.\.viewport/)
+  assert.match(viewportConfig, /viewportWidth:\s*1440/)
+  // 只替换包来源，不改生成的 Vite 配置或业务样式，以真实 tarball 验证默认接线。
+  manifest.devDependencies['@lumal/vite'] = toFileSpecifier(project, tarballs.vite)
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+  runPnpm(['install', '--frozen-lockfile=false', '--prefer-offline'], project)
+  runPnpm(['install', '--frozen-lockfile', '--prefer-offline'], project)
+  runPnpm(['typecheck'], project)
+  runPnpm(['build'], project)
+  const assets = join(project, 'dist/assets')
+  const css = (await Promise.all((await readdir(assets))
+    .filter(name => name.endsWith('.css'))
+    .map(name => readFile(join(assets, name), 'utf8')))).join('\n')
+  const panel = css.match(/\.screen-view\[[^\]]+\]\{([^}]+)\}/)?.[1]
+  assert.ok(panel, '缺少 Screen 内容样式')
+  // CSS 压缩器会删去前导零并舍入末位，按原转换精度核对数值。
+  assert.ok(Math.abs(Number(panel.match(/padding:([\d.]+)vw/)?.[1]) - 32 / 1440 * 100) < 0.00001)
+  assert.ok(Math.abs(Number(panel.match(/font-size:([\d.]+)vw/)?.[1]) - 14 / 1440 * 100) < 0.00001)
+  const header = css.match(/\.screen-view__header\[[^\]]+\]\{([^}]+)\}/)?.[1]
+  assert.ok(Math.abs(Number(header?.match(/gap:([\d.]+)vw/)?.[1]) - 16 / 1440 * 100) < 0.00001)
+  assert.doesNotMatch(css, /--lumal-viewport-unit|transform:\s*scale/)
+  return {
+    status: 'passed',
+    command: 'create-lumal --template screen --viewport --design-width 1440 --no-interactive',
+    checks: ['real-cli-tarball', 'single-design-config', 'minimal-dependencies', 'install-frozen', 'vue-types', 'production-build', 'plain-vw-output', 'font-line-height'],
+    version,
+    validation: '真实生成的独立 Vue 项目，无浏览器或业务项目改动',
+  }
+}
+
 async function main() {
   const temporary = await mkdtemp(join(tmpdir(), prefix))
   const project = join(temporary, 'consumer')
@@ -34,12 +76,13 @@ async function main() {
   }
   try {
     // 每次从当前源码重建，避免消费者无意验证上一次的 dist。
-    for (const name of ['@lumal/viewport', '@lumal/vite'])
+    for (const name of ['@lumal/viewport', '@lumal/vite', 'create-lumal-admin'])
       runPnpm(['--filter', name, 'build'], root)
     const tarballs = join(temporary, 'tarballs')
     await mkdir(tarballs)
     const viteTarball = await packPackage('@lumal/vite', 'packages/vite', tarballs)
     const viewportTarball = await packPackage('@lumal/viewport', 'packages/viewport', tarballs)
+    const createTarball = await packPackage('create-lumal-admin', 'packages/create-lumal-admin', tarballs)
     await cp(fixture, project, { recursive: true })
     const dependencies = {
       '@lumal/vite': toFileSpecifier(project, viteTarball),
@@ -50,6 +93,7 @@ async function main() {
     const devDependencies = {}
     for (const name of ['@types/node', '@vitejs/plugin-vue', 'postcss', 'sass-embedded', 'typescript', 'vite', 'vue-tsc'])
       devDependencies[name] = await installedVersion(name)
+    devDependencies['create-lumal-admin'] = toFileSpecifier(project, createTarball)
     await writeFile(join(project, 'package.json'), `${JSON.stringify({
       name: 'lumal-vite-viewport-consumer',
       private: true,
@@ -61,13 +105,19 @@ async function main() {
     runPnpm(['install', '--frozen-lockfile', '--prefer-offline'], project)
     runPnpm(['exec', 'vue-tsc', '--noEmit', '-p', 'tsconfig.json'], project)
     runPnpm(['exec', 'node', 'verify.mjs'], project)
-    Object.assign(report, await readJson(join(project, 'consumer-report.json')), {
+    const defaultDesign = await readJson(join(project, 'consumer-report.json'))
+    runPnpm(['exec', 'node', 'verify.mjs'], project, false, { CONSUMER_DESIGN_WIDTH: '1440' })
+    const alternateDesign = await readJson(join(project, 'consumer-report.json'))
+    const generatedProject = await verifyGeneratedViewportProject(temporary, project, { vite: viteTarball, viewport: viewportTarball })
+    Object.assign(report, defaultDesign, {
+      alternateDesign,
       dependencies,
       devDependencies,
+      generatedProject,
       status: 'passed',
     })
     assert.equal(report.status, 'passed')
-    console.log('Vite 视口 tarball 消费通过：ESM/CJS、Vue 类型、CSS/SCSS/模板、Dev/Build 与运行时协同。')
+    console.log('Vite 视口 tarball 消费通过：ESM/CJS、Vue 类型、CSS/SCSS/模板、Dev/Build、运行时协同及真实 CLI vw 项目。')
   }
   catch (error) {
     report.status = 'failed'

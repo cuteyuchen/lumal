@@ -53,12 +53,13 @@ describe('icon picker layout', () => {
 
   it('弹窗保持固定视口高度，中间内容滚动且为滚动条预留宽度', () => {
     const rules = readStyleRules('LumalIconPickerDialog')
-    const bodies = rules.filter(rule => rule.selector === '.lumal-icon-picker-dialog__body')
+    const body = rules.find(rule => rule.selector === '.lumal-icon-picker-dialog__body')!.declarations
+    const mobileBody = rules.find(rule => rule.selector === '.lumal-icon-picker-dialog.is-responsive .lumal-icon-picker-dialog__body')!.declarations
     const content = rules.find(rule => rule.selector === '.lumal-icon-picker-dialog__content')!.declarations
 
-    expect(bodies[0]!.declarations.height).toBe('min(680px, 88dvh)')
-    expect(bodies[0]!.declarations['grid-template-rows']).toBe('auto minmax(0, 1fr) auto')
-    expect(bodies[1]!.declarations.height).toBe('min(680px, 92dvh)')
+    expect(body.height).toBe('min(680px, 88dvh)')
+    expect(body['grid-template-rows']).toBe('auto minmax(0, 1fr) auto')
+    expect(mobileBody.height).toBe('min(680px, 92dvh)')
     expect(content.overflow).toBe('auto')
     expect(content['min-height']).toBe('0')
     expect(content['scrollbar-gutter']).toBe('stable')

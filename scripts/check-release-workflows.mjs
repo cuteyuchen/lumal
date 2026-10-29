@@ -52,10 +52,34 @@ export function verifyReleaseWorkflows(workflows, scripts) {
   assert.ok(release.jobs['site-build'].needs.includes('release-check'), '站点必须使用生产 E2E 验证后的 Admin 产物')
   assert.ok(release.jobs['release-check'].steps.some(step => step.run === 'pnpm release:check'))
   assert.ok(release.jobs['site-build'].steps.some(step => step.run === 'pnpm release:budgets --require-all'))
+  // PR 和候选分支分别可触发；冲突分支也能验证 HEAD，不能冒充已验证的合并结果。
+  for (const file of ['ci.yml', 'build-validation.yml']) {
+    assert.deepEqual(workflows[file].on.pull_request.branches, ['master'], `${file} 必须验证指向 master 的 PR`)
+    assert.ok(workflows[file].on.push.branches.includes('codex/pure-vw-unification'), `${file} 必须直接验证候选分支 HEAD`)
+  }
+  const ci = workflows['ci.yml'].jobs.check
   const demo = workflows['build-validation.yml'].jobs['demo-production']
+  const consumer = workflows['build-validation.yml'].jobs['viewport-consumer']
+  assert.deepEqual(ci.strategy.matrix.os, ['ubuntu-latest', 'windows-latest'], '代码检查必须覆盖 Ubuntu / Windows')
   assert.deepEqual(demo.strategy.matrix.os, ['ubuntu-latest', 'windows-latest'], 'Demo 必须覆盖 Ubuntu / Windows')
-  assert.ok(!demo.if && !demo['continue-on-error'], 'Demo 生产门禁不可跳过')
-  for (const command of ['pnpm test:vite-consumer', 'pnpm cockpit:build', 'pnpm --filter lumal-cockpit build', 'pnpm typecheck:e2e:cockpit', 'pnpm test:e2e:cockpit:built', 'pnpm --filter lumal-admin build', 'pnpm test:e2e:release:built', 'pnpm docs:build', 'pnpm release:budgets'])
+  assert.deepEqual(consumer.strategy.matrix.os, ['ubuntu-latest', 'windows-latest'], 'tarball 消费者必须覆盖 Ubuntu / Windows')
+  for (const job of [ci, demo, consumer]) {
+    assert.equal(job.strategy['fail-fast'], false, '跨平台检查不得因另一平台失败而取消')
+    assert.equal(job['runs-on'], `\${{ matrix.os }}`, '矩阵必须使用实际的跨平台 runner')
+  }
+  for (const [file, name] of [
+    ['ci.yml', 'check'],
+    ['build-validation.yml', 'validate'],
+    ['build-validation.yml', 'viewport-consumer'],
+    ['build-validation.yml', 'demo-production'],
+    ['build-validation.yml', 'datav-visual'],
+  ]) {
+    const job = workflows[file].jobs[name]
+    assert.ok(!job.needs && !job.if && !job['continue-on-error'], `${file}/${name} 必须独立执行且不得跳过或容错`)
+    assert.ok(!JSON.stringify(job).includes('secrets.'), `${file}/${name} 不得接触发布 Secrets`)
+  }
+  assert.ok(!demo.steps.some(step => step.run === 'pnpm test:vite-consumer'), 'tarball 消费者必须独立于 Demo 生产浏览器')
+  for (const command of ['pnpm --filter @lumal/vite build', 'pnpm cockpit:build', 'pnpm --filter lumal-cockpit build', 'pnpm typecheck:e2e:cockpit', 'pnpm test:e2e:cockpit:built', 'pnpm --filter lumal-admin build', 'pnpm test:e2e:release:built', 'pnpm docs:build', 'pnpm release:budgets'])
     assert.ok(demo.steps.some(step => step.run === command && !step.if && !step['continue-on-error']), `Demo 缺少 ${command}`)
   assert.ok(release.jobs['site-build'].steps.some(step => step.run === 'pnpm typecheck:e2e:cockpit'), '发布站点必须检查 Cockpit 浏览器测试类型')
   assert.ok(release.jobs['site-build'].steps.some(step => step.run === 'pnpm test:e2e:cockpit:built'), '发布站点必须实跑 Cockpit 生产浏览器')
@@ -64,6 +88,7 @@ export function verifyReleaseWorkflows(workflows, scripts) {
   for (const [file, jobName, commands] of [
     ['ci.yml', 'check', ['lint', 'format:check', 'test', 'typecheck', 'build']],
     ['release-gate.yml', 'windows-check', ['lint', 'format:check', 'test', 'typecheck', 'build', 'test:vite-consumer']],
+    ['build-validation.yml', 'viewport-consumer', ['test:vite-consumer']],
     ['build-validation.yml', 'validate', ['test:create-consumer', 'test:create-projects', 'test:viewport']],
   ]) {
     for (const command of commands) {

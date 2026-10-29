@@ -27,6 +27,8 @@ const iconName = shallowRef('lumal:settings')
 ## 选择 API
 
 - `LumalIcon`：接受注册名称，或 `icon` 传入直接 IconDefinition。可控制 size/color；不要把任意字符串都当作已注册图标。
+- 数字 size 是设计 px，内部按项目配置输出普通 vw；未开启时输出 px；
+  宿主提供单位后参与适配，不新增Viewport依赖。字符串size原样保留，固定像素传 `size="20px"`。
 - `LumalIconPicker`：表单内选择，绑定模型，复用内置分组和查询。
 - `LumalIconPickerDialog`：弹窗选择，具体 model/事件按当前声明核对；它 Teleport 到 body，主题不能只依赖局部祖先选择器。
 - `useIconRegistry()`：在 setup/effect scope 内调用，得到响应式 `icons/groups` 和 `resolve`，不需要手动订阅注册表。

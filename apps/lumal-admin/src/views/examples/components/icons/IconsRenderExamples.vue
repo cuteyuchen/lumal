@@ -242,7 +242,7 @@ async function copyExample(code: string, label: string): Promise<void> {
 .icons-render-examples__caption-label code,
 .icons-render-examples__code,
 .icons-render-examples__feedback {
-  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
 }
 
 .icons-render-examples__copy {
@@ -289,22 +289,22 @@ async function copyExample(code: string, label: string): Promise<void> {
   margin: 28px 0 0;
   padding-top: 24px;
   border-top: 1px solid var(--el-border-color-light);
-  font-size: calc(var(--lumal-font-size-base, 14px) + 2px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 1.14285714);
 }
 
 @media (max-width: 1100px) {
-  .icons-render-examples__controls {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .icons-render-examples__controls {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
   }
 }
 
 @media (max-width: 480px) {
-  .icons-render-examples__controls {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .icons-render-examples__controls {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .icons-render-examples__copy {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .icons-render-examples__copy {
     width: 44px;
     height: 44px;
   }

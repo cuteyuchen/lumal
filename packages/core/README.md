@@ -2,7 +2,7 @@
 
 Lumal 后台核心包，提供应用安装器、布局、路由菜单辅助、权限、请求、主题和基础组件。
 
-本文 API 基线为已发布并核验的 `0.0.7-beta`；开发未发布源码时使用精确提交的 tarball。
+本文 API 基线为候选 `0.1.0-beta`，尚未发布；使用精确提交的 tarball 验证。
 
 ```ts
 import { createLumalAdmin } from '@lumal/core'
@@ -26,7 +26,20 @@ await createLumalAdmin({ rootComponent: App }).mount('#app')
 
 详细说明见仓库文档 `docs/core-api.md`。
 
-## 0.0.6-beta 修复
+## 纯 vw 接入
+
+在消费项目的 `@lumal/vite` 中启用转换并配置一次 `viewportWidth`。
+Core 依赖轻量 `@lumal/viewport` 工具，自有静态 CSS 和动态主题 token 使用同一设计宽度。
+未启用时保持 px；启用时，主题初始化、修改和恢复均输出普通 vw，不需要主题长度回调或尺寸变量协议。
+
+Layout/Tabs 默认在启用 vw 时保留桌面编排，未启用时保留原响应式断点。
+表格数字列宽、表单数字标签宽度、编辑器数字尺寸和图标数字 size 是设计 px，由组件内部换算。
+显式 CSS 字符串保持原义；DOM 测量和 Popper 坐标不参与换算。
+
+接线、选择范围与第三方样式授权见 `docs/screen-viewport-guide.md`。
+不扫描业务脚本、不缩放整页。候选版本尚未发布，需用当前 tarball 验证。
+
+## 已有修复
 
 以下变更自 `0.0.6-beta` 提供，当前版本继续保留；升级验证应使用目标版本的实际 tarball：
 

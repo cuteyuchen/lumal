@@ -1,12 +1,13 @@
 import type { CockpitCardTab } from '../src/runtime/card'
 import type { CockpitConfig, CockpitWidgetInstance } from '../src/types'
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, markRaw } from 'vue'
 import { useCockpitContext } from '../src/composables/useCockpitContext'
 import { createCockpitRegistry } from '../src/registry/createCockpitRegistry'
 import LumalCockpit from '../src/runtime/LumalCockpit.vue'
 
+afterEach(() => vi.unstubAllGlobals())
 const StubWidget = defineComponent({
   name: 'StubWidget',
   setup() {
@@ -276,15 +277,21 @@ describe('lumalCockpit v3 运行时', () => {
     expect(bodyChildren[2].classList.contains('lumal-cockpit-canvas__right')).toBe(true)
   })
 
-  it('支持由消费方选择 vwvh 适配模式', () => {
-    const wrapper = mount(LumalCockpit, { props: { config: config(), registry: registry(), viewportMode: 'vwvh' } })
-    expect(wrapper.attributes('data-viewport-mode')).toBe('vwvh')
-    expect(wrapper.find('.lumal-cockpit-canvas').attributes('data-viewport-mode')).toBe('vwvh')
+  it.each([1920, 1440])('全部内部设计数值遵循项目宽度 %s，没有画布缩放与模式分支', (designWidth) => {
+    vi.stubGlobal('__LUMAL_VIEWPORT__', { enabled: true, designWidth })
+    const value = config()
+    const wrapper = mount(LumalCockpit, { props: { config: value, registry: registry() } })
+    expect(wrapper.attributes('data-viewport-mode')).toBeUndefined()
     const stageStyle = wrapper.find('.lumal-cockpit-canvas__stage').attributes('style')
     expect(stageStyle).toContain('100vw')
-    expect(stageStyle).toContain('--lumal-cockpit-x-unit')
-    expect(stageStyle).toContain('--lumal-cockpit-y-unit')
-    expect(wrapper.find('.lumal-cockpit-region').attributes('style')).toContain('--lumal-cockpit-x-unit')
-    expect(wrapper.find('.lumal-cockpit-container__grid').attributes('style')).toContain('--lumal-cockpit-x-unit')
+    expect(stageStyle).toContain(`${Number((1080 / designWidth * 100).toFixed(10))}vw`)
+    expect(stageStyle).not.toContain('transform')
+    expect(stageStyle).not.toContain('--lumal')
+    const columnWidth = `${Number((320 / designWidth * 100).toFixed(10))}vw`
+    expect(wrapper.find('.lumal-cockpit-region').attributes('style')).toContain(columnWidth)
+    expect(wrapper.find('.lumal-cockpit-container__grid').attributes('style')).toContain(columnWidth)
+    expect(value.layouts[0].left.columns[0].width).toBe(320)
+    expect(value.layouts[0].left.rows[0].height).toBe(100)
+    wrapper.unmount()
   })
 })

@@ -1,6 +1,6 @@
 # lumal-admin
 
-Lumal 中后台管理台示例应用，基于已发布的 `@lumal/* 0.0.7-beta` 公开 API 搭建，演示登录鉴权、动态菜单、权限指令、SchemaForm/CrudTable、主题定制，以及局部视口、DataV 和 Cockpit Runtime 集成。
+Lumal 中后台管理台示例应用，基于候选 `@lumal/* 0.1.0-beta` 公开 API 搭建，演示登录鉴权、动态菜单、权限指令、SchemaForm/CrudTable、主题定制，以及统一 vw、DataV 和 Cockpit Runtime 集成。
 
 ## 技术栈
 
@@ -9,11 +9,11 @@ Lumal 中后台管理台示例应用，基于已发布的 `@lumal/* 0.0.7-beta` 
 - Vue Router 4
 - Element Plus
 - ECharts + vue-echarts（通过 `@lumal/charts`）
-- Lumal 组件库：Core、Charts、Icons / Icons Vue；Viewport 提供轻量默认策略，DataV / Cockpit 仅在对应示例页加载。
+- Lumal 组件库：Core、Charts、Icons / Icons Vue；Viewport 提供宽度数值工具和测量，DataV / Cockpit 仅在对应示例页加载。
 
 ## 本地开发
 
-本应用在开发（`vite serve`）模式下，通过 `@lumal/vite` 的 `createLumalAliases` 将 `@lumal/*` 依赖别名指向各 package 的 **源码**（`packages/*/src`），因此改动组件库源码会即时热更新，**无需先构建 dist**。生产构建和 preview 使用各包的 `dist` 产物，不混入开发 alias。
+本应用在开发（`vite serve`）模式下，通过 `@lumal/vite` 的 `createLumalAliases` 将 UI 依赖别名指向各 package 的 **源码**（`packages/*/src`），改动组件库源码会即时热更新。全新 clone 需先构建配置入口依赖 `pnpm --filter @lumal/vite build`；UI 源码开发无需逐次构建 dist。生产构建和 preview 使用各包的 `dist` 产物，不混入开发 alias。
 
 ```bash
 # 在仓库根目录：一键并行启动全部 app（推荐）
@@ -77,6 +77,19 @@ src/
 | `pnpm preview` | 预览构建产物 |
 | `pnpm test` | 构建 mock-api 后运行单元测试 |
 
+## Header 的 VW 开关
+
+Header 提供「VW 适配」开关，默认开启。关闭后进入同源 `/px/` 对照入口，
+开启后回到 `/`。切换会重新加载当前路由，保留 URL 查询、登录态和已存储的偏好；
+未保存的表单或组件内存状态不跨重新加载保留，刷新则维持当前入口。
+
+这是 Demo 对比转换开关的能力，不是新增布局模式或对已编译 CSS 的运行时撤销。
+两份入口复用同一源码与 Vite 配置，只有 `enabled` 不同；CSS、行内样式、
+Core 动态 token 及数字工具整体切换，设计宽度仍只在 `vite.config.ts` 配置一次。
+Dev 在同一端口挂载独立的 px 编译管线，`pnpm build` 顺序生成 `dist/` 与 `dist/px/`。
+部署与 preview 必须保留完整 `dist` 目录，不能只复制根入口的 assets。
+此开关仅在 Admin Demo 提供，不改变公共包或脚手架的单一 vw 规则。
+
 ## 构建与联调说明
 
 - 生产构建依赖各 `@lumal/*` 包的 `dist`，构建前请先在根目录执行 `pnpm build` 生成所有包产物，或使用根目录的 `pnpm admin:build`（会先构建全部包再构建 admin）。
@@ -86,12 +99,12 @@ src/
 
 | 路由 | 实际能力 | 授权 |
 | --- | --- | --- |
-| `/#/examples/viewport` | 应用默认、路由和容器策略；contain / width / responsive / disabled；实测尺寸、字号下限、独立弹窗和源码 | `examples:view` |
+| `/#/examples/viewport` | 普通px→vw、容器测量、192px探针、字号/行高、点击、独立弹窗和源码 | `examples:view` |
 | `/#/examples/datav` | 边框、装饰、数字翻牌、滚动榜单与局部全屏容器 | `examples:view` |
-| `/#/examples/cockpit` | 真实 Runtime、最小 Widget、主题切换；外层 Viewport 与内层 external | `cockpit:view` |
+| `/#/examples/cockpit` | 真实Runtime、最小Widget、主题切换；嵌入不二次缩放 | `cockpit:view` |
 
-页面全部通过组件白名单动态导入。远程菜单仍由 Mock 决定授权；Viewport 页的布局策略在
-`src/api/menu.ts` 按可信组件名补入，不依赖后端 DTO 透传任意 meta。
+页面全部通过组件白名单动态导入，远程菜单仍由Mock决定授权。
+Vite一次配置设计宽度，不由路由meta切换已编译的CSS。
 guest 不显示 Cockpit 集成入口，直接访问返回 403。首页不加载 DataV、Cockpit、Designer 或地图资源。
 
 在根目录执行 `pnpm test:e2e:release`，生产产物运行全部 Admin Playwright；
@@ -102,30 +115,14 @@ pnpm test:e2e:release:built apps/lumal-admin/e2e/visualization-examples.spec.ts
 ```
 
 完整接入说明见 [Demo 与业务接入](../../docs/demo-integration-guide.md)。
-新增示例已随 PR #9 合入 master 并完成授权部署，
+旧版示例曾随 PR #9 合入 master 并完成授权部署，
 首次生产验收基线为 `e2ac131`；实际 Deployment、菜单与资源证据见
 [本版发布记录](../../docs/npm-release-0.0.7-beta.md#合并与站点实际验收)。
 后续本地改动仍须独立构建、部署，不能凭 npm 版本推断线上已更新。
 
-## 工作区三模式
-
-发包后的应用示例在顶栏切换 responsive、contain、width，默认 responsive。
-只适配内容区，Header、Tabbar、侧栏和 body Teleport 弹层不缩放。
-切换器显式加载 Element Plus Dropdown 的按需样式，并在浮层中标识当前模式；
-不依赖 Core 主题合集或后续访问的异步业务页面补齐菜单样式。
-设计工作区为 `1280 × 720`，最小比例 `.75`、目标物理字号下限 `12px`；
-窗口不足时局部滚动，模式偏好保存在应用本地，不修改 Core 默认值或根字号。
-
-`examples/viewport`、`examples/datav`、`examples/cockpit` 使用自己的适配；
-`examples/crud-table`、`system/user`、`system/role` 保留 CRUD 编辑器原有定位上下文。
-这六页通过可信 `meta.workspaceViewport: 'self-managed'` 映射保持 responsive，
-不绕过菜单或访问权限。切换器提示本页独立布局。
-
-继承正文和 Element Plus 字号变量显式应用 `computeViewportFontSize`；
-Demo 自有小字可使用 `--lumal-workspace-min-font-size`。
-该 token 不会重写任意第三方固定像素、rem 或 Canvas 字体，页面仍需自行接入。
-工作区包装器保持同一 RouterView/KeepAlive 插槽；行为与生产验证需单独记录，
-不因 npm 已发布而自动视为通过。
+当前纯 vw 候选没有工作区模式菜单、路由适配豁免、局部字号补偿或整画布缩放。
+Header、侧栏、内容区和 body 弹层遵循同一设计宽度；旧模式偏好键在启动时定向清理，
+不清除登录、主题和业务数据。历史部署不代表本候选已部署。
 
 ## 关于页面与版本确认
 

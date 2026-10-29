@@ -41,7 +41,7 @@ Skill 的描述也包含 Lumal 包名及适用场景，支持隐式发现的工�
 ## 使用边界
 
 - Skill 按需求加载分包参考，不要求 AI 每次读取所有包。
-- 示例与 `metadata.api-version` 基线为已发布并核验的 `0.0.7-beta`，不保证一直是 npm 最新版本；AI 应先核对实际安装包和 registry。开发未发布源码时使用精确 tarball，不能悄悄换用旧 CLI 验收新增能力。
+- 示例与 `metadata.api-version` 基线为 `0.1.0-beta`，不代表 npm 的最新版本或已发布证明；AI 应先核对实际安装包和 registry。目标版本不可用时不能悄悄换用旧 CLI，候选验收使用本地 tarball。
 - Skill 不代替具体业务接口契约、安全审查或测试，也不赋予 AI 自动发布权限。
 - 普通包消费者不需要 Lumal 仓库源码 alias；只使用请求或图标工具时，不应被引导安装整套后台。
 - HTTP 未配置时必须明确失败，不回退演示登录；Vben 5 使用 `/v5`，根及 `/legacy` 保留旧 Lumal 行为，不能混用两种元组。

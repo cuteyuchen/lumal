@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { createLumalProject } from '../src'
 import { parseCliArgs } from '../src/cli'
 import { resolveProjectOptions } from '../src/projects'
+import { getVersion } from '../src/templates'
 
 const temporary: string[] = []
 afterEach(async () => {
@@ -89,42 +90,52 @@ describe('通用项目生成器', () => {
   it.each(['charts', 'datav', 'cockpit'] as const)('可视化 %s 只组合所选能力，不生成Designer', async (visualization) => {
     const targetDir = await mkdtemp(join(tmpdir(), 'lumal-screen-visual-'))
     temporary.push(targetDir)
-    const result = await createLumalProject({ template: 'screen', name: 'screen-visual', targetDir, visualization, viewport: 'contain' })
+    const result = await createLumalProject({ template: 'screen', name: 'screen-visual', targetDir, visualization, viewport: true })
     const manifest = JSON.parse(await readFile(join(targetDir, 'package.json'), 'utf8'))
     expect(manifest.dependencies).toHaveProperty(`@lumal/${visualization}`)
-    expect(manifest.dependencies).toHaveProperty('@lumal/viewport')
+    expect(manifest.devDependencies).toHaveProperty('@lumal/vite')
+    expect(manifest.dependencies).not.toHaveProperty('@lumal/viewport')
     for (const other of ['charts', 'datav', 'cockpit'].filter(item => item !== visualization))
       expect(manifest.dependencies).not.toHaveProperty(`@lumal/${other}`)
     expect(manifest.dependencies).not.toHaveProperty('@lumal/vben-compat')
     expect(Boolean(manifest.dependencies.echarts)).toBe(visualization === 'charts')
     const source = await readFile(join(targetDir, 'src/screen/components/ScreenVisualization.vue'), 'utf8')
     expect(source).not.toContain('/designer')
-    if (visualization === 'cockpit')
-      expect(source).toContain('viewport-mode="external"')
-    expect(result.createdFiles).toContain('src/screen/ScreenViewport.vue')
+    expect(source).not.toContain('viewport-mode')
+    expect(result.createdFiles).not.toContain('src/screen/ScreenViewport.vue')
   })
-  it.each(['disabled', 'responsive', 'width', 'contain', 'scale', 'vw'] as const)('%s 适配参数与容器策略一致', async (viewport) => {
+  it.each([true, false])('适配开关 %s 只有一份设计基准，没有运行时包装器', async (viewport) => {
     const targetDir = await mkdtemp(join(tmpdir(), 'lumal-screen-viewport-'))
     temporary.push(targetDir)
-    const result = await createLumalProject({ template: 'screen', name: 'screen-viewport', targetDir, viewport })
-    const included = !['disabled', 'responsive'].includes(viewport)
-    expect(result.createdFiles.includes('src/screen/ScreenViewport.vue')).toBe(included)
-    expect(result.createdFiles.includes('viewport.config.ts')).toBe(included)
-    if (included) {
+    const result = await createLumalProject({ template: 'screen', name: 'screen-viewport', targetDir, viewport, designWidth: 1440 })
+    expect(result.createdFiles.includes('src/screen/ScreenViewport.vue')).toBe(false)
+    expect(result.createdFiles.includes('viewport.config.ts')).toBe(viewport)
+    if (viewport) {
       const configuration = await readFile(join(targetDir, 'viewport.config.ts'), 'utf8')
-      expect(configuration).toContain(`mode: '${viewport === 'scale' ? 'contain' : viewport}'`)
-      expect(configuration).toContain('export const viewportDesign')
-      expect(configuration).toContain('designWidth: 1920')
-      expect(configuration).toContain('designHeight: 1080')
-      expect(configuration).toContain('...viewportDesign')
+      expect(configuration).toContain('export const viewport')
+      expect(configuration).toContain('viewportWidth: 1440')
+      expect(configuration).toContain('enabled: true')
       expect(configuration).not.toMatch(/import |createViewportTransformPlugin/)
-      const wrapper = await readFile(join(targetDir, 'src/screen/ScreenViewport.vue'), 'utf8')
-      expect(wrapper).toContain('import { viewportPolicy } from \'../../viewport.config\'')
-      expect(wrapper).toContain(':policy="viewportPolicy"')
-      expect(wrapper).not.toMatch(/designWidth:|designHeight:/)
     }
     const manifest = JSON.parse(await readFile(join(targetDir, 'package.json'), 'utf8'))
-    expect(manifest.devDependencies).not.toHaveProperty('@lumal/vite')
-    expect(await readFile(join(targetDir, 'vite.config.ts'), 'utf8')).not.toContain('createViewportTransformPlugin')
+    const vite = await readFile(join(targetDir, 'vite.config.ts'), 'utf8')
+    if (viewport) {
+      expect(manifest.devDependencies['@lumal/vite']).toBe(await getVersion())
+      expect(manifest.dependencies).not.toHaveProperty('@lumal/viewport')
+      expect(vite).toContain('createViewportTransformPlugin')
+      expect(vite).toContain('import { viewport } from \'./viewport.config\'')
+      expect(vite).toContain('...viewport')
+      expect(vite).toContain('include: [\'src/**\']')
+      expect(vite).not.toMatch(/output:|fontSize: false|minSize: false/)
+      expect(vite).not.toMatch(/command|apply:|transformNodeModules|script:/)
+      const screen = await readFile(join(targetDir, 'src/screen/ScreenView.vue'), 'utf8')
+      expect(screen).toContain('padding: 32px')
+      expect(screen).toContain('gap: 16px')
+      expect(screen).toContain('margin-bottom: 32px')
+    }
+    else {
+      expect(manifest.devDependencies).not.toHaveProperty('@lumal/vite')
+      expect(vite).not.toContain('createViewportTransformPlugin')
+    }
   })
 })

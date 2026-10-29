@@ -1,5 +1,10 @@
 # @lumal/icons-vue
 
+## 0.1.0-beta (2026-10-28)
+
+- 数字 size 为设计 px，在内部按唯一项目配置输出 vw；显式单位字符串保持原样。
+- 同步固定包组与 Viewport 依赖版本。
+
 ## 0.0.7-beta (2026-10-26)
 
 ### Patch Changes

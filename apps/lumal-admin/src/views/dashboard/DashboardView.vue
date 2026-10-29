@@ -40,6 +40,8 @@ const quickActions = computed(() => [
   { authority: 'system:dict:list', label: '字典维护', path: '/system/dict' },
 ].filter(action => currentUser.value?.permissions.includes(action.authority)))
 
+/***********************表格数值尺寸*********************/
+// SchemaTable 的数字列宽为设计 px，由组件内部统一换算一次。
 const userColumns = computed<SchemaTableColumn[]>(() => [
   { field: 'username', label: '用户名', minWidth: 140 },
   { field: 'nickname', label: '昵称', minWidth: 140 },
@@ -48,6 +50,7 @@ const userColumns = computed<SchemaTableColumn[]>(() => [
   { field: 'createdAt', label: '创建时间', width: 130 },
 ])
 
+/***********************数据加载与导航*********************/
 function countMenus(items: SystemMenuRecord[]): number {
   return items.reduce((total, item) =>
     total + (item.type === 'button' ? 0 : 1) + countMenus(item.children ?? []), 0)
@@ -189,7 +192,7 @@ onMounted(() => {
 
 .lumal-admin-workspace__metric strong {
   color: var(--el-text-color-primary);
-  font-size: calc(var(--lumal-font-size-base, 14px) + 14px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 2);
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
 }
@@ -213,22 +216,22 @@ onMounted(() => {
 }
 
 @media (max-width: 1024px) {
-  .lumal-admin-workspace__metrics {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-workspace__metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .lumal-admin-workspace__columns {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-workspace__columns {
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
 @media (max-width: 640px) {
-  .lumal-admin-workspace__metrics,
-  .lumal-admin-workspace__actions {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-workspace__metrics,
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-workspace__actions {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .lumal-admin-workspace__metric {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-workspace__metric {
     padding: 16px;
   }
 }

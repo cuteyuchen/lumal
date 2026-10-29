@@ -4,18 +4,29 @@
 
 ## 安装
 
-下列命令面向已发布并核验的 `0.0.7-beta`，显式选择版本，不根据本文推断浮动 dist-tag；
-开发未发布源码时使用本地构建或精确提交的 tarball。
+下列命令面向候选 `0.1.0-beta`，发布后才可从 registry 安装；
+发布核验前使用本地构建或候选 tarball，不根据本文推断 npm 的当前 dist-tag。
 
 ```bash
-pnpm add @lumal/datav@0.0.7-beta vue@^3.5
+pnpm add @lumal/datav@0.1.0-beta vue@^3.5
 # 仅使用 ECharts 模式或 LumalActiveRingChart 时安装。
 pnpm add echarts@^6
 ```
 
 本版 ECharts 为可选 peer：仅 ECharts 图表模式与 `LumalActiveRingChart`
 需要安装，纯数字、边框和列表子入口不要求引擎。Vue 仍为必需 peer。
-DataV 与 Cockpit 共享轻量 `@lumal/viewport`，保留既有全屏缩放 API 与组件行为。
+DataV 与 Cockpit 共享轻量 `@lumal/viewport` 数字工具，不再提供旧画布适配模式。
+
+## 统一宽度适配
+
+项目由 `@lumal/vite` 一次配置设计宽度，自有公共 CSS 在消费者构建时转换，不在发布时写死1920。
+数字尺寸 prop/config 仍写设计 px，组件内部按同一配置换算；实际测量直接用于图表 resize。
+`LumalFullScreenContainer` 的 width 默认项目设计宽度，height 默认自然高度；
+显式 width/height 是内容设计尺寸，height 也按设计宽度换算，不作为缩放除数。
+overflow 默认 auto，可显式 hidden 裁切；embedded 用于普通页面嵌入。
+容器没有 mode、物理 screen 推断、居中偏移或整画布 transform。
+关闭适配时保持普通 px。SVG viewBox、局部动画与 Canvas 几何仍保留原有功能。
+完整配置见[统一指南](../../docs/screen-viewport-guide.md)。
 
 ```ts
 import { createApp } from 'vue'

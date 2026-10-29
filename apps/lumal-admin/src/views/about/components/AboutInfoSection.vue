@@ -56,7 +56,7 @@ defineProps<{
   padding-bottom: 16px;
   border-bottom: 1px solid var(--el-border-color-lighter);
   color: var(--el-text-color-primary);
-  font-size: calc(var(--lumal-font-size-base, 14px) + 2px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 1.14285714);
   font-weight: 600;
   line-height: 1.5;
 }
@@ -128,25 +128,25 @@ defineProps<{
 }
 
 @media (max-width: 1024px) {
-  .lumal-about-info__grid {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-about-info__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 640px) {
-  .lumal-about-info {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-about-info {
     padding: 20px 16px;
   }
 
-  .lumal-about-info__grid {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-about-info__grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .lumal-about-info__item {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-about-info__item {
     padding: 16px 0;
   }
 
-  .lumal-about-info__link {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-about-info__link {
     min-height: 44px;
   }
 }

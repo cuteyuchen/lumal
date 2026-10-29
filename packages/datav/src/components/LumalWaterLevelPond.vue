@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { WaterLevelPondConfig } from '../types'
+import { useViewportWidth } from '@lumal/viewport'
 import { computed, useId, useTemplateRef } from 'vue'
 import { useElementSize } from '../composables/useElementSize'
 import { useSvgAnimationPause } from '../composables/useSvgAnimationPause'
@@ -26,6 +27,8 @@ const props = defineProps<{
 
 const rootRef = useTemplateRef<HTMLElement>('rootRef')
 const svgRef = useTemplateRef<SVGSVGElement>('svgRef')
+/***********************设计振幅与实际容器几何*********************/
+const { pixels } = useViewportWidth()
 const size = useElementSize(rootRef)
 const animation = useSvgAnimationPause(rootRef, svgRef)
 const id = useId().replaceAll(':', '')
@@ -48,7 +51,7 @@ const normalizedShape = computed<'rect' | 'round' | 'roundRect'>(() => {
 const shapeClass = computed(() => normalizedShape.value === 'round' ? 'is-circle' : normalizedShape.value === 'roundRect' ? 'is-rounded' : 'is-rect')
 const colors = computed(() => props.colors ?? props.config?.colors ?? ['#3DE7C9', '#00BAFF'])
 const waveNum = computed(() => positiveInteger(props.waveNum ?? props.waveCount ?? props.config?.waveNum ?? 3, 3))
-const waveHeight = computed(() => Math.max(0, props.waveHeight ?? props.config?.waveHeight ?? 40))
+const waveHeight = computed(() => pixels(Math.max(0, props.waveHeight ?? props.config?.waveHeight ?? 40)))
 const waveOpacity = computed(() => Math.min(1, Math.max(0, props.waveOpacity ?? props.config?.waveOpacity ?? 0.4)))
 const levels = computed(() => {
   const source = props.data ?? props.values ?? (props.value === undefined ? props.config?.data : [props.value]) ?? []

@@ -461,14 +461,14 @@ async function handleSubmit(): Promise<void> {
 .lumal-admin-login__welcome {
   margin: 0 0 14px;
   color: #60a5fa;
-  font-size: calc(var(--lumal-font-size-base, 14px) - 3px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.78571429);
   font-weight: 750;
   letter-spacing: .18em;
 }
 
 .lumal-admin-login__hero h2 {
   margin: 0;
-  font-size: clamp(calc(var(--lumal-font-size-base, 14px) + 20px), 3.2vw, calc(var(--lumal-font-size-base, 14px) + 38px));
+  font-size: clamp(calc(var(--lumal-font-size-base, 14px) * 2.42857143), 3.2vw, calc(var(--lumal-font-size-base, 14px) * 3.71428571));
   font-weight: 720;
   letter-spacing: -.045em;
   line-height: 1.18;
@@ -478,7 +478,7 @@ async function handleSubmit(): Promise<void> {
   max-width: 550px;
   margin: 22px 0 0;
   color: #9fb0c7;
-  font-size: calc(var(--lumal-font-size-base, 14px) + 1px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 1.07142857);
   line-height: 1.85;
 }
 
@@ -543,8 +543,8 @@ async function handleSubmit(): Promise<void> {
   backdrop-filter: blur(14px);
 }
 
-.lumal-admin-login__metric b { font-size: calc(var(--lumal-font-size-base, 14px) - 2px); font-weight: 650; }
-.lumal-admin-login__metric small { color: #8094af; font-size: calc(var(--lumal-font-size-base, 14px) - 4px); }
+.lumal-admin-login__metric b { font-size: calc(var(--lumal-font-size-base, 14px) * 0.85714286); font-weight: 650; }
+.lumal-admin-login__metric small { color: #8094af; font-size: calc(var(--lumal-font-size-base, 14px) * 0.71428571); }
 .lumal-admin-login__metric > i:first-child {
   width: 7px;
   height: 7px;
@@ -575,7 +575,7 @@ async function handleSubmit(): Promise<void> {
   margin: 0;
   padding: 0;
   color: #aebed2;
-  font-size: calc(var(--lumal-font-size-base, 14px) - 2px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.85714286);
   list-style: none;
 }
 
@@ -610,7 +610,7 @@ async function handleSubmit(): Promise<void> {
 .lumal-admin-login__heading h1 {
   margin: 0;
   color: var(--el-text-color-primary);
-  font-size: calc(var(--lumal-font-size-base, 14px) + 18px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 2.28571429);
   font-weight: 730;
   letter-spacing: -.04em;
   line-height: 1.2;
@@ -628,7 +628,7 @@ async function handleSubmit(): Promise<void> {
   height: auto;
   padding-bottom: 8px;
   color: var(--el-text-color-regular);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
   font-weight: 600;
   line-height: 1.3;
 }
@@ -648,7 +648,7 @@ async function handleSubmit(): Promise<void> {
 .lumal-admin-login__error {
   margin: -4px 0 12px;
   color: var(--el-color-danger);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
   line-height: 1.5;
 }
 .lumal-admin-login__submit {
@@ -680,8 +680,8 @@ async function handleSubmit(): Promise<void> {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--el-color-success) 12%, transparent);
 }
 .lumal-admin-login__hint p { display: grid; gap: 3px; margin: 0; }
-.lumal-admin-login__hint strong { color: var(--el-text-color-regular); font-size: calc(var(--lumal-font-size-base, 14px) - 2px); }
-.lumal-admin-login__hint small { color: var(--el-text-color-secondary); font-size: calc(var(--lumal-font-size-base, 14px) - 3px); line-height: 1.5; }
+.lumal-admin-login__hint strong { color: var(--el-text-color-regular); font-size: calc(var(--lumal-font-size-base, 14px) * 0.85714286); }
+.lumal-admin-login__hint small { color: var(--el-text-color-secondary); font-size: calc(var(--lumal-font-size-base, 14px) * 0.78571429); line-height: 1.5; }
 
 .lumal-admin-login__copyright {
   position: absolute;
@@ -690,7 +690,7 @@ async function handleSubmit(): Promise<void> {
   left: 0;
   margin: 0;
   color: var(--el-text-color-placeholder);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 3px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.78571429);
   text-align: center;
 }
 
@@ -720,44 +720,44 @@ async function handleSubmit(): Promise<void> {
 }
 
 @media (max-width: 1100px) {
-  .lumal-admin-login,
-  .lumal-admin-login.is-form-left {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login,
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login.is-form-left {
     grid-template-columns: minmax(0, 1fr) minmax(400px, .9fr);
   }
-  .lumal-admin-login.is-form-left { grid-template-columns: minmax(400px, .9fr) minmax(0, 1fr); }
-  .lumal-admin-login__hero { padding-right: 5vw; padding-left: 5vw; }
-  .lumal-admin-login__metric.is-metric-access { left: 0; }
-  .lumal-admin-login__metric.is-metric-runtime { right: 0; }
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login.is-form-left { grid-template-columns: minmax(400px, .9fr) minmax(0, 1fr); }
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login__hero { padding-right: 5vw; padding-left: 5vw; }
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login__metric.is-metric-access { left: 0; }
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login__metric.is-metric-runtime { right: 0; }
 }
 
 @media (max-width: 820px) {
-  .lumal-admin-login,
-  .lumal-admin-login.is-form-left,
-  .lumal-admin-login.is-form-center {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login,
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login.is-form-left,
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login.is-form-center {
     display: block;
   }
-  .lumal-admin-login__hero { display: none; }
-  .lumal-admin-login__auth {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login__hero { display: none; }
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login__auth {
     min-height: 100vh;
     min-height: 100dvh;
     padding: 108px 32px 64px;
   }
-  .lumal-admin-login__layout-switch { display: none; }
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login__layout-switch { display: none; }
 }
 
 @media (max-width: 480px) {
-  .lumal-admin-login__topbar { height: 68px; padding: 0 16px; }
-  .lumal-admin-login__auth { padding: 92px 20px 58px; }
-  .lumal-admin-login__heading { margin-bottom: 26px; }
-  .lumal-admin-login__heading h1 { font-size: calc(var(--lumal-font-size-base, 14px) + 14px); }
-  .lumal-admin-login.is-form-center .lumal-admin-login__panel {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login__topbar { height: 68px; padding: 0 16px; }
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login__auth { padding: 92px 20px 58px; }
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login__heading { margin-bottom: 26px; }
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login__heading h1 { font-size: calc(var(--lumal-font-size-base, 14px) * 2); }
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login.is-form-center .lumal-admin-login__panel {
     padding: 0;
     border: 0;
     background: transparent;
     box-shadow: none;
     backdrop-filter: none;
   }
-  .lumal-admin-login__copyright { bottom: 18px; }
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-login__copyright { bottom: 18px; }
 }
 
 @media (prefers-reduced-motion: no-preference) {

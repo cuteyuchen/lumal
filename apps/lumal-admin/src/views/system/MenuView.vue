@@ -10,6 +10,7 @@ import type { SaveSystemMenuInput, SystemMenuRecord } from '../../api/system'
 import { LumalPage, LumalSchemaForm, LumalSchemaTable } from '@lumal/core/components'
 import { RequestError } from '@lumal/core/request'
 import { LumalIcon, LumalIconPicker } from '@lumal/icons-vue'
+import { viewportLength } from '@lumal/viewport'
 import { ElAlert, ElButton, ElDialog } from 'element-plus'
 import { computed, onMounted, shallowRef, useTemplateRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
@@ -376,7 +377,7 @@ onMounted(() => {
         :error="loadError"
         :table-props="tableProps"
         row-key="id"
-        action-width="300"
+        :action-width="300"
         @retry="loadMenus"
       >
         <template #table-icon="{ value }">
@@ -422,7 +423,7 @@ onMounted(() => {
       class="lumal-admin-dialog lumal-menu-dialog"
       :title="dialogTitle"
       top="6vh"
-      width="960px"
+      :width="viewportLength(960)"
     >
       <ElAlert
         v-if="operationError"
@@ -436,7 +437,7 @@ onMounted(() => {
         v-model="formModel"
         :columns="2"
         :gutter="24"
-        label-width="96px"
+        :label-width="96"
         :mode="formMode"
         :schemas="formSchemas"
         :submit-loading="saving"

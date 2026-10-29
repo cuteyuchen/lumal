@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   applyThemePreferences,
   applyThemeToElement,
@@ -42,10 +42,39 @@ class MemoryStorage implements Storage {
 }
 
 describe('theme runtime', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('项目设计宽度贯通动态 token、主题切换和恢复，不在运行时写回固定 px', () => {
+    vi.stubGlobal('__LUMAL_VIEWPORT__', { enabled: true, designWidth: 1440 })
+    const targetDocument = document.implementation.createHTMLDocument()
+    const preferences = createDefaultPreferences({ theme: { fontSize: 14 }, sidebar: { width: 248 } })
+    const style = targetDocument.documentElement.style
+    applyThemePreferences(preferences, { document: targetDocument })
+    expect(style.getPropertyValue('--lumal-header-height')).toBe('3.4722222222vw')
+    expect(style.getPropertyValue('--lumal-sidebar-width')).toBe('17.2222222222vw')
+    expect(style.getPropertyValue('--el-font-size-base')).toBe('0.9722222222vw')
+    expect(style.getPropertyValue('--lumal-page-gutter')).toBe('1.3888888889vw')
+
+    preferences.theme.mode = 'dark'
+    preferences.theme.fontSize = 18
+    applyThemePreferences(preferences, { document: targetDocument })
+    expect(targetDocument.documentElement.classList.contains('dark')).toBe(true)
+    expect(style.fontSize).toBe('1.25vw')
+    expect(style.getPropertyValue('--el-font-size-medium')).toBe('1.3888888889vw')
+
+    applyThemePreferences(createDefaultPreferences(), { document: targetDocument })
+    expect(style.fontSize).toBe('0.9722222222vw')
+    expect(style.getPropertyValue('--lumal-header-height')).toBe('3.4722222222vw')
+    vi.stubGlobal('__LUMAL_VIEWPORT__', { enabled: false, designWidth: 1440 })
+    applyThemePreferences(preferences, { document: targetDocument })
+    expect(style.fontSize).toBe('18px')
+    expect(style.getPropertyValue('--lumal-header-height')).toBe('50px')
+  })
+
   it('主题入口包含单选按钮样式，保留处理方式的标签和选中态', () => {
     const themeEntry = readFileSync(resolve(import.meta.dirname, '../theme-chalk/index.scss'), 'utf8')
 
-    expect(themeEntry).toContain('@use "element-plus/theme-chalk/src/radio-button.scss"')
+    expect(themeEntry).toContain('@import "element-plus/theme-chalk/el-radio-button.css"')
   })
 
   it('会创建默认主题状态并生成 CSS 变量 token', () => {
@@ -251,6 +280,21 @@ describe('theme runtime', () => {
 
     expect(sources.every(source => source.includes('var(--lumal-font-size-base, 14px)'))).toBe(true)
     expect(sources.some(source => /font-size:\s*(?:12|13|14|16|18)px/.test(source))).toBe(false)
+  })
+  it('设计宽度也覆盖圆角、阴影与间距，不需要主题长度回调', () => {
+    vi.stubGlobal('__LUMAL_VIEWPORT__', { enabled: true, designWidth: 1920 })
+    const element = document.createElement('html')
+    applyThemePreferences(createDefaultPreferences({ theme: { fontSize: 18 }, sidebar: { width: 256 } }), {
+      document: { documentElement: element } as Document,
+    })
+    expect(element.style.getPropertyValue('--lumal-font-size-base')).toBe('0.9375vw')
+    expect(element.style.getPropertyValue('--el-border-radius-base')).toBe('0.3125vw')
+    expect(element.style.getPropertyValue('--lumal-shadow-base')).toBe('0 0.4166666667vw 1.25vw rgb(15 23 42 / 8%)')
+    expect(element.style.getPropertyValue('--lumal-spacing-md')).toBe('0.8333333333vw')
+    vi.stubGlobal('__LUMAL_VIEWPORT__', { enabled: false, designWidth: 1920 })
+    applyThemePreferences(createDefaultPreferences(), { document: { documentElement: element } as Document })
+    expect(element.style.getPropertyValue('--lumal-font-size-base')).toBe('14px')
+    expect(element.style.getPropertyValue('--lumal-shadow-base')).toBe('0 8px 24px rgb(15 23 42 / 8%)')
   })
 
   it('会按布局模式统一解析设置项可用性', () => {

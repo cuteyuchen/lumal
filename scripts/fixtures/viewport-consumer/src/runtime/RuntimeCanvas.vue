@@ -1,12 +1,7 @@
-<script setup lang="ts">
-import { LumalViewport } from '@lumal/viewport'
-import { viewportPolicy } from '../../viewport.config'
-</script>
-
 <template>
-  <LumalViewport :policy="viewportPolicy">
+  <section>
     <div class="runtime-canvas" style="width: 192px; height: 96px" />
-  </LumalViewport>
+  </section>
 </template>
 
 <style scoped>

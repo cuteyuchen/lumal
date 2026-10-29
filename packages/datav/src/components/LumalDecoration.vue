@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
 import type { DecorationVariant } from '../types'
+import { viewportLength } from '@lumal/viewport'
 import {
   computed,
   nextTick,
@@ -307,8 +308,8 @@ watch(
       ]"
       :style="{
         animationDuration: `${resolvedDuration / 1000}s`,
-        height: reverse ? '5px' : `${height}px`,
-        width: reverse ? `${width}px` : '5px',
+        height: reverse ? viewportLength(5) : `${height}px`,
+        width: reverse ? `${width}px` : viewportLength(5),
       }"
     >
       <svg

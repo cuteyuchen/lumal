@@ -54,7 +54,6 @@ const activeLayoutId = shallowRef(config.value.activeLayoutId)
     v-model:active-layout-id="activeLayoutId"
     :config="config"
     :registry="registry"
-    viewport-mode="scale"
   >
     <template #center="{ context, layout }">
       <ApplicationCenter :context="context" :layout="layout" />
@@ -77,8 +76,8 @@ const activeLayoutId = shallowRef(config.value.activeLayoutId)
 
 ## 缩放、消息和主题
 
-- `scale`：内部按 1920×1080 等比缩放；`vwvh`：视口单位适配；`external`：父容器承担缩放，Cockpit 不再自缩放。
-- 与 `LumalFullScreenContainer` 组合时使用 `external`，避免双重缩放和点击偏移。
+- 设计px仅按项目统一宽度输出vw，baseHeight是内容高度，不参与比例。没有适配模式和整画布transform；DataV嵌套不重复缩放。
+- 与 `LumalFullScreenContainer` 组合时仅增加内容容器，两者使用同一项目配置，不存在外部缩放模式。
 - `enterFullscreen()` 只全屏组件根节点；body Teleport 和外部 Designer 不在其中。应用需选择包含浮层的全屏宿主，或打开浮层前退出全屏，不用第二次 CSS 缩放修复可见性。
 - 用 `useCockpitContext` 获取当前实例的 `messages/mode/instanceId`；不要为每个模块创建一个互不相通的全局消息总线。
 - 设计区内已放置模块共享 `mode: 'design'` 的总线，模块库预览保持隔离。
@@ -88,7 +87,7 @@ const activeLayoutId = shallowRef(config.value.activeLayoutId)
 
 ## Demo 的使用边界
 
-Admin 的 `examples/CockpitView.vue` 是最小 Runtime + Widget，外层 Viewport / 内层 external，
+Admin 的 `examples/CockpitView.vue` 是最小 Runtime + Widget，普通嵌入容器不施加额外缩放，
 不导入地图或 Designer；独立 `apps/lumal-cockpit` 才演示地图、持久化和编辑流程。
 完整源码与安装说明可从仓库 `docs/demo-integration-guide.md` 核对，不把 Demo 业务逻辑复制进公共包。
 

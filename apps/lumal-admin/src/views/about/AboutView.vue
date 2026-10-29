@@ -100,7 +100,7 @@ const dependencySections = [
 .lumal-admin-about__title {
   margin: 0;
   color: var(--el-text-color-primary);
-  font-size: calc(var(--lumal-font-size-base, 14px) + 6px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 1.42857143);
   font-weight: 600;
   line-height: 1.5;
 }
@@ -128,13 +128,13 @@ const dependencySections = [
 }
 
 @media (max-width: 640px) {
-  .lumal-admin-about__header {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-about__header {
     align-items: flex-start;
     gap: 12px;
     padding: 20px 16px;
   }
 
-  .lumal-admin-about__logo {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-about__logo {
     width: 40px;
     height: 40px;
   }

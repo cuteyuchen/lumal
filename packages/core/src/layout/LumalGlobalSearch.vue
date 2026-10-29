@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { LumalLayoutMenuItem } from './types'
 import { LumalIcon } from '@lumal/icons-vue'
+import { getViewportConfig } from '@lumal/viewport'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, useTemplateRef, watch } from 'vue'
 
 interface SearchResult {
@@ -178,7 +179,7 @@ defineExpose({ close: closeSearch, open: openSearch })
 </script>
 
 <template>
-  <div class="lumal-global-search">
+  <div class="lumal-global-search" :class="{ 'is-responsive': !getViewportConfig().enabled }">
     <button
       ref="triggerRef"
       class="lumal-global-search__trigger"
@@ -467,8 +468,8 @@ defineExpose({ close: closeSearch, open: openSearch })
 }
 
 @media (max-width: 1024px) {
-  .lumal-global-search__trigger-label,
-  .lumal-global-search__trigger kbd {
+  .lumal-global-search.is-responsive .lumal-global-search__trigger-label,
+  .lumal-global-search.is-responsive .lumal-global-search__trigger kbd {
     display: none;
   }
 }

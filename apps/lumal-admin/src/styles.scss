@@ -1,4 +1,5 @@
 :root {
+  box-sizing: border-box;
   color: var(--el-text-color-primary);
   background: var(--el-bg-color-page);
   font-family:
@@ -7,6 +8,12 @@
     "Microsoft YaHei",
     Arial,
     sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
 }
 
 html,
@@ -71,12 +78,12 @@ button {
   display: block;
   padding-top: 12px;
   color: var(--el-text-color-secondary);
-  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
 }
 
 .lumal-admin-home__status {
   color: var(--el-color-primary);
-  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
   font-weight: 700;
 }
 
@@ -99,15 +106,15 @@ button {
 }
 
 @media (max-width: 768px) {
-  .lumal-admin-page {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-page {
     /* 禁止被 flex 收缩到视口高度以下，否则子级 height:100%/overflow:hidden 会截断且外层无法滚动 */
     flex: 0 0 auto;
     min-height: auto;
     height: auto;
   }
 
-  .lumal-admin-page > .lumal-page,
-  .lumal-admin-page > .lumal-crud-table {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-page > .lumal-page,
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-page > .lumal-crud-table {
     flex: 0 0 auto;
     min-height: auto;
     height: auto;
@@ -130,19 +137,19 @@ button {
 }
 
 @media (max-width: 768px) {
-  .lumal-admin-dialog {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-dialog {
     width: calc(100vw - 24px) !important;
   }
 
-  .lumal-admin-dialog .el-dialog__header {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-dialog .el-dialog__header {
     padding: 12px;
   }
 
-  .lumal-admin-dialog .el-dialog__body {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-dialog .el-dialog__body {
     padding: 12px;
   }
 
-  .lumal-admin-dialog .el-dialog__footer {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-dialog .el-dialog__footer {
     padding: 10px 12px 12px;
   }
 }
@@ -173,23 +180,23 @@ button {
 }
 
 @media (max-width: 768px) {
-  .lumal-admin-example {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-example {
     flex: 0 0 auto;
     height: auto;
     min-height: auto;
   }
 
-  .lumal-admin-example.is-fill {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-example.is-fill {
     height: auto;
     min-height: auto;
   }
 
-  .lumal-admin-example.is-fill .lumal-page {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-example.is-fill .lumal-page {
     height: auto;
     min-height: auto;
   }
 
-  .lumal-admin-example.is-fill .lumal-page__body {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-example.is-fill .lumal-page__body {
     overflow: visible;
   }
 }
@@ -215,13 +222,13 @@ button {
 .lumal-admin-example__metric span,
 .lumal-admin-example__chart-card-label {
   color: var(--el-text-color-secondary);
-  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
 }
 
 .lumal-admin-example__metric strong,
 .lumal-admin-example__chart-card-value {
   color: var(--el-text-color-primary);
-  font-size: calc(var(--lumal-font-size-base, 14px) + 10px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 1.71428571);
   line-height: 1.2;
 }
 
@@ -296,7 +303,7 @@ button {
 .lumal-admin-example__chart-label,
 .lumal-admin-example__chart-value {
   color: var(--el-text-color-regular);
-  font-size: max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px));
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
 }
 
 .lumal-admin-example__chart-track {
@@ -319,18 +326,18 @@ button {
 }
 
 @media (max-width: 980px) {
-  .lumal-admin-example__two-columns {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-example__two-columns {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 640px) {
-  .lumal-admin-example__metrics,
-  .lumal-admin-example__chart-panel {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-example__metrics,
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-example__chart-panel {
     grid-template-columns: 1fr;
   }
 
-  .lumal-admin-example__chart-row {
+  html:has(.lumal-layout.is-responsive, .public-layout.is-responsive) .lumal-admin-example__chart-row {
     grid-template-columns: 1fr;
   }
 }

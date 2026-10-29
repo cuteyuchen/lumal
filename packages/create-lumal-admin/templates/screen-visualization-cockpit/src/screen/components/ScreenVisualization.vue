@@ -17,7 +17,7 @@ layout.left.rows[0]!.cells[0]!.widget = createWidgetInstance('metric', '任务�
 
 <template>
   <div class="screen-cockpit">
-    <LumalCockpit :config="config" :registry="registry" viewport-mode="external">
+    <LumalCockpit :config="config" :registry="registry">
       <template #center><p>数据总览</p></template>
     </LumalCockpit>
   </div>

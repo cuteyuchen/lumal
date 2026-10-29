@@ -22,10 +22,10 @@ const cases = [
   { name: 'screen-auth-only', args: ['--template', 'screen', '--auth', 'http'], auth: 'http', http: true },
   { name: 'screen-auth-http', args: ['--template', 'screen', '--auth', 'http', '--data', 'http', '--router-mode', 'history'], auth: 'http', http: true, protectedData: true },
   { name: 'screen-charts', args: ['--template', 'screen', '--visualization', 'charts'], visualization: 'charts' },
-  { name: 'screen-datav', args: ['--template', 'screen', '--visualization', 'datav', '--viewport', 'contain'], visualization: 'datav', viewport: 'contain' },
-  { name: 'screen-cockpit', args: ['--template', 'screen', '--visualization', 'cockpit', '--viewport', 'contain'], visualization: 'cockpit', viewport: 'contain' },
-  { name: 'screen-width', args: ['--template', 'screen', '--viewport', 'width'], viewport: 'width' },
-  { name: 'screen-units', args: ['--template', 'screen', '--viewport', 'vw'], viewport: 'vw' },
+  { name: 'screen-datav', args: ['--template', 'screen', '--visualization', 'datav', '--design-width', '1440'], visualization: 'datav', designWidth: 1440 },
+  { name: 'screen-cockpit', args: ['--template', 'screen', '--visualization', 'cockpit', '--design-width', '1440'], visualization: 'cockpit', designWidth: 1440 },
+  { name: 'screen-px', args: ['--template', 'screen', '--no-viewport'] },
+  { name: 'screen-vw-1440', args: ['--template', 'screen', '--design-width', '1440'], designWidth: 1440 },
 ]
 
 async function sourceHash(directory) {
@@ -88,20 +88,38 @@ async function verifyBrowser(projectDir, scenario, screenshots, api) {
       await expect.poll(() => api.state.refreshes).toBeGreaterThan(refreshCount)
       await expect(page.getByRole('alert')).toHaveCount(0)
     }
-    const sizes = [[1366, 768], [1920, 1080], [2560, 1440], [1440, 900], [390, 844]]
+    const sizes = [[1280, 720], [1366, 768], [1920, 920], [1920, 1080], [2560, 1440], [1440, 900], [390, 844]]
     for (const [width, height] of sizes) {
       await page.setViewportSize({ width, height })
       await expect.poll(async () => {
         const box = await mainElement.boundingBox()
-        const container = scenario.viewport ? await page.locator(`[data-viewport-mode="${scenario.viewport}"]`).first().boundingBox() : null
-        const expectedWidth = scenario.viewport === 'contain' && container
-          ? Math.min(container.width / 1920, container.height / 1080) * 1920
-          : width
-        return Boolean(box && Math.abs(box.width - expectedWidth) < 2)
+        return Boolean(box && Math.abs(box.width - width) < 2)
       }).toBe(true)
       const main = await mainElement.boundingBox()
       if (!main || main.width > width + 1 || main.x < -1)
         throw new Error(`${name} ${width}x${height} 页面溢出`)
+      await expect(page.locator('[data-viewport-mode]')).toHaveCount(0)
+      if (name.startsWith('screen') && name !== 'screen-px') {
+        // Local Demo 的生产门禁仍停留在登录表单，不应拿尚未挂载的 ScreenView padding 验收。
+        if (scenario.auth === 'local-demo') {
+          const input = page.getByLabel('用户名', { exact: true })
+          const minHeight = await input.evaluate(element => Number.parseFloat(getComputedStyle(element).minHeight))
+          expect(Math.abs(minHeight - 40 * width / (scenario.designWidth ?? 1920))).toBeLessThan(0.1)
+        }
+        else {
+          const padding = await mainElement.evaluate(element => Number.parseFloat(getComputedStyle(element).paddingTop))
+          expect(Math.abs(padding - 32 * width / (scenario.designWidth ?? 1920))).toBeLessThan(0.1)
+        }
+      }
+      if (scenario.visualization === 'datav') {
+        const fontSize = Number(await page.locator('.lumal-digital-flop text').getAttribute('font-size'))
+        expect(fontSize).toBeCloseTo(30 * width / scenario.designWidth, 1)
+      }
+      if (scenario.visualization === 'cockpit') {
+        await expect(page.locator('.lumal-cockpit-canvas__stage')).toHaveCSS('transform', 'none')
+        const stage = await page.locator('.lumal-cockpit-canvas__stage').boundingBox()
+        expect(stage.width).toBeCloseTo(1440 * width / scenario.designWidth, 0)
+      }
       await page.screenshot({ path: join(screenshots, `${name}-${width}x${height}.png`), fullPage: true })
     }
     expect(errors).toEqual([])
@@ -158,10 +176,14 @@ async function main() {
       const manifestPath = join(projectDir, 'package.json')
       const manifest = await readJson(manifestPath)
       const dependencies = Object.keys(manifest.dependencies)
-      manifest.pnpm = { overrides: Object.fromEntries(Object.entries(tarballs).filter(([name]) => name.startsWith('@lumal/')).map(([name, path]) => [name, toFileSpecifier(projectDir, path)])) }
+      manifest.pnpm = { overrides: Object.fromEntries(Object.entries(tarballs).filter(([name]) => name.startsWith('@lumal/')).sort(([a], [b]) => a.localeCompare(b)).map(([name, path]) => [name, toFileSpecifier(projectDir, path)])) }
       for (const name of dependencies) {
         if (tarballs[name])
           manifest.dependencies[name] = toFileSpecifier(projectDir, tarballs[name])
+      }
+      for (const name of Object.keys(manifest.devDependencies)) {
+        if (tarballs[name])
+          manifest.devDependencies[name] = toFileSpecifier(projectDir, tarballs[name])
       }
       await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
       if (scenario.http)

@@ -17,6 +17,7 @@ const LayoutStub = defineComponent({
     fixedTabs: Array,
     menus: Array,
     preferences: Object,
+    responsive: Boolean,
     routeDriven: Boolean,
     routeTabResolver: Function,
     tabFallbackPath: String,
@@ -27,6 +28,7 @@ const LayoutStub = defineComponent({
       class="layout-stub"
       :data-menu-count="menus?.length ?? 0"
       :data-layout="preferences?.app.layout"
+      :data-responsive="String(responsive)"
       :data-header-menu-align="preferences?.header.menuAlign"
       :data-header-menu-max-width="preferences?.header.menuMaxWidth"
       :data-show-tab-icons="String(preferences?.tabbar.showIcon)"
@@ -172,6 +174,72 @@ describe('app shell', () => {
     expect(wrapper.find('.layout-stub').attributes('data-layout')).toBe('top-nav')
     expect(wrapper.find('.layout-stub').attributes('data-menu-count')).toBe('6')
     expect(document.title).toBe('Lumal Admin')
+  })
+
+  it('所有页面直接使用相同壳，切换页面不会挂载模式包装器或模式菜单', async () => {
+    await login('admin')
+    const router = createAdminRouter(createMemoryHistory())
+    await router.push('/dashboard')
+    await router.isReady()
+    const wrapper = mount(App, {
+      global: {
+        plugins: [router],
+        stubs: {
+          ...elementPlusStubs,
+          ElDrawer: DrawerStub,
+          LumalIcon: IconStub,
+          LumalLayout: LayoutStub,
+          LumalRouterView: RouterViewStub,
+        },
+      },
+    })
+    try {
+      const shell = wrapper.get('.layout-stub').element
+      for (const path of ['/examples/datav', '/examples/cockpit', '/examples/viewport', '/system/user', '/system/role', '/examples/crud-table']) {
+        await router.push(path)
+        expect(wrapper.get('.layout-stub').element).toBe(shell)
+        expect(wrapper.find('[data-viewport-mode]').exists()).toBe(false)
+        expect(wrapper.find('[aria-label="工作区适配"]').exists()).toBe(false)
+        expect(wrapper.find('.router-view-stub').exists()).toBe(true)
+      }
+    }
+    finally {
+      wrapper.unmount()
+    }
+  })
+
+  it('直接打开 Viewport 深链与返回登录页不注入全局布局补丁', async () => {
+    await login('admin')
+    const router = createAdminRouter(createMemoryHistory())
+    await router.push('/examples/viewport?source=refresh')
+    await router.isReady()
+    const wrapper = mount(App, {
+      global: {
+        plugins: [router],
+        stubs: {
+          ...elementPlusStubs,
+          ElDrawer: DrawerStub,
+          LumalIcon: IconStub,
+          LumalLayout: LayoutStub,
+          LumalRouterView: RouterViewStub,
+        },
+      },
+    })
+    try {
+      for (const path of ['/examples/viewport?source=refresh', '/dashboard', '/examples/viewport']) {
+        await router.push(path)
+        expect(document.documentElement.dataset.adminViewport).toBeUndefined()
+        expect(wrapper.find('[data-viewport-mode]').exists()).toBe(false)
+        expect(wrapper.get('.layout-stub').exists()).toBe(true)
+      }
+      await logout()
+      await router.push('/login')
+      expect(document.documentElement.dataset.adminViewport).toBeUndefined()
+      expect(wrapper.find('.layout-stub').exists()).toBe(false)
+    }
+    finally {
+      wrapper.unmount()
+    }
   })
 
   it('登录页使用 public layout，不渲染后台壳', async () => {

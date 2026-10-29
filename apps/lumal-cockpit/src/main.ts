@@ -1,4 +1,3 @@
-import { createViewportPlugin } from '@lumal/viewport'
 import { createApp } from 'vue'
 import App from './App.vue'
 import { enforceDarkThemeMode } from './services/preferences'
@@ -14,4 +13,4 @@ import './styles/motion.css'
 // 纯暗色大屏：清掉历史存档里可能残留的浅色偏好
 enforceDarkThemeMode()
 
-createApp(App).use(createViewportPlugin({ mode: 'responsive', designWidth: 1920, designHeight: 1080 })).mount('#app')
+createApp(App).mount('#app')

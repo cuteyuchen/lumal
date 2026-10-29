@@ -1,32 +1,15 @@
-import { createViewportPlugin } from '@lumal/viewport'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import { defineComponent, h } from 'vue'
 import ViewportCanvas from '../src/views/examples/viewport/ViewportCanvas.vue'
 
-// 固定比例只验证策略到字号样式的转换，真实容器缩放由 Playwright 验收。
-const ViewportStub = defineComponent({
-  name: 'LumalViewport',
-  setup(_, { slots }) {
-    return () => h('div', slots.default?.({ scale: 0.5, size: { width: 480, height: 270 } }))
-  },
-})
-
-describe('viewport 示例字号策略', () => {
-  it('继承应用最小字号，并响应局部覆盖和恢复', async () => {
-    const wrapper = mount(ViewportCanvas, {
-      global: {
-        plugins: [createViewportPlugin({ minFontSize: 12 })],
-        stubs: { LumalViewport: ViewportStub },
-      },
-    })
-    const fontSize = () => (wrapper.get('footer').element as HTMLElement).style.fontSize
-
-    expect(fontSize()).toBe('24px')
-    await wrapper.setProps({ policy: { minFontSize: 20 } })
-    expect(fontSize()).toBe('40px')
-    await wrapper.setProps({ policy: undefined })
-    expect(fontSize()).toBe('24px')
+describe('普通 px 示例不再拥有适配策略', () => {
+  it('直接渲染交互内容，没有额外包装器、整画布 transform 或字号补偿', async () => {
+    const wrapper = mount(ViewportCanvas)
+    expect(wrapper.find('[data-viewport-mode]').exists()).toBe(false)
+    expect(wrapper.attributes('style')).toBeUndefined()
+    expect(wrapper.get('[data-testid="viewport-font"]').attributes('style')).toBeUndefined()
+    await wrapper.get('button').trigger('click')
+    expect(wrapper.get('button').text()).toBe('确认 · 1')
     wrapper.unmount()
   })
 })

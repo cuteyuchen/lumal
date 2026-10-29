@@ -69,5 +69,10 @@ export function resolveOptions(options: CreateLumalAdminProjectOptions) {
   assertFeatures(selected, preset)
   if (!options.targetDir?.trim())
     throw new Error('目标目录不能为空')
-  return { ...options, preset, apiMode, routerMode, features: selected }
+  const designWidth = options.designWidth ?? 1920
+  if (!Number.isFinite(designWidth) || designWidth <= 0)
+    throw new Error('设计宽度必须为正有限数')
+  if (options.viewport !== undefined && typeof options.viewport !== 'boolean')
+    throw new Error('viewport 只能为布尔开关')
+  return { ...options, preset, apiMode, routerMode, features: selected, viewport: options.viewport ?? true, designWidth }
 }

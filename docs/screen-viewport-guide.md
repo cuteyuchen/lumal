@@ -1,330 +1,126 @@
-# 屏幕与工作区适配
+# Lumal 统一 vw 适配
 
-本文面向已发布的 `0.0.7-beta`，正式标签、逐包与 registry 消费者核验见
-[本版发布记录](./npm-release-0.0.7-beta.md)。开发未发布源码时使用本地 tarball，不用历史包代替新增能力验收。
-运行时 API 自 `0.0.6-beta` 提供；下文属性名单、最小尺寸保护、Vue 行内样式及原子化 CSS 保护自 `0.0.7-beta` 提供。
+本文对应 `0.1.0-beta` 候选版本，尚未发布 npm。它是对旧 Beta 多模式体系的破坏性替换。
+上一版正式标签、逐包与 registry 消费者证据见 [0.0.7-beta 发布记录](./npm-release-0.0.7-beta.md)，不替代本轮验收。
 `@lumal/viewport` 仅以 Vue 为 peer；不依赖 Core、Element Plus、地图、图表或 Cockpit。
-独立包让普通 Vue/Blank/Screen 能使用同一算法，DataV/Cockpit 也无需反向依赖后台。
-复制三份算法或放进 Core 会分别增加维护成本或后台依赖；因此选择单独的小包。
 
-## 作用范围与策略
+## 一个宽度规则
 
-作用范围由配置安装位置和包装位置决定，不属于模式枚举：
-
-| 范围 | 入口 | 行为 |
-| --- | --- | --- |
-| 应用默认 | `app.use(createViewportPlugin(defaults))` | 仅提供默认配置，不修改 DOM 根、Router 或全局字体 |
-| 页面/路由 | `LumalViewport :policy="route.meta.viewport"` | 仅包住当前内容区；其他页面显式关闭或覆盖 |
-| 局部容器 | `LumalViewport :policy="localPolicy"` | 观察自身可用尺寸，不取整屏高度 |
-
-| `policy.mode` | 行为 | 比例与溢出 |
-| --- | --- | --- |
-| `disabled` 或 `policy=false` | 不测量、不变换、不设置适配变量 | 保留普通布局 |
-| `responsive`（默认） | 正常布局，提供容器尺寸变量 | 应用负责断点、滚动和最小可读字号 |
-| `contain` | 设计宽高完整等比缩放并居中 | 可能留白；设置 minScale 后可能出现局部滚动 |
-| `width` | 按设计宽度等比缩放，顶部对齐 | 可能溢出高度，保留局部滚动 |
-| `vw` | 不 transform；显式使用 x/y unit 变量 | 根据实际容器宽高独立适配，不保证比例 |
-
-`vw` 的变量是容器相对尺寸的 px 值，不是覆盖全局的浏览器 vw；
-构建时 px→vw 是另一项可选能力，不能用于弥补工作区高度约束。
-`minScale/maxScale` 为明确缩放限制。`minFontSize` 仅提供变量，不会自动改写后代样式。
-缩放下限与完整容纳冲突时，必须允许局部滚动或切换响应式布局，不能同时承诺无溢出。
-
-## 全局默认示例
-
-```ts
-import { createViewportPlugin } from '@lumal/viewport'
-
-app.use(createViewportPlugin({
-  mode: 'responsive',
-  designWidth: 1920,
-  designHeight: 1080,
-  minFontSize: 12,
-}))
-```
-
-需要应用级统一策略时，让应用内容区使用一个 `<LumalViewport>`。
-此处没有对 `html/body/#app` 施加 transform，默认值支持 ref/getter 动态更新。
-
-## 页面与混合路由示例
-
-应用侧声明路由元信息，不需要给视口包安装 Vue Router：
-
-```ts
-import type { ViewportPolicy } from '@lumal/viewport'
-
-declare module 'vue-router' {
-  interface RouteMeta {
-    viewport?: ViewportPolicy | false
-  }
-}
-
-// 路由记录片段；实际组件由应用提供。
-const dashboardMeta = { viewport: { mode: 'responsive' as const, designWidth: 1920, designHeight: 964 } }
-const systemMeta = { viewport: false }
-```
-
-页面包装组件：
-
-```vue
-<script setup lang="ts">
-import { LumalViewport } from '@lumal/viewport'
-import { useRoute } from 'vue-router'
-
-/***********************仅适配当前内容容器*********************/
-const route = useRoute()
-</script>
-
-<template>
-  <LumalViewport :policy="route.meta.viewport">
-    <slot />
-  </LumalViewport>
-</template>
-```
-
-包装器的父容器必须有确定高度、`min-height: 0`；Header/Tabbar 由真实布局占位，
-不能再把 `window.innerHeight` 当作内容高度。Admin、Screen 使用同一 Router 即可；
-鉴权与菜单继续由 Core 管理，适配元信息不授予任何访问权限。
-KeepAlive 停用时断开观察器和待执行帧；激活重新测量，不重建页面实例。
-组件只写自己的行内变量，切路由不会残留全局样式。
-
-### Admin Demo 的工作区三模式
-
-发包后的 Admin Demo 以应用层包装器组合 `responsive / contain / width`，不是 Core 新增布局 API。
-仅内容工作区参与适配，Header、Tabbar、侧栏、全局字号和 body Teleport 弹层保持原布局。
-默认 responsive；设计工作区为 `1280 × 720`，`minScale: 0.75`、`minFontSize: 12`，
-偏好与路由的显式覆盖由应用管理。缩放达到下限时允许局部滚动，不承诺任意小窗口完整容纳。
-
-包装器为设计画布内显式接入的主题字号 token 和继承正文补偿字号；
-固定像素、`rem`、自绘 Canvas 和应用自己的字体规则不会被自动保护，
-需要页面显式接入：公共包装器可使用 `--lumal-viewport-min-font-size`，
-本 Demo 工作区使用 `--lumal-workspace-min-font-size`，也可直接调用 `computeViewportFontSize`。
-Demo 的六个路由覆盖为 responsive：`examples/viewport`、`examples/datav`、
-`examples/cockpit`、`examples/crud-table`、`system/user`、`system/role`。
-前三者拥有自己的缩放责任，后三者保留现有 CRUD 编辑器的定位上下文，避免非 Teleport 弹层被画布约束。
-这些覆盖通过可信应用映射写入 `meta.workspaceViewport: 'self-managed'`，不影响路由授权。
-业务地图与图表页也应按自身引擎需求显式覆盖，不让缩放改变坐标系统。
-稳定的 RouterView/KeepAlive 插槽不得随模式切换重新挂载。
-这些应用层改动不包含在已发布的 npm tarball 中，实际验证结果单独记录，不能从包发布推断通过。
-
-## 容器与独立 Screen 示例
-
-```vue
-<script setup lang="ts">
-import { LumalViewport } from '@lumal/viewport'
-</script>
-
-<template>
-  <section style="height: 540px; min-width: 0">
-    <LumalViewport :policy="{ mode: 'contain', designWidth: 1920, designHeight: 1080 }">
-      <slot />
-    </LumalViewport>
-  </section>
-</template>
-```
-
-Screen 可让视口容器占满应用高度；Admin 内嵌容器则只占实际工作区。
-同一内容树只有一个主要缩放责任方。内部 Cockpit 使用 `viewport-mode="external"`，
-不能再叠 DataV FullScreenContainer 或额外的 px→vw 全画布转换。
-
-## 字号与浮层约定
-
-- Admin 保留用户字号偏好（默认14，12–20）与 Element Plus 变量，不默认全屏缩放。
-- `--lumal-viewport-scale` 是组件施加的比例；responsive/vw 下为1。
-- `--lumal-viewport-x-unit/y-unit` 为实际容器尺寸 / 设计尺寸，可用于指定浮层。
-- `--lumal-viewport-min-font-size` 已反算设计坐标，可在画布内用 `max(14px, var(...))`。
-- 不自动转换全局字体、表格、输入框或弹窗。字号下限可能让文本换行，须保留合理空间。
-- 数值布局使用 `computed(() => designPx * scale.value)`；纯函数 `computeViewportFontSize`
-  可计算最终 CSS 字号下限，不会建立响应式依赖。
-
-Teleport 到 body 的弹窗不会继承局部缩放变量，这是刻意的隔离。
-Element Plus Dialog 使用 append-to-body；Popper/Select/Tooltip 保持默认 teleport，
-由其引擎基于触发器的实际矩形定位。不要把已计算的屏幕坐标再次乘 scale。
-
-## 地图与图表
-
-省级工作台应选择“地图实际尺寸 + 浮层协调宽高”，不是整体变换 OpenLayers。
-使用 `useElementSize({ target: useTemplateRef(...) })` 观察容器，尺寸变更时调用现有
-`map.updateSize()` / `chart.resize()`；这些回调不得重建地图、重新请求业务或清空中心位置。
-首次创建后也要更新尺寸；卸载清理实例；KeepAlive 下同时管理业务轮询。
-
-浮层布局需要由消费项目修改：去掉工作区固定 min1280×660，按实际内容高度划分顶部、
-左右和底部区域；中部使用 `minmax(0, 1fr)`、`min-height: 0`，不足时局部滚动或折叠。
-382px侧栏、210px底栏、业务 mapPadding、行业断点和颜色不能硬编码进 Lumal。
-不要为了适配删除地图、配色和业务回归断言；固定尺寸断言应改成可配置策略与边界断言。
-
-## 共享设计配置
-
-两个包没有相互依赖，也无需新增配置框架。用应用自己的 `viewport.config.ts` 保存同一份设计尺寸：
-
-```ts
-// 应用自有 viewport.config.ts，不导入 Vue 或 Vite。
-export const viewportDesign = {
-  designWidth: 1920,
-  designHeight: 1080,
-} as const
-
-// 作用于同一内容树的项目约定，按需分别启用测量和构建转换。
-export const viewportFeatures = {
-  measurement: true,
-  canvasScale: false,
-  cssTransform: false,
-}
-
-export const viewportPolicy = {
-  ...viewportDesign,
-  mode: !viewportFeatures.measurement
-    ? 'disabled'
-    : viewportFeatures.canvasScale ? 'contain' : 'responsive',
-  minFontSize: 12,
-} as const
-```
-
-运行时在既有入口使用 `app.use(createViewportPlugin(viewportPolicy))`，并由全局、页面或
-局部 `<LumalViewport :policy="...">` 包装器实际采用；未使用包装器不会自动缩放 DOM。
-Vite 使用 `viewportWidth: viewportDesign.designWidth`，并把开关设置为
-`viewportFeatures.cssTransform && !viewportFeatures.canvasScale`。
-测量与构建可以分别启用；仅测量的 `responsive` 可与构建转换协作，`contain/width`
-整体缩放画布不能再执行 px→vw。
-
-这组开关只是应用侧示例，不是新公共 API。混合项目中不同子树可以采用不同策略，
-但运行时缩放的文件目录仍须从构建范围排除，页面的临时 policy 覆盖不能自动改变构建结果。
-Screen 视口脚手架生成的根 `viewport.config.ts` 已集中 `viewportDesign/viewportPolicy`；
-不会因此默认安装或启用 `@lumal/vite`。Admin 和 Blank 可以同样按需添加这份普通配置。
-
-## 可选构建转换
-
-CSS、SFC style 和 SCSS 预处理后的声明共用 PostCSS 管线；Vue 行内样式有独立开关，
-基于模板 AST 定位并复用 CSS 声明规则，不扫描整份 SFC 或 TS/JS：
+业务继续写普通 px。设计宽度 D 默认1920，只在项目 Vite 接入处填写一次：
 
 ```ts
 import { createViewportTransformPlugin } from '@lumal/vite'
-import { viewportDesign, viewportFeatures } from './viewport.config'
 
 const viewport = createViewportTransformPlugin({
-  enabled: viewportFeatures.cssTransform && !viewportFeatures.canvasScale,
-  include: ['src/screen/**'],
-  exclude: ['**/map/**', 'src/screen/canvas/**'],
-  viewportWidth: viewportDesign.designWidth,
-  fontSize: false,
-  minSize: false,
-  customProperties: false,
-  includeProperties: ['width', 'height', 'top', 'left', 'padding*', '*gap'],
-  excludeProperties: ['border*', 'margin*'],
-  excludeSelectors: ['.runtime-canvas', '.map', /\.el-(?:dialog|popper)\b/],
-  inlineStyles: false,
+  enabled: true,
+  viewportWidth: 1920,
+  include: ['src/**'],
+  dependencies: ['element-plus'],
 })
 ```
 
-插件加入已有 plugins；默认关闭，必须显式 include，不按 serve/build 分支重复配置。
-默认不转换依赖，确需转换时用 `dependencies` 精确包名白名单。
-同一规则中的任一分组、嵌套祖先命中排除选择器时整条声明保留，不拆分选择器。
-字符串按选择器子串、正则按选择器匹配，正则 `g/y` 无跨规则状态。
+把它加入现有 plugins，保留 Vue 插件。也可将该普通对象放进 `viewport.config.ts`；
+配置文件不导入 Vue/Vite/PostCSS，浏览器不导入构建包。
 
-### 属性控制
+- CSS：`Ppx → P / D * 100 vw`。
+- 数字 API：`P * W / D`，W 测量实际 CSS `100vw`，不读取物理 screen 或乘 DPR。
+- 高度、行高、纵向间距也按宽度。相同宽度、不同高度不改变比例。
+- 不使用整页 transform、CSS zoom、按高度缩小、居中完整容纳或宽高拉伸。
+- 高度不足正常滚动；明确需要裁切时由页面设置 overflow。默认不静默隐藏内容。
 
-| 控制 | 默认 | 说明 |
-| --- | --- | --- |
-| `includeProperties` | `['*']` | CSS 连字符属性 glob；`[]` 不转换 |
-| `excludeProperties` | `[]` | 黑名单优先，支持 `border*`、`padding*`、`margin*`、`*gap` |
-| `fontSize` | `false` | `font-size`、`font`、`line-height` 一起保留 |
-| `minSize` | `false` | 保留物理和逻辑的宽高下限 |
-| `customProperties` | `false` | 保留自定义属性；`--lumal-viewport-*` 始终保留 |
-| `minPixelValue` | `1` | 保留绝对值不大于该值的 px，保护细边框 |
-| `precision` | `6` | 转换精度，`0..10` 位小数 |
-| `inlineStyles` | `false` | 独立开启 Vue 模板行内样式转换 |
+以192px为例，D1920下W1280/1920/2560分别为128/192/256实际CSS像素。
+浏览器原生 zoom 会改变布局视口 W，普通 vw 自然重算；细边框、忽略项、原子类不承诺同比变化。
+这不是任意页面无需审查即可像素级一致的承诺。
 
-文件和来源限制、选择器/忽略标记/已有适配保护都不能被属性名单绕过；
-黑名单优先于白名单，白名单不能绕过字体、最小尺寸、自定义属性开关。
-因此 `font-size:14px; line-height:20px` 在 `fontSize:false` 时都保持原值，
-不会出现字号不变却行高缩小的问题。`fontSize:true` 才一起转换；
-若只转换行高，可再用 `excludeProperties: ['font', 'font-size']` 保护字体。
+## 应用与公共包
 
-`min-width/min-height/min-inline-size/min-block-size` 默认不转换，避免缩小最小可用尺寸；
-确需按设计尺寸缩放时设置 `minSize:true`。边框、间距继续沿用原像素阈值和转换行为，
-可以分别通过属性名单排除，不必关闭其他布局属性。
+Admin/Screen 脚手架默认启用，`--no-viewport` 可关闭，`--design-width 1440` 改设计宽度。
+Blank 默认只含 Vue，不强制 Vite 转换包、Viewport、UI 或其他 Lumal 包。
+局部高级接入用 `include: ['src/screen/**']`，或 exclude/选择器/声明忽略。
+构建范围无法由运行时路由开关撤销，不再提供适配模式菜单或必需页面包装器。
+开关与设计宽度为项目级配置。局部 include/exclude 只控制编译来源；
+`frameworkStyles:false` 只关闭框架静态 CSS 接入，不撤销框架动态设计尺寸的项目级换算。
 
-### 声明与已有适配
+Admin Demo 的 Header 另提供 VW 开关用于对比：它在同源 `/`（启用）与 `/px/`（关闭）
+两份独立编译的入口间重载导航，保留当前 hash 路由和登录存储，不在运行时改写已编译 CSS。
+这只属于 Demo；业务接入仍使用单一构建开关，不需要安装额外模式或提供双份产物。
 
-```css
-.panel {
-  /* lumal-viewport-ignore-next */
-  width: 382px;
-  height: 210px; /* lumal-viewport-ignore */
-  padding: 24px;
-}
-```
+`frameworkStyles:true` 默认让 Lumal 自有 CSS 与应用一起在消费者构建时转换。
+公共包发布产物仍保留 px，改 D1440也会重新换算。第三方只授权经验证的精确包名，
+不是扫描整个 node_modules。Core 的主题 CSS 保留逐文件来源，未知混合 Sass 没有可靠 map 时跳过并诊断。
 
-前置 `ignore-next` 只保护紧随声明，后置 `ignore` 只保护紧邻前一声明。
-Sass 压缩时使用 `/*! ... */` 保留标记。原始注释不会改写为运行时逻辑。
+Core 动态 Header/Tabbar/侧栏、字号、间距、图标及数字表格/表单输入在内部换算。
+主题切换与恢复仍走相同路径，Teleport 到 body 不依赖父包装器，Popper 的屏幕坐标不再缩放。
+第三方库任意 JS 内联值不会被编译器覆盖，不能把普通 CSS 转换描述成全量第三方适配。
 
-含 `var/env/attr/min/max/clamp` 函数或已有视口、容器、字体相对单位的声明整体保留，
-不会把 `calc(192px * var(--lumal-viewport-scale))` 中的 192px 再变成 vw，
-也不把 `clamp(320px, 50vw, 960px)` 的上下限缩小。
-URL、引号字符串、普通数字不变，重复处理仍然幂等。
-外部 transform 或跨组件的运行时策略无法靠 CSS 源码可靠推断，必须显式排除其文件、
-选择器或声明；不承诺自动识别任意缩放容器。
-
-### Vue 行内样式与原子化 CSS
-
-设置 `inlineStyles:true` 后：
+## 普通样式与例外
 
 ```vue
 <template>
-  <div style="width: 192px; height: 96px; font-size: 14px; line-height: 20px" />
-  <div :style="[{ width: '192px' }, runtimeStyle, { top: '24px' }]" />
-  <!-- lumal-viewport-ignore -->
-  <div style="width: 192px">
-    <span style="height: 96px" />
-  </div>
-  <div class="w-[192px] h-[96px]" aria-label="width: 192px" />
+  <div class="panel" style="padding: 24px" :style="{ top: '48px' }">示例</div>
 </template>
+
+<style scoped>
+.panel {
+  width: 382px;
+  height: 210px;
+  font-size: 14px;
+  line-height: 20px;
+  min-width: 192px;
+  border: 1px solid currentColor;
+}
+</style>
 ```
 
-宽度 1920、默认字体策略下，静态宽高变为 `10vw/5vw`，字号和行高保持 `14px/20px`；
-样式数组中的静态对象值同样处理，`runtimeStyle` 不求值。
-对象的 CSS fallback 字符串数组与无插值模板字符串可以处理；
-条件/逻辑表达式内部不遍历。对象的 `fontSize/lineHeight` 等 camelCase 属性按对应 CSS 属性过滤。
-模板忽略注释跳过紧随元素及子树。无法静态分析的表达式保持原样，交给运行时 API。
-配置了选择器排除时，动态 class/id、data 等非 style 属性无法确定是否命中，保守跳过该元素子树。
-不会修改 class、`:class`、`aria-label`、其他模板属性、脚本变量或业务字符串。
+字体与有单位行高默认同步，最小尺寸默认参与，1px细边框保留。
+`fontSize:false` 同时保留 font/font-size/line-height；属性黑名单优先于白名单。
+真正的可操作下限用 `/*! lumal-viewport-ignore-next */` 保留单条声明，
+模板 `<!-- lumal-viewport-ignore -->` 保留紧随元素子树。
+已有 var/min/max/clamp、vw/rem 等业务表达式默认保护，按需显式授权设计 fallback。
+框架拥有的 token 由框架处理，不要求业务手写 Lumal 尺寸变量。
 
-Tailwind/UnoCSS 任意值类名及其生成 CSS 都保留，例如
-`.w-\[192px\] { width:192px }` 不参与转换；原子类本身不会阻止显式行内 style 的转换。解析选择器的 class AST，
-不会把普通的 `[data-size="192px"]` 属性选择器误识别为原子化规则。
-这不是脚本字符串转换；ECharts 配置和动态业务数值继续显式使用现有公开 API。
+`w-[192px]`、动态 class 和其生成的转义规则保留；普通属性选择器和显式 inline style 不受误伤。
+断点不转换；纯 vw Admin 的桌面断点重排显式关闭，关闭适配后仍保留原响应式布局。
+不是全局删除媒体查询，reduced-motion等偏好规则仍有效。
 
-已有 PostCSS 插件与配置文件保留；配置错误明确失败，不忽略。
+## 动态数字与测量
 
-SCSS等预处理输出有原始source map时，逐声明校验其来源，避免Screen入口合并
-Element Plus、Shared或Admin样式后绕过白名单。没有可靠map时，含跨文件
-`@use` / `@forward` / Sass `@import`、无法解析语法或函数`additionalData`的
-style整体跳过并发出警告；将外部样式与Screen声明拆成独立文件或style块。
-纯SCSS声明与同一SFC中的独立安全CSS/SCSS style仍可转换。低层PostCSS入口处理预编译
-SCSS/SFC时也必须提供原始map；来源不明的声明保留px，不能扩大转换范围。
+```ts
+import { useViewportWidth, viewportLength } from '@lumal/viewport'
+import { computed } from 'vue'
 
-已有选项与调用方式保留，行内样式仍默认关闭。此次安全修正会额外保护行高、最小尺寸和
-已有适配表达式；依赖旧最小尺寸缩放结果的项目需显式启用 `minSize` 后验证。
-构建 vw 仍相对浏览器视口；嵌入 Admin 的窄容器优先采用运行时测量和容器单位，
-不要把浏览器 vw 当作容器宽度。地图、Element Plus 与 Teleport 浮层默认保持在转换范围之外。
-
-## 隔离验收
-
-`apps/lumal-viewport-lab` 通过公开包名使用视口，使用真实 OpenLayers 矢量图、ECharts Canvas、
-Element Plus 表格/弹窗/下拉/Tooltip；全部数据为独立编写的通用示例，无业务服务。
-`scripts/check-viewport-consumer.mjs` 同时启动 Dev 和生产静态服务并在结束后关闭。
-
-```bash
-pnpm --filter @lumal/viewport build
-pnpm --filter lumal-viewport-lab typecheck
-pnpm --filter lumal-viewport-lab build
-node scripts/check-viewport-consumer.mjs
+const viewport = useViewportWidth()
+const option = computed(() => ({
+  title: { textStyle: { fontSize: viewport.pixels(18) } },
+}))
+const dialogWidth = viewportLength(520)
 ```
 
-结果在 `output/release/viewport-report.json`，截图在 `output/playwright/viewport/`。
-脚本不使用 deviceScaleFactor、CSS zoom 或 viewport 尺寸冒充浏览器缩放；
-使用临时 Chromium profile + 本仓库最小扩展调用 tabs.setZoom，
-记录80/100/125/150%的实际 zoom、innerWidth/innerHeight、DPR、工作区及组件矩形。
-扩展只装在临时 profile，不修改用户浏览器。没有扩展支持时测试失败而非静默降级。
-此夹具不能代替真实消费者的最终部署验收，业务仓库保持只读。
-实际尺寸、原生缩放、交互与实例稳定性证据见 [隔离验收报告](./screen-viewport-verification.md)。
+普通 CSS/静态模板值自动转换；不能静态分析的 :style 与外部动态脚本不扫描。
+ECharts 字号、设计边距是数字工具的使用对象；业务数据、经纬度、索引、比例不转换。
+`useElementSize` 获取的实际尺寸直接给图表 resize/地图 updateSize，容器宽度不是新缩放基准。
+缩放不重建地图、不重请求数据、不丢失选中状态。
+
+## DataV 与 Cockpit
+
+`LumalFullScreenContainer` 是普通内容容器，数字 width/height 为设计 px；
+width默认项目D，height默认自然高度，overflow默认auto，可显式hidden，嵌入用embedded。
+指定设计高度只控制内容高度，不作缩放除数。没有mode、screen推断或整画布transform。
+
+`LumalCockpit` 的 baseWidth/baseHeight 是内容设计尺寸，左右面板、列宽、间距按同一D换算，
+行高百分比保持语义。外套DataV容器不增加第二层缩放，也不需要外部缩放选项。
+多布局、左右区域、Tab、模块注册、Designer拖拽、保存/取消功能保留。
+Designer保存设计数值；屏幕测量与指针坐标不二次换算。
+SVG viewBox、Canvas局部绘制和装饰图形transform仍是组件自身图形功能，不是页面适配模式。
+
+## 迁移与证据
+
+移除旧 Viewport 策略插件、策略解析、画布组件、缩放/字号下限算法及全部模式配置，
+删除Admin旧模式localStorage键，不清理登录、主题或业务数据。
+旧 runtime 输出、媒体断点切换配置也删除，不保留别名、包装器或双轨实现。
+
+使用当前 tarball 验证，不用已发布旧版替代候选源码。
+验收命令以根package.json为准：`pnpm test:vite-consumer`、`pnpm test:create-consumer`、
+`pnpm test:create-projects`、`pnpm test:viewport`及生产E2E。
+字符串、SSR、浏览器布局和原生zoom是不同证据，实际执行结果见
+[本轮工作记录](pure-vw-refactor-2026-10-28.md)。

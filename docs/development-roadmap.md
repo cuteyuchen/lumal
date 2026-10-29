@@ -4,9 +4,9 @@
 
 ## 当前基线
 
-- 日期：2026-10-26。
-- 工作区版本：已发布的 `0.0.7-beta`（十个公共包保持同版，私有示例应用仍为 `0.0.0`）。本版纳入 Vite 精细视口转换、共享设计模板和 Cockpit Designer 名称修复；正式门禁、registry、同次产物及六类 registry 消费者结果见 [本版发布记录](./npm-release-0.0.7-beta.md)。此前三种项目形态、工程规范、通用视口和消费者修复的结果见 [下一阶段验收](./lumal-next-phase-audit.md)；历史十包发布见 [0.0.6-beta 记录](./npm-release-0.0.6-beta.md)。后置生产站点已单独恢复并核验，不将公开 Demo 的结果扩展为真实业务验收。
-- 当前维护基线：`master`，PR #9 以 `e2ac131` 合并，PR #8 的全部历史同时纳入。正式标签源提交仍为 `5d190e2`，原发布分支为 `codex/release-0.0.7-beta`。文档、Skill 和 Admin 工作区三模式在发包后收尾，不改写标签或已发布 tarball。双平台 PR 门禁、CodeQL、文档快照和五个 Git 生产部署见 [合并与站点实际验收](./npm-release-0.0.7-beta.md#合并与站点实际验收)。Demo 整改基线为 `3f9e184`，记录见 [整改验收](./cockpit-demo-remediation-2026-10-26.md)；此前项目类型阶段使用 `codex/lumal-project-types-and-quality` / `29e474e`，`0.0.5-beta` 九包及正式标签源提交 `53395dc` 的事实保留在 [历史记录](./npm-release-0.0.5-beta.md)。
+- 日期：2026-10-29。
+- 工作区版本：候选 `0.1.0-beta`（十包同版，未发布），分支 `codex/pure-vw-unification`，当前破坏性纯 vw 接入见 [工作记录](./pure-vw-refactor-2026-10-28.md)。上一版 `0.0.7-beta` 已发布，正式门禁、registry、同次产物及六类 registry 消费者结果保留在 [发布记录](./npm-release-0.0.7-beta.md)，不作为当前候选的验收证据。
+- 上游历史基线：`master@83464a6`，PR #9 以 `e2ac131` 合并并纳入 PR #8 历史。正式标签源提交仍为 `5d190e2`，发布分支为 `codex/release-0.0.7-beta`；发包后的文档、Skill 和旧 Admin 模式属于历史收尾，不改写标签或 tarball。历史双平台门禁和生产部署见 [合并与站点实际验收](./npm-release-0.0.7-beta.md#合并与站点实际验收)。Demo 整改基线 `3f9e184` 见 [整改验收](./cockpit-demo-remediation-2026-10-26.md)；项目类型阶段使用 `29e474e`，`0.0.5-beta` 九包及正式标签源提交 `53395dc` 的事实保留在 [历史记录](./npm-release-0.0.5-beta.md)。
 - 前一阶段提交记录（历史基线，不代表本轮工作区已提交）：
   - `671f739 perf: 落地 admin/core/cockpit 整体性能与正确性优化`
   - `4d7a0e8 feat(components): 增强飞线图组件与文档，优化可访问性与交互体验`

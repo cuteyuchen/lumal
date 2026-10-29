@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Option } from '../../../../shared/api';
+import { getViewportConfig } from '@lumal/viewport';
 import { ElInput, ElTree } from 'element-plus';
 import { shallowRef, useTemplateRef, watch } from 'vue';
 
@@ -15,7 +16,7 @@ function filter(text: string, data: Record<string, unknown>): boolean {
 </script>
 
 <template>
-  <details class="user-organizations" open>
+  <details class="user-organizations" :class="{ 'is-responsive': !getViewportConfig().enabled }" open>
     <summary>机构筛选</summary>
     <ElInput v-model="keyword" aria-label="搜索机构" placeholder="搜索机构" clearable />
     <ElTree
@@ -50,11 +51,11 @@ function filter(text: string, data: Record<string, unknown>): boolean {
   overflow: auto;
 }
 @media (max-width: 768px) {
-  .user-organizations {
+  .user-organizations.is-responsive {
     border: 0;
     padding: 0;
   }
-  .user-organizations :deep(.el-tree) {
+  .user-organizations.is-responsive :deep(.el-tree) {
     max-height: 160px;
   }
 }

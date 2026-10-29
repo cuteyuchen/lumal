@@ -47,7 +47,7 @@ withDefaults(defineProps<{
 
 .lumal-brand__copy strong {
   overflow: hidden;
-  font-size: calc(var(--lumal-font-size-base, 14px) + 3px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 1.21428571);
   font-weight: 750;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -57,7 +57,7 @@ withDefaults(defineProps<{
 
 .lumal-brand__copy small {
   color: var(--el-text-color-secondary);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 3px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.78571429);
   line-height: 1.3;
 }
 
@@ -71,7 +71,7 @@ withDefaults(defineProps<{
 }
 
 .lumal-brand.is-compact .lumal-brand__copy strong {
-  font-size: calc(var(--lumal-font-size-base, 14px) + 1px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 1.07142857);
 }
 
 .lumal-brand.is-inverse {

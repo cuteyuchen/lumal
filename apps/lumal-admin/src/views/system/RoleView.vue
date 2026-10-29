@@ -13,6 +13,7 @@ import type {
   SystemRoleRecord,
 } from '../../api/system'
 import { LumalCrudTable } from '@lumal/core/components'
+import { viewportLength } from '@lumal/viewport'
 import { ElAlert, ElButton, ElDialog, ElLoading, ElMessage, ElMessageBox, ElTree } from 'element-plus'
 import { nextTick, shallowRef, useTemplateRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
@@ -329,7 +330,7 @@ async function saveRolePermissions(): Promise<void> {
       append-to-body
       class="lumal-admin-dialog"
       :title="`角色授权：${authorizingRole?.name ?? ''}${authorizingRole ? `（${authorizingRole.code}）` : ''}`"
-      width="560px"
+      :width="viewportLength(560)"
     >
       <p class="lumal-admin-role-authorization__hint">
         勾选菜单会联动下级页面和按钮权限，可按需取消具体操作权限。
@@ -374,7 +375,7 @@ async function saveRolePermissions(): Promise<void> {
 .lumal-admin-role-authorization__hint {
   margin: 0 0 12px;
   color: var(--el-text-color-secondary);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
   line-height: 1.6;
 }
 </style>

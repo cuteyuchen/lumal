@@ -8,6 +8,7 @@ import type {
   LumalLayoutRouteTabResolver,
   LumalLayoutTabItem,
 } from './types'
+import { getViewportConfig } from '@lumal/viewport'
 import { ElContainer } from 'element-plus'
 import { computed, inject, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from 'vue'
 import { routeLocationKey, routerKey } from 'vue-router'
@@ -62,6 +63,8 @@ const props = withDefaults(defineProps<{
   tabMaxCount?: number
   fixedTabs?: LumalLayoutTabItem[]
   headerHeight?: string
+  /** false 时保持桌面导航交互；CSS 断点需由应用的构建策略同步控制。 */
+  responsive?: boolean
   /** 是否显示顶部 Header。内嵌到其他壳层时可置为 false 以隐藏。 */
   showHeader?: boolean
   tabStorageKey?: string
@@ -72,7 +75,8 @@ const props = withDefaults(defineProps<{
 }>(), {
   activeMenuPath: '',
   activeTabPath: '',
-  headerHeight: '50px',
+  headerHeight: undefined,
+  responsive: () => !getViewportConfig().enabled,
   showHeader: true,
   menus: () => [],
   fixedTabs: () => [],
@@ -107,7 +111,8 @@ const injectedRouter = inject(routerKey, undefined)
 /***********************模板引用*********************/
 const layoutRef = useTemplateRef<ComponentPublicInstance>('layoutRef')
 const tabsRef = useTemplateRef<InstanceType<typeof LumalTabs>>('tabsRef')
-const isMobileViewport = shallowRef(false)
+const mobileViewportMatches = shallowRef(false)
+const isMobileViewport = computed(() => props.responsive && mobileViewportMatches.value)
 const mobileMenuOpen = shallowRef(false)
 const isContentMaximized = shallowRef(false)
 const routeTabs = shallowRef<LumalLayoutTabItem[]>([])
@@ -427,7 +432,7 @@ function restoreFromSnapshot(): void {
 }
 
 function syncMobileViewport(event?: MediaQueryListEvent): void {
-  isMobileViewport.value = event?.matches ?? mobileMediaQuery?.matches ?? false
+  mobileViewportMatches.value = event?.matches ?? mobileMediaQuery?.matches ?? false
 
   if (isMobileViewport.value) {
     mobileMenuOpen.value = false
@@ -690,6 +695,7 @@ defineExpose({
     class="lumal-layout"
     :data-layout="preferences.app.layout"
     :class="{
+      'is-responsive': responsive,
       'is-sidebar-collapsed': collapsed,
       'is-sidebar-hidden': !hasSidebar,
       'is-mobile-menu-hidden': !mobileMenuOpen,
@@ -766,8 +772,8 @@ defineExpose({
           :menus="sidebarMenus"
           :active-path="resolvedActiveMenuPath"
           :collapsed="collapsed"
-          :width="`${preferences.sidebar.width}px`"
-          collapsed-width="64px"
+          :width="preferences.sidebar.width"
+          :collapsed-width="64"
           @select="handleMenuSelect"
         />
       </Transition>
@@ -781,8 +787,8 @@ defineExpose({
         :menus="mobileMenus"
         :active-path="resolvedActiveMenuPath"
         :collapsed="false"
-        :width="`${preferences.sidebar.width}px`"
-        collapsed-width="64px"
+        :width="preferences.sidebar.width"
+        :collapsed-width="64"
         @select="handleMenuSelect"
       />
 
@@ -810,6 +816,7 @@ defineExpose({
           :show-more="preferences.tabbar.showMore"
           :show-refresh="preferences.tabbar.showRefresh"
           :draggable="preferences.tabbar.draggable"
+          :responsive="responsive"
           :wheelable="preferences.tabbar.wheelable"
           :middle-click-to-close="preferences.tabbar.middleClickToClose"
           :style-type="preferences.tabbar.styleType"
@@ -939,11 +946,11 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
-  .lumal-layout__desktop-sidebar {
+  .lumal-layout.is-responsive .lumal-layout__desktop-sidebar {
     display: none;
   }
 
-  .lumal-layout__mobile-sidebar {
+  .lumal-layout.is-responsive .lumal-layout__mobile-sidebar {
     position: absolute;
     inset: 0 auto 0 0;
     z-index: var(--lumal-z-drawer);
@@ -953,12 +960,12 @@ defineExpose({
     transform: translateX(0);
   }
 
-  .lumal-layout.is-mobile-menu-hidden .lumal-layout__mobile-sidebar {
+  .lumal-layout.is-responsive.is-mobile-menu-hidden .lumal-layout__mobile-sidebar {
     pointer-events: none;
     transform: translateX(-100%);
   }
 
-  .lumal-layout__sidebar-scrim {
+  .lumal-layout.is-responsive .lumal-layout__sidebar-scrim {
     position: absolute;
     inset: 0;
     z-index: var(--lumal-z-scrim);
@@ -969,11 +976,11 @@ defineExpose({
     cursor: pointer;
   }
 
-  .lumal-layout.is-mobile-menu-hidden .lumal-layout__sidebar-scrim {
+  .lumal-layout.is-responsive.is-mobile-menu-hidden .lumal-layout__sidebar-scrim {
     display: none;
   }
 
-  .lumal-layout__main {
+  .lumal-layout.is-responsive .lumal-layout__main {
     width: 100%;
   }
 }

@@ -2,6 +2,7 @@
 import type { EChartsOption } from 'echarts'
 import { LumalChartPanel } from '@lumal/charts'
 import { LumalPage } from '@lumal/core/components'
+import { useViewportWidth } from '@lumal/viewport'
 import { ElButton, ElMessage, ElOption, ElSelect, ElTable, ElTableColumn } from 'element-plus'
 import { computed, shallowRef } from 'vue'
 import { chartRows } from './example-data'
@@ -14,9 +15,10 @@ const error = shallowRef<string | false>(false)
 const range = shallowRef('7d')
 const view = shallowRef<'chart' | 'table'>('chart')
 const visibleRows = computed(() => range.value === '3d' ? chartRows.slice(-3) : chartRows)
+const viewport = useViewportWidth()
 
 const options = computed<EChartsOption>(() => ({
-  grid: { bottom: 32, left: 48, right: 16, top: 24 },
+  grid: { bottom: viewport.pixels(32), left: viewport.pixels(48), right: viewport.pixels(16), top: viewport.pixels(24) },
   series: [
     {
       areaStyle: {},
@@ -65,7 +67,7 @@ function handleExport(mode: 'chart' | 'table'): void {
         :summary="`当前展示 ${visibleRows.length} 个阶段的模块完成度趋势。`"
         show-view-toggle
         show-export
-        height="320px"
+        :height="320"
         @retry="refresh"
         @export="handleExport"
       >
@@ -88,8 +90,8 @@ function handleExport(mode: 'chart' | 'table'): void {
         </template>
         <template #table>
           <ElTable :data="visibleRows" height="100%">
-            <ElTableColumn prop="label" label="阶段" min-width="140" />
-            <ElTableColumn prop="value" label="完成度" min-width="120" />
+            <ElTableColumn prop="label" label="阶段" :min-width="viewport.pixels(140)" />
+            <ElTableColumn prop="value" label="完成度" :min-width="viewport.pixels(120)" />
           </ElTable>
         </template>
       </LumalChartPanel>

@@ -1,7 +1,7 @@
 import { fileURLToPath, URL } from 'node:url'
+import { createLumalAliases, createViewportTransformPlugin } from '@lumal/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
-import { createLumalAliases } from '../../packages/vite/src/aliases'
 
 const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
 
@@ -9,7 +9,7 @@ const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
 // 独立示例应用，作为 @lumal/datav 的组件文档站，可静态托管并以外链形式嵌入 Admin。
 export default defineConfig(({ command }) => ({
   base: './',
-  plugins: [vue()],
+  plugins: [vue(), createViewportTransformPlugin({ enabled: true, include: ['src/**'], viewportWidth: 1920, dependencies: ['element-plus'], customProperties: true })],
   server: {
     // 固定端口，admin 通过 VITE_DATAV_GUIDE_URL(默认 5175) 外链嵌入本站
     port: 5175,

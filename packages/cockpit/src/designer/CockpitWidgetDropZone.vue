@@ -3,7 +3,7 @@ import type { SortableEvent } from 'sortablejs'
 import type { CockpitWidgetInstance } from '../types'
 import type { DraftWidgetLocation } from './useCockpitDraft'
 import Sortable from 'sortablejs'
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, useTemplateRef } from 'vue'
 import { confirmWidgetReplacement } from './confirmWidgetReplacement'
 
 /***********************Designer 模块投放区*********************/
@@ -32,7 +32,7 @@ const emit = defineEmits<{
   drop: [payload: DragPayload]
 }>()
 
-const zoneRef = ref<HTMLElement | null>(null)
+const zoneRef = useTemplateRef<HTMLElement>('zoneRef')
 let sortable: Sortable | undefined
 
 function readSource(value: string | undefined): DraftWidgetLocation | undefined {

@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'vue'
+import { viewportLength } from '@lumal/viewport'
 
 /***********************面板尺寸变量*********************/
 export type ChartPanelWidth = number | string
@@ -10,7 +11,7 @@ export type ChartPanelStyle = CSSProperties & {
 
 function toCssSize(value: ChartPanelWidth | undefined): string | undefined {
   if (typeof value === 'number') {
-    return Number.isFinite(value) ? `${value}px` : undefined
+    return Number.isFinite(value) ? viewportLength(value) : undefined
   }
 
   if (typeof value === 'string' && value.trim()) {

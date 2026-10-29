@@ -15,12 +15,12 @@
 下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm add @lumal/datav@0.0.7-beta vue@^3.5
+pnpm add @lumal/datav@0.1.0-beta vue@^3.5
 # 仅 ECharts 图表模式或 LumalActiveRingChart 需要。
 pnpm add echarts@^6
 ```
 
-已发布的 `0.0.7-beta` 继续将 ECharts 保持为可选 peer，
+当前候选继续将 ECharts 保持为可选 peer，
 只用数字、边框和列表时无需安装；ECharts 图表模式与 `LumalActiveRingChart` 仍需引擎。
 开发未发布源码时使用精确 tarball，不用历史发布包替代新增能力验收。
 
@@ -132,7 +132,7 @@ DataV 原生配置：
 ## 边界
 
 - Vue 为必需 peer；ECharts 为可选 peer，仅图表模式需要
-- 与 Cockpit 共享轻量 `@lumal/viewport`，旧全屏缩放契约保持
+- 与Cockpit共享轻量宽度数值工具，容器仅承载内容；数字设计px内部转换，实际测量不二次缩放
 - **不**依赖 `@lumal/core` / charts / cockpit
 - 不得引入业务接口、状态码或字段映射
 - 版权说明见包内 `THIRD_PARTY_NOTICES.md`

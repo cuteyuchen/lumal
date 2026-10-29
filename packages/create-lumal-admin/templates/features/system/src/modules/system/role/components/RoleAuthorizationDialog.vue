@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { PermissionNode } from '../../../../app/module';
 import type { Role } from '../types';
+import { viewportLength } from '@lumal/viewport';
 import { ElAlert, ElButton, ElDialog, ElTree } from 'element-plus';
 import { nextTick, shallowRef, useTemplateRef, watch } from 'vue';
 import { collectPermissions } from '../../../../app/module';
@@ -81,7 +82,7 @@ async function save(): Promise<void> {
   <ElDialog
     v-model="visible"
     :title="`角色授权：${role.name}`"
-    width="min(600px, 94vw)"
+    :width="viewportLength(600)"
     append-to-body
     :close-on-click-modal="!saving"
     :close-on-press-escape="!saving"

@@ -3,6 +3,7 @@ import type { SchemaFormItem, SchemaFormModel, SchemaTableColumn, SchemaTableRow
 import type { SaveSystemDictionaryTypeInput, SystemDictionaryTypeRecord } from '../../api/system'
 import { LumalPage, LumalSchemaForm, LumalSchemaTable } from '@lumal/core/components'
 import { RequestError } from '@lumal/core/request'
+import { viewportLength } from '@lumal/viewport'
 import { ElAlert, ElButton, ElDialog } from 'element-plus'
 import { computed, onMounted, shallowRef } from 'vue'
 import { adminPermissionCodes } from '../../api/permissions'
@@ -119,7 +120,7 @@ onMounted(() => {
           新增分类
         </ElButton>
       </template>
-      <LumalSchemaTable :columns="columns" :rows="rows" :error="loadError" row-key="id" action-width="180" @retry="loadData">
+      <LumalSchemaTable :columns="columns" :rows="rows" :error="loadError" row-key="id" :action-width="180" @retry="loadData">
         <template #actions="{ row }">
           <ElButton v-authority="adminPermissionCodes.systemDictUpdate" data-action="edit-dictionary-type" @click="openEdit(row)">
             编辑
@@ -131,7 +132,7 @@ onMounted(() => {
       </LumalSchemaTable>
     </LumalPage>
 
-    <ElDialog v-model="dialogVisible" append-to-body class="lumal-admin-dialog" :title="formMode === 'edit' ? '编辑字典分类' : '新增字典分类'" width="720px">
+    <ElDialog v-model="dialogVisible" append-to-body class="lumal-admin-dialog" :title="formMode === 'edit' ? '编辑字典分类' : '新增字典分类'" :width="viewportLength(720)">
       <ElAlert v-if="operationError" :title="operationError" type="error" show-icon :closable="false" />
       <LumalSchemaForm v-model="formModel" :mode="formMode" :schemas="schemas" :columns="2" :submit-loading="saving" show-actions submit-text="保存分类" @submit="save" />
     </ElDialog>

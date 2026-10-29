@@ -8,7 +8,7 @@ import { parseArgs } from 'node:util'
 import { cancel, confirm, intro, isCancel, multiselect, note, outro, select, spinner, text } from '@clack/prompts'
 import { assertTargetDirectory } from './create.js'
 import { apiModes, assertPackageName, availableFeatures, defaultFeatures, featureDefinitions, features, presets, routerModes } from './presets.js'
-import { createLumalProject, projectRouterModes, projectTemplates, resolveProjectOptions, screenAuthModes, screenDataModes, screenViewports, screenVisualizations } from './projects.js'
+import { createLumalProject, projectRouterModes, projectTemplates, resolveProjectOptions, screenAuthModes, screenDataModes, screenVisualizations } from './projects.js'
 import { getVersion } from './templates.js'
 
 export function parseCliArgs(args: string[]) {
@@ -22,7 +22,9 @@ export function parseCliArgs(args: string[]) {
       'auth': { type: 'string' },
       'data': { type: 'string' },
       'visualization': { type: 'string' },
-      'viewport': { type: 'string' },
+      'viewport': { type: 'boolean' },
+      'no-viewport': { type: 'boolean' },
+      'design-width': { type: 'string' },
       'features': { type: 'string' },
       'help': { type: 'boolean', short: 'h' },
       'name': { type: 'string' },
@@ -34,6 +36,11 @@ export function parseCliArgs(args: string[]) {
   })
   if (positionals.length > 1)
     throw new Error('只能指定一个目标目录')
+  if (values.viewport && values['no-viewport'])
+    throw new Error('--viewport 与 --no-viewport 冲突')
+  const designWidth = values['design-width'] === undefined ? undefined : Number(values['design-width'])
+  if (designWidth !== undefined && (!Number.isFinite(designWidth) || designWidth <= 0))
+    throw new Error('--design-width 必须为正有限数')
   function choice<T extends string>(name: string, value: string | undefined, choices: readonly T[]): T | undefined {
     if (value !== undefined && !choices.includes(value as T))
       throw new Error(`--${name} 仅支持 ${choices.join('、')}`)
@@ -50,7 +57,8 @@ export function parseCliArgs(args: string[]) {
     auth: choice('auth', values.auth, screenAuthModes),
     data: choice('data', values.data, screenDataModes),
     visualization: choice('visualization', values.visualization, screenVisualizations),
-    viewport: choice('viewport', values.viewport, screenViewports),
+    viewport: values['no-viewport'] ? false : values.viewport,
+    designWidth,
     preset: choice('preset', values.preset, presets),
     routerMode: choice('router-mode', values['router-mode'], projectRouterModes),
     features: selected,
@@ -70,7 +78,8 @@ const help = `用法：pnpm create lumal-admin [目录] [选项]
   --auth none|local-demo|http               Screen 认证（默认 none）
   --data none|local|http                    Screen 业务数据（默认 none）
   --visualization none|charts|datav|cockpit  Screen 可视化（默认 none）
-  --viewport disabled|responsive|contain|width|vw  Screen 适配（scale 为 contain 别名）
+  --viewport / --no-viewport                 启用 / 关闭 px→vw（Admin/Screen 默认启用，Blank 关闭）
+  --design-width <number>                    唯一设计宽度（默认 1920）
   --features system,examples|none            业务模块（标准预设默认全部）
   --name <npm包名>                           项目名称（默认目录名）
   --no-interactive                           禁用交互，CI/非 TTY 自动禁用
@@ -213,18 +222,21 @@ export async function main(args = process.argv.slice(2), unified = false): Promi
             { value: 'cockpit', label: 'Cockpit', hint: '仅 runtime，复杂编排时选择' },
           ] as const,
         }))
-        options.viewport ??= await answer(select({
+      }
+      if (options.template !== 'blank') {
+        options.viewport ??= await answer(confirm({
           input,
-          message: 'Screen 适配',
-          initialValue: 'responsive',
-          options: [
-            { value: 'responsive', label: 'Responsive', hint: '普通响应式，无额外视口包' },
-            { value: 'contain', label: 'Contain', hint: '完整等比缩放，可能留白' },
-            { value: 'width', label: 'Width', hint: '按宽缩放，可能纵向滚动' },
-            { value: 'vw', label: 'Container units', hint: '局部容器尺寸变量，不全局转换 CSS' },
-            { value: 'disabled', label: 'Disabled', hint: '不生成适配代码' },
-          ] as const,
+          message: '启用统一 px→vw 宽度适配？',
+          initialValue: true,
         }))
+        if (options.viewport && options.designWidth === undefined) {
+          options.designWidth = Number(await answer(text({
+            input,
+            message: '设计宽度',
+            defaultValue: '1920',
+            validate: value => !value || (Number.isFinite(Number(value)) && Number(value) > 0) ? undefined : '请输入正有限数',
+          })))
+        }
       }
       const resolved = resolveProjectOptions({ ...options, name: options.name, targetDir: options.target })
       note([
@@ -241,9 +253,9 @@ export async function main(args = process.argv.slice(2), unified = false): Promi
               `认证：${resolved.auth}${resolved.auth === 'http' ? '（包含认证网络请求）' : ''}`,
               `业务数据：${resolved.data}`,
               `可视化：${resolved.visualization}`,
-              `适配：${resolved.viewport}`,
             ]),
         `路由：${resolved.routerMode}`,
+        `px→vw：${resolved.viewport ? `开启，设计宽度 ${resolved.designWidth}` : '关闭'}`,
       ].join('\n'), '配置摘要')
       if (!await answer(confirm({ input, message: '确认创建项目？', active: '创建', inactive: '取消' })))
         throw new PromptCancelled()

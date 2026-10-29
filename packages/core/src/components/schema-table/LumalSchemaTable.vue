@@ -13,6 +13,7 @@ import type {
   SchemaTableTreeProps,
 } from './types'
 import { LumalIcon } from '@lumal/icons-vue'
+import { getViewportConfig, useViewportWidth } from '@lumal/viewport'
 import { ElCheckbox, ElLoading, ElPopover, ElTable, ElTableColumn } from 'element-plus'
 import {
   computed,
@@ -112,7 +113,12 @@ const hiddenColumnFields = shallowRef(new Set<string>())
 const columnOrder = shallowRef<string[]>([])
 const selectedRows = shallowRef<T[]>([])
 const selectedRowKeys = shallowRef<Array<string | number>>([])
-const isMobileViewport = shallowRef(typeof window !== 'undefined' && window.innerWidth <= 768)
+const isMobileViewport = shallowRef(!getViewportConfig().enabled && typeof window !== 'undefined' && window.innerWidth <= 768)
+const viewport = useViewportWidth()
+// 列宽配置为设计尺寸；Element Plus 接收实际数值，不把它写回业务配置。
+function columnPixels(value: number | string | undefined) {
+  return typeof value === 'number' ? viewport.pixels(value) : value
+}
 const openMobileActionKey = shallowRef<string | null>(null)
 let resizeObserver: ResizeObserver | undefined
 let resizeLayoutTimer: ReturnType<typeof setTimeout> | undefined
@@ -165,7 +171,7 @@ const elementRowKey = computed(() => {
 })
 const showPagination = computed(() => props.pagination && props.total > 0)
 const showColumnSettingsPanel = computed(() => props.showColumnSettings || props.columnSettings?.enabled)
-const resolvedActionWidth = computed(() => isMobileViewport.value ? props.mobileActionWidth : props.actionWidth)
+const resolvedActionWidth = computed(() => columnPixels(isMobileViewport.value ? props.mobileActionWidth : props.actionWidth))
 const resolvedErrorText = computed(() => props.error instanceof Error
   ? props.error.message || props.errorText
   : typeof props.error === 'string' ? props.error : props.errorText)
@@ -333,16 +339,16 @@ function resolveColumnMinWidth(column: NormalizedSchemaTableColumn<T>): number |
   }
   const minWidth = column.minWidth ?? column.componentProps.minWidth as number | string | undefined
   if (column.field === flexibleColumnField.value) {
-    return minWidth ?? column.width ?? column.componentProps.width as number | string | undefined
+    return columnPixels(minWidth ?? column.width ?? column.componentProps.width as number | string | undefined)
   }
-  return minWidth
+  return columnPixels(minWidth)
 }
 
 function resolveColumnWidth(column: NormalizedSchemaTableColumn<T>): number | string | undefined {
   if (!props.scaleColumnWidth || column.field === flexibleColumnField.value) {
     return undefined
   }
-  return column.width
+  return columnPixels(column.width)
 }
 
 function resolveRowKey(row: T, index: number): string | number | undefined {
@@ -410,7 +416,7 @@ function syncMobileViewport(): void {
   if (typeof window === 'undefined') {
     return
   }
-  const mobile = window.innerWidth <= 768
+  const mobile = !getViewportConfig().enabled && window.innerWidth <= 768
   if (mobile === isMobileViewport.value) {
     return
   }
@@ -506,7 +512,7 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="containerRef" class="lumal-schema-table">
+  <div ref="containerRef" class="lumal-schema-table" :class="{ 'is-responsive': !getViewportConfig().enabled }">
     <div v-if="$slots['toolbar-title'] || $slots.toolbar || $slots['toolbar-tools'] || showColumnSettingsPanel" class="lumal-schema-table__toolbar">
       <div v-if="$slots['toolbar-title']" class="lumal-schema-table__toolbar-title">
         <slot name="toolbar-title" />
@@ -587,8 +593,8 @@ defineExpose({
         @current-change="handleCurrentChange"
         @expand-change="handleExpandChange"
       >
-        <ElTableColumn v-if="selection" type="selection" width="48" />
-        <ElTableColumn v-if="showIndex" type="index" :label="indexLabel" :width="indexWidth" />
+        <ElTableColumn v-if="selection" type="selection" :width="viewport.pixels(48)" />
+        <ElTableColumn v-if="showIndex" type="index" :label="indexLabel" :width="columnPixels(indexWidth)" />
 
         <ElTableColumn
           v-for="column in renderableColumns"
@@ -878,24 +884,24 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
-  .lumal-schema-table {
+  .lumal-schema-table.is-responsive {
     gap: 12px;
   }
 
-  .lumal-schema-table__toolbar {
+  .lumal-schema-table.is-responsive .lumal-schema-table__toolbar {
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-start;
     row-gap: 8px;
   }
 
-  .lumal-schema-table__toolbar-content {
+  .lumal-schema-table.is-responsive .lumal-schema-table__toolbar-content {
     flex: 1 1 auto;
     min-width: 0;
     justify-content: flex-start;
   }
 
-  .lumal-schema-table__toolbar-tools {
+  .lumal-schema-table.is-responsive .lumal-schema-table__toolbar-tools {
     flex: 0 1 auto;
     min-width: 0;
     justify-content: flex-end;
@@ -903,7 +909,7 @@ defineExpose({
     margin-left: auto;
   }
 
-  .lumal-schema-table__toolbar-tools :deep(.el-button.is-circle) {
+  .lumal-schema-table.is-responsive .lumal-schema-table__toolbar-tools :deep(.el-button.is-circle) {
     width: 28px;
     min-width: 28px;
     height: 28px;
@@ -911,23 +917,23 @@ defineExpose({
     flex-basis: 28px;
   }
 
-  .lumal-schema-table__column-settings-trigger {
+  .lumal-schema-table.is-responsive .lumal-schema-table__column-settings-trigger {
     width: 28px;
     min-width: 28px;
     height: 28px;
     min-height: 28px;
   }
 
-  .lumal-schema-table__pagination {
+  .lumal-schema-table.is-responsive .lumal-schema-table__pagination {
     justify-content: flex-start;
     overflow-x: auto;
   }
 
-  .lumal-schema-table__actions--desktop {
+  .lumal-schema-table.is-responsive .lumal-schema-table__actions--desktop {
     display: none;
   }
 
-  .lumal-schema-table__mobile-actions {
+  .lumal-schema-table.is-responsive .lumal-schema-table__mobile-actions {
     display: inline-flex;
     min-width: 48px;
     height: 32px;
@@ -937,18 +943,18 @@ defineExpose({
     padding: 0 8px;
   }
 
-  .lumal-schema-table__mobile-actions:hover,
-  .lumal-schema-table__mobile-actions:focus-visible,
-  .lumal-schema-table__mobile-actions[aria-expanded="true"] {
+  .lumal-schema-table.is-responsive .lumal-schema-table__mobile-actions:hover,
+  .lumal-schema-table.is-responsive .lumal-schema-table__mobile-actions:focus-visible,
+  .lumal-schema-table.is-responsive .lumal-schema-table__mobile-actions[aria-expanded="true"] {
     background: var(--el-color-primary-light-9);
     outline: none;
   }
 
-  .lumal-schema-table__body :deep(.el-table__body .el-table__cell) {
+  .lumal-schema-table.is-responsive .lumal-schema-table__body :deep(.el-table__body .el-table__cell) {
     padding: 8px 0;
   }
 
-  .lumal-schema-table__body :deep(.el-table__body .cell) {
+  .lumal-schema-table.is-responsive .lumal-schema-table__body :deep(.el-table__body .cell) {
     min-height: 32px;
     line-height: 32px;
   }

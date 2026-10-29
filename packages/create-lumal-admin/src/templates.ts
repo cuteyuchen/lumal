@@ -45,10 +45,11 @@ export async function composeTemplates(options: ReturnType<typeof resolveOptions
     devDependencies: Record<string, string>
   }
   manifest.name = options.name
-  for (const name of ['@lumal/core', '@lumal/icons', '@lumal/icons-vue'])
+  for (const name of ['@lumal/core', '@lumal/icons', '@lumal/icons-vue', '@lumal/viewport'])
     manifest.dependencies[name] = version
   if (options.preset === 'vben-compatible')
     manifest.dependencies['@lumal/vben-compat'] = version
+  applyViewportTemplate(files, manifest, options, version)
   manifest.dependencies = Object.fromEntries(Object.entries(manifest.dependencies).sort(([left], [right]) => left.localeCompare(right)))
   manifest.devDependencies = Object.fromEntries(Object.entries(manifest.devDependencies).sort(([left], [right]) => left.localeCompare(right)))
   files.set('package.json', `${JSON.stringify(manifest, null, 2)}\n`)
@@ -76,6 +77,31 @@ HTTP 登录失败不得回退 Local。Local 仅供演示，生产默认禁用。
   title: '${options.name}',
 };\n`)
   return [...files].map(([path, content]) => ({ path, content })).sort((a, b) => a.path.localeCompare(b.path))
+}
+
+/** 只有启用的项目接入构建插件；编译常量自动把同一个基准传给公共包运行时。 */
+export function applyViewportTemplate(
+  files: Map<string, string>,
+  manifest: { dependencies: Record<string, string>, devDependencies: Record<string, string> },
+  options: { viewport: boolean, designWidth: number },
+  version: string,
+) {
+  if (!options.viewport)
+    return
+  manifest.devDependencies['@lumal/vite'] = version
+  files.set('viewport.config.ts', `// 项目唯一设计基准；构建、框架动态 token 和数字工具共享此配置。\nexport const viewport = {\n  enabled: true,\n  viewportWidth: ${options.designWidth},\n} as const;\n`)
+  const dependencies = manifest.dependencies['element-plus'] ? '      dependencies: [\'element-plus\'],\n' : ''
+  files.set('vite.config.ts', files.get('vite.config.ts')!
+    .replace('import vue from \'@vitejs/plugin-vue\';', 'import { createViewportTransformPlugin } from \'@lumal/vite\';\nimport vue from \'@vitejs/plugin-vue\';')
+    .replace('import { defineConfig } from \'vite\';', 'import { defineConfig } from \'vite\';\nimport { viewport } from \'./viewport.config\';')
+    .replace('plugins: [vue()]', `plugins: [
+    vue(),
+    createViewportTransformPlugin({
+      ...viewport,
+      include: ['src/**'],
+      customProperties: true,
+${dependencies}    }),
+  ]`))
 }
 
 /** 工程层只读合成，缺失资源在首次写入前失败。 */

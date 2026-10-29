@@ -10,10 +10,8 @@ import { RouterLink, RouterView } from 'vue-router'
         工作台
       </RouterLink><RouterLink to="/system">
         系统管理
-      </RouterLink><RouterLink to="/scale/contain">
-        完整缩放
-      </RouterLink><RouterLink to="/scale/width">
-        宽度缩放
+      </RouterLink><RouterLink to="/width">
+        宽度适配
       </RouterLink>
     </nav>
   </header>

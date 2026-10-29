@@ -4,6 +4,8 @@ export type RouterMode = 'hash' | 'history'
 export type AdminFeature = 'examples' | 'system'
 
 export interface CreateLumalAdminProjectOptions {
+  viewport?: boolean
+  designWidth?: number
   apiMode?: ApiMode
   features?: AdminFeature[]
   name: string
@@ -15,6 +17,8 @@ export interface CreateLumalAdminProjectOptions {
 }
 
 export interface CreateLumalAdminProjectResult {
+  viewport: boolean
+  designWidth: number
   targetDir: string
   createdFiles: string[]
   preset: AdminPreset
@@ -33,7 +37,6 @@ export type ProjectTemplate = 'admin' | 'blank' | 'screen'
 export type ScreenAuth = 'none' | 'local-demo' | 'http'
 export type ScreenData = 'none' | 'local' | 'http'
 export type ScreenVisualization = 'none' | 'charts' | 'datav' | 'cockpit'
-export type ScreenViewport = 'disabled' | 'responsive' | 'width' | 'contain' | 'scale' | 'vw'
 export type ProjectRouterMode = RouterMode | 'none'
 
 export interface CreateLumalProjectOptions {
@@ -47,7 +50,8 @@ export interface CreateLumalProjectOptions {
   auth?: ScreenAuth
   data?: ScreenData
   visualization?: ScreenVisualization
-  viewport?: ScreenViewport
+  viewport?: boolean
+  designWidth?: number
   signal?: AbortSignal
 }
 
@@ -59,7 +63,8 @@ export interface ResolvedScreenOptions {
   data: ScreenData
   routerMode: ProjectRouterMode
   visualization: ScreenVisualization
-  viewport: ScreenViewport
+  viewport: boolean
+  designWidth: number
   signal?: AbortSignal
 }
 

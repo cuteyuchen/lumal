@@ -1,5 +1,52 @@
 # 更新日志
 
+## 0.1.0-beta (2026-10-28)
+
+候选版本，未发布 npm。本次允许破坏性修改，不保留旧适配兼容层。
+
+- 统一为业务 px → 普通 vw，项目只配一次设计宽度；数字工具使用实际 CSS vw 基准。
+- Vite 复用现有安全 AST 转换，默认同步字号/行高/最小尺寸/模板样式；细边框和忽略项保留。
+- 自有公共 CSS 在消费构建时转换；Core 动态 token、主题恢复及数字设计输入走同一配置。
+- 删除 Viewport 策略/画布/旧缩放 API，DataV/Cockpit 删除模式、居中与整画布缩放，保留业务编排和图形功能。
+- Admin、独立示例、脚手架与消费者迁移；删除旧模式菜单及其专属偏好，Blank 默认保持纯净。
+- 吸收此前的 Dropdown 主题和 Designer 名称提交修复，不保留已被替换的适配模式 API。
+- 迁移和实际验证结果见 `screen-viewport-guide.md`、`pure-vw-refactor-2026-10-28.md`。
+
+## 历史开发记录 (2026-10-28)
+
+以下原记录保留当时实现与准备状态，不代表当前公共 API、待发布计划或本轮验收。
+其中多模式、局部单位、`output: 'runtime'`、`mediaQueries` 和 `cssLength`
+已由上方纯 vw 候选替换；当前接入以各包 README 和迁移指南为准。
+
+- 修复进入 `examples/viewport` 时整页 vw 意外失效：示例改用 flow-only 路由边界，
+  Header、侧栏、工具栏、模拟宿主及浮层继续适配；内部画布独立绑定单位与设计字号，
+  contain/width 下仍避免双重缩放，并覆盖深链、往返导航及模式切换回归。
+- Admin `vw 流式` 补齐整页适配：Header、侧栏、字号/行高、主题、最小尺寸、细边框和
+  body 浮层共用浏览器宽度单位，CSS/JS 断点同步，Dashboard 数值列宽显式计算；
+  保留响应式默认、独立 DataV/Cockpit 画布整页回退与标签缓存，不 transform 整页。
+- `@lumal/vite` 新增默认关闭的 `variableFallbacks` 与 `mediaQueries`，
+  分别处理已核对的变量 fallback/尺寸约束和根模式下的媒体/容器宽高断点；
+  支持编译后的范围查询，不放宽原子化、来源或第三方依赖保护。
+- Core 增加可选主题 `cssLength`、Layout/Tabs `responsive`，图标数字尺寸支持协作单位，
+  默认 px/响应式行为和字符串图标尺寸不变，不改 Viewport 公共 API。
+- 补充独立 Vue tarball 场景及 Admin Dev/Build 的真实80%～200%页面缩放检查，
+  验证布局、菜单定位/点击、抽屉、表格和侧栏，不使用 CSS zoom/DPR 模拟。
+
+- 补齐共享 Dropdown 主题样式，恢复 Admin Header 适配菜单的整行点击、悬停与焦点反馈；
+  显示当前模式，并以真实 Element Plus / Teleport 组件测试覆盖鼠标与键盘切换。
+- Admin Header 工作区菜单补充 `vw 流式`，接入共享设计宽度及自有页面的协作转换；
+  保留原画布模式、标签缓存和第三方/自管理视口隔离，不再只有独立示例可体验 vw。
+- 修正运行时 `vw` 的浏览器宽度语义：宽高共用 `window.innerWidth / designWidth`，
+  保持流式布局，不按容器宽高分别换算、不 transform 整页；实际容器测量继续保留。
+- `@lumal/vite` 新增可选 `output: 'runtime'`，与局部单位协作，在 vw 外恢复设计 px，
+  切换 responsive/contain/width/disabled 不叠加缩放；默认直接 vw 输出保持兼容。
+- `--viewport vw` 生成的 Screen 真正启用构建与 Vue 行内样式转换，共享设计尺寸；
+  其他模式不增加构建依赖。Admin 视口示例补充 vw 及单层缩放演示。
+
+- `@lumal/vite` 新增属性名单、选择器排除、声明忽略与独立 Vue 行内样式转换开关；保护原子化任意值类名及其 CSS 规则。
+- 修复保留字号却缩小行高的问题，默认保护最小尺寸与已有适配表达式；保留文件、依赖、SCSS source map 和 Dev/Build 一致性边界。
+- Screen 视口模板共享项目级设计尺寸，仅 vw 模式开启构建转换，不新增运行时公共函数。
+
 ## 0.0.7-beta (2026-10-26)
 
 - `@lumal/vite` 新增属性名单、选择器排除、声明忽略与独立 Vue 行内样式转换开关；保护原子化任意值类名及其 CSS 规则。
@@ -31,7 +78,7 @@
 
 ### 视口与公共能力
 
-- 新增轻量 `@lumal/viewport`，仅 Vue peer，支持应用默认、页面和容器三级适配。
+- 新增轻量 `@lumal/viewport`，仅 Vue peer，支持应用默认、页面和容器统一宽度适配。
   响应式、完整等比、按宽度和容器尺寸单位独立于作用范围，不默认变换 DOM 根或地图。
 - DataV/Cockpit 共享算法与尺寸生命周期，保留已有缩放函数和 Cockpit `external`。
   Vite 增加默认关闭、来源范围受控的 CSS 视口转换，Dev/Build 行为一致。

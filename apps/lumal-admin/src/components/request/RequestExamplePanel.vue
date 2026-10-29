@@ -135,7 +135,7 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
 
 .lumal-request-panel__eyebrow {
   color: var(--el-color-primary);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 2px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.85714286);
   font-weight: 700;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -144,7 +144,7 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
 .lumal-request-panel__title {
   margin: 0;
   color: var(--el-text-color-primary);
-  font-size: calc(var(--lumal-font-size-base, 14px) + 6px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 1.42857143);
   font-weight: 700;
 }
 
@@ -168,7 +168,7 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
 .lumal-request-panel__label,
 .lumal-request-panel__detail-label {
   color: var(--el-text-color-secondary);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 2px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.85714286);
 }
 
 .lumal-request-panel__value {
@@ -201,26 +201,26 @@ const statusType = computed(() => props.status === 'error' ? 'danger' : props.st
     "JetBrains Mono",
     Consolas,
     monospace;
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
 }
 
 .lumal-request-panel__message {
   margin: 18px 0 0;
   color: var(--el-text-color-regular);
-  font-size: calc(var(--lumal-font-size-base, 14px) - 1px);
+  font-size: calc(var(--lumal-font-size-base, 14px) * 0.92857143);
 }
 
 @media (max-width: 760px) {
-  .lumal-request-panel__header {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-request-panel__header {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .lumal-request-panel__meta {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-request-panel__meta {
     grid-template-columns: 1fr;
   }
 
-  .lumal-request-panel__detail {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-request-panel__detail {
     grid-template-columns: 1fr;
   }
 }

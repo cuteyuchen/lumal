@@ -6,7 +6,7 @@
 
 ## 接入与入口
 
-Vue 3.5+ 为必需 peer。`0.0.6-beta` 的 ECharts 6 为可选 peer，仅使用 ECharts
+Vue 3.5+ 为必需 peer。`0.1.0-beta` 的 ECharts 6 为可选 peer，仅使用 ECharts
 图表模式或 `LumalActiveRingChart` 时安装；历史发布版本以其实际 manifest 为准。
 数字、边框等子入口不要求图表引擎。组件优先独立子入口导入，样式统一引入：
 
@@ -61,12 +61,12 @@ import '@lumal/datav/style.css'
 
 - 纯 SVG、数字和列表子入口不加载图表引擎；`LumalActiveRingChart` 使用 ECharts，不能当成无引擎组件。
 - `LumalCharts` 按当前模式动态加载引擎，切换模式和卸载会使旧加载失效。`onMounted` 不保证异步引擎已创建。
-- `0.0.6-beta` 在首个 `setOption` 前绑定 `events` 和模板事件；首帧 `rendered/finished` 应在模板或 props 中提前声明。
+- `0.1.0-beta` 在首个 `setOption` 前绑定 `events` 和模板事件；首帧 `rendered/finished` 应在模板或 props 中提前声明。
 - 组件 ref 使用 `useTemplateRef`；`getInstance/getNativeInstance/setConfig/setOption/resize` 应在对应实例就绪后调用，并处理暂未就绪。
 - 给组件及其父容器明确的宽高；标题和图表可用 `auto minmax(0, 1fr)` 网格行分开。仅有 `min-height` 的父级不应再靠 100% 子图表撑高；画布空白时先查尺寸、模式和实例时机。
 - 内置离屏、页面隐藏、焦点/悬停和 reduced-motion 暂停。新增动画保持这些行为，不额外叠加永不清理的 interval。
 - 滚动表的 HTML 字符串按文本渲染，这是安全边界，不通过 `v-html` 恢复旧行为。
-- `LumalFullScreenContainer` 与 Cockpit 不要重复缩放；组合时 Cockpit 选择 `viewport-mode="external"`。
+- `LumalFullScreenContainer`使用设计内容宽高、embedded和overflow承载内容；没有适配模式，嵌套Cockpit也不整画布缩放。数字设计尺寸内部换算，实际测量不再处理。
 - 主题使用 `--lumal-datav-*` 语义变量，行业皮肤放应用层。
 - 全屏容器默认 fixed；嵌入 Admin 内容区时为局部宿主明确覆盖为 absolute 并设置宽高。
   Admin `examples/DataVView.vue` 演示边框、装饰、翻牌和滚动排行，不需要安装 Cockpit 或地图引擎。

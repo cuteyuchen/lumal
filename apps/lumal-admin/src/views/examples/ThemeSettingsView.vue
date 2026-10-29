@@ -79,7 +79,7 @@ const previewStyle = computed(() => ({
             </div>
           </div>
 
-          <LumalInfoTable :items="preferenceItems" :columns="2" label-width="96px" />
+          <LumalInfoTable :items="preferenceItems" :columns="2" :label-width="96" />
         </div>
       </div>
     </LumalPage>
@@ -147,12 +147,12 @@ const previewStyle = computed(() => ({
 }
 
 @media (max-width: 960px) {
-  .lumal-admin-example.is-fill :deep(.lumal-page__body),
-  .lumal-admin-example__theme-layout {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-example.is-fill :deep(.lumal-page__body),
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-example__theme-layout {
     overflow: auto;
   }
 
-  .lumal-admin-example__theme-panel {
+  :global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .lumal-admin-example__theme-panel {
     max-height: min(70vh, 640px);
   }
 }

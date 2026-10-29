@@ -4,6 +4,7 @@ import type { Component } from 'vue'
 import type { LumalIconMorphSpring } from '../types'
 import { Icon as IconifyIcon } from '@iconify/vue'
 import { applySvgGradient, recolorSvgString } from '@lumal/icons'
+import { viewportLength } from '@lumal/viewport'
 import { computed, onErrorCaptured, toRaw, useId } from 'vue'
 import { useIconMorph } from '../composables/useIconMorph'
 import { useIconRegistry } from '../composables/useIconRegistry'
@@ -92,7 +93,8 @@ onErrorCaptured(() => {
 
 /***********************渲染状态*********************/
 const iconStyle = computed(() => {
-  const size = typeof props.size === 'number' ? `${props.size}px` : props.size ?? '1em'
+  // 数值是设计 px，消费项目 Vite 配置决定输出 vw 或 px；显式单位保持原语义。
+  const size = typeof props.size === 'number' ? viewportLength(props.size) : props.size ?? '1em'
 
   return {
     '--lumal-icon-size': size,

@@ -1,6 +1,15 @@
 import type { Page } from '@playwright/test'
 import { expect } from '@playwright/test'
 
+async function waitForDashboardResponses(page: Page): Promise<void> {
+  // Header 已出现不代表五个工作台请求已结束，尤其不能在访客 403 尚未送达时结束诊断。
+  const paths = ['/api/system/users', '/api/system/roles', '/api/system/menus', '/api/system/dictionaries/types', '/api/system/roles/options']
+  await Promise.all(paths.map(async (path) => {
+    const response = await page.waitForResponse(response => new URL(response.url()).pathname === path && response.request().method() === 'GET')
+    await response.finished()
+  }))
+}
+
 export async function resetBrowserState(page: Page): Promise<void> {
   await page.goto('/#/login')
   await page.evaluate(() => localStorage.clear())
@@ -9,7 +18,7 @@ export async function resetBrowserState(page: Page): Promise<void> {
 
 export async function loginAsAdmin(page: Page): Promise<void> {
   await resetBrowserState(page)
-  await page.getByTestId('login-submit').click()
+  await Promise.all([waitForDashboardResponses(page), page.getByTestId('login-submit').click()])
   await expect(page).toHaveURL(/#\/dashboard$/)
   await expect(page.getByRole('heading', { name: /欢迎回来/ })).toBeVisible()
 }
@@ -23,7 +32,7 @@ export async function loginAs(page: Page, account: 'admin' | 'guest' | 'operator
     operator: '运营人员',
   }
   await page.getByRole('option', { name: labels[account], exact: true }).click()
-  await page.getByTestId('login-submit').click()
+  await Promise.all([waitForDashboardResponses(page), page.getByTestId('login-submit').click()])
   await expect(page).toHaveURL(/#\/dashboard$/)
 }
 

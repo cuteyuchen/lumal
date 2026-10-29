@@ -2,10 +2,23 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { mount } from '@vue/test-utils'
 import { compileString } from 'sass-embedded'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { LumalChartPanel } from '../src'
 
 describe('lumal chart panel', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('数字高度与面板宽度统一按设计宽度换算，切换视图不叠乘', async () => {
+    vi.stubGlobal('__LUMAL_VIEWPORT__', { enabled: true, designWidth: 1440 })
+    const wrapper = mount(LumalChartPanel, { props: { height: 144, chartWidth: 720, tableWidth: 360 }, slots: { chart: '图表', table: '表格' } })
+    expect(wrapper.get('.lumal-chart-panel__body').attributes('style')).toContain('height: 10vw')
+    expect(wrapper.attributes('style')).toContain('--lumal-chart-panel-chart-width: 50vw')
+    await wrapper.setProps({ view: 'table' })
+    expect(wrapper.get('.lumal-chart-panel__body').attributes('style')).toContain('height: 10vw')
+    expect(wrapper.attributes('style')).toContain('--lumal-chart-panel-table-width: 25vw')
+    expect(wrapper.classes()).not.toContain('is-responsive')
+    wrapper.unmount()
+  })
   it('两种视图实际消费各自宽度变量，并受父容器宽度约束', async () => {
     const source = readFileSync(resolve(process.cwd(), 'src/LumalChartPanel.vue'), 'utf8')
     const scss = source.match(/<style scoped lang="scss">([\s\S]*?)<\/style>/)![1]!

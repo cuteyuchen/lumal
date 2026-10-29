@@ -6,6 +6,17 @@ import { defineComponent, h, nextTick } from 'vue'
 import { LumalIcon, LumalIconPicker, LumalIconPickerDialog } from '../src'
 
 describe('lumalIcon', () => {
+  it('项目开启后数字尺寸输出普通 vw，字符串和物理单位仍由调用方明确指定', () => {
+    vi.stubGlobal('__LUMAL_VIEWPORT__', { enabled: true, designWidth: 1440 })
+    const wrapper = mount(LumalIcon, { props: { name: 'lumal:plus', size: 144 } })
+    try {
+      expect(wrapper.attributes('style')).toContain('--lumal-icon-size: 10vw')
+    }
+    finally {
+      wrapper.unmount()
+      vi.unstubAllGlobals()
+    }
+  })
   it('真实 Teleport 弹窗约束焦点，关闭和卸载都恢复原触发点', async () => {
     const trigger = document.createElement('button')
     document.body.append(trigger)
@@ -94,6 +105,20 @@ describe('lumalIcon', () => {
     expect(wrapper.classes()).toContain('lumal-icon')
     expect(wrapper.html()).toContain('#1677ff')
     expect(wrapper.attributes('style')).toContain('--lumal-icon-size: 20px')
+  })
+  it('字符串尺寸保持原样，固定像素与已有适配值不再次转换', () => {
+    for (const size of ['20px', '1em', '10vw']) {
+      const wrapper = mount(LumalIcon, {
+        props: { size, icon: { key: 'direct:size', source: 'local-svg', svgText: '<svg><path d="M0 0h2v2z"/></svg>' } },
+      })
+      try {
+        expect(wrapper.attributes('style')).toContain(`--lumal-icon-size: ${size}`)
+        expect(wrapper.attributes('style')).not.toContain('var(--lumal-viewport-unit')
+      }
+      finally {
+        wrapper.unmount()
+      }
+    }
   })
 
   it('注册表变化后选择器可以搜索、分页并选择图标', async () => {

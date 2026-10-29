@@ -14,7 +14,7 @@
 下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm add @lumal/icons@0.0.7-beta @lumal/icons-vue@0.0.7-beta vue@^3.5 @iconify/vue@^5
+pnpm add @lumal/icons@0.1.0-beta @lumal/icons-vue@0.1.0-beta vue@^3.5 @iconify/vue@^5
 ```
 
 ## 公开入口
@@ -36,6 +36,11 @@ import '@lumal/icons-vue/style.css'
   <LumalIcon name="lumal:settings" color="#1677ff" :size="20" />
 </template>
 ```
+
+数字 `size` 是设计 px，内部按消费项目配置输出普通 vw（未开启时为 px），
+默认视觉仍为 Npx；宿主提供单位后参与适配，不强制依赖 Viewport。
+字符串尺寸原样保留，需要固定像素可用 `size="20px"`。
+整页根单位、局部画布与 Teleport 边界见 [屏幕适配](/reference/screen-viewport-guide)。
 
 ## 与 createLumalAdmin 联用
 

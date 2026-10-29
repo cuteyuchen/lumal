@@ -21,7 +21,8 @@ describe('生成工程的格式契约', () => {
     ['Admin Standard', { template: 'admin', preset: 'standard' }],
     ['Admin Vben Compatible', { template: 'admin', preset: 'vben-compatible' }],
     ['Blank', { template: 'blank' }],
-    ['Screen 能力组合', { template: 'screen', auth: 'http', data: 'http', routerMode: 'history', visualization: 'cockpit', viewport: 'contain' }],
+    ['Screen 能力组合', { template: 'screen', auth: 'http', data: 'http', routerMode: 'history', visualization: 'cockpit', viewport: true }],
+    ['Screen vw', { template: 'screen', viewport: true }],
   ] as const)('%s 合并后的运行时和开发依赖均有序', async (_label, input) => {
     const options = resolveProjectOptions({ ...input, name: 'quality-test', targetDir: 'unused' })
     const files = options.template === 'admin'
@@ -32,13 +33,17 @@ describe('生成工程的格式契约', () => {
       const names = Object.keys(manifest[field])
       expect(names, field).toEqual([...names].sort((left, right) => left.localeCompare(right)))
     }
+    if (options.viewport) {
+      const vite = files.find(file => file.path === 'vite.config.ts')!.content
+      expect(vite.indexOf('from \'vite\'')).toBeLessThan(vite.indexOf('from \'./viewport.config\''))
+    }
   })
 
   it.each([
     { template: 'blank' },
     { template: 'screen' },
-    { template: 'screen', viewport: 'contain' },
-    { template: 'screen', viewport: 'vw' },
+    { template: 'screen', viewport: false },
+    { template: 'screen', viewport: true, designWidth: 1440 },
   ] as const)('%j 输出符合公共格式且无 Admin 规范', async (input) => {
     const options = resolveProjectOptions({ ...input, name: 'quality-test', targetDir: 'unused' })
     if (options.template === 'admin')

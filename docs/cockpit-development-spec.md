@@ -68,7 +68,7 @@ interface CockpitGridRowConfig {
 - 左右区域定位在中心内容上层两侧，宽度为区域 `width`（列宽为均分结果）。
 - 普通模块和 Tab 行各使用一个视觉 Card；Tab 行只显示激活模块，但保留全部模块实例。
 - Tab 默认项来自 `activeWidgetId`，失效时回退到第一个模块。
-- `scale` 模式使用基准画布等比缩放；`vwvh` 模式把设计尺寸转换为视口单位。
+- 仅按项目统一设计宽度将设计px转换为普通vw，高度也按宽度，不使用整画布transform。
 - 框架提供 context prop 和 `useCockpitContext()`，上下文只包含框架 id、模式和消息总线。
 - 可选 `autoRefresh`：右上角开关，按间隔广播框架 topic `cockpit:refresh`；模块通过 `useCockpitRefresh` 订阅。默认关闭，由消费方 opt-in。
 - 可选 `#left` / `#right` 插槽：消费方可包裹区域实现收起/展开；包本身不内置区域收起。

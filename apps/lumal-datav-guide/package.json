@@ -11,16 +11,17 @@
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
-    "@lumal/core": "0.0.7-beta",
-    "@lumal/datav": "0.0.7-beta",
-    "@lumal/icons": "0.0.7-beta",
-    "@lumal/icons-vue": "0.0.7-beta",
+    "@lumal/core": "0.1.0-beta",
+    "@lumal/datav": "0.1.0-beta",
+    "@lumal/icons": "0.1.0-beta",
+    "@lumal/icons-vue": "0.1.0-beta",
     "echarts": "^6.1.0",
     "element-plus": "^2.11.0",
     "vue": "^3.5.0",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
+    "@lumal/vite": "0.1.0-beta",
     "@vitejs/plugin-vue": "^6.0.1",
     "typescript": "^6.0.0",
     "vite": "^8.0.0",

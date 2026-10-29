@@ -1,0 +1,230 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
+import process from 'node:process'
+import { chromium, expect } from '@playwright/test'
+import { browserZoom, captureNativeScreenshot, resizeNativeWindow } from './browser-zoom.mjs'
+
+const root = resolve(import.meta.dirname, '..')
+const evidence = join(root, 'output/playwright/admin-viewport')
+const reportFile = join(root, 'output/release/admin-viewport-zoom.json')
+// 使用已启动的真实 Admin 与 Mock；此检查不修改应用源码、用户浏览器或持久偏好。
+const environments = [
+  ['production', process.env.LUMAL_ADMIN_PREVIEW_URL || 'http://127.0.0.1:4177'],
+  ['development', process.env.LUMAL_ADMIN_DEV_URL || 'http://127.0.0.1:5170'],
+]
+const sizes = [[1280, 720], [1366, 768], [1920, 720], [1920, 920], [1920, 1080], [2560, 1440]]
+const zooms = [0.8, 1, 1.25, 1.5, 2]
+
+async function readMetrics(page) {
+  return page.evaluate(() => {
+    const selectors = {
+      header: '.lumal-header',
+      trigger: '[aria-label="偏好设置"]',
+      title: '.lumal-page__title',
+      metric: '.lumal-admin-workspace__metric',
+      number: '.lumal-admin-workspace__metric strong',
+      row: '.el-table__body .el-table__row',
+      cell: '.el-table__body .cell',
+      sidebar: '.lumal-sidebar',
+    }
+    const boxes = Object.fromEntries(Object.entries(selectors).map(([name, selector]) => {
+      const element = document.querySelector(selector)
+      if (!element)
+        return [name, null]
+      const rect = element.getBoundingClientRect()
+      const style = getComputedStyle(element)
+      const borderHeight = (target) => {
+        const css = getComputedStyle(target)
+        return Number.parseFloat(css.borderTopWidth) + Number.parseFloat(css.borderBottomWidth)
+      }
+      // 卡片有两条物理边框；本例首行最高单元格由字典标签两边框和 td 底边框撑高。
+      // 它们按约定保留 1px，不属于承诺同比例变化的设计尺寸，单独记录而不放宽误差。
+      const heightBorders = name === 'row'
+        ? borderHeight(element.querySelector('td')) + borderHeight(element.querySelector('.lumal-schema-table__dictionary-tag'))
+        : borderHeight(element)
+      const frame = name === 'row' ? getComputedStyle(element.closest('.lumal-page')) : undefined
+      const widthBorders = frame ? Number.parseFloat(frame.borderLeftWidth) + Number.parseFloat(frame.borderRightWidth) : 0
+      return [name, { x: rect.x, y: rect.y, width: rect.width, widthBorders, height: rect.height, heightBorders, fontSize: Number.parseFloat(style.fontSize), lineHeight: Number.parseFloat(style.lineHeight) || 0 }]
+    }))
+    return {
+      innerWidth,
+      innerHeight,
+      devicePixelRatio,
+      scrollWidth: document.documentElement.scrollWidth,
+      gridColumns: getComputedStyle(document.querySelector('.lumal-admin-workspace__metrics')).gridTemplateColumns.split(' ').length,
+      rootTransform: getComputedStyle(document.documentElement).transform,
+      bodyTransform: getComputedStyle(document.body).transform,
+      layoutTransform: getComputedStyle(document.querySelector('.lumal-layout')).transform,
+      contentTransform: getComputedStyle(document.querySelector('.lumal-content')).transform,
+      fixedColumns: [...document.querySelectorAll('.el-table__body colgroup col')].slice(3, 4).map(element => ({
+        assigned: Number(element.getAttribute('width')),
+        actual: Number.parseFloat(getComputedStyle(element).width),
+      })),
+      boxes,
+    }
+  })
+}
+
+async function verifyControls(page) {
+  await page.getByRole('button', { name: '偏好设置', exact: true }).click()
+  const drawer = page.getByRole('dialog', { name: '偏好设置', exact: true })
+  await expect(drawer).toBeVisible()
+  const drawerBox = await drawer.boundingBox()
+  await page.keyboard.press('Escape')
+  await expect(drawer).not.toBeVisible()
+  return { drawer: drawerBox }
+}
+
+async function main() {
+  const profile = await mkdtemp(join(tmpdir(), 'lumal-admin-zoom-'))
+  const extension = join(root, 'scripts/fixtures/zoom-extension')
+  const report = { sizes, zooms, baselines: [], results: [], sidebars: [], errors: [], consoleErrors: [] }
+  let context
+  let page
+  let cdp
+  try {
+    await mkdir(evidence, { recursive: true })
+    await mkdir(join(root, 'output/release'), { recursive: true })
+    context = await chromium.launchPersistentContext(profile, {
+      channel: 'chromium',
+      headless: true,
+      viewport: null,
+      args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`, '--window-size=1280,720'],
+    })
+    report.chromium = context.browser()?.version()
+    const worker = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker')
+    page = await context.newPage()
+    page.on('pageerror', error => report.errors.push(error.message))
+    page.on('console', (message) => {
+      if (message.type() === 'error')
+        report.consoleErrors.push(message.text())
+    })
+    cdp = await context.newCDPSession(page)
+    const { windowId } = await cdp.send('Browser.getWindowForTarget')
+    for (const [environment, url] of environments) {
+      await page.goto(`${url}/#/login`)
+      await page.getByTestId('login-submit').click()
+      await expect(page.getByRole('heading', { name: '欢迎回来，超级管理员' })).toBeVisible()
+      await expect(page.getByRole('button', { name: '工作区适配', exact: true })).toHaveCount(0)
+      for (const [width, height] of sizes) {
+        await browserZoom(worker, url, 1)
+        await resizeNativeWindow(page, cdp, windowId, width, height)
+        await page.evaluate(async () => {
+          await document.fonts.ready
+          await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+        })
+        const baseline = await readMetrics(page)
+        report.baselines.push({ environment, width, height, ...baseline })
+        for (const zoom of zooms) {
+          report.currentCheck = { environment, width, height, zoom }
+          const actualZoom = await browserZoom(worker, url, zoom)
+          await expect.poll(() => page.evaluate(() => devicePixelRatio)).toBeCloseTo(baseline.devicePixelRatio * zoom, 2)
+          // 等待响应式 DOM、字体和布局在真正的缩放事件后稳定。
+          await expect.poll(async () => (await readMetrics(page)).boxes.header.height * actualZoom).toBeCloseTo(baseline.boxes.header.height, 0)
+          // Element Plus 按钮还会过渡 width/height/font-size；Header 就绪不代表这些过渡已结束。
+          await expect.poll(async () => {
+            const current = await readMetrics(page)
+            return Object.entries(baseline.boxes).flatMap(([name, original]) => {
+              if (!original)
+                return []
+              return ['height', 'fontSize', 'lineHeight'].flatMap((dimension) => {
+                const border = dimension === 'height' ? current.boxes[name].heightBorders : 0
+                const originalBorder = dimension === 'height' ? original.heightBorders : 0
+                return Math.abs((current.boxes[name][dimension] - border) * actualZoom - (original[dimension] - originalBorder)) < 1.1
+                  ? []
+                  : [`${name}.${dimension}: ${current.boxes[name][dimension]} × ${actualZoom} != ${original[dimension]}`]
+              })
+            })
+          }, { message: `${environment} ${width} ${zoom} 缩放后的设计尺寸稳定` }).toEqual([])
+          const metrics = await readMetrics(page)
+          const result = { environment, width, height, zoom: actualZoom, ...metrics }
+          report.results.push(result)
+          expect(metrics.gridColumns).toBe(4)
+          expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.innerWidth + 1)
+          for (const transform of [metrics.rootTransform, metrics.bodyTransform, metrics.layoutTransform, metrics.contentTransform])
+            expect(transform).toBe('none')
+          for (const [name, original] of Object.entries(baseline.boxes)) {
+            if (!original)
+              continue
+            for (const dimension of ['height', 'fontSize', 'lineHeight']) {
+              const border = dimension === 'height' ? metrics.boxes[name].heightBorders : 0
+              const originalBorder = dimension === 'height' ? original.heightBorders : 0
+              expect(Math.abs((metrics.boxes[name][dimension] - border) * actualZoom - (original[dimension] - originalBorder)), `${environment} ${width} ${zoom} ${name}.${dimension}`).toBeLessThan(1.1)
+            }
+          }
+          // 表格引擎的数值列宽必须显式适配，不能只让行高看起来一致。
+          await expect.poll(async () => {
+            const current = (await readMetrics(page)).boxes.row
+            return Math.abs((current.width + current.widthBorders) * actualZoom - (baseline.boxes.row.width + baseline.boxes.row.widthBorders))
+          }).toBeLessThan(2)
+          // 状态列为固定 100px 设计宽度；末列按既有表格契约吸收剩余空间，不能当作固定列。
+          // Element Plus 对输入取整数，浏览器原生 zoom 还会对实际列宽作亚像素舍入。
+          await expect.poll(async () => (await readMetrics(page)).fixedColumns.map(column => column.assigned))
+            .toEqual([Math.floor(100 * metrics.innerWidth / 1920)])
+          const fixedColumns = (await readMetrics(page)).fixedColumns
+          expect(fixedColumns).toHaveLength(1)
+          expect(fixedColumns[0].actual).toBeCloseTo(fixedColumns[0].assigned, 1)
+          result.controls = await verifyControls(page)
+          expect(Math.abs(result.controls.drawer.width * actualZoom - 384 * width / 1920)).toBeLessThan(1.1)
+          if (environment === 'production')
+            result.screenshotSize = await captureNativeScreenshot(cdp, join(evidence, `${width}x${height}-${zoom}.png`))
+          result.status = 'passed'
+        }
+      }
+      await browserZoom(worker, url, 1)
+      await resizeNativeWindow(page, cdp, windowId, 1280, 720)
+      await page.goto(`${url}/#/system/user`)
+      await expect(page.getByRole('heading', { name: '机构导航', exact: true })).toBeVisible()
+      const sidebar = page.locator('.lumal-layout__desktop-sidebar')
+      await expect(sidebar).toBeVisible()
+      for (const zoom of zooms) {
+        const actualZoom = await browserZoom(worker, url, zoom)
+        await expect.poll(async () => Math.abs((await sidebar.boundingBox()).width * actualZoom - 280 * 1280 / 1920)).toBeLessThan(1.1)
+        report.sidebars.push({ environment, zoom: actualZoom, box: await sidebar.boundingBox(), status: 'passed' })
+      }
+      await browserZoom(worker, url, 1)
+      await page.goto(`${url}/#/examples/viewport`)
+      // 示例与壳层直接使用同一套 vw，没有路由策略、画布包装器或字号补偿。
+      const canvas = page.locator('.viewport-canvas')
+      await expect(canvas).toBeVisible()
+      const headerHeight = (await page.locator('.lumal-header').boundingBox()).height
+      for (const zoom of [1, 2]) {
+        const actualZoom = await browserZoom(worker, url, zoom)
+        await expect.poll(async () => Math.abs((await page.locator('.lumal-header').boundingBox()).height * actualZoom - headerHeight)).toBeLessThan(1.1)
+        await expect(canvas).toHaveCSS('transform', 'none')
+        const width = await page.evaluate(() => innerWidth)
+        expect((await page.getByTestId('viewport-probe').boundingBox()).width).toBeCloseTo(192 * width / 1920, 1)
+        const text = await canvas.evaluate(el => ({ font: Number.parseFloat(getComputedStyle(el).fontSize), line: Number.parseFloat(getComputedStyle(el).lineHeight) }))
+        expect(text.font).toBeCloseTo(14 * width / 1920, 1)
+        expect(text.line).toBeCloseTo(20 * width / 1920, 1)
+      }
+      await browserZoom(worker, url, 1)
+    }
+    expect(report.errors).toEqual([])
+    expect(report.consoleErrors).toEqual([])
+    report.status = 'passed'
+    delete report.currentCheck
+    console.log(`Admin 原生缩放验收通过：${report.results.length} 组 Header/内容/表格/浮层和 ${report.sidebars.length} 组侧栏检查，Dev/Build 均通过。`)
+  }
+  catch (error) {
+    report.status = 'failed'
+    report.failure = String(error)
+    report.metricsOnFailure = await readMetrics(page).catch(() => null)
+    if (cdp)
+      await captureNativeScreenshot(cdp, join(evidence, 'failed.png')).catch(() => {})
+    throw error
+  }
+  finally {
+    await writeFile(reportFile, `${JSON.stringify(report, null, 2)}\n`)
+    await context?.close()
+    // 仅删除由 mkdtemp 创建并核对路径的隔离浏览器 profile。
+    if (resolve(profile).startsWith(resolve(tmpdir(), 'lumal-admin-zoom-')))
+      await rm(profile, { recursive: true, force: true })
+  }
+}
+
+main().catch((error) => {
+  console.error(error)
+  process.exitCode = 1
+})

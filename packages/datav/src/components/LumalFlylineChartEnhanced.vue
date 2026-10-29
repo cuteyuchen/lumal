@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
 import type { FlylineEnhancedConfig, FlylineHaloStyle, FlylineIconStyle, FlylineLineStyle, FlylineTextStyle } from '../types'
+import { useViewportWidth } from '@lumal/viewport'
 import { computed, nextTick, shallowRef, useId, useTemplateRef, watch } from 'vue'
 import { useElementSize } from '../composables/useElementSize'
 import { useSvgAnimationPause } from '../composables/useSvgAnimationPause'
@@ -23,6 +24,7 @@ const emit = defineEmits<{
 const rootRef = useTemplateRef<HTMLElement>('rootRef')
 const svgRef = useTemplateRef<SVGSVGElement>('svgRef')
 const size = useElementSize(rootRef)
+const { pixels } = useViewportWidth()
 const animation = useSvgAnimationPause(rootRef, svgRef)
 const id = svgId('lumal-flyline-enhanced', useId())
 
@@ -54,11 +56,11 @@ const points = computed(() => {
     return {
       ...point,
       coordinate,
-      halo,
+      halo: { ...halo, radius: pixels(halo.radius) },
       haloTime: randomDuration(halo.duration),
-      icon,
+      icon: { ...icon, width: pixels(icon.width), height: pixels(icon.height) },
       key: `${svgId('point', point.name)}-${index}`,
-      text,
+      text: { ...text, fontSize: pixels(text.fontSize), offset: text.offset.map(value => pixels(value)) },
     }
   })
 })
@@ -78,6 +80,8 @@ const lines = computed(() => {
     const end = rawPath.end.map(value => Number(value.toFixed(10))) as unknown as readonly [number, number]
     return [{
       ...style,
+      radius: pixels(style.radius),
+      width: pixels(style.width),
       control,
       d: `M${start.join(',')} Q${control.join(',')} ${end.join(',')}`,
       end,

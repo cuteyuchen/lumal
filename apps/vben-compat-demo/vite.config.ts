@@ -1,13 +1,13 @@
 import { fileURLToPath, URL } from 'node:url'
+import { createLumalAliases, createViewportTransformPlugin } from '@lumal/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
-import { createLumalAliases } from '../../packages/vite/src/aliases'
 
 const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
 
 /***********************应用开发配置*********************/
 export default defineConfig(({ command }) => ({
-  plugins: [vue()],
+  plugins: [vue(), createViewportTransformPlugin({ enabled: true, include: ['src/**'], dependencies: ['element-plus'] })],
   server: {
     // 固定端口，便于 vben 兼容层示例稳定联调
     port: 5185,

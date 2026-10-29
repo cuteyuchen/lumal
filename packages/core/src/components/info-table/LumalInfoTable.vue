@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
 import type { InfoTableItem, InfoTableProps } from './types'
+import { getViewportConfig, viewportLength } from '@lumal/viewport'
 import { computed, useTemplateRef } from 'vue'
 
 /***********************属性定义*********************/
@@ -8,7 +9,7 @@ const props = withDefaults(defineProps<InfoTableProps>(), {
   bordered: true,
   columns: 1,
   emptyText: '-',
-  labelWidth: '88px',
+  labelWidth: 88,
 })
 
 /***********************模板引用*********************/
@@ -22,7 +23,7 @@ const tableStyle = computed<CSSProperties>(() => ({
 }))
 
 const labelStyle = computed<CSSProperties>(() => ({
-  width: typeof props.labelWidth === 'number' ? `${props.labelWidth}px` : props.labelWidth,
+  width: typeof props.labelWidth === 'number' ? viewportLength(props.labelWidth) : props.labelWidth,
 }))
 
 /***********************内容格式化*********************/
@@ -48,7 +49,7 @@ defineExpose({
   <dl
     ref="infoTableRef"
     class="lumal-info-table"
-    :class="{ 'lumal-info-table--bordered': bordered }"
+    :class="{ 'is-responsive': !getViewportConfig().enabled, 'lumal-info-table--bordered': bordered }"
     :style="tableStyle"
   >
     <div
@@ -111,11 +112,11 @@ defineExpose({
 }
 
 @media (max-width: 760px) {
-  .lumal-info-table {
+  .lumal-info-table.is-responsive {
     grid-template-columns: 1fr;
   }
 
-  .lumal-info-table__item {
+  .lumal-info-table.is-responsive .lumal-info-table__item {
     grid-column: span 1 !important;
   }
 }

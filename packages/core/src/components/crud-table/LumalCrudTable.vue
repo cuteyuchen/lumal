@@ -11,6 +11,7 @@ import type {
   CrudToolbarSlotProps,
 } from './types'
 import { LumalIcon } from '@lumal/icons-vue'
+import { getViewportConfig, useViewportWidth } from '@lumal/viewport'
 import { ElButton, ElMessageBox } from 'element-plus'
 import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from 'vue'
 import { LumalPagination } from '../pagination'
@@ -117,6 +118,8 @@ const queryRef = useTemplateRef<HTMLElement>('queryRef')
 const queryFormRef = useTemplateRef<SchemaFormExpose>('queryFormRef')
 const dialogFormRef = useTemplateRef<SchemaFormExpose>('dialogFormRef')
 const tableRef = useTemplateRef<SchemaTableExpose>('tableRef')
+const viewport = useViewportWidth()
+const responsive = !getViewportConfig().enabled
 
 /***********************兼容配置归一化*********************/
 const resolvedQuerySchemas = computed(() => props.query?.schemas ?? props.querySchemas)
@@ -150,7 +153,7 @@ const hasToolbarActions = computed(() => showCreate.value || showBatchDelete.val
 const hasToolbarTools = computed(() => showQueryToggle.value || showRefresh.value || showFullscreen.value)
 
 /***********************组合状态*********************/
-const initialMobileViewport = typeof window !== 'undefined'
+const initialMobileViewport = responsive && typeof window !== 'undefined'
   && typeof window.matchMedia === 'function'
   && window.matchMedia('(max-width: 768px)').matches
 const initialQueryVisibility = {
@@ -216,7 +219,9 @@ function updateResponsiveQueryColumns(width: number): void {
   if (props.query?.columns !== undefined || width <= 0) {
     return
   }
-  const columns = width >= 1280 ? 4 : width >= 960 ? 3 : width >= 640 ? 2 : 1
+  // 窄窗口只改变 vw 比例，不因相同设计宽度被压小而切换查询布局。
+  const designWidth = viewport.ratio.value > 0 ? width / viewport.ratio.value : width
+  const columns = designWidth >= 1280 ? 4 : designWidth >= 960 ? 3 : designWidth >= 640 ? 2 : 1
   if (responsiveQueryColumns.value !== columns) {
     responsiveQueryColumns.value = columns
   }
@@ -262,7 +267,7 @@ onMounted(() => {
   if (typeof document !== 'undefined') {
     document.addEventListener('fullscreenchange', handleFullscreenChange)
   }
-  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+  if (responsive && typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
     mobileMediaQuery = window.matchMedia('(max-width: 768px)')
     syncMobileViewport(mobileMediaQuery.matches)
     mobileMediaQuery.addEventListener?.('change', handleMobileViewportChange)
@@ -590,7 +595,7 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="crudRef" class="lumal-crud-table">
+  <div ref="crudRef" class="lumal-crud-table" :class="{ 'is-responsive': responsive }">
     <div
       v-if="hasQuery"
       v-show="queryPanelVisible"
@@ -809,7 +814,7 @@ defineExpose({
       v-model="dialogState.visible.value"
       :title="editorTitle"
       :type="editor?.type ?? 'dialog'"
-      :width="editor?.width ?? (editor?.type === 'drawer' ? 'min(720px, 92vw)' : 'min(920px, calc(100vw - 32px))')"
+      :width="editor?.width ?? (editor?.type === 'drawer' ? 720 : 920)"
       :close-on-click-modal="editor?.closeOnClickModal ?? false"
       :destroy-on-close="editor?.destroyOnClose ?? true"
       :before-close="handleEditorBeforeClose"
@@ -994,13 +999,18 @@ defineExpose({
   padding-top: 12px;
 }
 
+.lumal-crud-table:not(.is-responsive) .lumal-crud-table__query.is-collapsed {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
 @media (min-width: 960px) {
-  .lumal-crud-table__query.is-collapsed {
+  .lumal-crud-table.is-responsive .lumal-crud-table__query.is-collapsed {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
   }
 
-  .lumal-crud-table__query.is-collapsed .lumal-crud-table__query-actions {
+  .lumal-crud-table.is-responsive .lumal-crud-table__query.is-collapsed .lumal-crud-table__query-actions {
     align-self: end;
     white-space: nowrap;
   }
@@ -1033,69 +1043,69 @@ defineExpose({
 
 @media (max-width: 768px) {
   /* 移动端改为内容自然撑开，由外层 LumalContent 滚动，避免 height:100% + overflow:hidden 截断 */
-  .lumal-crud-table {
+  .lumal-crud-table.is-responsive {
     height: auto;
     max-height: none;
     gap: 12px;
     overflow: visible;
   }
 
-  .lumal-crud-table__query {
+  .lumal-crud-table.is-responsive .lumal-crud-table__query {
     gap: 10px;
     padding: 12px;
   }
 
-  .lumal-crud-table__query-form :deep(.lumal-schema-form__row) {
+  .lumal-crud-table.is-responsive .lumal-crud-table__query-form :deep(.lumal-schema-form__row) {
     row-gap: 10px;
   }
 
-  .lumal-crud-table__table-panel {
+  .lumal-crud-table.is-responsive .lumal-crud-table__table-panel {
     flex: 0 0 auto;
     padding: 12px;
   }
 
-  .lumal-crud-table__body {
+  .lumal-crud-table.is-responsive .lumal-crud-table__body {
     flex: 0 0 auto;
     min-height: 0;
   }
 
-  .lumal-crud-table__body :deep(.lumal-schema-table) {
+  .lumal-crud-table.is-responsive .lumal-crud-table__body :deep(.lumal-schema-table) {
     height: auto;
     min-height: 0;
     grid-template-rows: auto auto;
   }
 
-  .lumal-crud-table__body :deep(.lumal-schema-table__scroll) {
+  .lumal-crud-table.is-responsive .lumal-crud-table__body :deep(.lumal-schema-table__scroll) {
     height: auto;
     min-height: 160px;
     max-height: min(56dvh, 480px);
     overflow: auto;
   }
 
-  .lumal-crud-table__query-actions {
+  .lumal-crud-table.is-responsive .lumal-crud-table__query-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .lumal-crud-table__query-actions :deep(.el-button) {
+  .lumal-crud-table.is-responsive .lumal-crud-table__query-actions :deep(.el-button) {
     min-height: 32px;
     margin-left: 0;
   }
 
-  .lumal-crud-table__query-actions :deep([data-action="toggle-query"]) {
+  .lumal-crud-table.is-responsive .lumal-crud-table__query-actions :deep([data-action="toggle-query"]) {
     grid-column: 1 / -1;
   }
 
-  .lumal-crud-table__toolbar :deep(.el-button) {
+  .lumal-crud-table.is-responsive .lumal-crud-table__toolbar :deep(.el-button) {
     min-height: 32px;
     margin-left: 0;
   }
 
-  .lumal-crud-table__toolbar-tools :deep(.el-button) {
+  .lumal-crud-table.is-responsive .lumal-crud-table__toolbar-tools :deep(.el-button) {
     margin-left: 0;
   }
 
-  :global(.lumal-crud-table__dialog.el-dialog) {
+  :global(.lumal-crud-table__dialog.is-responsive.el-dialog) {
     display: flex;
     width: calc(100vw - 24px) !important;
     max-height: calc(100dvh - 24px);
@@ -1103,28 +1113,28 @@ defineExpose({
     margin: 12px auto;
   }
 
-  :global(.lumal-crud-table__dialog .el-dialog__header) {
+  :global(.lumal-crud-table__dialog.is-responsive .el-dialog__header) {
     padding: 12px;
   }
 
-  :global(.lumal-crud-table__dialog .el-dialog__body) {
+  :global(.lumal-crud-table__dialog.is-responsive .el-dialog__body) {
     min-height: 0;
     padding: 12px;
     overflow-y: auto;
   }
 
-  :global(.lumal-crud-table__dialog .el-dialog__footer) {
+  :global(.lumal-crud-table__dialog.is-responsive .el-dialog__footer) {
     padding: 10px 12px 12px;
   }
 
-  .lumal-crud-table__dialog-footer :deep(.el-button) {
+  .lumal-crud-table.is-responsive .lumal-crud-table__dialog-footer :deep(.el-button) {
     min-height: 32px;
     margin-left: 0;
   }
 }
 
 @media (max-width: 480px) {
-  .lumal-crud-table__dialog-footer :deep(.el-button) {
+  .lumal-crud-table.is-responsive .lumal-crud-table__dialog-footer :deep(.el-button) {
     flex: 1 1 0;
   }
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { LumalLayoutMenuItem } from './types'
 import { LumalIcon } from '@lumal/icons-vue'
+import { getViewportConfig } from '@lumal/viewport'
 import { computed, inject } from 'vue'
 import { routeLocationKey } from 'vue-router'
 import { findMenuTrailByPath, resolveNavigationTarget } from './state/menu-layout'
@@ -121,7 +122,7 @@ const visible = computed(() => items.value.length > 0 && !(props.hideOnlyOne && 
 </script>
 
 <template>
-  <nav v-if="visible" class="lumal-breadcrumb" aria-label="面包屑">
+  <nav v-if="visible" class="lumal-breadcrumb" :class="{ 'is-responsive': !getViewportConfig().enabled }" aria-label="面包屑">
     <ol class="lumal-breadcrumb__list">
       <li v-for="(item, index) in items" :key="`${item.path}:${index}`" class="lumal-breadcrumb__item">
         <LumalIcon
@@ -211,7 +212,7 @@ const visible = computed(() => items.value.length > 0 && !(props.hideOnlyOne && 
 }
 
 @media (max-width: 768px) {
-  .lumal-breadcrumb {
+  .lumal-breadcrumb.is-responsive {
     display: none;
   }
 }

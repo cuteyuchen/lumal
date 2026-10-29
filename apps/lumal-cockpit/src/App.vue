@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { CockpitConfig, CockpitDesignerSavePayload, CockpitViewportMode } from '@lumal/cockpit'
+import type { CockpitConfig, CockpitDesignerSavePayload } from '@lumal/cockpit'
 import { LumalCockpit, LumalCockpitRegion } from '@lumal/cockpit/runtime'
 import { LumalFullScreenContainer } from '@lumal/datav'
 import { LumalIcon } from '@lumal/icons-vue'
+import { viewportLength } from '@lumal/viewport'
 import { ElButton, ElDialog, ElTooltip } from 'element-plus'
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from 'vue'
+import { defineAsyncComponent, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from 'vue'
 import designerTitleImage from './assets/cockpit-designer/dialog-header-bg.png'
 import SceneCenter from './centers/scene-center/Center.vue'
 import CockpitCard from './components/CockpitCard.vue'
@@ -27,40 +28,13 @@ const designerVisible = ref(false)
 const saving = ref(false)
 const saveError = ref<string>('')
 
-// 三种大屏适配 UI 模式：scale 等比缩放 / vwvh 视口铺满 / container 由 @lumal/datav 全屏容器缩放
-type ViewportUiMode = 'scale' | 'vwvh' | 'container'
-
 const activeLayoutId = ref<string | undefined>(config.value.activeLayoutId)
 const fullscreenActive = ref(false)
-const viewportMode = ref<ViewportUiMode>('scale')
 const cockpitRef = useTemplateRef<InstanceType<typeof LumalCockpit>>('cockpitRef')
 const autoRefreshEnabled = ref(true)
 
-// 基准设计尺寸，供全屏容器与画布共用
-const baseWidth = 1920
+// 内容高度不是缩放除数；设计宽度仅在 Vite 插件中配置。
 const baseHeight = 1080
-
-// container 模式下让 LumalCockpit 使用 external（自身不缩放），交由 LumalFullScreenContainer
-const cockpitViewportMode = computed<CockpitViewportMode>(() =>
-  viewportMode.value === 'container' ? 'external' : viewportMode.value,
-)
-const useFullScreenContainer = computed(() => viewportMode.value === 'container')
-
-const viewportModeLabel = computed(() => {
-  const labels: Record<ViewportUiMode, string> = {
-    scale: '等比缩放',
-    vwvh: 'VW/VH 适配',
-    container: '全屏容器缩放',
-  }
-  return labels[viewportMode.value]
-})
-
-// 循环切换三种适配模式
-function cycleViewportMode(): void {
-  const order: ViewportUiMode[] = ['scale', 'vwvh', 'container']
-  const index = order.indexOf(viewportMode.value)
-  viewportMode.value = order[(index + 1) % order.length] ?? 'scale'
-}
 
 function openDesigner(): void {
   designerVisible.value = true
@@ -141,12 +115,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="standalone-app">
-    <!-- container 模式：用 @lumal/datav 全屏容器承担缩放；其它模式透传，由 LumalCockpit 自缩放 -->
-    <component
-      :is="useFullScreenContainer ? LumalFullScreenContainer : 'div'"
-      :class="useFullScreenContainer ? 'standalone-app__stage' : 'standalone-app__passthrough'"
-      v-bind="useFullScreenContainer ? { width: baseWidth, height: baseHeight, mode: 'width' } : {}"
-    >
+    <LumalFullScreenContainer class="standalone-app__stage" :height="baseHeight">
       <LumalCockpit
         ref="cockpitRef"
         v-model:active-layout-id="activeLayoutId"
@@ -157,9 +126,7 @@ onBeforeUnmount(() => {
         :config="config"
         :registry="standaloneCockpitRegistry"
         :theme-mode="THEME_MODE"
-        :base-width="baseWidth"
         :base-height="baseHeight"
-        :viewport-mode="cockpitViewportMode"
         @configure="openDesigner"
       >
         <template #header-title="{ title }">
@@ -202,11 +169,6 @@ onBeforeUnmount(() => {
                 <LumalIcon :name="fullscreenActive ? 'lumal:fullscreen-exit' : 'lumal:fullscreen'" :size="18" />
               </ElButton>
             </ElTooltip>
-            <ElTooltip :content="`切换大屏适配，当前：${viewportModeLabel}`">
-              <ElButton circle aria-label="切换大屏适配模式" @click="cycleViewportMode">
-                <LumalIcon name="lumal:monitor" :size="18" />
-              </ElButton>
-            </ElTooltip>
             <ElTooltip content="打开配置器">
               <ElButton circle data-action="cockpit-configure" aria-label="打开配置器" @click="openDesigner">
                 <LumalIcon name="lumal:settings" :size="18" />
@@ -228,7 +190,7 @@ onBeforeUnmount(() => {
           </RegionCollapse>
         </template>
       </LumalCockpit>
-    </component>
+    </LumalFullScreenContainer>
 
     <div v-if="notice" class="standalone-app__notice" role="alert">
       {{ notice }}
@@ -239,8 +201,8 @@ onBeforeUnmount(() => {
         关闭
       </ElButton>
     </div>
-    <!-- Dialog 位于缩放树之外，浮层坐标始终以真实视口为准。 -->
-    <ElDialog v-model="viewportLabVisible" title="视口实验" width="min(1100px, 94vw)" destroy-on-close append-to-body>
+    <!-- 尺寸为设计值；Teleport/Popper 的定位仍使用浏览器实际像素。 -->
+    <ElDialog v-model="viewportLabVisible" title="视口实验" :width="viewportLength(1100)" destroy-on-close append-to-body>
       <ViewportLab v-if="viewportLabVisible" />
     </ElDialog>
 

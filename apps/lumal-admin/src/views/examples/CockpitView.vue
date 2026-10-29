@@ -3,7 +3,7 @@ import type { CockpitConfig } from '@lumal/cockpit'
 import { createCockpitRegistry } from '@lumal/cockpit/registry'
 import { LumalCockpit, LumalCockpitRegion } from '@lumal/cockpit/runtime'
 import { LumalPage } from '@lumal/core/components'
-import { LumalViewport } from '@lumal/viewport'
+import { viewportLength } from '@lumal/viewport'
 import { ref } from 'vue'
 import MetricWidget from './cockpit/MetricWidget.vue'
 import '@lumal/cockpit/style.css'
@@ -41,28 +41,25 @@ const config: CockpitConfig = {
         <a href="https://lumal.cuteyuchen.top/components/cockpit/runtime" target="_blank" rel="noopener noreferrer">Runtime 接入文档</a>
       </div>
       <div class="embedded-stage">
-        <LumalViewport :policy="{ mode: 'contain', designWidth: 960, designHeight: 540 }">
-          <!-- 唯一缩放责任方为外层 Viewport。 -->
-          <LumalCockpit :config="config" :registry="registry" :theme-mode="theme" :base-width="960" :base-height="540" viewport-mode="external">
-            <template #header-actions>
-              <span>ADMIN WORKSPACE</span>
-            </template>
-            <template #left="{ layout, region }">
-              <LumalCockpitRegion side="left" :layout-id="layout.id" :region="region" />
-            </template>
-            <template #right>
-              <span aria-hidden="true" />
-            </template>
-            <template #center="{ layout }">
-              <!-- 中心是全幅底层；应用自己为覆盖其上的左侧区域预留空间。 -->
-              <div class="embedded-center" :style="{ paddingLeft: `${layout.left.width + 32}px` }">
-                <h2>区域运行态势</h2><div v-for="(value, index) in [72, 96, 83]" :key="value">
-                  <span>{{ ['北区', '东区', '南区'][index] }}</span><meter :value="value" min="0" max="100" />
-                </div>
+        <LumalCockpit :config="config" :registry="registry" :theme-mode="theme" :base-width="960" :base-height="540">
+          <template #header-actions>
+            <span>ADMIN WORKSPACE</span>
+          </template>
+          <template #left="{ layout, region }">
+            <LumalCockpitRegion side="left" :layout-id="layout.id" :region="region" />
+          </template>
+          <template #right>
+            <span aria-hidden="true" />
+          </template>
+          <template #center="{ layout }">
+            <!-- 中心是全幅底层；应用自己为覆盖其上的左侧区域预留空间。 -->
+            <div class="embedded-center" :style="{ paddingLeft: viewportLength(layout.left.width + 32) }">
+              <h2>区域运行态势</h2><div v-for="(value, index) in [72, 96, 83]" :key="value">
+                <span>{{ ['北区', '东区', '南区'][index] }}</span><meter :value="value" min="0" max="100" />
               </div>
-            </template>
-          </LumalCockpit>
-        </LumalViewport>
+            </div>
+          </template>
+        </LumalCockpit>
       </div>
     </LumalPage>
   </main>
@@ -71,7 +68,7 @@ const config: CockpitConfig = {
 <style scoped>
 .cockpit-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; margin-bottom: 16px; }
 select { padding: 6px; background: var(--el-bg-color); color: var(--el-text-color-primary); border: 1px solid var(--el-border-color); }
-.embedded-stage { height: 540px; }
+.embedded-stage { position: relative; height: 540px; overflow: auto; }
 .embedded-stage :deep(.lumal-cockpit) { position: absolute; inset: 0; }
 .embedded-stage :deep([data-cockpit-theme='dark']) {
   --lumal-cockpit-bg: #12232a;

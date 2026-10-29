@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CockpitRegionConfig, CockpitSide } from '../types'
+import { viewportLength } from '@lumal/viewport'
 import { computed } from 'vue'
 import LumalCockpitContainer from './LumalCockpitContainer.vue'
 
@@ -17,7 +18,7 @@ const regionWidth = computed(() => {
   return props.region.columns.reduce((sum, column) => sum + column.width, 0)
 })
 const regionStyle = computed(() => ({
-  width: `calc(${regionWidth.value} * var(--lumal-cockpit-x-unit, 1px) + ${Math.max(0, props.region.columns.length - 1)} * var(--lumal-cockpit-gap-x, 12px))`,
+  width: `calc(${viewportLength(regionWidth.value)} + ${Math.max(0, props.region.columns.length - 1)} * var(--lumal-cockpit-gap-x, ${viewportLength(12)}))`,
 }))
 </script>
 

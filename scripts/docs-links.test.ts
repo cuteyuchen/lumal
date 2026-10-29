@@ -69,7 +69,7 @@ describe('published documentation links', () => {
     })
   })
 
-  it('当前安装文档使用统一发布版本，不再标记为待发布或占位', () => {
+  it('当前安装文档使用统一候选版本，不引用旧版安装命令或占位地址', () => {
     const files = [
       'index.md',
       'guide/essentials/installation.md',
@@ -82,7 +82,7 @@ describe('published documentation links', () => {
     for (const file of files) {
       const content = readFileSync(join(root, 'apps/lumal-docs/src', file), 'utf8')
       expect(content, file).toContain(version)
-      expect(content, file).not.toMatch(/准备版本|尚未执行 npm 发布|发布后使用|包地址占位/)
+      expect(content, file).not.toMatch(/包地址占位/)
       for (const match of content.matchAll(/(?:@lumal\/[\w-]+|lumal-admin)@(0\.0\.\d+-beta)/g))
         expect(match[1], file).toBe(version)
     }
@@ -118,7 +118,7 @@ describe('published documentation links', () => {
     }
   })
 
-  it('十包覆盖表逐一关联实际公共包，运行时文档包含 external', () => {
+  it('十包覆盖表逐一关联实际公共包，运行时文档只有 vw 规则', () => {
     const content = readFileSync(join(root, 'docs/public-package-coverage.md'), 'utf8')
     const rows = [...content.matchAll(/^\| `([^`]+)` \|/gm)].map(match => match[1])
     const packages = readdirSync(join(root, 'packages')).map(directory =>
@@ -126,7 +126,12 @@ describe('published documentation links', () => {
     expect(rows.toSorted()).toEqual(packages.toSorted())
     expect(new Set(rows).size).toBe(rows.length)
     const runtime = readFileSync(join(root, 'apps/lumal-docs/src/components/cockpit/runtime.md'), 'utf8')
-    expect(runtime).toContain('external')
+    expect(runtime).toContain('vw')
+    expect(runtime).not.toMatch(/viewportMode|viewport-mode|vwvh/)
+    const upgrade = readFileSync(join(root, 'docs/upgrade-guide.md'), 'utf8')
+    expect(upgrade).toContain('Vue 模板 style/:style')
+    expect(upgrade).not.toContain('viewport-mode="external"')
+    expect(upgrade).not.toContain('不扫描脚本、模板内联 style')
     expect(readFileSync(join(root, 'apps/lumal-docs/src/.vitepress/config.ts'), 'utf8'))
       .toContain('ignoreDeadLinks: false')
   })

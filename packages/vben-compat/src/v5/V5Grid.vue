@@ -2,10 +2,12 @@
 import type { GridController, NativeTable } from './grid'
 import { LumalPagination, LumalSchemaTable } from '@lumal/core/components'
 import { LumalIcon } from '@lumal/icons-vue'
+import { useViewportWidth } from '@lumal/viewport'
 import { computed, onBeforeUnmount, onMounted, useTemplateRef } from 'vue'
 
 /***********************表格渲染与生命周期*********************/
 const props = defineProps<{ controller: GridController, tableTitle?: string }>()
+const viewport = useViewportWidth()
 const tableRef = useTemplateRef<NativeTable>('tableRef')
 const state = computed(() => props.controller.state.value)
 const grid = computed(() => state.value.gridOptions ?? {})
@@ -36,7 +38,7 @@ onBeforeUnmount(() => props.controller.unmount())
       :loading="controller.loading.value || grid.loading"
       :selection="grid.columns?.some(column => column.type === 'checkbox')"
       :show-column-settings="grid.toolbarConfig?.custom"
-      :table-props="{ border: grid.border, stripe: grid.stripe, height: grid.height === 'auto' ? undefined : grid.height }"
+      :table-props="{ border: grid.border, stripe: grid.stripe, height: grid.height === 'auto' ? undefined : typeof grid.height === 'number' ? viewport.pixels(grid.height) : grid.height }"
       @sort-change="controller.changeSort"
       @selection-change="controller.select"
     >

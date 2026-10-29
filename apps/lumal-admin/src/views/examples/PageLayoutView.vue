@@ -109,5 +109,5 @@ function handleAction(action: string): void {
 </template>
 
 <style scoped lang="scss">
-.layout-region{padding:14px;border:1px dashed var(--el-border-color);border-radius:8px}.layout-region header{display:flex;align-items:center;gap:10px;margin-bottom:12px;color:var(--el-text-color-secondary);font-size:max(var(--lumal-workspace-min-font-size, 0px), calc(var(--lumal-font-size-base, 14px) - 1px))}.layout-region--pagination{width:100%}
+.layout-region{padding:14px;border:1px dashed var(--el-border-color);border-radius:8px}.layout-region header{display:flex;align-items:center;gap:10px;margin-bottom:12px;color:var(--el-text-color-secondary);font-size:calc(var(--lumal-font-size-base, 14px) * 0.92857143)}.layout-region--pagination{width:100%}
 </style>

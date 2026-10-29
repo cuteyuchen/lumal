@@ -74,11 +74,22 @@ export async function verifyScaffoldBrowsers(projects, api, screenshotDirectory)
         await expect(page).toHaveURL(new RegExp(`${deep.replaceAll('/', '\\/')}$`))
         await page.reload()
         await expect(page.getByRole('button', { name: '退出登录', exact: true })).toBeVisible()
+        // 从公开 tarball 消费，验证 Core 静态 CSS 与运行时主题共享消费端设计基准。
+        const designWidth = project.designWidth ?? 1920
+        for (const [width, height] of [[1280, 720], [1366, 768], [1920, 920], [1920, 1080], [2560, 1440]]) {
+          await page.setViewportSize({ width, height })
+          await expect.poll(async () => (await page.locator('.lumal-header').boundingBox()).height).toBeCloseTo(50 * width / designWidth, 1)
+          const rootFont = await page.locator('html').evaluate(element => Number.parseFloat(getComputedStyle(element).fontSize))
+          expect(rootFont).toBeCloseTo(14 * width / designWidth, 1)
+          await expect(page.locator('.lumal-layout')).toHaveCSS('transform', 'none')
+        }
+        await page.setViewportSize({ width: 1280, height: 720 })
         if (project.preset === 'minimal')
           await expect(page.getByRole('tab', { name: '工作台', exact: true })).toHaveCount(0)
         await page.getByRole('button', { name: '切换深色模式', exact: true }).click()
         await expect(page.locator('html')).toHaveClass(/dark/)
         await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(10, 10, 10)')
+        expect(await page.locator('html').evaluate(element => Number.parseFloat(getComputedStyle(element).fontSize))).toBeCloseTo(14 * 1280 / designWidth, 1)
         await page.getByRole('button', { name: '偏好设置', exact: true }).click()
         await expect(page.locator('.el-drawer')).toBeVisible()
         if (project.preset === 'minimal') {

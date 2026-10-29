@@ -81,7 +81,7 @@ function handleRetry(): void {
           </template>
         </LumalSchemaTable>
 
-        <LumalInfoTable :items="tableStateItems" label-width="88px" />
+        <LumalInfoTable :items="tableStateItems" :label-width="88" />
       </div>
     </LumalPage>
   </main>

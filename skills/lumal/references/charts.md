@@ -37,7 +37,7 @@ const options: EChartsOption = {
 </script>
 
 <template>
-  <LumalChart :options="options" height="320px" />
+  <LumalChart :options="options" :height="320" />
 </template>
 ```
 
@@ -48,6 +48,8 @@ const options: EChartsOption = {
 - `useChartResize`：只有直接管理其他图表实例时再使用；不要和 VChart 内置 autoresize 对同一实例重复监听。
 
 ## 重要契约
+
+- 容器 width/height、面板 chartWidth/tableWidth 的数字为设计 px，内部按项目配置输出普通 vw，未启用时为 px；字符串保持 CSS 原义。动态 ECharts 设计尺寸显式用 `useViewportWidth().pixels()`，业务数据和 Canvas 测量不转换。
 
 - 此包的 prop 是 `options`；DataV `LumalCharts` 的 ECharts prop 是 `option`，不要混用。
 - `LumalChart` 的 class/style 留在外层，其余 attrs 和事件交给 VChart。`@click` 是 ECharts 事件，原生 DOM 事件用 vue-echarts 的 `native:` 前缀。

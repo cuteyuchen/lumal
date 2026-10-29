@@ -10,7 +10,7 @@ const layoutTransitionSelector = [
   '.lumal-layout-sidebar-leave-active',
 ].join(',')
 
-test('设置、标签页和移动布局可以完整操作并持久化', async ({ page }) => {
+test('设置和标签页可以完整操作并持久化，窄视口不切换导航', async ({ page }) => {
   await loginAsAdmin(page)
   await openTopMenu(page, '功能示例')
   await page.getByRole('menuitem', { name: 'Chart Panel', exact: true }).click()
@@ -51,7 +51,9 @@ test('设置、标签页和移动布局可以完整操作并持久化', async ({
   await expect(page.getByRole('navigation', { name: '主导航' })).toBeVisible()
 
   await page.setViewportSize({ width: 375, height: 812 })
-  await expect(page.getByRole('button', { name: /菜单|侧边栏/ })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: '主导航' })).toBeVisible()
+  await expect(page.locator('.lumal-layout')).not.toHaveClass(/is-responsive/)
+  await expect(page.locator('.lumal-layout')).toHaveCSS('transform', 'none')
   await expectNoPageOverflow(page)
 })
 
@@ -85,48 +87,34 @@ test('三种布局在 375、768、1024、1440px 下保持导航可用且无页�
       const breadcrumb = page.getByRole('navigation', { name: '面包屑' })
       const desktopSidebar = page.locator('.lumal-layout__desktop-sidebar')
       const primaryNavigation = page.getByRole('navigation', { name: '主导航' })
-      const isMobile = width <= 768
+      await expect(breadcrumb).toBeVisible()
+      await expect(breadcrumb).toContainText('功能示例')
+      await expect(breadcrumb).toContainText('示例详情')
+      await expect(page.locator('.lumal-layout')).not.toHaveClass(/is-responsive/)
+      expect((await page.locator('.lumal-header').boundingBox())!.height).toBeCloseTo(50 * width / 1920, 1)
 
-      if (isMobile) {
-        await expect(breadcrumb).toBeHidden()
-        await expect(desktopSidebar).toBeHidden()
+      if (layout.value === 'sidebar-nav') {
         await expect(primaryNavigation).toBeHidden()
-
-        await page.getByRole('button', { name: '展开侧边栏' }).click()
-        const mobileSidebar = page.locator('.lumal-layout__mobile-sidebar')
-        await expect(mobileSidebar).toBeVisible()
-        await expect(mobileSidebar.locator('.el-sub-menu.is-active')).toContainText('功能示例')
-        await expect(mobileSidebar.locator('.el-menu-item.is-active')).toContainText('示例总览')
-        await page.getByRole('button', { name: '收起侧边栏' }).click()
+        await expect(desktopSidebar).toBeVisible()
+        await expect(page.locator('.lumal-header__breadcrumb .lumal-breadcrumb')).toBeVisible()
+        await expect(page.locator('.lumal-layout__main > .lumal-breadcrumb')).toHaveCount(0)
+        await expect(desktopSidebar.locator('.el-sub-menu.is-active')).toContainText('功能示例')
+        await expect(desktopSidebar.locator('.el-menu-item.is-active')).toContainText('示例总览')
+      }
+      else if (layout.value === 'top-nav') {
+        await expect(primaryNavigation).toBeVisible()
+        await expect(desktopSidebar).toBeHidden()
+        await expect(page.locator('.lumal-header__breadcrumb')).toHaveCount(0)
+        await expect(page.locator('.lumal-layout__main > .lumal-breadcrumb')).toBeVisible()
+        await expect(page.locator('.lumal-top-nav .el-sub-menu.is-active')).toContainText('功能示例')
       }
       else {
-        await expect(breadcrumb).toBeVisible()
-        await expect(breadcrumb).toContainText('功能示例')
-        await expect(breadcrumb).toContainText('示例详情')
-
-        if (layout.value === 'sidebar-nav') {
-          await expect(primaryNavigation).toBeHidden()
-          await expect(desktopSidebar).toBeVisible()
-          await expect(page.locator('.lumal-header__breadcrumb .lumal-breadcrumb')).toBeVisible()
-          await expect(page.locator('.lumal-layout__main > .lumal-breadcrumb')).toHaveCount(0)
-          await expect(desktopSidebar.locator('.el-sub-menu.is-active')).toContainText('功能示例')
-          await expect(desktopSidebar.locator('.el-menu-item.is-active')).toContainText('示例总览')
-        }
-        else if (layout.value === 'top-nav') {
-          await expect(primaryNavigation).toBeVisible()
-          await expect(desktopSidebar).toBeHidden()
-          await expect(page.locator('.lumal-header__breadcrumb')).toHaveCount(0)
-          await expect(page.locator('.lumal-layout__main > .lumal-breadcrumb')).toBeVisible()
-          await expect(page.locator('.lumal-top-nav .el-sub-menu.is-active')).toContainText('功能示例')
-        }
-        else {
-          await expect(primaryNavigation).toBeVisible()
-          await expect(desktopSidebar).toBeVisible()
-          await expect(page.locator('.lumal-header__breadcrumb')).toHaveCount(0)
-          await expect(page.locator('.lumal-layout__main > .lumal-breadcrumb')).toBeVisible()
-          await expect(page.locator('.lumal-top-nav .el-menu-item.is-active')).toContainText('功能示例')
-          await expect(desktopSidebar.locator('.el-menu-item.is-active')).toContainText('示例总览')
-        }
+        await expect(primaryNavigation).toBeVisible()
+        await expect(desktopSidebar).toBeVisible()
+        await expect(page.locator('.lumal-header__breadcrumb')).toHaveCount(0)
+        await expect(page.locator('.lumal-layout__main > .lumal-breadcrumb')).toBeVisible()
+        await expect(page.locator('.lumal-top-nav .el-menu-item.is-active')).toContainText('功能示例')
+        await expect(desktopSidebar.locator('.el-menu-item.is-active')).toContainText('示例总览')
       }
 
       await page.getByRole('button', { name: '打开全局搜索' }).click()
@@ -261,8 +249,9 @@ test('侧栏折叠后仍显示已注册的菜单图标', async ({ page }) => {
 
   const icon = page.locator('.lumal-layout__desktop-sidebar .lumal-sidebar-menu-item__icon .lumal-icon').first()
   await expect(icon).toBeVisible()
-  await expect(icon).toHaveCSS('width', '16px')
-  await expect(icon).toHaveCSS('height', '16px')
+  const box = await icon.boundingBox()
+  expect(box!.width).toBeCloseTo(16 * page.viewportSize()!.width / 1920, 1)
+  expect(box!.height).toBeCloseTo(16 * page.viewportSize()!.width / 1920, 1)
 })
 
 test('混合导航会根据一级菜单子级动态显示和隐藏侧栏', async ({ page }) => {
@@ -350,7 +339,8 @@ test('主题设置页和抽屉共享自适应图标卡片布局', async ({ page 
 
   const panel = page.locator('.lumal-admin-example__theme-panel')
   await expect(panel).toBeVisible()
-  expect(await panel.evaluate(element => element.getBoundingClientRect().width)).toBeGreaterThanOrEqual(340)
+  expect(await panel.evaluate(element => element.getBoundingClientRect().width))
+    .toBeCloseTo(380 * page.viewportSize()!.width / 1920, 1)
 
   await panel.getByRole('tab', { name: '外观', exact: true }).click()
   await expect(panel.locator('.lumal-theme-settings__mode-card .lumal-icon')).toHaveCount(3)

@@ -2,7 +2,7 @@
 
 `@lumal/icons` 的 Vue 3 组件与响应式适配层，提供 `LumalIcon`、`LumalIconPicker`、`LumalIconPickerDialog` 和 `useIconRegistry`。
 
-本文 API 基线为已发布并核验的 `0.0.7-beta`，接入时核对实际安装版本；两个图标包保持同版。
+本文 API 基线为候选 `0.1.0-beta`，尚未发布；两个图标包保持同版，当前使用精确 tarball 验证。
 
 ```vue
 <script setup lang="ts">
@@ -16,6 +16,13 @@ import '@lumal/icons-vue/style.css'
 ```
 
 SVG 改色、渐变、合成、Data URI 和注册表等纯 TypeScript 能力由 `@lumal/icons` 提供。
+
+## 未发布：数值尺寸协作
+
+`LumalIcon` 的数字 `size` 通过 `viewportLength` 输出普通 vw（未开启时为 px），
+默认仍等效 Npx，不依赖 `@lumal/viewport`。宿主显式提供单位时，与文字、Header 和侧栏一起适配。
+字符串 `size="20px"`、`size="1em"` 等保持原样；需要固定像素时传字符串。
+整页模式由应用管理根单位，局部画布与 Teleport 的边界见 `docs/screen-viewport-guide.md`。
 
 ## 选择器布局
 

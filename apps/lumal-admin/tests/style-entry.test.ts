@@ -1,4 +1,5 @@
 import { readdir, readFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import { join } from 'node:path'
 
 interface StyleSource {
@@ -29,10 +30,22 @@ describe('lumal admin style entry', () => {
   it('会显式导入 Lumal 组件样式和主题样式', async () => {
     const mainTs = await readFile(join(process.cwd(), 'src/main.ts'), 'utf8')
 
-    expect(mainTs).toContain('import \'@lumal/core/theme-chalk/index.scss\'')
+    expect(mainTs).toContain('import \'./styles/element-plus\'')
     expect(mainTs).toContain('import \'@lumal/core/style.css\'')
     expect(mainTs).toContain('import \'@lumal/icons-vue/style.css\'')
     expect(mainTs).toContain('import \'./styles.scss\'')
+    expect(mainTs).toContain('from \'@lumal/core/minimal\'')
+    expect(mainTs).not.toContain('components: false')
+  })
+  it('独立 CSS 清单与 Core 主题一致，不能漏掉菜单、弹窗等组件样式', async () => {
+    const coreTheme = await readFile(createRequire(import.meta.url).resolve('@lumal/core/theme-chalk/index.scss'), 'utf8')
+    const appTheme = await readFile(join(process.cwd(), 'src/styles/element-plus.ts'), 'utf8')
+    const components = [...coreTheme.matchAll(/@import "(element-plus\/theme-chalk\/[^"]+\.css)"/g)]
+      .map(match => match[1]!)
+    expect(components).not.toHaveLength(0)
+    for (const component of components)
+      expect(appTheme).toContain(`import '${component}'`)
+    expect(appTheme).not.toContain('element-plus/dist/index.css')
   })
 
   it('会注册 authority 与 permission 应用级权限指令', async () => {
@@ -51,9 +64,9 @@ describe('lumal admin style entry', () => {
     expect(appVue).toContain(':cache="routeViewCache"')
   })
 
-  it('可见文本字号会统一消费全局字号令牌', async () => {
+  it('偏好字号继续使用 token，普通 px 适配示例不要求业务尺寸协议', async () => {
     const sources = await readStyleSources(join(process.cwd(), 'src'))
-    const violations = sources.flatMap(({ path, source }) => (
+    const violations = sources.filter(({ path }) => !/[\\/]examples[\\/](?:viewport[\\/]|ViewportView\.vue)/.test(path)).flatMap(({ path, source }) => (
       [...source.matchAll(/font-size\s*:\s*([^;}\r\n]+)/g)]
         .filter(match => match[1]?.includes('px') && !match[1].includes('var(--lumal-font-size-base'))
         .map(match => `${path}:${source.slice(0, match.index).split(/\r?\n/).length}:${match[0]}`)
@@ -61,5 +74,7 @@ describe('lumal admin style entry', () => {
 
     expect(violations).toEqual([])
     expect(sources.some(({ source }) => source.includes('var(--lumal-font-size-base, 14px)'))).toBe(true)
+    const example = sources.find(({ path }) => path.endsWith('ViewportCanvas.vue'))!.source
+    expect(example).toContain('font-size: 14px; line-height: 20px')
   })
 })

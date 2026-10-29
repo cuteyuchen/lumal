@@ -17,6 +17,52 @@ describe('release dependency graph', () => {
     expect(() => verifyReleaseWorkflows(readWorkflows(), scripts)).not.toThrow()
   })
 
+  it.each(['ci.yml', 'build-validation.yml'])('%s 同时验证 PR 与可能存在合并冲突的候选 HEAD', (file) => {
+    const workflows = readWorkflows()
+    workflows[file].on.push.branches = ['master']
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('候选分支 HEAD')
+    workflows[file].on.push.branches.push('codex/pure-vw-unification')
+    delete workflows[file].on.pull_request
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow()
+  })
+
+  it.each([
+    ['ci.yml', 'check'],
+    ['build-validation.yml', 'demo-production'],
+    ['build-validation.yml', 'viewport-consumer'],
+  ])('%s/%s 两平台完整运行且不相互取消', (file, name) => {
+    const workflows = readWorkflows()
+    const job = workflows[file].jobs[name]
+    job.strategy.matrix.os = ['ubuntu-latest']
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('Windows')
+    job.strategy.matrix.os = ['ubuntu-latest', 'windows-latest']
+    job.strategy['fail-fast'] = true
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('另一平台失败')
+  })
+
+  it.each([
+    ['ci.yml', 'check'],
+    ['build-validation.yml', 'validate'],
+    ['build-validation.yml', 'viewport-consumer'],
+    ['build-validation.yml', 'demo-production'],
+    ['build-validation.yml', 'datav-visual'],
+  ])('%s/%s 不依赖其他校验结果', (file, name) => {
+    const workflows = readWorkflows()
+    const job = workflows[file].jobs[name]
+    job.needs = ['other-check']
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('独立执行')
+    delete job.needs
+    job.if = 'success()'
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('独立执行')
+  })
+
+  it('tarball 消费者不能再放回生产浏览器之前阻断其运行', () => {
+    const workflows = readWorkflows()
+    workflows['build-validation.yml'].jobs['demo-production'].steps
+      .push({ run: 'pnpm test:vite-consumer' })
+    expect(() => verifyReleaseWorkflows(workflows, scripts)).toThrow('独立于 Demo')
+  })
+
   it('普通 PR 必须包含两平台完整 Cockpit 构建和生产浏览器，不能只构建公共包', () => {
     const workflows = readWorkflows()
     const job = workflows['build-validation.yml'].jobs['demo-production']
@@ -132,7 +178,8 @@ describe('release dependency graph', () => {
     ['ci.yml', 'check', 'format:check'],
     ['release-gate.yml', 'windows-check', 'format:check'],
     ['release-gate.yml', 'windows-check', 'test:vite-consumer'],
-    ['build-validation.yml', 'demo-production', 'test:vite-consumer'],
+    ['build-validation.yml', 'demo-production', '--filter @lumal/vite build'],
+    ['build-validation.yml', 'viewport-consumer', 'test:vite-consumer'],
     ['build-validation.yml', 'validate', 'test:create-projects'],
     ['build-validation.yml', 'validate', 'test:viewport'],
   ])('%s 不能移除或容错 %s/%s', (file, jobName, command) => {

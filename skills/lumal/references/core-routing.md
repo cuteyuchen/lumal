@@ -76,6 +76,10 @@ const menus = createMenuRouteRuntime({
 
 `LumalLayout` 接收完整 `menus` 和 `preferences`。`sidebar-nav/top-nav/mixed-nav` 由偏好驱动，应用不必另造顶栏/侧栏菜单状态。
 
+Layout/Tabs 的 `responsive?:boolean` 默认取项目 vw 开关反值；
+开启 vw 保持桌面编排，关闭时保留原响应式断点。
+Header、侧栏和菜单设计尺寸由内部工具按项目设计宽度输出普通 vw，未开启时输出 px。
+
 启用 `route-driven` 后，让 Layout 管理访问标签；用 `fixed-tabs`、`route-tab-filter`、`route-tab-resolver` 扩展，不再维护第二份标签数组。
 
 缓存接线示意，`viewKey` 和 `cacheKeys` 必须使用同一套 `path:version` 规则：
@@ -111,8 +115,8 @@ const menus = createMenuRouteRuntime({
 身份切换后更新授权，并通过 Router 的 `replace({ path: current.fullPath, force: true })`
 重新检查当前路由；仅改变菜单不能阻止当前已打开页面继续显示。
 
-尺寸适配与权限分离。页面可用 [视口](viewport.md) 的包装器读取应用自有路由元信息，
-System页关闭适配；不要把整个 Admin DOM 根 transform，也不要让大屏变量污染后台浮层。
+尺寸适配与权限分离。通过构建文件/选择器范围选择全局或局部使用，
+不能靠路由开关撤回已编译 vw；不使用页面包装器或整页 transform。
 
 完整接线可核对 `packages/create-lumal-admin/templates/base/src/{App.vue,router/index.ts}` 或
 `apps/lumal-admin/src/App.vue`；以消费项目的用户/权限适配为准，不照搬 Demo 业务。

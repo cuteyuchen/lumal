@@ -3,6 +3,7 @@ import type { SchemaFormItem, SchemaFormModel } from '@lumal/core/components';
 import type { Option } from '../../../../shared/api';
 import type { User } from '../types';
 import { LumalSchemaForm } from '@lumal/core/components';
+import { viewportLength } from '@lumal/viewport';
 import { ElAlert, ElDialog, ElMessage } from 'element-plus';
 import { computed, shallowRef, watch } from 'vue';
 import { service } from '../../../../app/services/session';
@@ -76,7 +77,7 @@ async function save(values: SchemaFormModel): Promise<void> {
   <ElDialog
     v-model="visible"
     :title="batch ? '批量分配角色' : '分配角色'"
-    width="min(520px, 94vw)"
+    :width="viewportLength(520)"
     append-to-body
     :close-on-click-modal="!saving"
   >

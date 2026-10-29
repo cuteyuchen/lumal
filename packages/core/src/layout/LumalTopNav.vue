@@ -2,6 +2,7 @@
 import type { ComponentPublicInstance, CSSProperties } from 'vue'
 import type { LumalLayoutMenuItem } from './types'
 import { LumalIcon } from '@lumal/icons-vue'
+import { viewportLength } from '@lumal/viewport'
 import { ElMenu, ElMenuItem } from 'element-plus'
 import { computed, useTemplateRef } from 'vue'
 import LumalMenuBadge from './LumalMenuBadge.vue'
@@ -63,7 +64,7 @@ function resolveFlatMenuAttrs(item: LumalLayoutMenuItem): Record<string, unknown
       }
 }
 const menuStyle = computed<CSSProperties>(() => ({
-  '--lumal-top-nav-max-width': typeof props.maxWidth === 'number' ? `${props.maxWidth}px` : props.maxWidth,
+  '--lumal-top-nav-max-width': typeof props.maxWidth === 'number' ? viewportLength(props.maxWidth) : props.maxWidth,
 }))
 
 function handleSelect(path: string): void {

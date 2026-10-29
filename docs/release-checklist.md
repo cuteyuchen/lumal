@@ -7,7 +7,8 @@
 公共包统一版本，私有应用保留 `0.0.0`，只更新内部依赖。历史九包 `0.0.3-beta`、`0.0.4-beta`、`0.0.5-beta` 均已发布，完整门禁、registry 与实际 tarball 核验见 [历史发布记录](./npm-release-0.0.5-beta.md)。
 `@lumal/viewport` 自 `0.0.6-beta` 加入十包集合；该版已发布并完成 registry 与同次发布产物核验，见 [历史发布记录](./npm-release-0.0.6-beta.md)。
 `0.0.7-beta` 已完成正式门禁、registry、同次发布产物及六类 registry 消费者核验，
-见 [本版发布记录](./npm-release-0.0.7-beta.md)。正式 npm 发布时未启用生产部署；后置站点恢复单独记录。
+见 [历史发布记录](./npm-release-0.0.7-beta.md)。正式 npm 发布时未启用生产部署；后置站点恢复单独记录。
+当前破坏性纯 vw 候选为 `0.1.0-beta`，尚未发布，不因创建 PR 或通过 CI 自动获得合并、发包和部署授权。
 已发布版本不能用于新的全量发布；部分可见也不得重发。下一次正式发布前仍须逐包查询 registry，任一已有版本或网络异常都应中断。
 
 ```bash
@@ -22,7 +23,7 @@ pnpm release:verify
 - 将 pending Changeset 汇总进每个公共包 CHANGELOG，确认完整后移除已消费记录；本轮不运行标准 `changeset:version`，避免把 beta 序列变为稳定版 `0.1.0`。
 - 更新 `docs/changelog.md`、路线图基线、文档导航、安装命令和脚手架说明；历史版本与验收证据保留。
 - 保留脚手架源码的三个版本占位符；`pnpm build` 时按脚手架 package.json 注入精确版本，再用 `pnpm test:create-consumer` 验证 tarball 的 minimal/request、local、HTTP 三种消费路径。
-- 以空 Changeset 注明变更已手工汇总（本轮为 `prepared-0-0-7-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。历史 `prepared-0-0-6-beta.md` 保留原发布语境。
+- 以空 Changeset 注明变更已手工汇总（当前候选为 `prepared-0-1-0-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。历史 `prepared-0-0-7-beta.md` 与 `prepared-0-0-6-beta.md` 保留原发布语境。
 
 唯一发布入口是 `release-gate.yml`：`v*` tag 或手动运行。手动运行默认 `dry_run=true`，只执行校验；分支上不能以 `dry_run=false` 发包。真实运行必须选择版本相符且指向当前 HEAD 的 tag。含预发布后缀的 tag 使用 `beta`，稳定版使用 `latest`。
 
@@ -57,15 +58,22 @@ tag / workflow_dispatch (默认 dry_run=true)
 
 `DEPLOY_PRODUCTION` 只收紧部署条件，不能越过任一门禁或 npm 成功依赖；`dry_run=true` 时无论该变量为何值都不发包、不部署。
 
-普通 CI 继续运行 lint/单测/类型/构建/边界，增加发布图与 actionlint；Build Validation 保留独立脚手架消费者校验。`deployment-artifacts.yml` 仅构建产物，不访问云部署。
+普通 CI 在 Ubuntu / Windows 独立运行 lint/格式/单测/类型/构建/边界，Ubuntu 另执行 actionlint；
+Build Validation 的双平台 Vite tarball、脚手架消费者、双平台生产浏览器及 Windows DataV 视觉作业互不依赖，
+所有跨平台矩阵均关闭 fail-fast。Vite tarball 消费者不再作为生产浏览器作业的前置步骤，仍保留两平台覆盖。
+`deployment-artifacts.yml` 仅构建产物，不访问云部署。
 
-当前版本的 `release:check` 不允许遗漏 `format:check`、`test:vite-consumer`、
+`codex/pure-vw-unification` 的 push 也直接触发上述检查，避免 PR 存在合并冲突时没有测试结果。
+此时验证的是候选分支 HEAD，不代表已经验证与 master 合并后的代码；处理冲突后仍须重新通过 PR 检查。
+创建 PR 和运行校验不授权合并、创建版本 tag、发布 `0.1.0-beta` 或部署生产。
+
+当前候选源码的 `release:check` 不允许遗漏 `format:check`、`test:vite-consumer`、
 `test:create-projects` 或 `test:viewport`；普通 PR 的 Build Validation 同样必须执行独立 tarball 消费检查，
 Windows校验同样检查模板格式；`release-safety.test.mjs` 用移除/容错变体保护这些门禁。
 Ubuntu的生成器单测包含原有Linux PTY交互，不能以Windows执行替代其实际结果。
 新模板、Screen可选能力及真实缩放的报告/截图随消费者artifact上传，不需要发布权限。
 
-CI 的 Linux PTY 与发布门禁的 Windows PTY 输出始终单独上传 `output/release/cli-terminal/`，缺失附件报错，
+CI 两平台及发布门禁的 Windows PTY 输出始终单独上传 `output/release/cli-terminal/`，缺失附件报错，
 不能只用测试总数作为跨平台交互证据。Build Validation 的 Windows DataV job 和发布 Windows job
 复用原 `pnpm test:datav:visual --repeat-each=3`；禁止 `only`、重试、跳过或容错，
 不在 CI 更新 golden。当前基准为 Windows Chromium，不能拿来冒充 Linux 像素基准。
@@ -156,11 +164,11 @@ pnpm release:workflows
 
 只做代码验收时可以单独执行非浏览器命令，但必须注明“E2E 未验证”；不得据此声明完整 `release:check` 通过。
 
-`pnpm test:vite-consumer` 从当前源码重建 Viewport / Vite 并打包，在独立 Vue 项目中先安装生成锁文件，
+`pnpm test:vite-consumer` 从候选源码重建 Viewport / Vite 并打包，在独立 Vue 项目中先安装生成锁文件，
 再 frozen 复装，验证 ESM/CJS、类型、SSR、CSS/SCSS、Vue 行内样式、来源边界、Source Map、
 幂等性及 Dev/Build 产物一致性。它不启动浏览器，结果写入 `output/release/vite-viewport-report.json`；
 不能据此声称地图点击、浮层位置、Canvas 或真实浏览器缩放已通过。
-修改这两个包或共享设计模板后，应使用同一提交重新构建受影响的 Admin/Cockpit，
+修改这两个包或共享设计模板后，应使用同一候选提交重新构建受影响的 Admin/Cockpit，
 分别执行既有生产 E2E、视口消费者与原体积预算，保留未执行、失败和环境阻塞，不以历史产物替代联合验收。
 
 ## 发包 dry-run

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { SchemaFormItem, SchemaFormModel } from '@lumal/core/components';
 import { LumalSchemaForm } from '@lumal/core/components';
+import { viewportLength } from '@lumal/viewport';
 import { ElAlert, ElDialog } from 'element-plus';
 
 /***********************编辑弹窗契约*********************/
@@ -14,7 +15,7 @@ const model = defineModel<SchemaFormModel>('model', { required: true });
   <ElDialog
     v-model="visible"
     :title="title"
-    width="min(760px, 94vw)"
+    :width="viewportLength(760)"
     append-to-body
     destroy-on-close
     :close-on-click-modal="!saving"

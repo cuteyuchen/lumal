@@ -17,7 +17,7 @@
 下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm add @lumal/cockpit@0.0.7-beta @lumal/core@0.0.7-beta @lumal/icons-vue@0.0.7-beta vue@^3.5 element-plus@^2.11 @iconify/vue@^5
+pnpm add @lumal/cockpit@0.1.0-beta @lumal/core@0.1.0-beta @lumal/icons-vue@0.1.0-beta vue@^3.5 element-plus@^2.11 @iconify/vue@^5
 ```
 
 可视化组件按需另装 `@lumal/datav`。
@@ -69,7 +69,6 @@ import '@lumal/cockpit/style.css'
     v-model:active-layout-id="activeLayoutId"
     :config="config"
     :registry="registry"
-    :viewport-mode="viewportMode"
   >
     <template #header-title="{ title }">
       <AppHeader :title="title" :layouts="config.layouts" />
@@ -82,9 +81,8 @@ import '@lumal/cockpit/style.css'
 </template>
 ```
 
-- `viewportMode="scale"`：1920×1080 等比缩放
-- `viewportMode="vwvh"`：VW/VH 适配
-- `viewportMode="external"`：外层 Viewport / DataV 容器负责缩放，内部不再缩放
+- 唯一vw规则：数字面板/列宽/间距是设计px，内部按项目D换算。
+- baseHeight仅为内容高度，高度不足滚动；不整画布transform，与DataV嵌套不增加比例。
 - 同 type 可多实例（独立 `instanceId`）；Tab 切换保留实例状态
 - 布局导航由应用负责
 

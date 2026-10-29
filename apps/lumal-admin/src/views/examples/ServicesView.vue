@@ -143,7 +143,7 @@ function clearDemoToken(): void {
         </ElButton>
       </div>
 
-      <LumalInfoTable :items="resultItems" :columns="4" label-width="86px" empty-text="-" />
+      <LumalInfoTable :items="resultItems" :columns="4" :label-width="86" empty-text="-" />
     </LumalPage>
     <div class="service-grid">
       <LumalPage title="Permission" description="使用当前登录账号的标准 permissions / roles 做实时判断。">
@@ -181,15 +181,15 @@ function clearDemoToken(): void {
           </ElButton><ElButton @click="clearDemoToken">
             清除
           </ElButton>
-        </div><LumalInfoTable :items="[{ label: '当前应用会话', value: adminSession.isAuthenticated() ? '已认证' : '未认证' }, { label: '隔离策略', value: 'lumal-example:token' }]" label-width="100px" />
+        </div><LumalInfoTable :items="[{ label: '当前应用会话', value: adminSession.isAuthenticated() ? '已认证' : '未认证' }, { label: '隔离策略', value: 'lumal-example:token' }]" :label-width="100" />
       </LumalPage>
       <LumalPage title="Request 能力矩阵" description="请求客户端保持 Fetch 语义，覆盖缓存、重复提交、刷新重放与错误分类。">
-        <LumalInfoTable :items="[{ label: '响应适配', value: '标准数据 / 分页 adapter' }, { label: '凭据注入', value: 'Authorization Bearer' }, { label: '会话刷新', value: '单飞刷新 + 一次安全重放' }, { label: '异常分类', value: 'HTTP / network / timeout / business' }, { label: '演示请求数', value: requestCount }, { label: '最近错误', value: errorKind }]" :columns="2" label-width="100px" />
+        <LumalInfoTable :items="[{ label: '响应适配', value: '标准数据 / 分页 adapter' }, { label: '凭据注入', value: 'Authorization Bearer' }, { label: '会话刷新', value: '单飞刷新 + 一次安全重放' }, { label: '异常分类', value: 'HTTP / network / timeout / business' }, { label: '演示请求数', value: requestCount }, { label: '最近错误', value: errorKind }]" :columns="2" :label-width="100" />
       </LumalPage>
     </div>
   </main>
 </template>
 
 <style scoped lang="scss">
-.service-actions,.service-field,.tag-list{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.service-actions{margin-bottom:16px}.service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.service-field{margin:14px 0}.service-field .el-select,.service-field .el-input{width:210px}.tag-list{max-height:150px;overflow:auto}.token-box{display:block;padding:12px;border-radius:6px;background:var(--el-fill-color-light);word-break:break-all}@media(max-width:900px){.service-grid{grid-template-columns:1fr}}
+.service-actions,.service-field,.tag-list{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.service-actions{margin-bottom:16px}.service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.service-field{margin:14px 0}.service-field .el-select,.service-field .el-input{width:210px}.tag-list{max-height:150px;overflow:auto}.token-box{display:block;padding:12px;border-radius:6px;background:var(--el-fill-color-light);word-break:break-all}@media(max-width:900px){:global(html:has(.lumal-layout.is-responsive, .public-layout.is-responsive)) .service-grid{grid-template-columns:1fr}}
 </style>

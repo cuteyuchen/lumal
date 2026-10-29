@@ -39,8 +39,8 @@ export function createViewportCssTransformer(options: ViewportTransformOptions) 
       || propertyExcluded(declaration.prop)
       || (!options.customProperties && declaration.prop.startsWith('--'))
       || declaration.prop.startsWith('--lumal-viewport-')
-      || (!options.fontSize && /^(?:font|font-size|line-height)$/i.test(declaration.prop))
-      || (!options.minSize && /^min-(?:width|height|inline-size|block-size)$/i.test(declaration.prop))
+      || (options.fontSize === false && /^(?:font|font-size|line-height)$/i.test(declaration.prop))
+      || (options.minSize === false && /^min-(?:width|height|inline-size|block-size)$/i.test(declaration.prop))
       || excludedDeclaration(declaration)) {
       return
     }
@@ -49,8 +49,13 @@ export function createViewportCssTransformer(options: ViewportTransformOptions) 
     // 整条声明先检查适配信号，不能先把 var()/clamp() 旁的 px 局部转换。
     parsed.walk((node) => {
       if (node.type === 'function') {
-        if (/^(?:var|env|constant|attr|min|max|clamp)$/i.test(node.value))
+        const variable = /^var$/i.test(node.value)
+        const viewportVariable = variable && node.nodes.some(child => child.type === 'word' && child.value.startsWith('--lumal-viewport-'))
+        if (viewportVariable
+          || /^(?:env|constant|attr)$/i.test(node.value)
+          || (!options.variableFallbacks && /^(?:var|min|max|clamp)$/i.test(node.value))) {
           adapted = true
+        }
         if (adapted || /^url$/i.test(node.value))
           return false
       }

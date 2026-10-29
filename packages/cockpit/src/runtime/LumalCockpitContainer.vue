@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CockpitGridColumnConfig, CockpitGridRowConfig, CockpitSide } from '../types'
 import type { CockpitCardTab } from './card'
+import { viewportLength } from '@lumal/viewport'
 import { computed, reactive, ref, watch } from 'vue'
 import { useCockpitRuntimeEnv } from './context'
 import LumalCockpitWidgetHost from './LumalCockpitWidgetHost.vue'
@@ -17,7 +18,7 @@ const props = defineProps<{
 const rowStyle = computed(() => ({ height: `${props.row.height}%` }))
 const gridStyle = computed(() => ({
   gridTemplateColumns: props.columns
-    .map(column => `calc(${column.width} * var(--lumal-cockpit-x-unit, 1px))`)
+    .map(column => viewportLength(column.width))
     .join(' '),
 }))
 const activeTabId = ref<string | undefined>()

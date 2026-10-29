@@ -47,7 +47,7 @@ const page = await request.get<{ items: { id: number }[], total: number }>('/pro
 - 退出/切换上下文调用 `request.clearCache()`；不要把 Token 拼入自定义 cache key，也不要让不同用户共用无身份区分的数据。
 - 旧在途请求在清理后不能重新回填缓存；不要用额外的全局 Map 绕开此生命周期。
 - `clearCache()` 同时解绑共享刷新任务，让新会话不等待旧刷新，但不会自动取消旧网络请求；应用仍须传入会话 signal 并保护刷新结果写入。
-- `0.0.6-beta` 会话隔离：清理/作用域切换后的旧401与旧刷新失败返回 `cancelled/STALE_SESSION`，
+- `0.1.0-beta` 会话隔离：清理/作用域切换后的旧401与旧刷新失败返回 `cancelled/STALE_SESSION`，
   不触发新身份退出。失效通知按会话版本、scope和实际凭据隔离，连续两次失效会话各自能通知。
   仅替换Token也隔离刷新锁、迟到写请求及刷新失败；安全GET可使用更新凭据重放一次，
   退出后不匿名重放。显式或Hook外部Authorization不跟随客户端Token刷新，
@@ -103,5 +103,9 @@ preferences.patch({
 - 优先语义 CSS 变量，不把主题色散落到每个组件。字号范围为 12～20px。
 - `reset()` 恢复偏好，`exportCurrent()` 输出配置；实例释放时 `dispose()` 清理监听。
 - 不假设偏好 Store 提供多语言系统或业务配置存储。
+
+消费端 `@lumal/vite` 开启后，Core 主题 token 自动按同一个设计宽度输出普通 vw；
+初始化、偏好修改和恢复均如此，未开启时输出 px。无需主题长度回调或业务根单位。
+构建转换不受运行时路由开关撤回；局部使用应配置文件/选择器范围。
 
 仓库核对位置：`packages/core/src/{request,auth,dictionary,theme}` 下的公开入口、类型和测试。接口适配示例参考 Admin 的 `src/services`，不要将演示 API 当作通用包契约。

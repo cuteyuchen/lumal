@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ComponentPublicInstance } from 'vue'
+import { getViewportConfig } from '@lumal/viewport'
 import { ElMain } from 'element-plus'
 import { useTemplateRef } from 'vue'
 
@@ -14,7 +15,7 @@ defineExpose({
 </script>
 
 <template>
-  <ElMain ref="contentRef" class="lumal-content">
+  <ElMain ref="contentRef" class="lumal-content" :class="{ 'is-responsive': !getViewportConfig().enabled }">
     <slot />
   </ElMain>
 </template>
@@ -35,13 +36,13 @@ defineExpose({
 }
 
 @media (max-width: 1024px) {
-  .lumal-content {
+  .lumal-content.is-responsive {
     padding: 10px;
   }
 }
 
 @media (max-width: 768px) {
-  .lumal-content {
+  .lumal-content.is-responsive {
     padding: 6px;
   }
 }

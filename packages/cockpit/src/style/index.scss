@@ -32,12 +32,8 @@
   --lumal-cockpit-gap: var(--lumal-cockpit-gap-size, 12px);
   --lumal-cockpit-gap-x: var(--lumal-cockpit-gap);
   --lumal-cockpit-gap-y: var(--lumal-cockpit-gap);
-  --lumal-cockpit-gap-design: 12;
   --lumal-cockpit-radius: var(--lumal-border-radius-base, var(--el-border-radius-base, 8px));
   --lumal-cockpit-header-height: var(--lumal-cockpit-header-size, 72px);
-  --lumal-cockpit-header-height-design: 72;
-  --lumal-cockpit-header-padding-design: 16;
-  --lumal-cockpit-title-size-design: 24;
   --lumal-cockpit-category-height: var(--lumal-cockpit-category-size, 64px);
   --lumal-cockpit-focus-ring: var(--el-color-primary, #409eff);
 }
@@ -46,7 +42,7 @@
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
   color: var(--lumal-cockpit-text);
   background: var(--lumal-cockpit-bg);
 }
@@ -71,38 +67,19 @@
   white-space: nowrap;
 }
 
-/***********************画布缩放*********************/
+/***********************宽度适配内容*********************/
 .lumal-cockpit-canvas {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  overflow: auto;
 
   &__stage {
-    position: absolute;
-    top: 0;
-    left: 0;
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: var(--lumal-cockpit-gap-y);
     padding: var(--lumal-cockpit-gap-y) var(--lumal-cockpit-gap-x);
     box-sizing: border-box;
-    // 使用 transform 缩放，避免频繁重排
-    will-change: transform;
-  }
-
-  &[data-viewport-mode='vwvh'] &__stage {
-    --lumal-cockpit-gap-x: calc(var(--lumal-cockpit-gap-design) * var(--lumal-cockpit-x-unit));
-    --lumal-cockpit-gap-y: calc(var(--lumal-cockpit-gap-design) * var(--lumal-cockpit-y-unit));
-    --lumal-cockpit-header-height: calc(var(--lumal-cockpit-header-height-design) * var(--lumal-cockpit-y-unit));
-
-    will-change: auto;
-  }
-
-  // external：画布不自缩放，stage 铺满父容器，缩放交由外层 LumalFullScreenContainer
-  &[data-viewport-mode='external'] &__stage {
-    width: 100% !important;
-    height: 100% !important;
-    will-change: auto;
   }
 
   &__header {
@@ -110,7 +87,7 @@
     align-items: center;
     gap: var(--lumal-cockpit-gap-x);
     height: var(--lumal-cockpit-header-height);
-    padding: 0 calc(var(--lumal-cockpit-header-padding-design) * var(--lumal-cockpit-x-unit));
+    padding: 0 16px;
     border: 1px solid var(--lumal-cockpit-border);
     border-radius: var(--lumal-cockpit-radius);
     background: var(--lumal-cockpit-title-bg);
@@ -120,7 +97,7 @@
 
   &__title {
     color: var(--lumal-cockpit-title-text);
-    font-size: calc(var(--lumal-cockpit-title-size-design) * var(--lumal-cockpit-x-unit));
+    font-size: 24px;
     font-weight: 600;
 
     h1 {

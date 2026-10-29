@@ -7,13 +7,13 @@ import {
   LumalLayout,
   LumalRouterView,
 } from '@lumal/core/layout'
+import { getViewportConfig } from '@lumal/viewport'
 import { ElConfigProvider } from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import { computed, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeaderActions from './components/app/AppHeaderActions.vue'
 import AppSettingsDrawer from './components/app/AppSettingsDrawer.vue'
-import AppWorkspaceViewport from './components/app/AppWorkspaceViewport.vue'
 import LumalBrand from './components/app/LumalBrand.vue'
 import {
   createAdminSidebarMenus,
@@ -30,7 +30,6 @@ import {
 import { adminTabSnapshotStorageKey, currentUser, logout } from './services/session'
 import { adminSettingsVisible, openAdminSettings } from './services/settings'
 import { runAdminThemeTransition } from './services/theme-transition'
-import { adminViewportMode, resolveAdminWorkspacePolicy } from './services/workspace-viewport'
 
 /***********************基础状态*********************/
 const title = adminAppName
@@ -44,10 +43,6 @@ const cockpitUrl = import.meta.env.VITE_COCKPIT_URL?.trim() || 'https://lumal-co
 const route = useRoute()
 const router = useRouter()
 const isPublicLayout = computed(() => route.meta.layout === 'public')
-const workspacePolicy = computed(() => resolveAdminWorkspacePolicy(
-  adminViewportMode.value,
-  route.meta.workspaceViewport === 'self-managed',
-))
 
 /***********************菜单状态*********************/
 const allMenus = computed(() => currentUser.value ? createAdminSidebarMenus(router) : [])
@@ -191,6 +186,8 @@ function handleTabsChange(tabs: LumalLayoutTabItem[]): void {
   <ElConfigProvider :locale="zhCn">
     <LumalRouterView
       v-if="isPublicLayout"
+      class="public-layout"
+      :class="{ 'is-responsive': !getViewportConfig().enabled }"
       :view-key="routeViewKey"
       :progress="preferences.transition.progress"
       :loading="preferences.transition.loading"
@@ -236,18 +233,16 @@ function handleTabsChange(tabs: LumalLayoutTabItem[]): void {
       </template>
 
       <template #default="{ tabs }">
-        <AppWorkspaceViewport :policy="workspacePolicy" :font-size="preferences.theme.fontSize">
-          <LumalRouterView
-            :view-key="routeViewKey"
-            :cache-keys="tabs.map((tab: LumalLayoutTabItem) => resolveRouteViewKey(tab.path))"
-            :progress="preferences.transition.progress"
-            :loading="preferences.transition.loading"
-            :cache="routeViewCache"
-            :cache-max="preferences.tabbar.maxCount"
-            :transition="preferences.transition.enable"
-            :transition-name="preferences.transition.name"
-          />
-        </AppWorkspaceViewport>
+        <LumalRouterView
+          :view-key="routeViewKey"
+          :cache-keys="tabs.map((tab: LumalLayoutTabItem) => resolveRouteViewKey(tab.path))"
+          :progress="preferences.transition.progress"
+          :loading="preferences.transition.loading"
+          :cache="routeViewCache"
+          :cache-max="preferences.tabbar.maxCount"
+          :transition="preferences.transition.enable"
+          :transition-name="preferences.transition.name"
+        />
 
         <AppSettingsDrawer
           v-model:visible="settingsVisible"

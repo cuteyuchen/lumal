@@ -7,8 +7,8 @@
 ## 项目类型与通用入口
 
 自 `0.0.6-beta` 起在现有包内提供 `create-lumal` bin 和
-`createLumalProject` API，旧 `create-lumal-admin` bin/API/defaults不变。
-当前按已发布并核验的 `0.0.7-beta` 接入；开发未发布源码时使用本地构建和精确 tarball。本地构建后可执行：
+`createLumalProject` API，保留 `create-lumal-admin` bin/API，当前删除旧适配模式参数。
+本页对应尚未发布的 `0.1.0-beta` 候选，使用本地构建和精确 tarball。本地构建后可执行：
 
 ```bash
 node packages/create-lumal-admin/dist/project-cli.js blank-app --template blank --no-interactive
@@ -22,14 +22,16 @@ Screen默认也只有Vue，无API、无认证、无管理布局。
 `--router-mode none|hash|history`分别组合；HTTP认证即使data=none也会联网。
 Local Demo仅开发可用，HTTP失败不能回退演示。
 
-`--visualization none|charts|datav|cockpit`只选所需引擎，Cockpit仅runtime/external，
-DataV数字/边框不安装ECharts。`--viewport disabled|responsive|contain|width|vw`
-与项目类型独立，非默认适配使用 [视口](viewport.md)；Admin不接受Screen专属参数。
+`--visualization none|charts|datav|cockpit`只选所需引擎，Cockpit仅runtime，
+DataV数字/边框不安装ECharts。`--viewport` / `--no-viewport`控制唯一宽度适配，
+Admin/Screen默认开启、Blank关闭；`--design-width`默认1920。Admin不接受Screen认证/数据专属参数。
 非Admin不能叠Admin base，不能靠先生成再删除无用文件实现轻量。
 
-`0.0.7-beta` 的Screen视口模板将设计尺寸和运行时策略集中到根 `viewport.config.ts`，
-供运行时包装器和按需接入的 `@lumal/vite` 共享；不会默认安装构建插件或双重缩放。
-历史 `0.0.6-beta` CLI不包含这项模板调整，依赖升级也不会自动改写已有项目文件。
+开启时根 `viewport.config.ts` 一次配置设计宽度，同版 `@lumal/vite`开发依赖将普通px输出vw，
+自动接线框架动态尺寸，不需要页面包装器、单位变量或每个组件填D。
+字号/有单位行高与最小尺寸同步，细边框/忽略/原子类/第三方保护保留。
+静态Screen不安装Viewport，Blank默认只含Vue；动态设计数字按需使用[数值工具](viewport.md)。
+依赖升级不会自动改写已有项目文件，需按当前纯 vw 接线迁移。
 
 新项目均生成独立ESLint/Prettier/EditorConfig、AI规范和统一check。
 首次install生成lockfile，再frozen复装；完成前运行 `pnpm check`。
@@ -38,22 +40,22 @@ DataV数字/边框不安装ECharts。`--viewport disabled|responsive|contain|wid
 
 ## 命令与版本选择
 
-环境基线：Node.js 22.12+、pnpm 10.33.0。下列命令对应已发布的 `0.0.7-beta`，
-不保证一直是 npm 最新版本；接入前核对 registry 与实际安装的声明。
+环境基线：Node.js 22.12+、pnpm 10.33.0。下列命令对应 `0.1.0-beta` 的公开 API，
+不代表 npm 最新版本；接入前核对 registry 与实际安装的声明。
 开发未发布源码时使用真实 tarball 验证，不用旧 CLI 的 `beta/latest` 标签代替新版能力。
 
 ```bash
-pnpm create lumal-admin@0.0.7-beta my-admin
-pnpm create lumal-admin@0.0.7-beta my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
-pnpm create lumal-admin@0.0.7-beta my-admin-v5 --preset vben-compatible
-pnpm --package=create-lumal-admin@0.0.7-beta dlx create-lumal my-screen --template screen
-pnpm --package=create-lumal-admin@0.0.7-beta dlx create-lumal my-blank --template blank
+pnpm create lumal-admin@0.1.0-beta my-admin
+pnpm create lumal-admin@0.1.0-beta my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
+pnpm create lumal-admin@0.1.0-beta my-admin-v5 --preset vben-compatible
+pnpm --package=create-lumal-admin@0.1.0-beta dlx create-lumal my-screen --template screen
+pnpm --package=create-lumal-admin@0.1.0-beta dlx create-lumal my-blank --template blank
 ```
 
 npm 等价命令：
 
 ```bash
-npm create lumal-admin@0.0.7-beta my-admin -- --api-mode http
+npm create lumal-admin@0.1.0-beta my-admin -- --api-mode http
 ```
 
 CLI 使用 Clack 方向键单选、Space 多选、Enter 确认，摘要确认前不写文件；
