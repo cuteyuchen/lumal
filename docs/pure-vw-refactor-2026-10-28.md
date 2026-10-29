@@ -224,3 +224,15 @@ CodeQL 成功；Build Validation `40822148205` 的两平台 Demo、Vite tarball 
 `LUMAL_PROJECT_CASES=screen-datav,screen-cockpit pnpm test:create-projects` 的两个独立
 tarball 项目完成安装、Lint、格式、类型、单测、构建及七组生产浏览器视口检查。
 这些定向结果不替代修复提交、合并后的 master 和 Release Gate 的完整远端验收。
+
+PR #15 首轮 `342e74c` 的两平台 CI 各 1,238 项、CodeQL、两平台 Vite tarball、
+Windows DataV 视觉、Ubuntu 生产 Demo 和完整消费者（含十四模板与真实 zoom）通过；
+Build Validation `40827176958` 的 Windows Cockpit 浏览器 11 项通过，Cesium 恢复用例
+超过原 90 秒预算，后续 Windows Admin 未执行。未合并此 PR，未运行 Release Gate 或发布。
+原 trace 显示恢复后的 768×512 Canvas 已采样成功（20 色），重复可见性检查耗时约 24 秒，
+截图约 20 秒，切换引擎时触及测试总预算。去掉截图 helper 的重复可见性等待，
+由三个调用方各自确认一次就绪，保留唯一画布、真实像素、错误反馈和退出清理断言；
+不改运行时、视口尺寸、截图范围、预算、超时、重试或跳过规则，须重新完整验证。
+调整后本地 `pnpm test:e2e:cockpit` 从包依赖重新构建，完整 12 项通过（3.2 分钟），
+恢复用例 21.2 秒；另通过 Cockpit 31 项单测、E2E 类型检查和 Lint。
+本地机器与 GitHub Windows 性能不同，不能用此结果代替新提交的完整远端检查。

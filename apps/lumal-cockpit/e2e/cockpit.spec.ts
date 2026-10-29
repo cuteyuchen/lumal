@@ -29,8 +29,7 @@ async function expectFittedStage(page: Page, width: number, height: number): Pro
 }
 
 async function captureCanvas(canvas: Locator, sampleOnly = false): Promise<Buffer> {
-  await expect(canvas).toBeVisible()
-  // 可见性已单独验证，只读取几何数据；不为截图再次解析句柄、滚动并等待元素稳定。
+  // 调用方已验证可见性；这里只读取几何数据，避免软件 GPU 下重复等待同一就绪条件。
   const bounds = await canvas.evaluateAll((elements) => {
     const target = elements[0]
     if (elements.length !== 1 || !target.isConnected)
@@ -81,7 +80,9 @@ test('默认动画、真实画布与 Widget 交互', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { name: '全国智慧运行态势' })).toBeVisible()
   await expect(page.locator('.metric-summary__grid')).toBeVisible()
-  expectCanvasColors(await captureCanvas(page.locator('.echarts-geo-center canvas').first()))
+  const canvas = page.locator('.echarts-geo-center canvas').first()
+  await expect(canvas).toBeVisible()
+  expectCanvasColors(await captureCanvas(canvas))
   await page.getByRole('tab', { name: '区域状态分布', exact: false }).click()
   await expect(page.locator('.status-distribution')).toBeVisible()
   await page.locator('[data-action="collapse-left"]').click()
@@ -159,7 +160,9 @@ test('Cesium 全幅真实像素与退出清理', async ({ page }) => {
   await expect(page.locator('.cesium-center')).toHaveAttribute('aria-busy', 'false')
   await expect(page.locator('.cesium-center [role="alert"]')).toHaveCount(0)
   // 保留默认设计尺寸的全幅采样，但不让软件 GPU 与同步 PNG 解码争用 CPU。
-  const image = await captureCanvas(page.locator('.cesium-widget canvas'))
+  const canvas = page.locator('.cesium-widget canvas')
+  await expect(canvas).toBeVisible()
+  const image = await captureCanvas(canvas)
   await page.getByRole('tab', { name: 'ECharts', exact: true }).click()
   await expect(page.locator('.cesium-widget')).toHaveCount(0)
   expectCanvasColors(image)
