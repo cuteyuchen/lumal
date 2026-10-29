@@ -813,6 +813,8 @@ onBeforeUnmount(() => {
   gap: 5px;
   padding: 0 26px 0 10px;
   border: 0;
+  /* 原生按钮继承主题字体，避免 UA 固定字号绕过 vw 适配。 */
+  font: inherit;
   color: inherit;
   background: transparent;
   cursor: pointer;

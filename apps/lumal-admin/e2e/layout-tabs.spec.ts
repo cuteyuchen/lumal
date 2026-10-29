@@ -93,6 +93,10 @@ test('三种布局在 375、768、1024、1440px 下保持导航可用且无页�
       await expect(breadcrumb).toContainText('示例详情')
       await expect(page.locator('.lumal-layout')).not.toHaveClass(/is-responsive/)
       expect((await page.locator('.lumal-header').boundingBox())!.height).toBeCloseTo(50 * width / 1920, 1)
+      const tab = page.locator('.lumal-tabs__tab').first()
+      const label = tab.locator('.lumal-tabs__label')
+      expect(await tab.evaluate(element => Number.parseFloat(getComputedStyle(element).fontSize))).toBeCloseTo(14 * width / 1920, 1)
+      expect((await label.boundingBox())!.height).toBeLessThanOrEqual((await tab.boundingBox())!.height + 0.5)
 
       if (layout.value === 'sidebar-nav') {
         await expect(primaryNavigation).toBeHidden()
