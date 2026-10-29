@@ -55,7 +55,14 @@ tag / workflow_dispatch (默认 dry_run=true)
 
 `DEPLOY_PRODUCTION` 只收紧部署条件，不能越过任一门禁或 npm 成功依赖；`dry_run=true` 时无论该变量为何值都不发包、不部署。
 
-普通 CI 继续运行 lint/单测/类型/构建/边界，增加发布图与 actionlint；Build Validation 保留独立脚手架消费者校验。`deployment-artifacts.yml` 仅构建产物，不访问云部署。
+普通 CI 在 Ubuntu / Windows 独立运行 lint/格式/单测/类型/构建/边界，Ubuntu 另执行 actionlint；
+Build Validation 的双平台 Vite tarball、脚手架消费者、双平台生产浏览器及 Windows DataV 视觉作业互不依赖，
+所有跨平台矩阵均关闭 fail-fast。Vite tarball 消费者不再作为生产浏览器作业的前置步骤，仍保留两平台覆盖。
+`deployment-artifacts.yml` 仅构建产物，不访问云部署。
+
+`codex/pure-vw-unification` 的 push 也直接触发上述检查，避免 PR 存在合并冲突时没有测试结果。
+此时验证的是候选分支 HEAD，不代表已经验证与 master 合并后的代码；处理冲突后仍须重新通过 PR 检查。
+创建 PR 和运行校验不授权合并、创建版本 tag、发布 `0.1.0-beta.0` 或部署生产。
 
 当前候选源码的 `release:check` 不允许遗漏 `format:check`、`test:vite-consumer`、
 `test:create-projects` 或 `test:viewport`；普通 PR 的 Build Validation 同样必须执行独立 tarball 消费检查，
@@ -63,7 +70,7 @@ Windows校验同样检查模板格式；`release-safety.test.mjs` 用移除/容�
 Ubuntu的生成器单测包含原有Linux PTY交互，不能以Windows执行替代其实际结果。
 新模板、Screen可选能力及真实缩放的报告/截图随消费者artifact上传，不需要发布权限。
 
-CI 的 Linux PTY 与发布门禁的 Windows PTY 输出始终单独上传 `output/release/cli-terminal/`，缺失附件报错，
+CI 两平台及发布门禁的 Windows PTY 输出始终单独上传 `output/release/cli-terminal/`，缺失附件报错，
 不能只用测试总数作为跨平台交互证据。Build Validation 的 Windows DataV job 和发布 Windows job
 复用原 `pnpm test:datav:visual --repeat-each=3`；禁止 `only`、重试、跳过或容错，
 不在 CI 更新 golden。当前基准为 Windows Chromium，不能拿来冒充 Linux 像素基准。

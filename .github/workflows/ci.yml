@@ -1,12 +1,12 @@
 name: CI
 
-# 每次提交只跑轻量检查（lint / test / typecheck / build）。
-# 完整发布门禁（E2E、打包验证、Windows 校验）移到 v* tag 触发的
-# release-gate.yml 统一编排，发包/部署不能独立触发。
+# Ubuntu / Windows 独立执行代码检查；消费者与生产浏览器由 build-validation.yml 负责。
+# 候选分支直接验证 HEAD，不依赖 PR 是否能生成临时合并提交；发包/部署仍只走 Release Gate。
 on:
   push:
     branches:
       - master
+      - codex/pure-vw-unification
   pull_request:
     branches:
       - master
@@ -23,8 +23,12 @@ env:
 
 jobs:
   check:
-    name: Lint / test / typecheck / build
-    runs-on: ubuntu-latest
+    name: Checks / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
       - name: Checkout repository
@@ -55,16 +59,17 @@ jobs:
         run: pnpm release:workflows
 
       - name: Validate Actions syntax
+        if: runner.os == 'Linux'
         run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12 -color
 
       - name: Test
         run: pnpm test
 
-      - name: Upload Linux terminal evidence
+      - name: Upload platform terminal evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cli-terminal-linux-${{ github.sha }}
+          name: cli-terminal-${{ matrix.os }}-${{ github.sha }}
           path: output/release/cli-terminal/
           if-no-files-found: error
           retention-days: 7
