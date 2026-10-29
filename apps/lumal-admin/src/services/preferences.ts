@@ -1,6 +1,7 @@
 import type {
   LumalPreferences,
   LumalPreferencesDefaults,
+  LumalPreferencesVisibility,
   ResolvedThemeMode,
   ThemeRuntimeEnvironment,
 } from '@lumal/core/theme'
@@ -8,6 +9,7 @@ import {
   applyThemePreferences,
   createDefaultPreferences,
   createPreferencesStore,
+  resolvePreferenceVisibility,
 } from '@lumal/core/theme'
 import { createMemoryStorage } from '@lumal/core/utils'
 import { readonly, shallowRef } from 'vue'
@@ -57,7 +59,7 @@ export const adminPreferenceDefaults: LumalPreferencesDefaults = {
   sidebar: {
     collapsed: false,
     enable: true,
-    width: 280,
+    width: 200,
   },
   tabbar: {
     cache: true,
@@ -87,6 +89,12 @@ export const adminPreferenceDefaults: LumalPreferencesDefaults = {
     progress: true,
   },
 }
+
+/***********************偏好功能显隐*********************/
+// 未配置项默认显示；例如 { theme: { mode: false } } 会隐藏主题模式及顶栏切换入口。
+// 主题默认值仍在 adminPreferenceDefaults.theme.mode 设置，显隐配置不写入用户缓存。
+export const adminPreferenceVisibility: LumalPreferencesVisibility = {}
+export const adminResolvedPreferenceVisibility = resolvePreferenceVisibility(adminPreferenceVisibility)
 
 /***********************偏好创建*********************/
 export function createAdminPreferences(): LumalPreferences {

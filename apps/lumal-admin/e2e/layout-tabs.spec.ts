@@ -25,11 +25,12 @@ test('设置和标签页可以完整操作并持久化，窄视口不切换导�
   await page.getByRole('button', { name: '偏好设置' }).click()
   const drawer = page.locator('.lumal-admin-settings-drawer')
   expect(await drawer.evaluate(element => element.getBoundingClientRect().width)).toBeLessThanOrEqual(385)
-  await expect(page.getByText('自定义偏好设置 & 实时预览')).toBeVisible()
+  await expect(drawer.locator('.lumal-admin-settings-drawer__title')).toHaveText('偏好设置')
+  await expect(drawer.getByRole('tablist', { name: '偏好设置分类' })).toBeVisible()
   await page.getByRole('tab', { name: '外观', exact: true }).click()
   await expect(page.locator('.lumal-theme-settings__mode-card .lumal-icon')).toHaveCount(3)
-  await expect(page.locator('.lumal-theme-settings__mode-card > span').last()).toHaveCSS('white-space', 'nowrap')
-  await expect(page.locator('.lumal-theme-settings__color-card > span').first()).toHaveCSS('white-space', 'nowrap')
+  await expect(drawer.getByRole('button', { name: '跟随系统', exact: true })).toBeVisible()
+  await expect(drawer.getByRole('button', { name: '默认蓝', exact: true })).toBeVisible()
   await page.getByRole('button', { name: '深色', exact: true }).click()
   await expect(page.locator('html')).toHaveClass(/dark/)
 
@@ -344,7 +345,7 @@ test('主题设置页和抽屉共享自适应图标卡片布局', async ({ page 
 
   await panel.getByRole('tab', { name: '外观', exact: true }).click()
   await expect(panel.locator('.lumal-theme-settings__mode-card .lumal-icon')).toHaveCount(3)
-  await expect(panel.locator('.lumal-theme-settings__color-card > span').first()).toHaveCSS('white-space', 'nowrap')
+  await expect(panel.getByRole('button', { name: '默认蓝', exact: true })).toBeVisible()
 })
 
 test('系统主题和 reduced-motion 偏好会应用到真实页面', async ({ page }) => {

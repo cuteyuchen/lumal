@@ -26,6 +26,22 @@ await createLumalAdmin({ rootComponent: App }).mount('#app')
 
 详细说明见仓库文档 `docs/core-api.md`。
 
+## 偏好设置显隐
+
+从 `@lumal/core/theme` 导入 `LumalThemeSettingsPanel` 和 `LumalPreferencesVisibility`。
+面板的 `visibility` 可按偏好组或单项控制入口，例如
+`{ theme: { mode: false }, sidebar: false }` 隐藏主题模式与侧边栏设置。
+未配置的功能默认显示，空分组与空页签自动隐藏；`showReset: false` 隐藏恢复默认操作，
+原有 `showLayout` 继续保留。
+
+默认值仍通过 `createPreferencesStore({ defaults })` 与面板的 `defaults` 传入。
+例如 `defaults.theme.mode: 'light'` 配合 `visibility.theme.mode: false`，
+可默认使用浅色且不展示主题模式选项。`defaults` 仅用于无缓存初始化、缺失字段及恢复默认；
+已有缓存值优先，隐藏入口不锁定偏好值。`visibility` 是应用配置，不是 Store 选项，也不进入偏好缓存。
+`resolvePreferenceVisibility` 可将其展开为完整的 `ResolvedPreferenceVisibility`，用于应用自有入口联动。
+
+UI 沿用 Vue、Element Plus 和既有样式入口，不新增依赖；完整 Vue 示例见 `docs/core-api.md` 的 Theme 部分。
+
 ## 纯 vw 接入
 
 在消费项目的 `@lumal/vite` 中启用转换并配置一次 `viewportWidth`。

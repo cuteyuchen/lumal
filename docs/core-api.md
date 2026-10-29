@@ -729,6 +729,10 @@ scope 应为不含Token的会话代次/租户标识，不能重复使用旧会�
 - `applyThemeToElement`
 - `resolveThemeTokens`
 - `defaultThemeState`
+- `LumalThemeSettingsPanel`
+- `resolvePreferenceVisibility`
+- `LumalPreferencesVisibility`（类型）
+- `ResolvedPreferenceVisibility`（类型）
 
 主题运行时支持明暗模式、主题色和紧凑布局，不包含多语言偏好。
 
@@ -758,6 +762,75 @@ preferences.dispose()
 ```
 
 Store 会清理损坏缓存、补齐新增默认字段，并只在主题模式为 `system` 时监听系统主题变化。全局字号限制为 12-20px，会同步 Lumal 和 Element Plus 的字号变量。
+
+### 偏好设置面板
+
+`LumalThemeSettingsPanel` 使用 `v-model:preferences` 接收完整偏好，并通过 `change` 输出更新、
+通过 `reset` 输出恢复后的偏好。相关 props：
+
+- `defaults?: LumalPreferencesDefaults`：恢复默认时使用的应用默认值，应与 Store 的 `defaults` 保持一致。
+- `visibility?: LumalPreferencesVisibility`：控制设置入口显隐，不改变对应偏好值。
+- `showReset?: boolean`：是否显示恢复默认操作，默认 `true`。
+- `showLayout?: boolean`：保留原有布局页签开关，默认 `true`。
+- `colorPresets`：沿用内置主题色选项，也可传入自定义色板。
+
+`visibility` 按 `LumalPreferences` 的组和字段定义：组设为 `false` 隐藏整组，
+如 `sidebar: false`；组内字段设为 `false` 只隐藏该功能，如 `theme: { mode: false }`。
+未配置的组和字段默认显示，空分组及空页签会自动隐藏。
+
+默认使用浅色且不展示主题模式的浏览器端 Vue 示例：
+
+```vue
+<script setup lang="ts">
+import type { LumalPreferencesDefaults, LumalPreferencesVisibility } from '@lumal/core/theme'
+import { createPreferencesStore, LumalThemeSettingsPanel } from '@lumal/core/theme'
+import { computed, onScopeDispose } from 'vue'
+import '@lumal/core/theme-chalk/index.scss'
+import '@lumal/core/style.css'
+import '@lumal/icons-vue/style.css'
+import 'element-plus/theme-chalk/dark/css-vars.css'
+
+/***********************应用配置*********************/
+const defaults: LumalPreferencesDefaults = {
+  theme: { mode: 'light' },
+}
+const visibility: LumalPreferencesVisibility = {
+  theme: { mode: false },
+  sidebar: false,
+}
+
+/***********************偏好状态*********************/
+const store = createPreferencesStore({
+  storage: localStorage,
+  storageKey: 'my-admin:preferences',
+  defaults,
+})
+const preferences = computed({
+  get: () => store.state.value,
+  set: value => store.patch(value),
+})
+onScopeDispose(() => store.dispose())
+</script>
+
+<template>
+  <LumalThemeSettingsPanel
+    v-model:preferences="preferences"
+    :defaults="defaults"
+    :visibility="visibility"
+  />
+</template>
+```
+
+UI 需要已有的 Vue、Element Plus peer 与上述样式，不需要额外依赖。
+`visibility` 是面板和应用入口配置，不是 `createPreferencesStore` 选项，也不会持久化。
+`defaults` 只在无缓存初始化、补齐缺失字段与恢复默认时生效，已有缓存值优先；
+隐藏主题模式不会将已保存的深色模式强制改为浅色，也不是锁定主题的机制。
+
+`resolvePreferenceVisibility(visibility)` 返回完整的 `ResolvedPreferenceVisibility`，
+例如 `resolvePreferenceVisibility(visibility).theme.mode` 可控制应用自有主题切换按钮。
+Admin 将这份配置集中放在 `apps/lumal-admin/src/services/preferences.ts` 的
+`adminPreferenceVisibility`；设置 `theme: { mode: false }` 后，偏好面板和顶栏主题切换入口同步隐藏。
+主题默认值独立在同文件的 `adminPreferenceDefaults.theme.mode` 配置，例如 `'light'`。
 
 候选版本在消费端 `@lumal/vite` 配置一次 `viewportWidth` 后，
 Core 通过 `@lumal/viewport` 自动将字号、布局、间距、圆角和阴影中的设计尺寸写为普通 vw。

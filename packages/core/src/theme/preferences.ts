@@ -1,6 +1,8 @@
 import type {
   LumalPreferences,
   LumalPreferencesDefaults,
+  LumalPreferencesVisibility,
+  ResolvedPreferenceVisibility,
   ResolvedThemeMode,
   ThemeMode,
   ThemeRuntimeEnvironment,
@@ -39,7 +41,7 @@ export function createDefaultPreferences(defaults: LumalPreferencesDefaults = {}
       autoActivateChild: false,
       collapsed: false,
       enable: true,
-      width: 280,
+      width: 200,
     },
     tabbar: {
       cache: true,
@@ -177,6 +179,26 @@ export function resolvePreferenceAvailability(preferences: LumalPreferences): Pr
     sidebarWidth: sidebarEnabled,
     tabbarCache: preferences.tabbar.enable,
   }
+}
+
+/***********************设置入口显隐*********************/
+export function resolvePreferenceVisibility(
+  visibility: LumalPreferencesVisibility = {},
+): ResolvedPreferenceVisibility {
+  return Object.fromEntries(Object.entries(createDefaultPreferences()).map(([section, preferences]) => {
+    const sectionVisibility = visibility[section as keyof LumalPreferences]
+    const featureVisibility = typeof sectionVisibility === 'boolean'
+      ? undefined
+      : sectionVisibility as Record<string, boolean | undefined> | undefined
+
+    return [
+      section,
+      Object.fromEntries(Object.keys(preferences).map(feature => [
+        feature,
+        typeof sectionVisibility === 'boolean' ? sectionVisibility : featureVisibility?.[feature] ?? true,
+      ])),
+    ]
+  })) as ResolvedPreferenceVisibility
 }
 
 /***********************主题模式解析*********************/

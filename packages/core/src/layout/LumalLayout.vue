@@ -955,7 +955,7 @@ defineExpose({
     inset: 0 auto 0 0;
     z-index: var(--lumal-z-drawer);
     display: block;
-    width: min(var(--lumal-sidebar-width, 248px), 84vw) !important;
+    width: min(var(--lumal-sidebar-width, 200px), 84vw) !important;
     box-shadow: var(--lumal-shadow-base);
     transform: translateX(0);
   }

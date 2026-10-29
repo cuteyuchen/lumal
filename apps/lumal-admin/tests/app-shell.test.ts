@@ -120,7 +120,7 @@ describe('app shell', () => {
     expect(wrapper.find('.layout-stub').attributes('data-header-menu-max-width')).toBe('1120')
     expect(wrapper.find('.layout-stub').attributes('data-show-tab-icons')).toBe('true')
     expect(wrapper.find('.layout-stub').attributes('data-show-tab-maximize')).toBe('true')
-    expect(wrapper.find('.layout-stub').attributes('data-sidebar-width')).toBe('280')
+    expect(wrapper.find('.layout-stub').attributes('data-sidebar-width')).toBe('200')
     expect(wrapper.find('.layout-stub').attributes('data-fixed-tab-count')).toBe('1')
     expect(wrapper.find('.layout-stub').attributes('data-fixed-tab-paths')).toBe('/dashboard')
     expect(wrapper.find('.layout-stub').attributes('data-route-driven')).toBe('true')

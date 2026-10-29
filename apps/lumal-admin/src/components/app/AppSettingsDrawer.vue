@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import type { LumalPreferences } from '@lumal/core/theme'
+import type { LumalPreferences, LumalPreferencesDefaults, LumalPreferencesVisibility } from '@lumal/core/theme'
 import { LumalThemeSettingsPanel } from '@lumal/core/theme'
-import { LumalIcon } from '@lumal/icons-vue'
 import { viewportLength } from '@lumal/viewport'
 import { ElDrawer } from 'element-plus'
 import { computed } from 'vue'
 
 /***********************属性定义*********************/
 const props = withDefaults(defineProps<{
-  defaults?: import('@lumal/core/theme').LumalPreferencesDefaults
+  defaults?: LumalPreferencesDefaults
   preferences: LumalPreferences
+  visibility?: LumalPreferencesVisibility
   visible?: boolean
 }>(), {
   visible: false,
@@ -52,19 +52,12 @@ function handleReset(nextPreferences: LumalPreferences): void {
     destroy-on-close
   >
     <template #header>
-      <div class="lumal-admin-settings-drawer__title">
-        <span class="lumal-admin-settings-drawer__title-icon">
-          <LumalIcon name="lumal:settings" :size="18" />
-        </span>
-        <span class="lumal-admin-settings-drawer__title-copy">
-          <strong>偏好设置</strong>
-          <small>自定义偏好设置 &amp; 实时预览</small>
-        </span>
-      </div>
+      <strong class="lumal-admin-settings-drawer__title">偏好设置</strong>
     </template>
     <LumalThemeSettingsPanel
       :defaults="defaults"
       :preferences="preferences"
+      :visibility="visibility"
       @change="handleChange"
       @reset="handleReset"
       @update:preferences="handlePreferencesUpdate"
@@ -75,11 +68,12 @@ function handleReset(nextPreferences: LumalPreferences): void {
 <style lang="scss">
 .lumal-admin-settings-drawer {
   max-width: 100%;
-  background: var(--el-bg-color-page);
+  background: var(--el-bg-color);
 }
 
 .lumal-admin-settings-drawer .el-drawer__header {
   min-height: 64px;
+  flex: none;
   margin: 0;
   padding: 0 16px;
   border-bottom: 1px solid var(--el-border-color-lighter);
@@ -88,48 +82,21 @@ function handleReset(nextPreferences: LumalPreferences): void {
 }
 
 .lumal-admin-settings-drawer .el-drawer__body {
-  height: calc(100% - 64px);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   min-height: 0;
-  padding: 0 12px 12px;
+  padding: 0 16px 16px;
   overflow: hidden;
-  background: var(--el-bg-color-page);
+  background: var(--el-bg-color);
 }
 
 .lumal-admin-settings-drawer__title {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
+  min-width: 0;
   color: var(--el-text-color-primary);
-}
-
-.lumal-admin-settings-drawer__title-icon {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  flex: none;
-  place-items: center;
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 8px;
-  color: var(--el-color-primary);
-  background: var(--el-color-primary-light-9);
-}
-
-.lumal-admin-settings-drawer__title-copy {
-  display: grid;
-  gap: 2px;
-}
-
-.lumal-admin-settings-drawer__title-copy strong {
   font-size: calc(var(--lumal-font-size-base, 14px) * 1.14285714);
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-.lumal-admin-settings-drawer__title-copy small {
-  color: var(--el-text-color-secondary);
-  font-size: calc(var(--lumal-font-size-base, 14px) * 0.78571429);
-  font-weight: 400;
-  line-height: 1.25;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 @media (max-width: 640px) {

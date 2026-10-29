@@ -30,7 +30,9 @@ const DrawerStub = defineComponent({
 const ThemeSettingsPanelStub = defineComponent({
   name: 'LumalThemeSettingsPanel',
   props: {
+    defaults: Object,
     preferences: Object,
+    visibility: Object,
   },
   emits: ['change', 'update:preferences'],
   template: `
@@ -108,6 +110,19 @@ function mountHeaderActions() {
 }
 
 describe('app header actions', () => {
+  it('配置隐藏主题切换时不会影响其他工具入口', async () => {
+    const wrapper = mountHeaderActions()
+    await wrapper.setProps({ showThemeToggle: false })
+
+    expect(wrapper.find('[data-action="toggle-theme"]').exists()).toBe(false)
+    expect(wrapper.find('[data-action="open-settings"]').exists()).toBe(true)
+    expect(wrapper.find('[data-action="open-profile"]').exists()).toBe(true)
+
+    await wrapper.find('[data-action="open-settings"]').trigger('click')
+    expect(wrapper.emitted('openSettings')).toHaveLength(1)
+    expect(wrapper.emitted('toggleTheme')).toBeUndefined()
+  })
+
   it('会展示用户入口并抛出主题切换、设置打开和登出事件', async () => {
     const wrapper = mountHeaderActions()
 
@@ -197,11 +212,34 @@ describe('app settings drawer', () => {
 
     expect(wrapper.find('.el-drawer').attributes('data-title')).toBe('偏好设置')
     expect(wrapper.find('.el-drawer').attributes('data-size')).toBe('384px')
-    expect(wrapper.text()).toContain('自定义偏好设置 & 实时预览')
+    expect(wrapper.find('.lumal-admin-settings-drawer__title').text()).toBe('偏好设置')
 
     await wrapper.find('.theme-panel-stub').trigger('click')
 
     expect(wrapper.emitted('change')?.[0]).toEqual([preferences])
     expect(wrapper.emitted('update:preferences')?.[0]).toEqual([preferences])
+  })
+
+  it('会透传功能显隐配置及偏好默认值', () => {
+    const defaults = { theme: { mode: 'light' as const } }
+    const visibility = { breadcrumb: false, theme: { mode: false } }
+    const wrapper = mount(AppSettingsDrawer, {
+      global: {
+        stubs: {
+          ElDrawer: DrawerStub,
+          LumalThemeSettingsPanel: ThemeSettingsPanelStub,
+        },
+      },
+      props: {
+        defaults,
+        preferences: createAdminPreferences(),
+        visibility,
+        visible: true,
+      },
+    })
+    const panel = wrapper.getComponent(ThemeSettingsPanelStub)
+
+    expect(panel.props('defaults')).toEqual(defaults)
+    expect(panel.props('visibility')).toEqual(visibility)
   })
 })

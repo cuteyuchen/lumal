@@ -75,6 +75,19 @@ export interface LumalPreferences {
 
 export type LumalPreferencesDefaults = DeepPartial<LumalPreferences>
 
+/** 仅控制设置入口显隐，不改变对应的偏好值。 */
+export type LumalPreferencesVisibility = {
+  [Section in keyof LumalPreferences]?: boolean | {
+    [Feature in keyof LumalPreferences[Section]]?: boolean
+  }
+}
+
+export type ResolvedPreferenceVisibility = {
+  [Section in keyof LumalPreferences]: {
+    [Feature in keyof LumalPreferences[Section]]: boolean
+  }
+}
+
 export interface ThemeRuntimeEnvironment {
   document?: Document
   matchMedia?: (query: string) => MediaQueryList

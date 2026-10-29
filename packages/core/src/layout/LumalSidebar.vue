@@ -20,7 +20,7 @@ const props = withDefaults(defineProps<{
   collapsed: false,
   collapsedWidth: 64,
   menus: () => [],
-  width: 280,
+  width: 200,
 })
 
 const emit = defineEmits<{
