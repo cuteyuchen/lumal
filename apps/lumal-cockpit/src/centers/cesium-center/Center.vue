@@ -366,19 +366,21 @@ async function initializeViewer(): Promise<void> {
     })
     viewer = current
     // Worker / WebGL 的错误可能在初始化 Promise 完成后出现，仍需可见回退与重试。
-    const showRuntimeError = () => {
+    const showRuntimeError = (detail: string) => {
       if (!isCurrentViewer(current, currentGeneration))
         return
-      errorMessage.value = 'Cesium 渲染中断，请检查静态资源或 WebGL 支持后重新加载。'
+      errorMessage.value = `Cesium 渲染中断，请检查静态资源或 WebGL 支持后重新加载。${detail ? `（${detail}）` : ''}`
       loading.value = false
       queueMicrotask(() => {
         if (isCurrentViewer(current, currentGeneration))
           destroyViewer()
       })
     }
-    removeRenderError = current.scene.renderError.addEventListener(showRuntimeError)
-    current.scene.canvas.addEventListener('webglcontextlost', showRuntimeError)
-    removeContextLost = () => current.scene.canvas.removeEventListener('webglcontextlost', showRuntimeError)
+    // 保留引擎错误，避免资源、着色器和上下文故障都只留下同一条泛化提示。
+    removeRenderError = current.scene.renderError.addEventListener((_scene, error: Error) => showRuntimeError(error.message))
+    const onContextLost = (event: Event) => showRuntimeError((event as WebGLContextEvent).statusMessage || 'WebGL 上下文丢失')
+    current.scene.canvas.addEventListener('webglcontextlost', onContextLost)
+    removeContextLost = () => current.scene.canvas.removeEventListener('webglcontextlost', onContextLost)
 
     animationStart = JulianDate.now()
     current.clock.startTime = JulianDate.clone(animationStart)

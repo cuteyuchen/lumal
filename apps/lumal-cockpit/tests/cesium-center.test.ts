@@ -11,7 +11,7 @@ const cesiumMocks = vi.hoisted(() => ({
   load: vi.fn(),
   observerDisconnect: vi.fn(),
   requestRender: vi.fn(),
-  renderError: undefined as (() => void) | undefined,
+  renderError: undefined as ((scene: unknown, error: Error) => void) | undefined,
   removeRenderError: vi.fn(),
   viewer: undefined as any,
   viewerDestroy: vi.fn(),
@@ -148,7 +148,7 @@ vi.mock('cesium', () => {
         pick: vi.fn(),
         requestRender: cesiumMocks.requestRender,
         renderError: {
-          addEventListener(callback: () => void) {
+          addEventListener(callback: (scene: unknown, error: Error) => void) {
             cesiumMocks.renderError = callback
             return cesiumMocks.removeRenderError
           },
@@ -225,9 +225,10 @@ describe('cesium 中央地图', () => {
       props: { selectedIds: [], focusedId: '', reducedMotion: true },
     })
     await flushPromises()
-    cesiumMocks.renderError!()
+    cesiumMocks.renderError!(cesiumMocks.viewer.scene, new Error('Framebuffer is incomplete'))
     await flushPromises()
     expect(wrapper.get('[role="alert"]').text()).toContain('Cesium 渲染中断')
+    expect(wrapper.get('[role="alert"]').text()).toContain('Framebuffer is incomplete')
     expect(cesiumMocks.removeRenderError).toHaveBeenCalled()
     expect(cesiumMocks.observerDisconnect).toHaveBeenCalled()
     await wrapper.get('[role="alert"] button').trigger('click')
@@ -235,6 +236,27 @@ describe('cesium 中央地图', () => {
     expect(wrapper.find('[role="alert"]').exists()).toBe(false)
     wrapper.unmount()
   })
+
+  it('上下文丢失显示原因，重试后旧画布不再触发销毁', async () => {
+    const wrapper = mount(CesiumCenter, {
+      props: { selectedIds: [], focusedId: '', reducedMotion: true },
+    })
+    await flushPromises()
+    const originalCanvas = cesiumMocks.viewer.scene.canvas as HTMLCanvasElement
+    originalCanvas.dispatchEvent(new Event('webglcontextlost'))
+    await flushPromises()
+    expect(wrapper.get('[role="alert"]').text()).toContain('WebGL 上下文丢失')
+    expect(cesiumMocks.viewerDestroy).toHaveBeenCalledOnce()
+
+    await wrapper.get('[role="alert"] button').trigger('click')
+    await flushPromises()
+    originalCanvas.dispatchEvent(new Event('webglcontextlost'))
+    await flushPromises()
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    expect(cesiumMocks.viewerDestroy).toHaveBeenCalledOnce()
+    wrapper.unmount()
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     cesiumMocks.clickCallback = undefined

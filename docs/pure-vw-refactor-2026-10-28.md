@@ -236,3 +236,11 @@ Build Validation `40827176958` 的 Windows Cockpit 浏览器 11 项通过，Cesi
 调整后本地 `pnpm test:e2e:cockpit` 从包依赖重新构建，完整 12 项通过（3.2 分钟），
 恢复用例 21.2 秒；另通过 Cockpit 31 项单测、E2E 类型检查和 Lint。
 本地机器与 GitHub Windows 性能不同，不能用此结果代替新提交的完整远端检查。
+
+`e3c7cf6` 的完整消费者、双平台 CI / Vite tarball、CodeQL、Windows DataV 视觉与 Ubuntu
+生产 Demo 通过，Windows 恢复用例也通过（52.7 秒）；但 Build Validation `40830461373`
+的 Cesium resize 用例失败，旧 Canvas 已断开，页面出现“Cesium 渲染中断”，后续 Windows
+Admin 未运行。这不是先前的恢复超时，不能通过增加等待或重试视为解决。
+原日志、截图和 trace 保留在 `output/release/pr15-e3c7-windows-demo/`。
+先保留 Cesium renderError / contextlost 的底层信息并增加错误及旧监听清理回归，
+以便区分真实渲染缺陷与环境错误；尚未确定根因，PR 和发布继续阻断。
