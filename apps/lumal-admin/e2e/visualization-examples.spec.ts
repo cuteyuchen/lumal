@@ -1,7 +1,50 @@
 import { expect, test } from './fixtures'
-import { expectNoPageOverflow, loginAs, loginAsAdmin } from './helpers'
+import { expectNoPageOverflow, loginAs, loginAsAdmin, openTopMenu } from './helpers'
 
 /***********************懒加载示例与真实布局验收*********************/
+test('Header VW 开关真实切换静态样式和动态 token，保留路由及登录态', async ({ page }) => {
+  await loginAsAdmin(page)
+  await page.setViewportSize({ width: 1280, height: 720 })
+  await page.goto('/?comparison=header#/examples/viewport?demo=1')
+  const token = await page.evaluate(() => localStorage.getItem('lumal-admin:token'))
+  expect(token).toBeTruthy()
+  const control = page.getByRole('switch', { name: 'VW 适配', exact: true })
+
+  for (const [index, enabled] of [true, false, true].entries()) {
+    await expect(control).toHaveAttribute('aria-checked', String(enabled))
+    await expect(page.getByTestId('viewport-metrics')).toBeVisible()
+    const ratio = enabled ? 1280 / 1920 : 1
+    await expect.poll(async () => (await page.getByTestId('viewport-probe').boundingBox())!.width).toBeCloseTo(192 * ratio, 1)
+    const typography = await page.getByTestId('viewport-font').evaluate(element => ({
+      font: Number.parseFloat(getComputedStyle(element).fontSize),
+      line: Number.parseFloat(getComputedStyle(element).lineHeight),
+    }))
+    expect(typography.font).toBeCloseTo(14 * ratio, 1)
+    expect(typography.line).toBeCloseTo(20 * ratio, 1)
+    await expect.poll(async () => (await page.locator('.lumal-header').boundingBox())!.height).toBeCloseTo(50 * ratio, 1)
+    const rootFont = await page.locator('html').evaluate(element => element.style.fontSize)
+    expect(rootFont.endsWith(enabled ? 'vw' : 'px')).toBe(true)
+    expect(await page.evaluate(() => localStorage.getItem('lumal-admin:token'))).toBe(token)
+    await expect(page.locator('.lumal-layout')).toHaveCSS('transform', 'none')
+    await page.screenshot({ path: `output/playwright/admin-vw-switch-${enabled ? 'on' : 'off'}.png`, animations: 'disabled' })
+    if (!enabled) {
+      await openTopMenu(page, '工作台')
+      await expect(page).toHaveURL(/\/px\/\?comparison=header#\/dashboard$/)
+      await expect(control).toHaveAttribute('aria-checked', 'false')
+      await page.goBack()
+      await expect(page).toHaveURL(/\/px\/\?comparison=header#\/examples\/viewport\?demo=1$/)
+      await page.reload()
+      await expect(control).toHaveAttribute('aria-checked', 'false')
+      await expect(page.getByTestId('viewport-probe')).toHaveCSS('width', '192px')
+    }
+    if (index < 2) {
+      // Element Plus 的原生 input 负责无障碍状态；鼠标应点击可见的开关轨道。
+      await page.locator('[data-action="toggle-viewport"]').click()
+      await expect(page).toHaveURL(`${new URL(page.url()).origin}${enabled ? '/px/' : '/'}?comparison=header#/examples/viewport?demo=1`)
+    }
+  }
+})
+
 test('Viewport 普通 px 编译为 vw、同宽不同高、容器测量和浮层', async ({ page }) => {
   await loginAsAdmin(page)
   const rootFontSize = await page.locator('html').evaluate(element => element.style.fontSize)

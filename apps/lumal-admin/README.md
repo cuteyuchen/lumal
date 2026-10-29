@@ -9,7 +9,7 @@ Lumal 中后台管理台示例应用，基于 `@lumal/* 0.1.0-beta.0` 公开 API
 - Vue Router 4
 - Element Plus
 - ECharts + vue-echarts（通过 `@lumal/charts`）
-- Lumal 组件库：Core、Charts、Icons / Icons Vue；Viewport 提供轻量默认策略，DataV / Cockpit 仅在对应示例页加载。
+- Lumal 组件库：Core、Charts、Icons / Icons Vue；Viewport 提供宽度数值工具和测量，DataV / Cockpit 仅在对应示例页加载。
 
 ## 本地开发
 
@@ -76,6 +76,19 @@ src/
 | `pnpm build` | 类型检查 + 生产构建（使用各 @lumal 包的 dist） |
 | `pnpm preview` | 预览构建产物 |
 | `pnpm test` | 构建 mock-api 后运行单元测试 |
+
+## Header 的 VW 开关
+
+Header 提供「VW 适配」开关，默认开启。关闭后进入同源 `/px/` 对照入口，
+开启后回到 `/`。切换会重新加载当前路由，保留 URL 查询、登录态和已存储的偏好；
+未保存的表单或组件内存状态不跨重新加载保留，刷新则维持当前入口。
+
+这是 Demo 对比转换开关的能力，不是新增布局模式或对已编译 CSS 的运行时撤销。
+两份入口复用同一源码与 Vite 配置，只有 `enabled` 不同；CSS、行内样式、
+Core 动态 token 及数字工具整体切换，设计宽度仍只在 `vite.config.ts` 配置一次。
+Dev 在同一端口挂载独立的 px 编译管线，`pnpm build` 顺序生成 `dist/` 与 `dist/px/`。
+部署与 preview 必须保留完整 `dist` 目录，不能只复制根入口的 assets。
+此开关仅在 Admin Demo 提供，不改变公共包或脚手架的单一 vw 规则。
 
 ## 构建与联调说明
 

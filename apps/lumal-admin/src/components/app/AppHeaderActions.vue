@@ -10,6 +10,7 @@ import {
 } from 'element-plus'
 import { computed, inject } from 'vue'
 import { useAdminThemeIcon } from '../../composables/use-admin-theme-icon'
+import AppViewportSwitch from './AppViewportSwitch.vue'
 
 /***********************属性定义*********************/
 const props = withDefaults(defineProps<{
@@ -76,6 +77,7 @@ function handleMobileMenuCommand(command: unknown): void {
 
 <template>
   <div class="lumal-admin-header-actions">
+    <AppViewportSwitch />
     <ElButton
       circle
       text

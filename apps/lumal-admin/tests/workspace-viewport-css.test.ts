@@ -9,11 +9,11 @@ import { describe, expect, it } from 'vitest'
 const root = fileURLToPath(new URL('../', import.meta.url))
 const length = (value: number) => `${Number((value / 1920 * 100).toFixed(6))}vw`
 
-async function withAdminServer(check: (server: ViteDevServer) => Promise<void>) {
+async function withAdminServer(check: (server: ViteDevServer) => Promise<void>, viewportEnabled = true) {
   // 加载应用实际配置，避免测试复制一份转换白名单后与消费者接线脱节。
   const server = await createServer({
     root,
-    configFile: resolve(root, 'vite.config.ts'),
+    configFile: resolve(root, viewportEnabled ? 'vite.config.ts' : 'vite.px.config.ts'),
     logLevel: 'silent',
     appType: 'custom',
     server: { middlewareMode: true, hmr: false, watch: null },
@@ -34,6 +34,25 @@ async function style(server: ViteDevServer, path: string, language = 'css') {
 }
 
 describe('纯 vw 的真实 Vite 转换边界', () => {
+  it('关闭入口同步保留 CSS、行内样式与公共主题 px，并关闭运行时换算', async () => {
+    await withAdminServer(async (server) => {
+      expect(server.config.base).toBe('/px/')
+      expect(JSON.parse(server.config.define.__LUMAL_VIEWPORT__)).toEqual({ enabled: false, designWidth: 1920 })
+      const canvas = await style(server, '/src/views/examples/viewport/ViewportCanvas.vue')
+      expect(canvas).toContain('font-size: 14px')
+      expect(canvas).toContain('line-height: 20px')
+      expect(canvas).toContain('gap: 24px')
+      expect(canvas).not.toContain('vw')
+      const header = await style(server, '/src/components/app/AppHeaderActions.vue')
+      expect(header).toContain('width: 44px')
+      const panel = await server.transformRequest('/src/views/examples/ChartPanelView.vue')
+      expect(panel!.code).toContain('160px')
+      const require = createRequire(import.meta.url)
+      const theme = await server.transformRequest(`/@fs/${normalizePath(require.resolve('element-plus/theme-chalk/base.css'))}?direct`)
+      expect(theme!.code).toContain('--el-font-size-base:14px')
+    }, false)
+  }, 30_000)
+
   it('设计尺寸参与转换，物理细边框和媒体断点保持不变', async () => {
     await withAdminServer(async (server) => {
       const dashboard = await style(server, '/src/views/dashboard/DashboardView.vue', 'scss')

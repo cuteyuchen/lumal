@@ -111,6 +111,7 @@ describe('app header actions', () => {
   it('会展示用户入口并抛出主题切换、设置打开和登出事件', async () => {
     const wrapper = mountHeaderActions()
 
+    expect(wrapper.find('[data-action="toggle-viewport"]').exists()).toBe(true)
     expect(wrapper.find('[data-action="toggle-theme"]').exists()).toBe(true)
     expect(wrapper.find('[data-action="toggle-theme"] [data-icon]').attributes('data-icon')).toBe('lumal:sun')
     expect(wrapper.find('[data-action="open-cockpit"]').attributes('href')).toBe('http://localhost:5180/')

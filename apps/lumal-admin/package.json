@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "vue-tsc --noEmit -p tsconfig.json && vite build",
+    "build": "vue-tsc --noEmit -p tsconfig.json && vite build && vite build --config vite.px.config.ts",
     "icons:generate": "node scripts/generate-element-plus-icons.mjs",
     "test": "pnpm --filter lumal-mock-api build:test && vitest run --config vitest.config.ts tests",
     "preview": "vite preview --host 127.0.0.1"

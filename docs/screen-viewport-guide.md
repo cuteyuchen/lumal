@@ -39,6 +39,10 @@ Blank 默认只含 Vue，不强制 Vite 转换包、Viewport、UI 或其他 Luma
 开关与设计宽度为项目级配置。局部 include/exclude 只控制编译来源；
 `frameworkStyles:false` 只关闭框架静态 CSS 接入，不撤销框架动态设计尺寸的项目级换算。
 
+Admin Demo 的 Header 另提供 VW 开关用于对比：它在同源 `/`（启用）与 `/px/`（关闭）
+两份独立编译的入口间重载导航，保留当前 hash 路由和登录存储，不在运行时改写已编译 CSS。
+这只属于 Demo；业务接入仍使用单一构建开关，不需要安装额外模式或提供双份产物。
+
 `frameworkStyles:true` 默认让 Lumal 自有 CSS 与应用一起在消费者构建时转换。
 公共包发布产物仍保留 px，改 D1440也会重新换算。第三方只授权经验证的精确包名，
 不是扫描整个 node_modules。Core 的主题 CSS 保留逐文件来源，未知混合 Sass 没有可靠 map 时跳过并诊断。
