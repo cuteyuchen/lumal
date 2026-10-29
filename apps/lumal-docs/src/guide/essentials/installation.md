@@ -37,7 +37,7 @@ Pinia 是可选 peer；使用 `createPinia()` 时另装 `pinia@^3.0.3`，框架�
 
 只使用 `@lumal/core/minimal` 或 request 等纯服务子入口时，只需安装 Core 和 Vue，无需 Element Plus；消费 UI、图标或 Router 子入口时再安装对应 peer。
 
-`0.1.0-beta.0` 提供 Blank/Screen 模板与仅 Vue peer 的 `@lumal/viewport`，
+当前版本继续提供 Blank/Screen 模板与仅 Vue peer 的 `@lumal/viewport`，
 DataV 的 ECharts peer 为可选；仅 ECharts 图表模式与 `LumalActiveRingChart`
 需要另装 `echarts@^6`。纯数字/边框不需要图表引擎，Blank 默认仅安装 Vue。
 按需依赖见[项目模板](/reference/project-template-guide)及[屏幕适配](/reference/screen-viewport-guide)。

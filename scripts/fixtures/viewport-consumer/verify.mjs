@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { writeFile } from 'node:fs/promises'
+import { realpath, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
 import process from 'node:process'
@@ -12,7 +12,8 @@ import { createSSRApp } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import { assertConsumerPackage } from './assert-consumer-package.mjs'
 
-const root = process.cwd()
+// Windows 短路径和 junction 需要与模块来源统一为真实路径。
+const root = await realpath(process.cwd())
 const require = createRequire(import.meta.url)
 const designWidth = Number(process.env.CONSUMER_DESIGN_WIDTH ?? 1920)
 const options = { enabled: true, include: ['src/screen/**'], viewportWidth: designWidth, fontSize: false, minSize: false }

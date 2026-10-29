@@ -34,7 +34,7 @@ Screen 的认证、请求、路由、可视化和适配选项见 [项目模板](
 minimal 不接受业务模块。
 
 向导使用方向键单选、Space 多选，并在配置摘要确认后写入项目；
-Escape / Ctrl+C 可取消。候选发布核验前使用本地 tarball，不用历史发布包代替新能力。
+Escape / Ctrl+C 可取消。开发未发布源码时使用精确 tarball，不用历史发布包代替新能力。
 TTY 会询问项目目录、npm 名称及未显式指定的选项；CI、非 TTY 和 `--no-interactive`
 不等待输入，默认 `standard/local/hash`。目录与 npm 名称不同时使用 `--name`；
 `--help` 与 `--version` 不写入项目。无 `--force`，非空目录、文件或符号链接目标均拒绝覆盖；

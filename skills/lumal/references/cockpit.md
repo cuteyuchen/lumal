@@ -72,12 +72,12 @@ const activeLayoutId = shallowRef(config.value.activeLayoutId)
 - Designer 编辑草稿，不直接调用后端或写 localStorage。由应用校验权限、持久化成功后替换正式配置。
 - 使用 `prepareCockpitConfig/normalizeCockpitConfig/validateCockpitConfig` 与迁移工具接收旧配置；不要手动假装旧结构已是 v3。
 - 拖拽缩减包含模块的行列会被阻止，替换已占用槽需确认。新增能力不要绕开这些数据保护。
-- 工作分支修复了布局名称输入被还原的缺陷；该 Changeset 未发布前，不承诺 npm `0.1.0-beta.0` 已含修复。区分源码、tarball 与 registry。
+- `0.0.7-beta` 已修复并发布布局名称输入被还原的补丁；历史 npm `0.0.6-beta` 不含该修复。区分源码、tarball、registry 和示例站点部署。
 
 ## 缩放、消息和主题
 
 - 设计px仅按项目统一宽度输出vw，baseHeight是内容高度，不参与比例。没有适配模式和整画布transform；DataV嵌套不重复缩放。
-- 与 `LumalFullScreenContainer` 组合时使用 `external`，避免双重缩放和点击偏移。
+- 与 `LumalFullScreenContainer` 组合时仅增加内容容器，两者使用同一项目配置，不存在外部缩放模式。
 - `enterFullscreen()` 只全屏组件根节点；body Teleport 和外部 Designer 不在其中。应用需选择包含浮层的全屏宿主，或打开浮层前退出全屏，不用第二次 CSS 缩放修复可见性。
 - 用 `useCockpitContext` 获取当前实例的 `messages/mode/instanceId`；不要为每个模块创建一个互不相通的全局消息总线。
 - 设计区内已放置模块共享 `mode: 'design'` 的总线，模块库预览保持隔离。
@@ -87,7 +87,7 @@ const activeLayoutId = shallowRef(config.value.activeLayoutId)
 
 ## Demo 的使用边界
 
-Admin 的 `examples/CockpitView.vue` 是最小 Runtime + Widget，外层 Viewport / 内层 external，
+Admin 的 `examples/CockpitView.vue` 是最小 Runtime + Widget，普通嵌入容器不施加额外缩放，
 不导入地图或 Designer；独立 `apps/lumal-cockpit` 才演示地图、持久化和编辑流程。
 完整源码与安装说明可从仓库 `docs/demo-integration-guide.md` 核对，不把 Demo 业务逻辑复制进公共包。
 
@@ -95,5 +95,10 @@ Admin 的 `examples/CockpitView.vue` 是最小 Runtime + Widget，外层 Viewpor
 `build:app` 要求公共包 JS / types 已构建；开发源码 alias 不用于生产 preview。
 Cesium 为 Demo 应用依赖，部署须包含整个 `cesiumStatic`，不能仅上传 JS/CSS。
 资源失败应显示重试，普通 resize 不重建地图；npm 发布不代表 Demo 域名已更新。
+
+接入减少动态效果偏好时，同时检查地图和图表引擎自身的循环，不能只停 CSS 或全局 `animation`。
+例如 ECharts `effectScatter` 的 `rippleEffect.scale=1` 仍循环改变透明度；
+`rippleEffect.number=0` 才禁用波纹，恢复偏好时可还原默认的三圈。
+这是应用中心组件的图表选项，不是 Cockpit 配置字段，也不需要修改公共包。
 
 仓库核对位置：`packages/cockpit/src/types`、`config`、`registry`、`runtime`、`designer`、`messaging` 及其测试。

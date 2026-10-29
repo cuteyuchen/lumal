@@ -2,9 +2,10 @@
 
 本文对应候选源码 `0.1.0-beta.0`，尚未发布npm；实际进度见
 [本轮工作记录](./pure-vw-refactor-2026-10-28.md)。安装时核对registry，当前使用精确候选tarball验证。
+上一版 `0.0.7-beta` 的正式标签、registry 与消费者证据保留在 [发布记录](./npm-release-0.0.7-beta.md)。
 公共包发布不代表业务升级通过，也不授权部署或修改真实业务仓库。
 实际兼容证据与未执行事项见[真实消费者矩阵](./real-consumer-compatibility.md)；
-历史 `0.0.5-beta` 发布与旧验收记录继续保留，不覆盖为本轮结果。
+历史 `0.0.6-beta`、`0.0.5-beta` 发布与旧验收记录继续保留，不覆盖为本轮结果。
 
 ## 升级原则
 
@@ -150,6 +151,16 @@ CLI 保留 `create-lumal-admin` 命令和 Admin preset；旧适配模式参数�
 改用 `--viewport`/`--no-viewport` 与单一 `--design-width`。新项目类型与可选能力见
 [项目模板指南](./project-template-guide.md)。通用 `create-lumal` bin 由候选 `create-lumal-admin@0.1.0-beta.0` 分发，
 独立 `create-lumal` npm 包仍未发布，也没有删除或更名旧入口。后续新增 npm 名称时须另行核对 registry 与发布权限。
+
+### 历史：0.0.6-beta 到 0.0.7-beta
+
+以下仅说明旧版本之间的变化，不是当前纯 vw 候选的接入方式。
+该次升级保持十包内部依赖同版，显式安装 `0.0.7-beta`，不依赖浮动 `latest`。
+Viewport 运行时公开 API 未改变。Vite 默认继续关闭转换，但启用时额外保护行高、最小尺寸和已有适配表达式；
+旧项目若确需转换最小尺寸，显式设置 `minSize: true` 后验证布局，不要扩大整个文件范围。
+`inlineStyles: true` 才处理可静态分析的 Vue style，业务脚本、动态表达式和地图坐标保持原样。
+Screen 共享 `viewport.config.ts` 是生成代码改进，已有项目按需手工合并；依赖升级不会覆盖业务文件。
+Cockpit Designer 名称输入修复已随本版发布，不需要消费方复制内部组件。
 
 ## P2 审查
 

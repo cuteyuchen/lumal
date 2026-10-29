@@ -15,7 +15,7 @@ Lumal 提供一个总 Skill，帮助 AI 根据需求选择包，并按公开 API
 | `@lumal/cockpit` | v3 配置、模块注册、runtime/designer 隔离、中心插槽、缩放与保存 |
 | `@lumal/icons` | 图标注册、SVG 工具、Data URI 和静态清单插件 |
 | `@lumal/icons-vue` | 图标组件、选择器与响应式注册表 |
-| `@lumal/vite` | resolver、工作区 alias、可选 Devtools 与定向 CSS 视口转换 |
+| `@lumal/vite` | resolver、工作区 alias、可选 Devtools、定向 CSS 与可选 Vue 行内视口转换 |
 | `@lumal/vben-compat` | Vben 5.7.0 固定基准、`/v5` 组件元组与 legacy 注册元组、轻量路由入口、支持子集 |
 | `create-lumal-admin` | Admin / Screen / Blank、三预设、按需认证与数据、非交互创建与真实后端接线 |
 

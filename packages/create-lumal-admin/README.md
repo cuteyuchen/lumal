@@ -43,7 +43,7 @@ pnpm create lumal-admin@0.1.0-beta.0 my-admin
 pnpm create lumal-admin@0.1.0-beta.0 my-admin-http --api-mode http
 ```
 
-本版模块化向导不会覆盖历史发布版本，不能用旧 CLI 代替本地构建或候选 tarball 验收。
+本版模块化向导不会覆盖历史发布版本；开发未发布源码时，不能用旧 CLI 代替精确 tarball 验收。
 
 在 TTY 中依次选择目录、npm 名称、预设、数据源、路由和业务模块。单选使用上下方向键和
 Enter，多选使用 Space，最后展示摘要并确认，确认前不写文件。Ctrl+C / Escape 取消不残留文件。默认

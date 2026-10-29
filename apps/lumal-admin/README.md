@@ -1,6 +1,6 @@
 # lumal-admin
 
-Lumal 中后台管理台示例应用，基于 `@lumal/* 0.1.0-beta.0` 公开 API 搭建，演示登录鉴权、动态菜单、权限指令、SchemaForm/CrudTable、主题定制，以及局部视口、DataV 和 Cockpit Runtime 集成。
+Lumal 中后台管理台示例应用，基于候选 `@lumal/* 0.1.0-beta.0` 公开 API 搭建，演示登录鉴权、动态菜单、权限指令、SchemaForm/CrudTable、主题定制，以及统一 vw、DataV 和 Cockpit Runtime 集成。
 
 ## 技术栈
 
@@ -13,7 +13,7 @@ Lumal 中后台管理台示例应用，基于 `@lumal/* 0.1.0-beta.0` 公开 API
 
 ## 本地开发
 
-本应用在开发（`vite serve`）模式下，通过 `@lumal/vite` 的 `createLumalAliases` 将 `@lumal/*` 依赖别名指向各 package 的 **源码**（`packages/*/src`），因此改动组件库源码会即时热更新，**无需先构建 dist**。生产构建和 preview 使用各包的 `dist` 产物，不混入开发 alias。
+本应用在开发（`vite serve`）模式下，通过 `@lumal/vite` 的 `createLumalAliases` 将 UI 依赖别名指向各 package 的 **源码**（`packages/*/src`），改动组件库源码会即时热更新。全新 clone 需先构建配置入口依赖 `pnpm --filter @lumal/vite build`；UI 源码开发无需逐次构建 dist。生产构建和 preview 使用各包的 `dist` 产物，不混入开发 alias。
 
 ```bash
 # 在仓库根目录：一键并行启动全部 app（推荐）
@@ -115,7 +115,14 @@ pnpm test:e2e:release:built apps/lumal-admin/e2e/visualization-examples.spec.ts
 ```
 
 完整接入说明见 [Demo 与业务接入](../../docs/demo-integration-guide.md)。
-新增示例属于本工作分支，未部署前不能使用线上地址验证本地改动。
+旧版示例曾随 PR #9 合入 master 并完成授权部署，
+首次生产验收基线为 `e2ac131`；实际 Deployment、菜单与资源证据见
+[本版发布记录](../../docs/npm-release-0.0.7-beta.md#合并与站点实际验收)。
+后续本地改动仍须独立构建、部署，不能凭 npm 版本推断线上已更新。
+
+当前纯 vw 候选没有工作区模式菜单、路由适配豁免、局部字号补偿或整画布缩放。
+Header、侧栏、内容区和 body 弹层遵循同一设计宽度；旧模式偏好键在启动时定向清理，
+不清除登录、主题和业务数据。历史部署不代表本候选已部署。
 
 ## 关于页面与版本确认
 

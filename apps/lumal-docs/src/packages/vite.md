@@ -6,6 +6,54 @@
 pnpm add -D @lumal/vite@0.1.0-beta.0
 ```
 
+## 公开入口
+
+仅 `@lumal/vite`。
+
+## Workspace Alias
+
+```ts
+import { resolve } from 'node:path'
+import { createLumalAliases } from '@lumal/vite'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  resolve: {
+    alias: createLumalAliases({
+      workspaceRoot: resolve(__dirname, '../..'),
+      // 开发默认 source；CI 验证 dist 时可改为 'dist'
+      target: 'source',
+      // packages: ['viewport', 'core', 'icons', 'icons-vue', 'charts', 'datav', 'cockpit', 'vben-compat'],
+    }),
+  },
+})
+```
+
+`createLumalAliases` 会为各包主入口、子路径（如 `@lumal/core/layout`）与 `style.css` 生成别名，并按路径长度排序，避免前缀冲突。
+
+## 组件 Resolver
+
+配合 `unplugin-vue-components` 等：
+
+```ts
+import { createLumalComponentResolver } from '@lumal/vite'
+import Components from 'unplugin-vue-components/vite'
+
+export default {
+  plugins: [
+    Components({
+      resolvers: [
+        createLumalComponentResolver({ importStyle: true }),
+      ],
+    }),
+  ],
+}
+```
+
+内置解析（节选）：`LumalSchemaForm`、`LumalLayout`、`LumalIcon`、`LumalChart`、`LumalChartPanel` 等。`importStyle: true` 时附加对应 `style.css` sideEffects。
+
+可通过 `customComponents` 扩展名称 → 包名映射。
+
 ## 统一转换
 
 ```ts

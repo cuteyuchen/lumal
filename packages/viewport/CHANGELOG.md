@@ -6,6 +6,13 @@
 - 仅保留元素测量与 `getViewportConfig`、`getViewportWidth`、`viewportLength`、`viewportPixels`、`useViewportWidth`。
 - 共享窗口监听及生命周期清理，数字尺寸与 CSS vw 使用同一浏览器宽度。
 
+## 0.0.7-beta (2026-10-26)
+
+### Patch Changes
+
+- 与十包 fixed-group 同步为 0.0.7-beta；本轮无新增运行时 API，保留容器测量、三级策略与纯 Vue 消费边界。
+- Vite/Screen 共享设计配置属于应用级普通 TypeScript 文件，不增加 Viewport 的构建工具依赖。
+
 ## 0.0.6-beta (2026-10-25)
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 # @lumal/vben-compat
 
-本文 API 基线为 `0.1.0-beta.0`，实际版本可用性以 registry 为准；Vben 基准另行固定如下。
+本文 API 基线为候选 `0.1.0-beta.0`，尚未发布；使用精确 tarball 验证，Vben 基准另行固定如下。
 
 启动阶段仅转换 Vben 菜单时，从 `@lumal/vben-compat/v5/router` 导入
 `adaptVbenMenus/adaptVbenRouteMeta`。该子入口不加载 UI，Form/Grid 留在业务路由懒加载。

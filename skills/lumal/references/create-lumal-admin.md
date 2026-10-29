@@ -6,9 +6,9 @@
 
 ## 项目类型与通用入口
 
-`0.1.0-beta.0` 在现有包内提供 `create-lumal` bin 和
-`createLumalProject` API，旧 `create-lumal-admin` bin/API/defaults不变。
-该版尚未发布，使用本地构建和真实 tarball。本地构建后可执行：
+自 `0.0.6-beta` 起在现有包内提供 `create-lumal` bin 和
+`createLumalProject` API，保留 `create-lumal-admin` bin/API，当前删除旧适配模式参数。
+本页对应尚未发布的 `0.1.0-beta.0` 候选，使用本地构建和精确 tarball。本地构建后可执行：
 
 ```bash
 node packages/create-lumal-admin/dist/project-cli.js blank-app --template blank --no-interactive
@@ -31,6 +31,7 @@ Admin/Screen默认开启、Blank关闭；`--design-width`默认1920。Admin不�
 自动接线框架动态尺寸，不需要页面包装器、单位变量或每个组件填D。
 字号/有单位行高与最小尺寸同步，细边框/忽略/原子类/第三方保护保留。
 静态Screen不安装Viewport，Blank默认只含Vue；动态设计数字按需使用[数值工具](viewport.md)。
+依赖升级不会自动改写已有项目文件，需按当前纯 vw 接线迁移。
 
 新项目均生成独立ESLint/Prettier/EditorConfig、AI规范和统一check。
 首次install生成lockfile，再frozen复装；完成前运行 `pnpm check`。
@@ -58,7 +59,7 @@ npm create lumal-admin@0.1.0-beta.0 my-admin -- --api-mode http
 ```
 
 CLI 使用 Clack 方向键单选、Space 多选、Enter 确认，摘要确认前不写文件；
-Escape / Ctrl+C 取消。目标版本不可用时使用本地 tarball，不用历史发布包代替候选验收。
+Escape / Ctrl+C 取消。开发未发布版本时使用本地 tarball，不用历史发布包代替新增能力验收。
 TTY 提问目录、名称、预设、数据源、路由和可选模块；非 TTY/CI 自动禁用交互。
 默认 `standard/local/hash`，省略目录时为 `lumal-admin`。显式指定的参数不会再次提问。
 自动化命令可加 `--no-interactive`，用 `--name` 指定与目录不同的 npm 包名；

@@ -253,12 +253,29 @@ describe('lumal admin router', () => {
     ]))
   })
 
-  it.each(['/examples/viewport', '/examples/datav', '/examples/cockpit'])('新示例 %s 可恢复深层路由', async (path) => {
+  it.each([
+    '/examples/viewport',
+    '/examples/datav',
+    '/examples/cockpit',
+    '/examples/crud-table',
+    '/system/user',
+    '/system/role',
+  ])('示例和 CRUD 页面 %s 可恢复深层路由且不注入旧适配策略', async (path) => {
     await login('admin')
     const router = createAdminRouter(createMemoryHistory())
     await router.push(`${path}?source=refresh`)
     await router.isReady()
     expect(router.currentRoute.value.fullPath).toBe(`${path}?source=refresh`)
+    expect(router.currentRoute.value.meta.workspaceViewport).toBeUndefined()
+    expect(router.currentRoute.value.meta.viewport).toBeUndefined()
+  })
+
+  it.each(['/dashboard', '/examples/overview', '/system/menu', '/system/dict-item'])('普通页面 %s 不会被隐式注入适配策略', async (path) => {
+    await login('admin')
+    const router = createAdminRouter(createMemoryHistory())
+    await router.push(path)
+    await router.isReady()
+    expect(router.currentRoute.value.path).toBe(path)
     expect(router.currentRoute.value.meta.workspaceViewport).toBeUndefined()
     expect(router.currentRoute.value.meta.viewport).toBeUndefined()
   })

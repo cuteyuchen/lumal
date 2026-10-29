@@ -2,6 +2,10 @@
 
 当前API基线为候选 `0.1.0-beta.0`，尚未发布npm或部署。使用精确源码tarball验收，
 不要用历史registry包或线上站点替代本分支。
+上一版 Designer 名称修复与正式发布证据见 [0.0.7-beta 发布记录](./npm-release-0.0.7-beta.md)。
+Demo 页面和文档部署是独立步骤，历史授权站点更新见
+[合并与站点实际验收](./npm-release-0.0.7-beta.md#合并与站点实际验收)。
+包版本不能替代线上提交和部署证据。
 
 ## 选型
 
@@ -17,6 +21,10 @@
 ```sh
 # 仅正式发布后可从registry执行；候选阶段使用本地tarball中的CLI。
 pnpm --package=create-lumal-admin@0.1.0-beta.0 dlx create-lumal internal-screen --template screen --auth http --data http --router-mode history --design-width 1920
+cd internal-screen
+pnpm install
+pnpm check
+pnpm dev
 ```
 
 按生成的API-CONTRACT配置真实接口。第一次install生成锁文件，之后CI使用frozen-lockfile。
@@ -82,3 +90,15 @@ Worker返回JS、资源返回原格式，不能用SPA fallback的HTML冒充200�
 业务数据、经纬度、实际测量、拖拽和Popper屏幕坐标不换算。
 无法静态分析的JS样式不自动扫描，不能宣称所有第三方动态样式都被覆盖。
 原生zoom、不同高度、地图状态和浮层实测见[本轮记录](pure-vw-refactor-2026-10-28.md)。
+## Demo 入口与版本边界
+
+| 站点 | 公开入口 | 可交互入口 |
+| --- | --- | --- |
+| Admin | https://lumal-admin.cuteyuchen.top/ | `/#/examples/viewport`、`/#/examples/datav`、`/#/examples/cockpit` |
+| Cockpit | https://lumal-cockpit.cuteyuchen.top/ | 顶部视口实验、布局恢复和错误反馈 |
+| DataV | https://lumal-datav.cuteyuchen.top/ | 继续使用完整组件指南 |
+| 文档 | https://lumal.cuteyuchen.top/ | 此指南和包功能覆盖表 |
+
+上述入口曾随 PR #9 合入 master 并完成授权部署；首次生产验收基线为 `e2ac131`，不是当前候选上线证明。
+npm 版本、源码提交、构建产物、Vercel Deployment 和域名别名仍须分别核对，
+不能用某一个成功替代全部上线验收。历史证据与未覆盖边界见 `0.0.7-beta` 发布记录。

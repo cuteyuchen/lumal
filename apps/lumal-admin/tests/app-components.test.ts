@@ -175,6 +175,7 @@ describe('app header actions', () => {
     expect(mobileStyles).toMatch(/\.lumal-admin-header-actions__mobile-menu\s*\{\s*display:\s*inline-flex;/)
     expect(mobileStyles).toMatch(/:deep\(\.el-button\)\s*\{\s*width:\s*36px;\s*height:\s*36px;/)
     expect(source).toMatch(/\.lumal-admin-header-actions__mobile-trigger\s*\{[\s\S]*?width:\s*36px;[\s\S]*?height:\s*36px;/)
+    expect(mountHeaderActions().find('[aria-label="VW 适配"]').exists()).toBe(true)
   })
 })
 

@@ -5,6 +5,12 @@
 - 数字 size 为设计 px，在内部按唯一项目配置输出 vw；显式单位字符串保持原样。
 - 同步固定包组与 Viewport 依赖版本。
 
+## 0.0.7-beta (2026-10-26)
+
+### Patch Changes
+
+- 同步图标依赖与十包 fixed-group 至 0.0.7-beta，保持既有组件 API 和静态加载边界。
+
 ## 0.0.6-beta (2026-10-25)
 
 ### Patch Changes

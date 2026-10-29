@@ -6,6 +6,12 @@
 - 数字宽高与面板宽度为设计 px，内部通过轻量 Viewport 工具换算；显式字符串保留单位语义。
 - 引擎业务数据、实际测量和外部动态 option 不自动扫描或换算。
 
+## 0.0.7-beta (2026-10-26)
+
+### Patch Changes
+
+- 与十包 fixed-group 同步为 0.0.7-beta；本轮未更改图表 API 或引擎 peer。
+
 ## 0.0.6-beta (2026-10-25)
 
 ### Patch Changes

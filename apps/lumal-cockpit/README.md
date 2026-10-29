@@ -34,6 +34,8 @@ pnpm dev
 - 主驾驶舱、DataV容器和Designer统一设计宽度，没有适配模式菜单或整画布transform，高度不足滚动。
 - Demo对整个文档请求全屏，确保body Teleport弹窗和兄弟Designer仍可交互，不增加第二层缩放。
 - 中心支持 ECharts、OpenLayers、Cesium 与独立 SVG 场景。窗口 resize 不重建地图。
+- 减少动态效果偏好会关闭飞线和节点波纹；ECharts 节点显式使用 `rippleEffect.number=0`，
+  不以 `scale=1` 冒充停止动画。恢复普通偏好后保留默认的三圈波纹和地图选择。
 - Cesium 的初始化、渲染或 WebGL 上下文错误显示可重试状态，并释放旧实例及监听器。
 - 本地配置无法读取时显示恢复提示，保留原始存档；只有显式恢复或保存时覆盖。
 
@@ -81,4 +83,8 @@ src/
 Viewport 实验与主画布隔离；测试的五种窗口尺寸不等同于真实浏览器缩放验证。
 
 完整安装、Cesium 资源与源码 alias / dist 边界见 [接入指南](../../docs/demo-integration-guide.md)。
-本轮 Designer 名称输入修复留有 Changeset，尚未发布；示例未部署前，线上域名不代表当前分支。
+Designer 名称输入修复已随 `0.0.7-beta` 发布并完成 registry 核验，
+示例已随 PR #9 合入 master 并完成授权部署；
+首次生产验收基线、Cesium 资源检查及未覆盖边界见
+[本版发布记录](../../docs/npm-release-0.0.7-beta.md#合并与站点实际验收)。
+后续包版本、源码和线上产物仍须分别核对。

@@ -13,6 +13,12 @@
 
 - 补齐共享主题入口的 Dropdown 样式，修复 Admin 适配菜单及其他下拉菜单退化为原生列表、整行点击区域和交互反馈缺失的问题。
 
+## 0.0.7-beta (2026-10-26)
+
+### Patch Changes
+
+- 与十包 fixed-group 同步为 0.0.7-beta；本轮未更改 Core 运行时 API，保留 minimal/request 和主题字号边界。
+
 ## 0.0.6-beta (2026-10-25)
 
 ### Patch Changes

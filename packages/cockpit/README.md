@@ -92,6 +92,9 @@ registry.registerWidget({
 
 保存配置保留设计数值，不因当前浏览器宽度污染列宽；取消不写回草稿。
 
+`0.0.7-beta` 已修复并发布布局名称输入在保存前被还原的补丁，并有回归测试保护。
+历史 registry 版本 `0.0.6-beta` 不包含该修复；npm 发布也不表示独立 Demo 已部署。
+
 ## 公共 Card
 
 `LumalCockpit` 默认使用 `LumalCockpitCard`。应用可通过 `cardComponent` 替换外框和 Tab 头部，组件须接收：

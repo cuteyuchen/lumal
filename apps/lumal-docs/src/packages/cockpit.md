@@ -110,8 +110,8 @@ import { LumalCockpitDesigner } from '@lumal/cockpit/designer'
 
 完整的 Admin 内嵌 Runtime 与 Widget 源码、Designer 按需加载、Cesium 静态资源部署和构建排错：
 [Demo 与业务接入](/reference/demo-integration-guide)。
-本分支修复了 Designer 布局名称输入回退问题，已登记 Changeset，**尚未发布补丁**；
-不能用 `0.1.0-beta.0` npm 包宣称该修复已经上线。
+`0.0.7-beta` 已修复并发布 Designer 布局名称输入回退补丁；
+历史 `0.0.6-beta` npm 包不包含该修复，Demo 是否上线仍须单独核对部署。
 
 ## 自定义 Card
 
