@@ -6,6 +6,8 @@
 - 纯 vw 时保留桌面结构，关闭适配时仍支持原响应式断点；实际定位坐标不重复缩放。
 - Element Plus 主题改为逐 CSS 文件导入，消费者按明确来源授权转换。
 - 纳入共享 Dropdown 主题样式修复；保留其他下拉菜单的点击、悬停与焦点反馈。
+- 主题设置按外观、布局和通用分类，补齐键盘导航；新增 `visibility`、`LumalPreferencesVisibility`、`ResolvedPreferenceVisibility` 和 `resolvePreferenceVisibility`，只控制入口显隐，不改写或持久化隐藏项配置。
+- 默认侧栏设计宽度调整为 200px，内容间距为 12px；Admin 的设置抽屉、主题切换入口和示例同步接线。
 
 ## 历史开发记录（已由后续候选吸收）
 

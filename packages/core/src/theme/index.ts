@@ -9,6 +9,7 @@ export {
   mergePreferences,
   normalizePreferences,
   resolvePreferenceAvailability,
+  resolvePreferenceVisibility,
   resolveThemeMode,
 } from './preferences'
 export type { PreferenceAvailability } from './preferences'
@@ -33,10 +34,12 @@ export type {
   LumalLayoutMode,
   LumalPreferences,
   LumalPreferencesDefaults,
+  LumalPreferencesVisibility,
   LumalTabStyle,
   LumalTransitionName,
   PreferencesStorage,
   PreferencesStore,
+  ResolvedPreferenceVisibility,
   ResolvedThemeMode,
   ThemeMode,
   ThemeOptions,

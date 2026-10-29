@@ -27,7 +27,7 @@ defineExpose({
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  padding: 14px;
+  padding: 12px;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;

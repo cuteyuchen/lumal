@@ -24,6 +24,8 @@ import {
   adminAppName,
   adminPreferenceDefaults,
   adminPreferences,
+  adminPreferenceVisibility,
+  adminResolvedPreferenceVisibility,
   adminResolvedThemeMode,
   patchAdminPreferences,
 } from './services/preferences'
@@ -224,6 +226,7 @@ function handleTabsChange(tabs: LumalLayoutTabItem[]): void {
         <AppHeaderActions
           :cockpit-url="cockpitUrl"
           :resolved-theme-mode="resolvedThemeMode"
+          :show-theme-toggle="adminResolvedPreferenceVisibility.theme.mode"
           :user-name="userName"
           @logout="handleLogout"
           @open-profile="handleOpenProfile"
@@ -248,6 +251,7 @@ function handleTabsChange(tabs: LumalLayoutTabItem[]): void {
           v-model:visible="settingsVisible"
           :defaults="adminPreferenceDefaults"
           :preferences="preferences"
+          :visibility="adminPreferenceVisibility"
           @update:preferences="handlePreferencesChange"
         />
       </template>

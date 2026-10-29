@@ -11,6 +11,7 @@ import { computed } from 'vue'
 import {
   adminPreferenceDefaults,
   adminPreferences,
+  adminPreferenceVisibility,
   patchAdminPreferences,
 } from '../../services/preferences'
 import { openAdminSettings } from '../../services/settings'
@@ -65,6 +66,7 @@ const previewStyle = computed(() => ({
         <LumalThemeSettingsPanel
           v-model:preferences="preferences"
           :defaults="adminPreferenceDefaults"
+          :visibility="adminPreferenceVisibility"
           class="lumal-admin-example__theme-panel"
         />
 

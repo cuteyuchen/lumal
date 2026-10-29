@@ -104,6 +104,22 @@ preferences.patch({
 - `reset()` 恢复偏好，`exportCurrent()` 输出配置；实例释放时 `dispose()` 清理监听。
 - 不假设偏好 Store 提供多语言系统或业务配置存储。
 
+`LumalThemeSettingsPanel` 从 `@lumal/core/theme` 导入，通过 `v-model:preferences` 接收完整偏好。
+应用默认值同时传给 Store 与面板的 `defaults`；它只用于无缓存初始化、补齐缺失字段及恢复默认，
+已有缓存值优先，不是锁定配置。
+
+设置入口显隐使用面板的 `visibility?: LumalPreferencesVisibility`：
+`{ theme: { mode: false }, sidebar: false }` 隐藏主题模式选项和整组侧边栏设置。
+未配置项默认显示，空分组与空页签自动隐藏；`showReset: false` 隐藏恢复默认操作，`showLayout` 保留兼容。
+`visibility` 是应用自有配置，不是 Store 选项，也不写入偏好缓存。
+默认浅色可用 `defaults: { theme: { mode: 'light' } }` 配合隐藏入口，但不会覆盖已保存的深色偏好。
+
+`resolvePreferenceVisibility` 将显隐配置展开为完整的 `ResolvedPreferenceVisibility`，
+可用其 `theme.mode` 联动应用自有主题切换入口。Admin 在 `src/services/preferences.ts` 的
+`adminPreferenceVisibility` 集中配置，面板与顶栏主题切换按钮共用。
+UI 仍需 Element Plus peer、`@lumal/core/theme-chalk/index.scss` 和 `@lumal/core/style.css` 等既有样式，
+不引入新的依赖。
+
 消费端 `@lumal/vite` 开启后，Core 主题 token 自动按同一个设计宽度输出普通 vw；
 初始化、偏好修改和恢复均如此，未开启时输出 px。无需主题长度回调或业务根单位。
 构建转换不受运行时路由开关撤回；局部使用应配置文件/选择器范围。

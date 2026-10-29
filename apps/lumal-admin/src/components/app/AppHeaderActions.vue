@@ -16,8 +16,10 @@ import AppViewportSwitch from './AppViewportSwitch.vue'
 const props = withDefaults(defineProps<{
   cockpitUrl: string
   resolvedThemeMode: ResolvedThemeMode
+  showThemeToggle?: boolean
   userName?: string
 }>(), {
+  showThemeToggle: true,
   userName: '管理员',
 })
 
@@ -79,6 +81,7 @@ function handleMobileMenuCommand(command: unknown): void {
   <div class="lumal-admin-header-actions">
     <AppViewportSwitch />
     <ElButton
+      v-if="showThemeToggle"
       circle
       text
       :title="themeToggleTitle"

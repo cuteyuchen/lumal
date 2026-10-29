@@ -1,5 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { compileStyle, parse } from '@vue/compiler-sfc'
+import { compileString } from 'sass-embedded'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   applyThemePreferences,
@@ -9,6 +11,7 @@ import {
   createThemeStore,
   mergePreferences,
   resolvePreferenceAvailability,
+  resolvePreferenceVisibility,
   resolveThemeMode,
   resolveThemeTokens,
 } from '../src/theme'
@@ -75,6 +78,25 @@ describe('theme runtime', () => {
     const themeEntry = readFileSync(resolve(import.meta.dirname, '../theme-chalk/index.scss'), 'utf8')
 
     expect(themeEntry).toContain('@import "element-plus/theme-chalk/el-radio-button.css"')
+  })
+
+  it('偏好面板保留数字输入框的组件默认宽度', () => {
+    const source = readFileSync(resolve(import.meta.dirname, '../src/theme/LumalThemeSettingsPanel.vue'), 'utf8')
+    const { descriptor } = parse(source)
+    const { errors, rawResult } = compileStyle({
+      id: 'theme-settings-panel',
+      source: compileString(descriptor.styles[0]!.content).css,
+    })
+    expect(errors).toEqual([])
+
+    // 检查样式约束，不使用 jsdom 推断实际数字的绘制宽度。
+    const inputWidths: string[] = []
+    rawResult!.root.walkRules(/\.el-input-number\b/, (rule) => {
+      rule.walkDecls('width', (declaration) => {
+        inputWidths.push(declaration.value)
+      })
+    })
+    expect(inputWidths).toEqual([])
   })
 
   it('会创建默认主题状态并生成 CSS 变量 token', () => {
@@ -155,6 +177,7 @@ describe('theme runtime', () => {
       },
       sidebar: {
         autoActivateChild: false,
+        width: 200,
       },
       shortcutKeys: {
         globalSearch: true,
@@ -259,7 +282,7 @@ describe('theme runtime', () => {
     expect(element.style.getPropertyValue('--lumal-radius-scale')).toBe('0.75')
     expect(element.style.getPropertyValue('--lumal-header-height')).toBe('50px')
     expect(element.style.getPropertyValue('--lumal-tabbar-height')).toBe('40px')
-    expect(element.style.getPropertyValue('--lumal-sidebar-width')).toBe('280px')
+    expect(element.style.getPropertyValue('--lumal-sidebar-width')).toBe('200px')
     expect(element.style.getPropertyValue('--lumal-font-size-base')).toBe('18px')
     expect(element.style.getPropertyValue('--el-font-size-base')).toBe('18px')
     expect(element.style.getPropertyValue('--el-font-size-small')).toBe('17px')
@@ -323,6 +346,57 @@ describe('theme runtime', () => {
     }))).toMatchObject({
       sidebarAutoActivateChild: true,
     })
+  })
+
+  it('显隐未配置时会显示所有已知偏好项', () => {
+    const visibility = resolvePreferenceVisibility()
+    const preferences = createDefaultPreferences()
+
+    expect(Object.keys(visibility)).toEqual(Object.keys(preferences))
+    for (const section of Object.values(visibility)) {
+      expect(Object.values(section).every(visible => visible)).toBe(true)
+    }
+    expect(Object.keys(visibility.theme)).toEqual(Object.keys(preferences.theme))
+    expect(Object.keys(visibility.tabbar)).toEqual(Object.keys(preferences.tabbar))
+  })
+
+  it('显隐支持整组和单项配置，undefined 保持默认显示', () => {
+    const visibility = resolvePreferenceVisibility({
+      header: true,
+      sidebar: undefined,
+      tabbar: false,
+      theme: { fontSize: undefined, mode: false },
+    })
+
+    expect(Object.values(visibility.header).every(visible => visible)).toBe(true)
+    expect(Object.values(visibility.sidebar).every(visible => visible)).toBe(true)
+    expect(Object.values(visibility.tabbar).every(visible => !visible)).toBe(true)
+    expect(visibility.theme).toEqual({
+      colorPrimary: true,
+      fontSize: true,
+      mode: false,
+      radiusScale: true,
+    })
+    expect(visibility.app.dynamicTitle).toBe(true)
+  })
+
+  it('隐藏主题模式不会修改默认值或缓存中的实际偏好', () => {
+    const storage = new MemoryStorage()
+    storage.setItem('preferences', JSON.stringify({ theme: { mode: 'light' } }))
+    const store = createPreferencesStore({
+      autoApply: false,
+      defaults: { theme: { mode: 'dark' } },
+      storage,
+      storageKey: 'preferences',
+    })
+    const config = Object.freeze({ theme: Object.freeze({ mode: false }) })
+    const visibility = resolvePreferenceVisibility(config)
+
+    expect(visibility.theme.mode).toBe(false)
+    expect(config).toEqual({ theme: { mode: false } })
+    expect(store.exportCurrent().theme.mode).toBe('light')
+    store.reset()
+    expect(store.exportCurrent().theme.mode).toBe('dark')
   })
 
   it('偏好 Store 会持久化、重置并清理损坏缓存', () => {

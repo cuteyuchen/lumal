@@ -180,7 +180,7 @@ async function main() {
       await expect(sidebar).toBeVisible()
       for (const zoom of zooms) {
         const actualZoom = await browserZoom(worker, url, zoom)
-        await expect.poll(async () => Math.abs((await sidebar.boundingBox()).width * actualZoom - 280 * 1280 / 1920)).toBeLessThan(1.1)
+        await expect.poll(async () => Math.abs((await sidebar.boundingBox()).width * actualZoom - 200 * 1280 / 1920)).toBeLessThan(1.1)
         report.sidebars.push({ environment, zoom: actualZoom, box: await sidebar.boundingBox(), status: 'passed' })
       }
       await browserZoom(worker, url, 1)

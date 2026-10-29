@@ -41,7 +41,7 @@ describe('lumal admin preferences', () => {
       sidebar: {
         collapsed: false,
         enable: true,
-        width: 280,
+        width: 200,
       },
       tabbar: {
         cache: true,
