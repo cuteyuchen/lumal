@@ -1,6 +1,6 @@
 # @lumal/vite
 
-候选 `0.1.0-beta.0`，尚未发布。消费项目使用公开exports，不使用工作区源码alias。
+候选 `0.1.0-beta`，尚未发布。消费项目使用公开exports，不使用工作区源码alias。
 
 ## 什么时候用
 

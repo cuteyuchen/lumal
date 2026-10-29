@@ -16,6 +16,6 @@
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
-    "@lumal/vite": "0.1.0-beta.0"
+    "@lumal/vite": "0.1.0-beta"
   }
 }

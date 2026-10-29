@@ -4,7 +4,7 @@ Lumal 是一套供个人长期使用、同时开放给其他开发者的轻量 V
 
 `apps/lumal-admin` 是公开 API 的集成示例与验收入口；可复用能力必须沉淀到 `packages/*`，业务接口字段、状态码和页面逻辑不得进入框架包。
 
-当前工作区与本文 API 基线为候选 `0.1.0-beta.0`，尚未发布 npm，
+当前工作区与本文 API 基线为候选 `0.1.0-beta`，尚未发布 npm，
 详见 [本轮工作记录](docs/pure-vw-refactor-2026-10-28.md)。下列 npm 命令在正式发布后可用；
 当前以本地 tarball 验证，不依赖浮动标签。
 上一版已发布的 `0.0.7-beta` 正式门禁、registry 与消费者证据见 [发布记录](docs/npm-release-0.0.7-beta.md)。
@@ -13,7 +13,7 @@ Viewport 的 `latest` 为 `0.0.6-beta`；这些历史记录不代表候选已发
 公共包发布不等于业务验收或生产部署。
 历史 [0.0.6-beta](docs/npm-release-0.0.6-beta.md) 与 [0.0.5-beta](docs/npm-release-0.0.5-beta.md) 发布记录继续保留。
 
-## 0.1.0-beta.0 能力
+## 0.1.0-beta 能力
 
 - 统一 `create-lumal` bin 生成 Admin、Screen、Blank，旧 Admin 命令与参数保留。
 - 所有模板具备 ESLint、Prettier、EditorConfig、AI 规范和统一 `pnpm check`。
@@ -32,7 +32,7 @@ Viewport 的 `latest` 为 `0.0.6-beta`；这些历史记录不代表候选已发
 ## Demo 后续整改
 
 仓库示例补充 Cockpit 的直接 Viewport 实验、错误恢复和配置交互，
-以及 Admin 的 Viewport / DataV / 轻量 Cockpit Runtime 示例。当前候选以 `0.1.0-beta.0` 为 API 基线；
+以及 Admin 的 Viewport / DataV / 轻量 Cockpit Runtime 示例。当前候选以 `0.1.0-beta` 为 API 基线；
 Designer 名称输入修复自已发布的 `0.0.7-beta` 提供，历史 `0.0.6-beta` 不包含该补丁。
 本轮不发布 npm 或部署生产，线上站点不能替代候选提交验收。
 接入代码见 [Demo 指南](docs/demo-integration-guide.md)，十包能力见 [覆盖表](docs/public-package-coverage.md)，
@@ -52,10 +52,10 @@ pnpm admin:dev
 创建新项目：
 
 ```bash
-pnpm create lumal-admin@0.1.0-beta.0 my-admin --preset standard
+pnpm create lumal-admin@0.1.0-beta my-admin --preset standard
 # 通用入口由现有包提供，明确选择 binary。
-pnpm --package=create-lumal-admin@0.1.0-beta.0 dlx create-lumal my-screen --template screen
-pnpm --package=create-lumal-admin@0.1.0-beta.0 dlx create-lumal my-blank --template blank
+pnpm --package=create-lumal-admin@0.1.0-beta dlx create-lumal my-screen --template screen
+pnpm --package=create-lumal-admin@0.1.0-beta dlx create-lumal my-blank --template blank
 ```
 
 应用侧最小接入：
@@ -116,7 +116,7 @@ create-lumal-admin  →  生成消费公开包入口的应用
 
 ## AI Skill
 
-[Lumal 总 Skill](skills/lumal/SKILL.md) 以候选 `0.1.0-beta.0` 为 API 基线，覆盖十个公共包，不代表已发布证明或 npm 最新版本；接入时核对实际安装包。总入口负责包选型，详细示例按任务从 `references/` 读取，不要求每次加载整套文档。
+[Lumal 总 Skill](skills/lumal/SKILL.md) 以候选 `0.1.0-beta` 为 API 基线，覆盖十个公共包，不代表已发布证明或 npm 最新版本；接入时核对实际安装包。总入口负责包选型，详细示例按任务从 `references/` 读取，不要求每次加载整套文档。
 
 将 `skills/lumal` 整个目录安装到 AI 工具支持的 Skill 目录后，可用 `$lumal` 显式调用。安装位置、示例请求与维护说明见 [AI Skill 指南](apps/lumal-docs/src/guide/essentials/ai-skills.md)。
 

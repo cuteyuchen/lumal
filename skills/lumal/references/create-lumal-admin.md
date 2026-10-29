@@ -8,7 +8,7 @@
 
 自 `0.0.6-beta` 起在现有包内提供 `create-lumal` bin 和
 `createLumalProject` API，保留 `create-lumal-admin` bin/API，当前删除旧适配模式参数。
-本页对应尚未发布的 `0.1.0-beta.0` 候选，使用本地构建和精确 tarball。本地构建后可执行：
+本页对应尚未发布的 `0.1.0-beta` 候选，使用本地构建和精确 tarball。本地构建后可执行：
 
 ```bash
 node packages/create-lumal-admin/dist/project-cli.js blank-app --template blank --no-interactive
@@ -40,22 +40,22 @@ Admin/Screen默认开启、Blank关闭；`--design-width`默认1920。Admin不�
 
 ## 命令与版本选择
 
-环境基线：Node.js 22.12+、pnpm 10.33.0。下列命令对应 `0.1.0-beta.0` 的公开 API，
+环境基线：Node.js 22.12+、pnpm 10.33.0。下列命令对应 `0.1.0-beta` 的公开 API，
 不代表 npm 最新版本；接入前核对 registry 与实际安装的声明。
 开发未发布源码时使用真实 tarball 验证，不用旧 CLI 的 `beta/latest` 标签代替新版能力。
 
 ```bash
-pnpm create lumal-admin@0.1.0-beta.0 my-admin
-pnpm create lumal-admin@0.1.0-beta.0 my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
-pnpm create lumal-admin@0.1.0-beta.0 my-admin-v5 --preset vben-compatible
-pnpm --package=create-lumal-admin@0.1.0-beta.0 dlx create-lumal my-screen --template screen
-pnpm --package=create-lumal-admin@0.1.0-beta.0 dlx create-lumal my-blank --template blank
+pnpm create lumal-admin@0.1.0-beta my-admin
+pnpm create lumal-admin@0.1.0-beta my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
+pnpm create lumal-admin@0.1.0-beta my-admin-v5 --preset vben-compatible
+pnpm --package=create-lumal-admin@0.1.0-beta dlx create-lumal my-screen --template screen
+pnpm --package=create-lumal-admin@0.1.0-beta dlx create-lumal my-blank --template blank
 ```
 
 npm 等价命令：
 
 ```bash
-npm create lumal-admin@0.1.0-beta.0 my-admin -- --api-mode http
+npm create lumal-admin@0.1.0-beta my-admin -- --api-mode http
 ```
 
 CLI 使用 Clack 方向键单选、Space 多选、Enter 确认，摘要确认前不写文件；

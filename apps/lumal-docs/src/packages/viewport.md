@@ -1,6 +1,6 @@
 # @lumal/viewport
 
-候选 `0.1.0-beta.0`：宽度数值工具与实际尺寸测量，仅依赖Vue，不需要Core或UI。
+候选 `0.1.0-beta`：宽度数值工具与实际尺寸测量，仅依赖Vue，不需要Core或UI。
 尚未发布npm，候选验收使用本地tarball。
 
 | 项 | 值 |
@@ -16,7 +16,7 @@
 下列命令面向当前候选，仅正式发布后可用，源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm add @lumal/viewport@0.1.0-beta.0 vue@^3.5
+pnpm add @lumal/viewport@0.1.0-beta vue@^3.5
 ```
 
 ## 公开入口

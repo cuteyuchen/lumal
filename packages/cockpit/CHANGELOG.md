@@ -1,6 +1,6 @@
 # @lumal/cockpit
 
-## 0.1.0-beta.0 (2026-10-28)
+## 0.1.0-beta (2026-10-28)
 
 - Breaking：删除 `CockpitViewportMode`、`viewportMode`、`useCanvasScale` 及整画布适配分支。
 - 面板/列宽/间距按项目设计宽度换算，百分比行高和业务布局语义不变。

@@ -1,6 +1,6 @@
 # Demo 与业务接入
 
-当前API基线为候选 `0.1.0-beta.0`，尚未发布npm或部署。使用精确源码tarball验收，
+当前API基线为候选 `0.1.0-beta`，尚未发布npm或部署。使用精确源码tarball验收，
 不要用历史registry包或线上站点替代本分支。
 上一版 Designer 名称修复与正式发布证据见 [0.0.7-beta 发布记录](./npm-release-0.0.7-beta.md)。
 Demo 页面和文档部署是独立步骤，历史授权站点更新见
@@ -20,7 +20,7 @@ Demo 页面和文档部署是独立步骤，历史授权站点更新见
 
 ```sh
 # 仅正式发布后可从registry执行；候选阶段使用本地tarball中的CLI。
-pnpm --package=create-lumal-admin@0.1.0-beta.0 dlx create-lumal internal-screen --template screen --auth http --data http --router-mode history --design-width 1920
+pnpm --package=create-lumal-admin@0.1.0-beta dlx create-lumal internal-screen --template screen --auth http --data http --router-mode history --design-width 1920
 cd internal-screen
 pnpm install
 pnpm check

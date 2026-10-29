@@ -1,6 +1,6 @@
 # @lumal/datav
 
-## 0.1.0-beta.0 (2026-10-28)
+## 0.1.0-beta (2026-10-28)
 
 - Breaking：删除全屏适配模式、`useFullScreenScale`、整画布 transform 和 screen 推断。
 - 全屏容器使用设计内容尺寸、自然高度与明确 overflow；数字设计 prop/config 在内部统一换算。

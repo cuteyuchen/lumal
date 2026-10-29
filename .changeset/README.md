@@ -8,7 +8,7 @@ Changesets 记录十个公共包的发布意图，公共包按 fixed 组统一�
 
 ## Beta 版本准备
 
-本轮破坏性重构准备 `0.1.0-beta.0` 候选，尚未发布，见
+本轮破坏性重构准备 `0.1.0-beta` 候选，尚未发布，见
 [工作记录](../docs/pure-vw-refactor-2026-10-28.md)。历史发布证据不改写，
 每轮先核对 registry 并由维护者选择尚未发布的合法预发布版本 `NEXT_VERSION`：
 
@@ -20,7 +20,7 @@ pnpm install --frozen-lockfile --ignore-scripts
 
 `release:version` 只更新公共包版本与工作区内部依赖，不会自动更新锁文件、文档、CHANGELOG 或执行发布。维护者需逐包汇总 pending changeset 到本版日志，确认内容完整后移除已消费的记录，再同步文档导航、安装命令和脚手架说明。不要把已汇总记录留给下一轮再次 bump。
 
-手工汇总后保留一份无包 bump 的空记录（本轮为 `prepared-0-1-0-beta-0.md`），注明变更已进入本版日志，避免未提交的版本工作区被 `changeset:status` 判为缺少记录。它不产生额外发布计划。
+手工汇总后保留一份无包 bump 的空记录（本轮为 `prepared-0-1-0-beta.md`），注明变更已进入本版日志，避免未提交的版本工作区被 `changeset:status` 判为缺少记录。它不产生额外发布计划。
 
 脚手架读取随 tarball 发布的 package.json，将自身版本注入生成项目所选的 Lumal 依赖；模板版本占位符应保持不变。验收步骤见 `docs/release-checklist.md`。
 

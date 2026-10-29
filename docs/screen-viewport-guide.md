@@ -1,6 +1,6 @@
 # Lumal 统一 vw 适配
 
-本文对应 `0.1.0-beta.0` 候选版本，尚未发布 npm。它是对旧 Beta 多模式体系的破坏性替换。
+本文对应 `0.1.0-beta` 候选版本，尚未发布 npm。它是对旧 Beta 多模式体系的破坏性替换。
 上一版正式标签、逐包与 registry 消费者证据见 [0.0.7-beta 发布记录](./npm-release-0.0.7-beta.md)，不替代本轮验收。
 `@lumal/viewport` 仅以 Vue 为 peer；不依赖 Core、Element Plus、地图、图表或 Cockpit。
 

@@ -6,7 +6,7 @@
 
 ## 接入与入口
 
-Vue 3.5+ 为必需 peer。`0.1.0-beta.0` 的 ECharts 6 为可选 peer，仅使用 ECharts
+Vue 3.5+ 为必需 peer。`0.1.0-beta` 的 ECharts 6 为可选 peer，仅使用 ECharts
 图表模式或 `LumalActiveRingChart` 时安装；历史发布版本以其实际 manifest 为准。
 数字、边框等子入口不要求图表引擎。组件优先独立子入口导入，样式统一引入：
 
@@ -61,7 +61,7 @@ import '@lumal/datav/style.css'
 
 - 纯 SVG、数字和列表子入口不加载图表引擎；`LumalActiveRingChart` 使用 ECharts，不能当成无引擎组件。
 - `LumalCharts` 按当前模式动态加载引擎，切换模式和卸载会使旧加载失效。`onMounted` 不保证异步引擎已创建。
-- `0.1.0-beta.0` 在首个 `setOption` 前绑定 `events` 和模板事件；首帧 `rendered/finished` 应在模板或 props 中提前声明。
+- `0.1.0-beta` 在首个 `setOption` 前绑定 `events` 和模板事件；首帧 `rendered/finished` 应在模板或 props 中提前声明。
 - 组件 ref 使用 `useTemplateRef`；`getInstance/getNativeInstance/setConfig/setOption/resize` 应在对应实例就绪后调用，并处理暂未就绪。
 - 给组件及其父容器明确的宽高；标题和图表可用 `auto minmax(0, 1fr)` 网格行分开。仅有 `min-height` 的父级不应再靠 100% 子图表撑高；画布空白时先查尺寸、模式和实例时机。
 - 内置离屏、页面隐藏、焦点/悬停和 reduced-motion 暂停。新增动画保持这些行为，不额外叠加永不清理的 interval。

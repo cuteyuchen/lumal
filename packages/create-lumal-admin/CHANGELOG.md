@@ -1,6 +1,6 @@
 # create-lumal-admin
 
-## 0.1.0-beta.0 (2026-10-28)
+## 0.1.0-beta (2026-10-28)
 
 - Breaking：删除适配模式枚举和模板，改为 `--viewport` / `--no-viewport` 与 `--design-width`。
 - Admin/Screen 默认启用普通 px→vw、一次配置设计宽度；Blank 默认不增加适配依赖。

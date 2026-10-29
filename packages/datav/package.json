@@ -1,7 +1,7 @@
 {
   "name": "@lumal/datav",
   "type": "module",
-  "version": "0.1.0-beta.0",
+  "version": "0.1.0-beta",
   "description": "High-fidelity Vue 3 refactors of DataV cockpit visualization components.",
   "license": "MIT",
   "keywords": [
@@ -125,7 +125,7 @@
   },
   "dependencies": {
     "@jiaminghi/charts": "0.2.18",
-    "@lumal/viewport": "0.1.0-beta.0"
+    "@lumal/viewport": "0.1.0-beta"
   },
   "devDependencies": {
     "echarts": "^6.1.0"

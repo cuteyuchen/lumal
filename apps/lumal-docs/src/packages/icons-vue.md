@@ -14,7 +14,7 @@
 下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm add @lumal/icons@0.1.0-beta.0 @lumal/icons-vue@0.1.0-beta.0 vue@^3.5 @iconify/vue@^5
+pnpm add @lumal/icons@0.1.0-beta @lumal/icons-vue@0.1.0-beta vue@^3.5 @iconify/vue@^5
 ```
 
 ## 公开入口

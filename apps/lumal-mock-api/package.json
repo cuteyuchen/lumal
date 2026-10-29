@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@lumal/core": "0.1.0-beta.0",
+    "@lumal/core": "0.1.0-beta",
     "h3": "1.15.11",
     "nitropack": "^2.13.4"
   },

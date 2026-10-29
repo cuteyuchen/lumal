@@ -11,7 +11,7 @@ pnpm changeset:status
 
 ## 准备 Beta
 
-本轮破坏性变更准备 `0.1.0-beta.0` 候选，尚未发布，见 [工作记录](/reference/pure-vw-refactor-2026-10-28)。
+本轮破坏性变更准备 `0.1.0-beta` 候选，尚未发布，见 [工作记录](/reference/pure-vw-refactor-2026-10-28)。
 每次准备时，`NEXT_VERSION` 必须是已核对registry、尚未发布的统一合法预发布版本：
 
 ```bash
@@ -22,7 +22,7 @@ pnpm install --frozen-lockfile --ignore-scripts
 
 版本命令只修改 package.json，不会自动更新锁文件、日志、文档或发布。将待处理 Changeset 汇总进十包 CHANGELOG，确认完整后移除已消费记录；同步文档版本、安装命令、Skill API 基线和脚手架说明。脚手架在生成时读取随 tarball 分发的 package.json，精确同步依赖版本。
 
-手工汇总后用一份无包 bump 的空记录注明已进入本版日志（本轮为 `prepared-0-1-0-beta-0.md`）。
+手工汇总后用一份无包 bump 的空记录注明已进入本版日志（本轮为 `prepared-0-1-0-beta.md`）。
 历史 `prepared-0-0-7-beta.md` 与 `prepared-0-0-6-beta.md` 保留原发布语境；
 空记录只避免未提交的版本工作区被 status 判为缺少记录，不会生成下一次发布计划。
 

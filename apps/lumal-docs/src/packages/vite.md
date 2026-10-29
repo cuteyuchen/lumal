@@ -1,9 +1,9 @@
 # @lumal/vite
 
-候选 `0.1.0-beta.0`：自动px→vw、组件resolver、工作区alias、可选Devtools。尚未发布npm。
+候选 `0.1.0-beta`：自动px→vw、组件resolver、工作区alias、可选Devtools。尚未发布npm。
 
 ```bash
-pnpm add -D @lumal/vite@0.1.0-beta.0
+pnpm add -D @lumal/vite@0.1.0-beta
 ```
 
 ## 公开入口

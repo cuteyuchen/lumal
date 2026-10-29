@@ -1,6 +1,6 @@
 # 升级与迁移指南
 
-本文对应候选源码 `0.1.0-beta.0`，尚未发布npm；实际进度见
+本文对应候选源码 `0.1.0-beta`，尚未发布npm；实际进度见
 [本轮工作记录](./pure-vw-refactor-2026-10-28.md)。安装时核对registry，当前使用精确候选tarball验证。
 上一版 `0.0.7-beta` 的正式标签、registry 与消费者证据保留在 [发布记录](./npm-release-0.0.7-beta.md)。
 公共包发布不代表业务升级通过，也不授权部署或修改真实业务仓库。
@@ -21,7 +21,7 @@
 建议仅在独立临时副本执行以下步骤，原项目保持只读：
 
 1. 保留原 package.json、pnpm 配置、lockfile、patch 和原质量门禁结果，记录目标版本与来源。
-2. 本轮候选 `0.1.0-beta.0` 尚未发布，构建并pack精确源码的公开包，记录每个tarball的SHA256；正式发布后才使用对应registry包。
+2. 本轮候选 `0.1.0-beta` 尚未发布，构建并pack精确源码的公开包，记录每个tarball的SHA256；正式发布后才使用对应registry包。
    Core、Icons、Charts、Vite 和新增 Viewport 的内部依赖必须来自同一版本或同一候选，不混用源码 alias。
 3. 在副本用精确版本或 tarball/overrides 替换原有 `@lumal/*`，不盲目升级所有 Vue/Vite/TypeScript 生态依赖。
    检查实际 `pnpm why`、peer 和 lockfile，避免传递依赖回落到 registry 的历史版本。
@@ -149,7 +149,7 @@ KeepAlive 是否保留地图由应用决定：希望切后台再回来保持地�
 
 CLI 保留 `create-lumal-admin` 命令和 Admin preset；旧适配模式参数已删除，
 改用 `--viewport`/`--no-viewport` 与单一 `--design-width`。新项目类型与可选能力见
-[项目模板指南](./project-template-guide.md)。通用 `create-lumal` bin 由候选 `create-lumal-admin@0.1.0-beta.0` 分发，
+[项目模板指南](./project-template-guide.md)。通用 `create-lumal` bin 由候选 `create-lumal-admin@0.1.0-beta` 分发，
 独立 `create-lumal` npm 包仍未发布，也没有删除或更名旧入口。后续新增 npm 名称时须另行核对 registry 与发布权限。
 
 ### 历史：0.0.6-beta 到 0.0.7-beta

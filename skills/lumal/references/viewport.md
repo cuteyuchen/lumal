@@ -1,6 +1,6 @@
 # 宽度数值与实际测量
 
-本页对应候选 `0.1.0-beta.0`，尚未发布。公共入口只有 `@lumal/viewport`，仅 Vue peer。
+本页对应候选 `0.1.0-beta`，尚未发布。公共入口只有 `@lumal/viewport`，仅 Vue peer。
 静态 CSS-only 项目不需要本包，使用 [Vite](vite.md) 一次配置设计宽度。
 
 - `getViewportConfig()` 返回编译配置 `{ enabled, designWidth }`，未注入时关闭、1920。
