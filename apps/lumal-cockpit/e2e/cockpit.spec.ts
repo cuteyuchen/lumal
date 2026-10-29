@@ -147,6 +147,16 @@ test('Cesium 资源与原实例 resize', async ({ page }) => {
   await expect.poll(() => cesium!.evaluate(element => element.isConnected)).toBe(true)
   await expect.poll(() => workers.length).toBeGreaterThan(0)
   await page.screenshot({ path: 'output/playwright/cockpit-cesium-1440.png', animations: 'disabled' })
+  // 截图后再确认原画布与绘图尺寸，不能把渲染前的短暂连接当成 resize 成功。
+  const rendered = await cesium!.evaluate((element) => {
+    const canvas = element as HTMLCanvasElement
+    return {
+      connected: canvas.isConnected,
+      resized: canvas.width === canvas.clientWidth && canvas.height === canvas.clientHeight,
+      error: document.querySelector('.cesium-center [role="alert"]')?.textContent ?? '',
+    }
+  })
+  expect(rendered).toEqual({ connected: true, resized: true, error: '' })
   await page.getByRole('tab', { name: 'ECharts', exact: true }).click()
   await expect(page.locator('.cesium-widget')).toHaveCount(0)
   expect(failed).toEqual([])
