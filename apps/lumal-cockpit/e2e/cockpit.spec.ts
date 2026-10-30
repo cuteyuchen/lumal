@@ -172,6 +172,14 @@ test('Cesium 全幅真实像素与退出清理', async ({ page }) => {
   // 保留默认设计尺寸的全幅采样，但不让软件 GPU 与同步 PNG 解码争用 CPU。
   const canvas = page.locator('.cesium-widget canvas')
   await expect(canvas).toBeVisible()
+  // 记录并检查实际 WebGL 后端，防止启动参数被忽略后静默改用其他渲染器。
+  const renderer = await canvas.evaluate((element) => {
+    const gl = (element as HTMLCanvasElement).getContext('webgl2')!
+    const debug = gl.getExtension('WEBGL_debug_renderer_info')!
+    return gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) as string
+  })
+  test.info().annotations.push({ type: 'webgl-renderer', description: renderer })
+  expect(renderer).toMatch(process.platform === 'win32' ? /Microsoft Basic Render Driver.*D3D11/ : /SwiftShader/)
   const image = await captureCanvas(canvas)
   await page.getByRole('tab', { name: 'ECharts', exact: true }).click()
   await expect(page.locator('.cesium-widget')).toHaveCount(0)

@@ -21,6 +21,17 @@ describe('production browser acceptance configuration', () => {
     })
   })
 
+  it('cockpit 使用平台原生软件渲染后端，不缩小生产视口', () => {
+    expect(cockpit.projects?.[0]?.use).toMatchObject({
+      viewport: { width: 1920, height: 1080 },
+      launchOptions: {
+        args: process.platform === 'win32'
+          ? ['--use-angle=d3d11-warp']
+          : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+      },
+    })
+  })
+
   it('dataV 视觉门禁固定单 worker，禁止 only 与重试掩盖不稳定', () => {
     expect(datav.forbidOnly).toBe(true)
     expect(datav.retries).toBe(0)
