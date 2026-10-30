@@ -2,7 +2,7 @@
 
 Lumal 后台核心包，提供应用安装器、布局、路由菜单辅助、权限、请求、主题和基础组件。
 
-本文 API 基线为候选 `0.1.0-beta`，尚未发布；使用精确提交的 tarball 验证。
+本文 API 基线为候选 `0.1.1-beta`，尚未发布；使用精确提交的 tarball 验证。
 
 ```ts
 import { createLumalAdmin } from '@lumal/core'

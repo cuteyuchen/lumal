@@ -12,15 +12,15 @@
 
 ## 使用
 
-本文面向 `0.1.0-beta`，环境要求 Node.js `>=22.12.0`、pnpm `10.33.0`。
+本文面向 `0.1.1-beta`，环境要求 Node.js `>=22.12.0`、pnpm `10.33.0`。
 以下命令以 registry 存在对应版本为前提；候选发布核验前使用本地 tarball。
 
 ```bash
-pnpm create lumal-admin@0.1.0-beta my-admin
-pnpm create lumal-admin@0.1.0-beta my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
-pnpm create lumal-admin@0.1.0-beta my-admin-v5 --preset vben-compatible
-pnpm --package=create-lumal-admin@0.1.0-beta dlx create-lumal my-screen --template screen
-pnpm --package=create-lumal-admin@0.1.0-beta dlx create-lumal my-blank --template blank
+pnpm create lumal-admin@0.1.1-beta my-admin
+pnpm create lumal-admin@0.1.1-beta my-admin-http --preset standard --api-mode http --router-mode history --no-interactive
+pnpm create lumal-admin@0.1.1-beta my-admin-v5 --preset vben-compatible
+pnpm --package=create-lumal-admin@0.1.1-beta dlx create-lumal my-screen --template screen
+pnpm --package=create-lumal-admin@0.1.1-beta dlx create-lumal my-blank --template blank
 ```
 
 Blank 默认仅依赖 Vue；Screen 默认无认证、API、Router 或管理布局。
@@ -98,7 +98,7 @@ node packages/create-lumal-admin/dist/cli.js my-admin
 
 - 生成项目只依赖公开包入口，不 alias 到 monorepo 源码
 - 业务协议写在应用层 `API-CONTRACT.md` / adapter，不进入 `@lumal/core`
-- Core 与图标包使用和脚手架相同的精确版本 `0.1.0-beta`，生成时读取 tarball 自身版本
+- Core 与图标包使用和脚手架相同的精确版本 `0.1.1-beta`，生成时读取 tarball 自身版本
 - 用户切换重建布局壳，登录前清理旧会话与标签快照；轻入口不意味着模板没有 Element Plus
 
 维护验收：先 `pnpm build`，再 `pnpm test:create-consumer`，验证实际 tarball 的

@@ -1,7 +1,7 @@
 {
   "name": "create-lumal-admin",
   "type": "module",
-  "version": "0.1.0-beta",
+  "version": "0.1.1-beta",
   "description": "Create lightweight Vue Blank, Screen or Lumal Admin projects with optional capabilities.",
   "license": "MIT",
   "keywords": [

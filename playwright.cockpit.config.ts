@@ -1,3 +1,4 @@
+import process from 'node:process'
 import { defineConfig, devices } from '@playwright/test'
 
 // 只启动已构建的产物；不得借开发 alias 掩盖缺失声明或静态资源。
@@ -16,7 +17,12 @@ export default defineConfig({
     use: {
       ...devices['Desktop Chrome'],
       viewport: { width: 1920, height: 1080 },
-      launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] },
+      launchOptions: {
+        // Windows 使用原生 WARP 软件后端，避免 SwiftShader 的全幅读回阻塞输入；不依赖宿主 GPU。
+        args: process.platform === 'win32'
+          ? ['--use-angle=d3d11-warp']
+          : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+      },
     },
   }],
   use: {

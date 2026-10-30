@@ -7,10 +7,13 @@ import { canvasFullClip, canvasSampleClip, countCanvasColors } from './canvas-pi
 async function expectFittedStage(page: Page, width: number, height: number): Promise<void> {
   await expect(page.locator('[data-viewport-mode], [data-scale]')).toHaveCount(0)
   await expect(page.locator('.lumal-cockpit-canvas__stage')).toHaveCSS('transform', 'none')
-  // ResizeObserver 与 RAF 合并更新完成后再记录截图，不能只断言旧地图仍然连接。
+  // 软件渲染时 CDP box model 可能仍是上一帧；直接读取当前 CSS 布局，保留原尺寸误差。
   await expect.poll(async () => {
-    const bounds = await page.locator('.lumal-cockpit-canvas__stage').boundingBox()
-    return Boolean(bounds && Math.abs(bounds.width - width) < 1 && Math.abs(bounds.height - 1080 * width / 1920) < 1)
+    const bounds = await page.locator('.lumal-cockpit-canvas__stage').evaluate((element) => {
+      const { width, height } = element.getBoundingClientRect()
+      return { width, height }
+    })
+    return Math.abs(bounds.width - width) < 1 && Math.abs(bounds.height - 1080 * width / 1920) < 1
   }).toBe(true)
   // 高度不参与比例；矮屏由外层容器滚动承载同一内容。
   // scrollHeight/clientHeight 为整数；1366×768 的内容仅多 0.375px，不构成可滚动溢出。
@@ -172,6 +175,14 @@ test('Cesium 全幅真实像素与退出清理', async ({ page }) => {
   // 保留默认设计尺寸的全幅采样，但不让软件 GPU 与同步 PNG 解码争用 CPU。
   const canvas = page.locator('.cesium-widget canvas')
   await expect(canvas).toBeVisible()
+  // 记录并检查实际 WebGL 后端，防止启动参数被忽略后静默改用其他渲染器。
+  const renderer = await canvas.evaluate((element) => {
+    const gl = (element as HTMLCanvasElement).getContext('webgl2')!
+    const debug = gl.getExtension('WEBGL_debug_renderer_info')!
+    return gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) as string
+  })
+  test.info().annotations.push({ type: 'webgl-renderer', description: renderer })
+  expect(renderer).toMatch(process.platform === 'win32' ? /Microsoft Basic Render Driver.*D3D11/ : /SwiftShader/)
   const image = await captureCanvas(canvas)
   await page.getByRole('tab', { name: 'ECharts', exact: true }).click()
   await expect(page.locator('.cesium-widget')).toHaveCount(0)

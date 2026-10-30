@@ -19,18 +19,18 @@
 
 ## npm 安装
 
-下列命令对应 `0.1.0-beta`，显式指定预发布版本，不依赖 npm 的 `latest` 标签。
+下列命令对应 `0.1.1-beta`，显式指定预发布版本，不依赖 npm 的 `latest` 标签。
 本版十包为候选版本，尚未发布npm；当前使用本地tarball，详见 [工作记录](/reference/pure-vw-refactor-2026-10-28)。
 开发未发布源码时，按 [项目模板](/reference/project-template-guide) 构建并验证本地 tarball，不能以旧包代替新增能力。
 
 ```bash
-pnpm add @lumal/core@0.1.0-beta @lumal/icons@0.1.0-beta @lumal/icons-vue@0.1.0-beta vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
-pnpm add @lumal/charts@0.1.0-beta echarts@^6 vue-echarts@^8   # 可选
-pnpm add @lumal/datav@0.1.0-beta                            # 可选，纯装饰无需 ECharts
-pnpm add @lumal/viewport@0.1.0-beta                         # 可选，只有 Vue peer
-pnpm add @lumal/cockpit@0.1.0-beta                          # 可选
-pnpm add -D @lumal/vite@0.1.0-beta
-pnpm add @lumal/vben-compat@0.1.0-beta                      # 迁移
+pnpm add @lumal/core@0.1.1-beta @lumal/icons@0.1.1-beta @lumal/icons-vue@0.1.1-beta vue@^3.5 vue-router@^4.5 element-plus@^2.11 @iconify/vue@^5
+pnpm add @lumal/charts@0.1.1-beta echarts@^6 vue-echarts@^8   # 可选
+pnpm add @lumal/datav@0.1.1-beta                            # 可选，纯装饰无需 ECharts
+pnpm add @lumal/viewport@0.1.1-beta                         # 可选，只有 Vue peer
+pnpm add @lumal/cockpit@0.1.1-beta                          # 可选
+pnpm add -D @lumal/vite@0.1.1-beta
+pnpm add @lumal/vben-compat@0.1.1-beta                      # 迁移
 ```
 
 Pinia 是可选 peer；使用 `createPinia()` 时另装 `pinia@^3.0.3`，框架不会自动创建 Store。图表不再兼容 ECharts 5 / vue-echarts 7；默认主题与布局迁移注意事项见 [更新日志](/reference/changelog)。

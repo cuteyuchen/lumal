@@ -1,6 +1,6 @@
 # lumal-admin
 
-Lumal 中后台管理台示例应用，基于候选 `@lumal/* 0.1.0-beta` 公开 API 搭建，演示登录鉴权、动态菜单、权限指令、SchemaForm/CrudTable、主题定制，以及统一 vw、DataV 和 Cockpit Runtime 集成。
+Lumal 中后台管理台示例应用，基于候选 `@lumal/* 0.1.1-beta` 公开 API 搭建，演示登录鉴权、动态菜单、权限指令、SchemaForm/CrudTable、主题定制，以及统一 vw、DataV 和 Cockpit Runtime 集成。
 
 ## 技术栈
 
