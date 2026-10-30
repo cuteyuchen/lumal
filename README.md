@@ -17,7 +17,7 @@ Viewport 的 `latest` 为 `0.0.6-beta`；后续安装仍须核对实际 registry
 
 ## 0.1.1-beta 能力
 
-- 统一 `create-lumal` bin 生成 Admin、Screen、Blank，旧 Admin 命令与参数保留。
+- 统一 `create-lumal` bin 生成 Admin、Screen、Blank，保留 Admin 专用命令，删除旧适配模式参数。
 - 所有模板具备 ESLint、Prettier、EditorConfig、AI 规范和统一 `pnpm check`。
 - Screen 的认证、业务数据、路由、可视化和视口能力独立选择；Blank 默认仅 Vue。
 - `@lumal/vite` 自动把受控设计 px 编译为普通 vw，`@lumal/viewport` 仅提供宽度数值工具与实际尺寸测量。
@@ -48,6 +48,7 @@ Windows Cockpit Demo 的独立失败仍按授权暂缓，不据此声称其问�
 
 ```bash
 pnpm install
+pnpm --filter @lumal/vite build
 pnpm admin:dev
 ```
 
