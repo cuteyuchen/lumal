@@ -1,7 +1,7 @@
 # create-lumal-admin
 
 `create-lumal-admin` 保留轻量后台入口，同时提供通用 `create-lumal` 二进制，可生成 Admin、Screen 或 Blank。
-本文面向候选 `0.1.1-beta`，尚未发布；发布核验前使用本包候选 tarball。
+本文面向 `0.1.1-beta` 公开 API；开发未发布源码时使用本包精确提交的 tarball 验证。
 通用 binary 由本包分发，没有新增独立 `create-lumal` npm 包，不能把 `pnpm create lumal` 当成已发布命令。
 
 ## 项目类型与可选能力
@@ -29,7 +29,7 @@ Blank 只安装 Vue 运行时。Screen 默认没有 Router、认证、API、Admi
 转换 `src/**` 的 CSS、SCSS 和可静态分析的 Vue `style/:style`，并接入 Lumal 自有 CSS。
 同一配置自动注入框架运行时，静态 Screen 不安装 Viewport。
 默认保留细边框，原子化类名/生成规则、明确忽略项和未知第三方来源；不扫描业务脚本。
-已有项目升级依赖不会自动更改配置，新增接线需使用本次构建的候选 tarball 验证。
+已有项目升级依赖不会自动更改配置，新增接线需使用目标版本的 CLI 或精确 tarball 验证。
 
 ## 使用
 

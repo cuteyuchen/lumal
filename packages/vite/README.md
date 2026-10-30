@@ -1,7 +1,7 @@
 # @lumal/vite
 
 来源受控的 px → vw 编译转换，以及组件 resolver、工作区 alias 与可选 Devtools 接线。
-本文对应 `0.1.1-beta` 候选源码，破坏性变更未发布；本地 tarball 是验收入口。
+本文对应 `0.1.1-beta` 公开 API，包含纯 vw 的破坏性变更；开发未发布源码时使用精确提交的 tarball 验证。
 
 ## 最小接入
 

@@ -2,7 +2,7 @@
 
 Lumal 后台核心包，提供应用安装器、布局、路由菜单辅助、权限、请求、主题和基础组件。
 
-本文 API 基线为候选 `0.1.1-beta`，尚未发布；使用精确提交的 tarball 验证。
+本文 API 基线为 `0.1.1-beta`。安装时核对 registry 与实际版本；开发未发布源码时使用精确提交的 tarball 验证。
 
 ```ts
 import { createLumalAdmin } from '@lumal/core'
@@ -53,7 +53,7 @@ Layout/Tabs 默认在启用 vw 时保留桌面编排，未启用时保留原响�
 显式 CSS 字符串保持原义；DOM 测量和 Popper 坐标不参与换算。
 
 接线、选择范围与第三方样式授权见 `docs/screen-viewport-guide.md`。
-不扫描业务脚本、不缩放整页。候选版本尚未发布，需用当前 tarball 验证。
+不扫描业务脚本、不缩放整页。源码开发时需用精确提交的 tarball 验证。
 
 ## 已有修复
 
