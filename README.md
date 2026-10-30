@@ -4,15 +4,16 @@ Lumal 是一套供个人长期使用、同时开放给其他开发者的轻量 V
 
 `apps/lumal-admin` 是公开 API 的集成示例与验收入口；可复用能力必须沉淀到 `packages/*`，业务接口字段、状态码和页面逻辑不得进入框架包。
 
-当前工作区与本文 API 基线为候选 `0.1.1-beta`，尚未发布 npm，
-详见 [发布前回归记录](docs/release-regressions-2026-10-30.md) 与
-[纯 vw 工作记录](docs/pure-vw-refactor-2026-10-28.md)。下列 npm 命令在正式发布后可用；
-当前以本地 tarball 验证，不依赖浮动标签。
-上一版已发布的 `0.0.7-beta` 正式门禁、registry 与消费者证据见 [发布记录](docs/npm-release-0.0.7-beta.md)。
-该次发布核验时十包 `beta` 为 `0.0.7-beta`，既有九包 `latest` 为 `0.0.1-beta`，
-Viewport 的 `latest` 为 `0.0.6-beta`；这些历史记录不代表候选已发布或当前浮动标签状态。
+当前工作区与本文 API 基线为已发布的 `0.1.1-beta`，十包同版，
+正式门禁、registry 与独立消费者证据见 [发布记录](docs/npm-release-0.1.1-beta.md)。
+下列 npm 命令显式选择本版，不依赖浮动标签。
+发布核验时十包 `beta` 为 `0.1.1-beta`，既有九包 `latest` 为 `0.0.1-beta`，
+Viewport 的 `latest` 为 `0.0.6-beta`；后续安装仍须核对实际 registry 状态。
+破坏性变更见 [纯 vw 工作记录](docs/pure-vw-refactor-2026-10-28.md)，
+失败与修复过程见 [回归记录](docs/release-regressions-2026-10-30.md)。
 公共包发布不等于业务验收或生产部署。
-历史 [0.0.6-beta](docs/npm-release-0.0.6-beta.md) 与 [0.0.5-beta](docs/npm-release-0.0.5-beta.md) 发布记录继续保留。
+历史 [0.0.7-beta](docs/npm-release-0.0.7-beta.md)、[0.0.6-beta](docs/npm-release-0.0.6-beta.md)
+与 [0.0.5-beta](docs/npm-release-0.0.5-beta.md) 发布记录继续保留。
 
 ## 0.1.1-beta 能力
 
@@ -33,9 +34,10 @@ Viewport 的 `latest` 为 `0.0.6-beta`；这些历史记录不代表候选已发
 ## Demo 后续整改
 
 仓库示例补充 Cockpit 的直接 Viewport 实验、错误恢复和配置交互，
-以及 Admin 的 Viewport / DataV / 轻量 Cockpit Runtime 示例。当前候选以 `0.1.1-beta` 为 API 基线；
+以及 Admin 的 Viewport / DataV / 轻量 Cockpit Runtime 示例。当前以 `0.1.1-beta` 为 API 基线；
 Designer 名称输入修复自已发布的 `0.0.7-beta` 提供，历史 `0.0.6-beta` 不包含该补丁。
-本轮须通过正式门禁后才发布 npm，不部署生产；线上站点不能替代候选提交验收。
+本轮已通过正式门禁并发布 npm，未手动部署生产；Windows Cockpit Demo 的独立失败按维护者授权暂缓，
+不据此声称 Demo 问题已修复。线上站点不能替代精确提交验收，详见本版发布记录。
 接入代码见 [Demo 指南](docs/demo-integration-guide.md)，十包能力见 [覆盖表](docs/public-package-coverage.md)，
 实际环境、构建与浏览器证据见 [整改验收](docs/cockpit-demo-remediation-2026-10-26.md)。
 
@@ -80,7 +82,7 @@ await createLumalAdmin({
 | `packages/icons-vue` | Vue 图标组件、选择器和响应式注册表适配 |
 | `packages/core` | 安装器、布局、路由、权限、请求、主题、字典和核心组件 |
 | `packages/charts` | 可选 ECharts 面板与自适应能力 |
-| `packages/viewport` | 纯 Vue 容器尺寸、全局默认/页面/容器适配，不依赖后台或图表 |
+| `packages/viewport` | 纯 Vue 宽度数值工具、共享窗口监听和实际元素测量，不依赖后台或图表 |
 | `packages/datav` | 面向驾驶舱的 Vue 3 DataV 可视化包（15 个导出组件，含变体共 38 种形态） |
 | `packages/cockpit` | 通用驾驶舱编排框架：布局运行时、组件注册、设计器与消息总线 |
 | `packages/vben-compat` | 常用旧项目写法到 Lumal 原生 API 的迁移层 |
@@ -117,7 +119,7 @@ create-lumal-admin  →  生成消费公开包入口的应用
 
 ## AI Skill
 
-[Lumal 总 Skill](skills/lumal/SKILL.md) 以候选 `0.1.1-beta` 为 API 基线，覆盖十个公共包，不代表已发布证明或 npm 最新版本；接入时核对实际安装包。总入口负责包选型，详细示例按任务从 `references/` 读取，不要求每次加载整套文档。
+[Lumal 总 Skill](skills/lumal/SKILL.md) 以已发布的 `0.1.1-beta` 为 API 基线，覆盖十个公共包，不保证始终是 npm 最新版本；接入时核对实际安装包。总入口负责包选型，详细示例按任务从 `references/` 读取，不要求每次加载整套文档。
 
 将 `skills/lumal` 整个目录安装到 AI 工具支持的 Skill 目录后，可用 `$lumal` 显式调用。安装位置、示例请求与维护说明见 [AI Skill 指南](apps/lumal-docs/src/guide/essentials/ai-skills.md)。
 

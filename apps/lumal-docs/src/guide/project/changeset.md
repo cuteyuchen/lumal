@@ -11,7 +11,7 @@ pnpm changeset:status
 
 ## 准备 Beta
 
-本轮破坏性变更准备 `0.1.1-beta` 候选，尚未发布，见 [工作记录](/reference/pure-vw-refactor-2026-10-28)。
+本轮破坏性变更已随 `0.1.1-beta` 发布，见 [发布记录](/reference/npm-release-0.1.1-beta)，不能重发同版。
 每次准备时，`NEXT_VERSION` 必须是已核对registry、尚未发布的统一合法预发布版本：
 
 ```bash
@@ -43,9 +43,9 @@ pnpm release:check
 
 构建、类型检查和包消费验收保持串行，避免同时清理 `dist`。版本准备可只做代码验收，但必须注明 E2E 未验证；真实发布仍必须通过包含完整生产 E2E 的 `release:check`，不能用历史审计结果代替。
 
-npm 发布统一由 `release-gate.yml` 编排，历史 `v0.0.7-beta` 已完成发布，不能重跑同版本发布链。
-当前候选仅授权提交、推送及 PR 校验，未授权合并、创建 tag、发布或生产部署。
-后续发布须经维护者授权并通过全部门禁；部署须独立授权。分支手动运行默认 `dry_run=true`，不会发包。
+npm 发布统一由 `release-gate.yml` 编排，`v0.1.1-beta` 及历史已发布版本不能重跑同版本发布链。
+本轮已获合并、提交、验证及 npm 发布授权，未手动部署生产；已知 Demo 例外见本版发布记录。
+后续发布须重新取得维护者授权并通过全部门禁；部署须独立授权。分支手动运行默认 `dry_run=true`，不会发包。
 `release-npm.yml` 仅保留复用入口；本地版本准备不会触发真实发布。
 
 清单见 [发布检查清单](/reference/release-checklist)，版本变化见 [更新日志](/reference/changelog)。

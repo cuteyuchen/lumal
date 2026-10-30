@@ -8,7 +8,9 @@
 `@lumal/viewport` 自 `0.0.6-beta` 加入十包集合；该版已发布并完成 registry 与同次发布产物核验，见 [历史发布记录](./npm-release-0.0.6-beta.md)。
 `0.0.7-beta` 已完成正式门禁、registry、同次发布产物及六类 registry 消费者核验，
 见 [历史发布记录](./npm-release-0.0.7-beta.md)。正式 npm 发布时未启用生产部署；后置站点恢复单独记录。
-当前破坏性纯 vw 候选为 `0.1.1-beta`，尚未发布，不因创建 PR 或通过 CI 自动获得合并、发包和部署授权。
+当前破坏性纯 vw 版本 `0.1.1-beta` 已获授权并完成发布，见 [本版发布记录](./npm-release-0.1.1-beta.md)。
+本版未手动部署生产；Windows Cockpit Demo 的独立失败按授权暂缓，不改写其失败状态或发布图。
+创建 PR 或通过 CI 不自动授权后续版本的合并、发包和部署。
 已发布版本不能用于新的全量发布；部分可见也不得重发。下一次正式发布前仍须逐包查询 registry，任一已有版本或网络异常都应中断。
 
 ```bash
@@ -23,7 +25,7 @@ pnpm release:verify
 - 将 pending Changeset 汇总进每个公共包 CHANGELOG，确认完整后移除已消费记录；本轮不运行标准 `changeset:version`，避免把 beta 序列变为稳定版 `0.1.0`。
 - 更新 `docs/changelog.md`、路线图基线、文档导航、安装命令和脚手架说明；历史版本与验收证据保留。
 - 保留脚手架源码的三个版本占位符；`pnpm build` 时按脚手架 package.json 注入精确版本，再用 `pnpm test:create-consumer` 验证 tarball 的 minimal/request、local、HTTP 三种消费路径。
-- 以空 Changeset 注明变更已手工汇总（当前候选为 `prepared-0-1-1-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。历史空记录保留原发布或候选语境，旧 `prepared-0-1-0-beta.md` 不代表发布成功。
+- 以空 Changeset 注明变更已手工汇总（本版为 `prepared-0-1-1-beta.md`，不含包 bump），再执行 `pnpm changeset:status`，确认没有下一轮发布计划；否则已消费记录可能重复提升版本。历史空记录保留原发布或候选语境，旧 `prepared-0-1-0-beta.md` 不代表发布成功。
 
 唯一发布入口是 `release-gate.yml`：`v*` tag 或手动运行。手动运行默认 `dry_run=true`，只执行校验；分支上不能以 `dry_run=false` 发包。真实运行必须选择版本相符且指向当前 HEAD 的 tag。含预发布后缀的 tag 使用 `beta`，稳定版使用 `latest`。
 
@@ -65,9 +67,10 @@ Build Validation 的双平台 Vite tarball、脚手架消费者、双平台生�
 
 `codex/pure-vw-unification` 的 push 也直接触发上述检查，避免 PR 存在合并冲突时没有测试结果。
 此时验证的是候选分支 HEAD，不代表已经验证与 master 合并后的代码；处理冲突后仍须重新通过 PR 检查。
-创建 PR 和运行校验不授权合并、创建版本 tag、发布 `0.1.1-beta` 或部署生产。
+创建 PR 和运行校验本身不授权合并、创建版本 tag、发布后续版本或部署生产；
+本版的实际授权和执行结果单独记录，不自动沿用到下一次。
 
-当前候选源码的 `release:check` 不允许遗漏 `format:check`、`test:vite-consumer`、
+当前源码的 `release:check` 不允许遗漏 `format:check`、`test:vite-consumer`、
 `test:create-projects` 或 `test:viewport`；普通 PR 的 Build Validation 同样必须执行独立 tarball 消费检查，
 Windows校验同样检查模板格式；`release-safety.test.mjs` 用移除/容错变体保护这些门禁。
 Ubuntu的生成器单测包含原有Linux PTY交互，不能以Windows执行替代其实际结果。

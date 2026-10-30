@@ -26,7 +26,7 @@ Element Plus 图标在 Admin 中从官方 `@element-plus/icons-vue` 预生成为
 ## 安装
 
 以下命令显式选择 `0.1.1-beta`；两个图标包保持同版，不依赖 npm 的 `latest` 标签。
-实际可用性以 registry 为准，候选发布核验前使用本地 tarball。
+本版已完成 registry 核验；开发未发布源码时使用精确提交的本地 tarball。
 
 只使用纯 TypeScript 能力：
 

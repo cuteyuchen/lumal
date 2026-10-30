@@ -1,7 +1,8 @@
 # Demo 与业务接入
 
-当前API基线为候选 `0.1.1-beta`，尚未发布npm或部署。使用精确源码tarball验收，
-不要用历史registry包或线上站点替代本分支。
+当前 API 基线为已发布的 `0.1.1-beta`，见 [本版发布记录](./npm-release-0.1.1-beta.md)。
+本轮未手动部署生产；包发布不代表线上站点或真实业务已经验收。
+Windows Cockpit Demo 的独立失败按维护者授权暂缓，不据此宣称 Demo 已修复。
 上一版 Designer 名称修复与正式发布证据见 [0.0.7-beta 发布记录](./npm-release-0.0.7-beta.md)。
 Demo 页面和文档部署是独立步骤，历史授权站点更新见
 [合并与站点实际验收](./npm-release-0.0.7-beta.md#合并与站点实际验收)。
@@ -19,7 +20,7 @@ Demo 页面和文档部署是独立步骤，历史授权站点更新见
 | 边框、数字、榜单 | DataV子入口，非图表不要求ECharts |
 
 ```sh
-# 仅正式发布后可从registry执行；候选阶段使用本地tarball中的CLI。
+# 使用已发布的精确版本；开发未发布源码时使用本地 tarball 中的 CLI。
 pnpm --package=create-lumal-admin@0.1.1-beta dlx create-lumal internal-screen --template screen --auth http --data http --router-mode history --design-width 1920
 cd internal-screen
 pnpm install
@@ -99,6 +100,6 @@ Worker返回JS、资源返回原格式，不能用SPA fallback的HTML冒充200�
 | DataV | https://lumal-datav.cuteyuchen.top/ | 继续使用完整组件指南 |
 | 文档 | https://lumal.cuteyuchen.top/ | 此指南和包功能覆盖表 |
 
-上述入口曾随 PR #9 合入 master 并完成授权部署；首次生产验收基线为 `e2ac131`，不是当前候选上线证明。
+上述入口曾随 PR #9 合入 master 并完成授权部署；首次生产验收基线为 `e2ac131`，不是当前版本上线证明。
 npm 版本、源码提交、构建产物、Vercel Deployment 和域名别名仍须分别核对，
 不能用某一个成功替代全部上线验收。历史证据与未覆盖边界见 `0.0.7-beta` 发布记录。

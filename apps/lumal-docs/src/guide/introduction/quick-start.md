@@ -70,7 +70,7 @@ pnpm --filter lumal-datav-guide dev
 ## 创建业务项目
 
 以下命令显式选择 `0.1.1-beta`，不依赖 npm 的 `latest`。
-候选发布核验前使用本地 tarball，见 [安装说明](/guide/essentials/installation)。
+本版已发布；开发未发布源码时使用精确提交的本地 tarball，见 [安装说明](/guide/essentials/installation)。
 
 ```bash
 pnpm create lumal-admin@0.1.1-beta my-admin

@@ -832,7 +832,7 @@ Admin 将这份配置集中放在 `apps/lumal-admin/src/services/preferences.ts`
 `adminPreferenceVisibility`；设置 `theme: { mode: false }` 后，偏好面板和顶栏主题切换入口同步隐藏。
 主题默认值独立在同文件的 `adminPreferenceDefaults.theme.mode` 配置，例如 `'light'`。
 
-候选版本在消费端 `@lumal/vite` 配置一次 `viewportWidth` 后，
+在消费端 `@lumal/vite` 配置一次 `viewportWidth` 后，
 Core 通过 `@lumal/viewport` 自动将字号、布局、间距、圆角和阴影中的设计尺寸写为普通 vw。
 `resolveThemeTokens(state)`、`applyThemeToElement(element,state)`、
 `applyThemePreferences` 与偏好 Store 初始化/切换/恢复使用同一配置。

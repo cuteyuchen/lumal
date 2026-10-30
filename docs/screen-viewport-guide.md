@@ -1,6 +1,7 @@
 # Lumal 统一 vw 适配
 
-本文对应 `0.1.1-beta` 候选版本，尚未发布 npm。它是对旧 Beta 多模式体系的破坏性替换。
+本文对应已发布的 `0.1.1-beta`，是对旧 Beta 多模式体系的破坏性替换，
+正式门禁与独立消费者见 [本版发布记录](./npm-release-0.1.1-beta.md)。
 上一版正式标签、逐包与 registry 消费者证据见 [0.0.7-beta 发布记录](./npm-release-0.0.7-beta.md)，不替代本轮验收。
 `@lumal/viewport` 仅以 Vue 为 peer；不依赖 Core、Element Plus、地图、图表或 Cockpit。
 
@@ -119,7 +120,7 @@ SVG viewBox、Canvas局部绘制和装饰图形transform仍是组件自身图形
 删除Admin旧模式localStorage键，不清理登录、主题或业务数据。
 旧 runtime 输出、媒体断点切换配置也删除，不保留别名、包装器或双轨实现。
 
-使用当前 tarball 验证，不用已发布旧版替代候选源码。
+使用本版 registry 包；开发未发布源码时使用精确提交 tarball，不用旧版代替新 API。
 验收命令以根package.json为准：`pnpm test:vite-consumer`、`pnpm test:create-consumer`、
 `pnpm test:create-projects`、`pnpm test:viewport`及生产E2E。
 字符串、SSR、浏览器布局和原生zoom是不同证据，实际执行结果见

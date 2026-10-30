@@ -1,7 +1,7 @@
 # 升级与迁移指南
 
-本文对应候选源码 `0.1.1-beta`，尚未发布npm；实际进度见
-[本轮工作记录](./pure-vw-refactor-2026-10-28.md)。安装时核对registry，当前使用精确候选tarball验证。
+本文对应已发布的 `0.1.1-beta`，正式门禁、registry 与独立消费者见
+[本版发布记录](./npm-release-0.1.1-beta.md)。安装时显式选择本版；开发未发布源码时使用精确提交 tarball。
 上一版 `0.0.7-beta` 的正式标签、registry 与消费者证据保留在 [发布记录](./npm-release-0.0.7-beta.md)。
 公共包发布不代表业务升级通过，也不授权部署或修改真实业务仓库。
 实际兼容证据与未执行事项见[真实消费者矩阵](./real-consumer-compatibility.md)；
@@ -21,8 +21,8 @@
 建议仅在独立临时副本执行以下步骤，原项目保持只读：
 
 1. 保留原 package.json、pnpm 配置、lockfile、patch 和原质量门禁结果，记录目标版本与来源。
-2. 本轮候选 `0.1.1-beta` 尚未发布，构建并pack精确源码的公开包，记录每个tarball的SHA256；正式发布后才使用对应registry包。
-   Core、Icons、Charts、Vite 和新增 Viewport 的内部依赖必须来自同一版本或同一候选，不混用源码 alias。
+2. 使用已核验的 `0.1.1-beta` registry 包；开发更新源码时构建并 pack 精确提交，记录每个 tarball 的 SHA256。
+   Core、Icons、Charts、Vite 和 Viewport 的内部依赖必须来自同一版本或同一候选，不混用源码 alias。
 3. 在副本用精确版本或 tarball/overrides 替换原有 `@lumal/*`，不盲目升级所有 Vue/Vite/TypeScript 生态依赖。
    检查实际 `pnpm why`、peer 和 lockfile，避免传递依赖回落到 registry 的历史版本。
 4. 只在副本移除旧 `@lumal/core@0.0.4-beta` 的 patchedDependencies 绑定；
@@ -149,12 +149,12 @@ KeepAlive 是否保留地图由应用决定：希望切后台再回来保持地�
 
 CLI 保留 `create-lumal-admin` 命令和 Admin preset；旧适配模式参数已删除，
 改用 `--viewport`/`--no-viewport` 与单一 `--design-width`。新项目类型与可选能力见
-[项目模板指南](./project-template-guide.md)。通用 `create-lumal` bin 由候选 `create-lumal-admin@0.1.1-beta` 分发，
+[项目模板指南](./project-template-guide.md)。通用 `create-lumal` bin 由已发布的 `create-lumal-admin@0.1.1-beta` 分发，
 独立 `create-lumal` npm 包仍未发布，也没有删除或更名旧入口。后续新增 npm 名称时须另行核对 registry 与发布权限。
 
 ### 历史：0.0.6-beta 到 0.0.7-beta
 
-以下仅说明旧版本之间的变化，不是当前纯 vw 候选的接入方式。
+以下仅说明旧版本之间的变化，不是当前纯 vw 版本的接入方式。
 该次升级保持十包内部依赖同版，显式安装 `0.0.7-beta`，不依赖浮动 `latest`。
 Viewport 运行时公开 API 未改变。Vite 默认继续关闭转换，但启用时额外保护行高、最小尺寸和已有适配表达式；
 旧项目若确需转换最小尺寸，显式设置 `minSize: true` 后验证布局，不要扩大整个文件范围。

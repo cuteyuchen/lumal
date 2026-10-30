@@ -20,7 +20,7 @@
 ## npm 安装
 
 下列命令对应 `0.1.1-beta`，显式指定预发布版本，不依赖 npm 的 `latest` 标签。
-本版十包为候选版本，尚未发布npm；当前使用本地tarball，详见 [工作记录](/reference/pure-vw-refactor-2026-10-28)。
+本版十包已发布并完成 registry 与同次产物核验，详见 [发布记录](/reference/npm-release-0.1.1-beta)。
 开发未发布源码时，按 [项目模板](/reference/project-template-guide) 构建并验证本地 tarball，不能以旧包代替新增能力。
 
 ```bash

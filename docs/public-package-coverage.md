@@ -1,6 +1,6 @@
 # 十包文档与示例覆盖
 
-版本基准：候选 `0.1.1-beta`，尚未发布；保留 `0.0.7-beta` 已发布的 Designer 名称补丁、
+版本基准：已发布的 `0.1.1-beta`；保留 `0.0.7-beta` 已发布的 Designer 名称补丁、
 Vite 精细视口转换控制与 Vue 行内样式，以及 Screen 共享设计配置模板。
 本表是维护清单，不表示每个导出都经过浏览器测试或所有示例已部署。
 
@@ -17,12 +17,13 @@ Vite 精细视口转换控制与 Vue 行内样式，以及 Screen 共享设计�
 | `@lumal/vben-compat` | `/v5` 与 `/legacy` 适配 | [兼容层](/packages/vben-compat) | vben-compat-demo、独立消费者；不是 Vben 全量兼容 |
 | `create-lumal-admin` | Admin / Screen / Blank、通用 bin、工程质量、共享设计配置 | [脚手架](/packages/create-lumal-admin)、[模板](/reference/project-template-guide) | 模板消费者、CLI PTY / 取消回滚；Admin/Screen 默认开启 vw，Blank 默认关闭；不存在独立 create-lumal npm 包 |
 
-候选源码的 `pnpm test:vite-consumer` 重建并打包 Viewport / Vite，在独立 Vue 项目中验证
+源码验收的 `pnpm test:vite-consumer` 重建并打包 Viewport / Vite，在独立 Vue 项目中验证
 ESM/CJS、类型、SSR、CSS/SCSS、模板、来源边界及 Dev/Build 产物一致性，报告写入
 `output/release/vite-viewport-report.json`。它不启动浏览器，不能替代 Admin/Cockpit 生产 E2E
 或真实浏览器缩放检查；联合验收必须记录各自命令、提交和结果，不能沿用旧提交的通过状态。
-上一版正式发布及六类 registry 消费者结果见 [0.0.7-beta 发布记录](./npm-release-0.0.7-beta.md)，
-不混入当前纯 vw 候选的通过证据。
+本版正式门禁、十包逐字节核验及八类纯 registry 消费者见 [发布记录](./npm-release-0.1.1-beta.md)。
+Windows Cockpit Demo 独立失败按维护者授权暂缓，不代表公共包验证失败，也不记为 Demo 已修复。
+上一版结果保留在 [0.0.7-beta 发布记录](./npm-release-0.0.7-beta.md)，不混入本版通过证据。
 
 ## 新 API 的检查规则
 

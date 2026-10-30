@@ -13,7 +13,7 @@
 ## 使用
 
 本文面向 `0.1.1-beta`，环境要求 Node.js `>=22.12.0`、pnpm `10.33.0`。
-以下命令以 registry 存在对应版本为前提；候选发布核验前使用本地 tarball。
+本版已发布并核验；开发未发布源码时使用精确提交的本地 tarball。
 
 ```bash
 pnpm create lumal-admin@0.1.1-beta my-admin

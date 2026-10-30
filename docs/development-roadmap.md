@@ -5,7 +5,7 @@
 ## 当前基线
 
 - 日期：2026-10-30。
-- 工作区版本：候选 `0.1.1-beta`（十包同版，未发布），分支 `codex/release-0.1.1-beta`。继承纯 vw 重构并修复首次正式门禁发现的问题，见 [回归记录](./release-regressions-2026-10-30.md)；旧 `v0.1.0-beta` 标签及失败门禁保留，不移动、不伪称已发布。纯 vw 接入过程见 [工作记录](./pure-vw-refactor-2026-10-28.md)。上一版 `0.0.7-beta` 已发布，正式门禁、registry、同次产物及六类 registry 消费者结果保留在 [发布记录](./npm-release-0.0.7-beta.md)，不作为当前候选的验收证据。
+- 工作区版本：已发布的 `0.1.1-beta`（十包同版），PR #18 已合入 master，正式标签固定于 `7e4d01c`。正式门禁、同次产物、registry 与八类独立消费者见 [发布记录](./npm-release-0.1.1-beta.md)。继承纯 vw 重构并修复首次正式门禁发现的问题，见 [回归记录](./release-regressions-2026-10-30.md)；Windows Cockpit Demo 的独立失败按授权暂缓，不宣称已修复。旧 `v0.1.0-beta` 标签及失败门禁保留，不移动、不伪称已发布。纯 vw 接入过程见 [工作记录](./pure-vw-refactor-2026-10-28.md)。上一版 `0.0.7-beta` 的正式门禁与消费者结果保留在 [历史发布记录](./npm-release-0.0.7-beta.md)，不作为本版的验收证据。
 - 上游历史基线：`master@83464a6`，PR #9 以 `e2ac131` 合并并纳入 PR #8 历史。正式标签源提交仍为 `5d190e2`，发布分支为 `codex/release-0.0.7-beta`；发包后的文档、Skill 和旧 Admin 模式属于历史收尾，不改写标签或 tarball。历史双平台门禁和生产部署见 [合并与站点实际验收](./npm-release-0.0.7-beta.md#合并与站点实际验收)。Demo 整改基线 `3f9e184` 见 [整改验收](./cockpit-demo-remediation-2026-10-26.md)；项目类型阶段使用 `29e474e`，`0.0.5-beta` 九包及正式标签源提交 `53395dc` 的事实保留在 [历史记录](./npm-release-0.0.5-beta.md)。
 - 前一阶段提交记录（历史基线，不代表本轮工作区已提交）：
   - `671f739 perf: 落地 admin/core/cockpit 整体性能与正确性优化`

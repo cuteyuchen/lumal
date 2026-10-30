@@ -8,7 +8,8 @@
 
 自 `0.0.6-beta` 起在现有包内提供 `create-lumal` bin 和
 `createLumalProject` API，保留 `create-lumal-admin` bin/API，当前删除旧适配模式参数。
-本页对应尚未发布的 `0.1.1-beta` 候选，使用本地构建和精确 tarball。本地构建后可执行：
+本页对应已发布的 `0.1.1-beta`。使用下方精确 registry 版本；
+开发未发布源码时先构建并打包，本地构建后可执行：
 
 ```bash
 node packages/create-lumal-admin/dist/project-cli.js blank-app --template blank --no-interactive

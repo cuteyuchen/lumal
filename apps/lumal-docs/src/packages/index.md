@@ -2,9 +2,9 @@
 
 Lumal 按职责拆包。应用只消费 **公开 `exports` 入口** 与样式路径，不要依赖 `packages/*/src` 或测试内部文件。
 
-本组文档对应候选 `0.1.1-beta` 的十包公开API，尚未发布npm，
-见 [本轮工作记录](/reference/pure-vw-refactor-2026-10-28)。
-下列命令显式选择本版；未发布源码的 tarball 接入方式见 [安装说明](/guide/essentials/installation)。
+本组文档对应已发布的 `0.1.1-beta` 十包公开 API，
+正式门禁与独立消费者见 [发布记录](/reference/npm-release-0.1.1-beta)。
+下列命令显式选择本版；开发未发布源码的 tarball 接入方式见 [安装说明](/guide/essentials/installation)。
 
 ## 选型建议
 

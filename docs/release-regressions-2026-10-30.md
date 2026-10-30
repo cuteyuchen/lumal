@@ -5,8 +5,9 @@
 `v0.1.0-beta` 指向 `ee503991eb342ad0d58150eeba7d852474aeecd7`。
 正式 Release Gate `40900334549` 的首次运行失败，npm 发布和生产部署均未执行。
 旧标签不移动；最初修复经 PR #17 合并至 `master@3d831dd`，
-后续版本准备位于 `codex/release-0.1.1-beta`，候选版本为 `0.1.1-beta`，尚未发布。
-本记录不能作为新提交的完整发布通过证据。
+后续版本准备位于 `codex/release-0.1.1-beta`，版本为 `0.1.1-beta`。
+该分支已通过 PR #18 合并；当前正式门禁状态见下方「发布边界与后续验证」，
+本记录中的历史验证不能替代新提交的完整发布证据。
 
 ## 角色授权树
 
@@ -112,3 +113,29 @@ trace 中舞台始终使用 `width:100vw;height:56.25vw`。
 测量修正后的本机 Cockpit 12/12 通过（约 1 分钟；resize 5.0 秒、
 全幅 9.0 秒、恢复 8.6 秒），类型、Lint 和 36 项相关脚本/Skill 测试通过。
 Docs/Cockpit/DataV 构建及 `release:budgets --require-all` 通过，预算未调整。
+
+## 发布边界与后续验证
+
+2026-10-30，维护者明确要求暂不处理 Cockpit Demo，只要十个公共包验证无误即可发布。
+PR [#18](https://github.com/cuteyuchen/lumal/pull/18) 的评论 `6513862242`
+记录该授权及已知 Windows Demo 例外，不将失败或未执行的检查记为成功。
+没有削减发布图、校验步骤、断言、超时或体积预算。
+
+PR #18 以 `747aaeb7e9fe43d126f09db97fb5ef7c1abf51ad` 合入 master，
+文件树与候选 `84eca8b` 一致；该合并提交的 CI `40994839531`、
+Build Validation `40994839514` 和 CodeQL `40994839542` 均成功。
+其中 Windows Cockpit 当轮通过，不代表历史间歇性问题已经修复。
+
+发布源提交为 `7e4d01cd462c324129e24cb80d7fe742523c4f23`，
+仅在合并后将十包 README 的发布状态说明改为版本中性表述。
+此提交的 CI `40997330017` 和 CodeQL `40997330095` 成功；
+Build Validation `40997330038` 的双平台 Vite tarball、完整模板与视口消费者、
+Windows DataV、Ubuntu 生产链均成功，Windows Demo 在 Cockpit 生产浏览器步骤失败。
+按上述授权暂缓该 Demo，不继续排查或冒用旧提交的结果。
+
+附注标签 `v0.1.1-beta` 固定指向发布源提交，正式
+[Release Gate 40998794045](https://github.com/cuteyuchen/lumal/actions/runs/40998794045)
+已独立完成全部门禁并发布十包，版本均为 `0.1.1-beta`。
+十包 registry 与同次产物核验通过，后置消费者及详细证据见
+[本版发布记录](./npm-release-0.1.1-beta.md)。
+生产部署开关未启用、deploy skipped；旧 `v0.1.0-beta` 与失败门禁保持不动。
