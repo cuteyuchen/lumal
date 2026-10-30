@@ -12,7 +12,8 @@
 - Windows Cockpit 生产浏览器使用 WARP 软件后端并校验实际 renderer，保留全幅像素、地图恢复、原视口、预算和零重试。
 - `v0.1.0-beta` 的门禁已失败，npm 尚未发布；旧标签保持不动，新修复需重新通过完整门禁。
 - 本版十包 `beta` 指向 `0.1.1-beta`，既有 `latest` 保持不变；不重跑旧版本发布链。
-- Windows Cockpit Demo 的独立失败按维护者授权暂缓，未修改发布门禁，也未手动部署生产。
+- Windows Cockpit Demo 的独立失败按维护者授权暂缓，未修改发布门禁；正式发包阶段未启用生产部署。
+- 发包后单独授权同步官网、Admin/DataV/Compat Demo、Mock API 和宿主 Skill；逐站部署与公网证据见本版发布记录，不重发 npm 或移动标签。
 
 ## 0.1.0-beta (2026-10-28)
 

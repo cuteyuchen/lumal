@@ -29,6 +29,11 @@ Docs 仍保留 Ignored Build Step：Git 检查显示绿色的 Canceled 不算文
 需要单独授权后从精确源码构建固定快照、定向 prebuilt 上传并验证公开域名全部文件。
 首次恢复的合并 SHA、Deployment 与 HTTP 证据见该记录的「合并与站点实际验收」。
 
+`0.1.1-beta` 发包后的官网、Admin、DataV Guide、Compat、Mock API 与宿主 Skill 更新已另获授权，
+具体提交、定向部署与公开资源证据见 [本版后置记录](../docs/npm-release-0.1.1-beta.md#非-cockpit-站点与宿主-skill-更新)。
+该次更新不修改或手动部署独立 Cockpit Demo，不重发十包，也不启用包含 Cockpit 的全量部署矩阵。
+Git 自动部署若已为相同提交生成 READY 产物，先核对正式别名与实际资源，不重复上传其他站点。
+
 ## GitHub Actions 配置
 
 在仓库 Settings → Environments → `production` 设置以下 Secrets（也可使用仓库级 Actions Secrets），设置审批人及 tag 限制。`npm-release` Environment 另需 `NPM_TOKEN`。插件登录不会自动写入这些配置。

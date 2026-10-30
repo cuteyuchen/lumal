@@ -117,8 +117,10 @@ pnpm test:e2e:release:built apps/lumal-admin/e2e/visualization-examples.spec.ts
 完整接入说明见 [Demo 与业务接入](../../docs/demo-integration-guide.md)。
 旧版示例曾随 PR #9 合入 master 并完成授权部署，
 首次生产验收基线为 `e2ac131`；实际 Deployment、菜单与资源证据见
-[本版发布记录](../../docs/npm-release-0.0.7-beta.md#合并与站点实际验收)。
+[0.0.7-beta 历史部署记录](../../docs/npm-release-0.0.7-beta.md#合并与站点实际验收)。
 后续本地改动仍须独立构建、部署，不能凭 npm 版本推断线上已更新。
+`0.1.1-beta` 的正式站点、VW/PX 双入口及 Mock 权限核验见
+[本版后置更新记录](../../docs/npm-release-0.1.1-beta.md#非-cockpit-站点与宿主-skill-更新)。
 
 当前纯 vw 实现没有工作区模式菜单、路由适配豁免、局部字号补偿或整画布缩放。
 Header、侧栏、内容区和 body 弹层遵循同一设计宽度；旧模式偏好键在启动时定向清理，

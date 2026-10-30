@@ -1,7 +1,9 @@
 # Demo 与业务接入
 
 当前 API 基线为已发布的 `0.1.1-beta`，见 [本版发布记录](./npm-release-0.1.1-beta.md)。
-本轮未手动部署生产；包发布不代表线上站点或真实业务已经验收。
+正式发包阶段未启用生产部署；随后官网、Admin、DataV Guide、Compat 和 Mock API 的
+单独授权更新见 [后置记录](./npm-release-0.1.1-beta.md#非-cockpit-站点与宿主-skill-更新)。
+包发布、站点更新和真实业务验收仍是不同边界。
 Windows Cockpit Demo 的独立失败按维护者授权暂缓，不据此宣称 Demo 已修复。
 上一版 Designer 名称修复与正式发布证据见 [0.0.7-beta 发布记录](./npm-release-0.0.7-beta.md)。
 Demo 页面和文档部署是独立步骤，历史授权站点更新见
@@ -96,8 +98,9 @@ Worker返回JS、资源返回原格式，不能用SPA fallback的HTML冒充200�
 | 站点 | 公开入口 | 可交互入口 |
 | --- | --- | --- |
 | Admin | https://lumal-admin.cuteyuchen.top/ | `/#/examples/viewport`、`/#/examples/datav`、`/#/examples/cockpit` |
-| Cockpit | https://lumal-cockpit.cuteyuchen.top/ | 顶部视口实验、布局恢复和错误反馈 |
+| Cockpit | https://lumal-cockpit.cuteyuchen.top/ | 本轮排除该独立 Demo，不将历史部署作为本版验收 |
 | DataV | https://lumal-datav.cuteyuchen.top/ | 继续使用完整组件指南 |
+| Compat | https://lumal-compat.cuteyuchen.top/ | Vben 兼容 API、表单与表格 |
 | 文档 | https://lumal.cuteyuchen.top/ | 此指南和包功能覆盖表 |
 
 上述入口曾随 PR #9 合入 master 并完成授权部署；首次生产验收基线为 `e2ac131`，不是当前版本上线证明。

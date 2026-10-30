@@ -4,7 +4,7 @@
 
 ## 技术栈
 
-- Nitro（node-server preset）
+- Nitro（默认 Vercel preset；本地独立服务使用 node-server）
 - h3（HTTP 处理）
 - TypeScript
 - 依赖 `@lumal/core` 的类型与工具
@@ -50,7 +50,18 @@ utils/             # 通用工具
 | 脚本 | 说明 |
 | --- | --- |
 | `pnpm dev` | 启动开发服务器（端口 5320） |
-| `pnpm build` | Nitro 生产构建，产物输出到 `.output/` |
-| `pnpm preview` / `pnpm start` | 运行构建产物（`node .output/server/index.mjs`） |
+| `pnpm build` | Nitro Vercel 生产构建，生成 `.vercel/output/` |
+| `pnpm build:test` | 使用 node-server preset 构建本地服务，产物为 `.output/` |
+| `pnpm preview` / `pnpm start` | 运行 `build:test` 生成的 Node 服务（`node .output/server/index.mjs`） |
 | `pnpm test` | 运行接口单元测试 |
 | `pnpm typecheck` | 类型检查 |
+
+## 与生产 Admin 联调
+
+生产 Admin 在构建时使用 `VITE_API_BASE_URL=https://lumal-mock-api.vercel.app/api`。
+静态部署不包含 Vite 开发代理，不能直接把默认 `/api` 的 CI 产物覆盖到生产。
+菜单、权限和应用组件白名单需使用相容的提交；包发布不会自动更新 Mock 服务。
+
+公开服务仅用于演示，会话使用隔离的内存数据。上线核验只检查健康状态、CORS、菜单和权限，
+临时登录后退出，不对其他用户会话执行 CRUD、重置或全套浏览器测试。
+本版实际部署见 [0.1.1-beta 执行记录](../../docs/npm-release-0.1.1-beta.md#非-cockpit-站点与宿主-skill-更新)。

@@ -179,3 +179,90 @@ minimal 26,090 B（增量 2,787 B），request 2,741 B，DataV charts 初始 26,
 本次文档提交不另跑实机浏览器、不重跑已发布版本的发布链。
 两个业务项目保持只读；动态 JS 设计尺寸仍显式使用公开数字工具，
 地图测量、业务数据、屏幕坐标和第三方动态定位不扫描、不二次缩放。
+
+## 非 Cockpit 站点与宿主 Skill 更新
+
+日期：2026-10-30。维护者随后明确授权：除独立 Cockpit Demo 外，同步文档、官网、
+Admin、DataV Guide、Compat、Mock API 及宿主 Skill。上文“未手动部署”描述正式发包阶段，
+不覆盖本节的后置授权。本轮不重发十包、不修改 dist-tag 或移动发布标签，
+也不启用含 Cockpit 的全量部署矩阵。平台 Git 自动集成仍独立运行，
+本轮未关闭它，不能把“未手动部署 Cockpit”描述成平台不会自动触发。
+
+### 精确基线与站点
+
+首轮核验源为干净 master `d0f89a9f0b7e38f2f001bc6ec3aea45963f4e8e8`，
+与远端同步。该提交的 [CI](https://github.com/cuteyuchen/lumal/actions/runs/41006369320)、
+[Build Validation](https://github.com/cuteyuchen/lumal/actions/runs/41006369294) 和
+[CodeQL](https://github.com/cuteyuchen/lumal/actions/runs/41006369295) 均真实成功，
+不使用发包标签的门禁代替。后续仅文档收尾仍需独立验证并更新官网快照；
+下表固定记录首轮部署，不将归档提交反写为它们的构建源。
+
+| 站点 | Deployment ID | 来源 / 状态 |
+| --- | --- | --- |
+| 官网与文档 | `dpl_6Spee8weAuvCRMy9f9PfSmtcKdWV` | CLI prebuilt / production / READY |
+| Admin | `dpl_9gYm18hQwLzqqrW2fbJagCMusqY9` | Git / production / READY |
+| DataV Guide | `dpl_EiDJwdjCQH2PBWt7wya2HgC4GUjR` | Git / production / READY |
+| Compat | `dpl_4c6vgyMZU9zQSFGAVhwoDQdv58hb` | Git / production / READY |
+| Mock API | `dpl_6n6fGcQ4nxChsTtnHv6T23q3zTwr` | Git / production / READY |
+
+五项均已核对正式域名别名，`aliasError=null`。后四项已由现有 Git 集成更新，
+没有重复上传。Admin 的实际 JS 保留生产 `https://lumal-mock-api.vercel.app/api`，
+未使用默认 `/api` 的 CI 静态包替代生产。
+独立 Cockpit Demo 不作本轮更新或修复声明；公共 Cockpit 包文档仍保持正确的纯 vw API。
+
+Docs 的 Git 构建继续被既有 `exit 0` 忽略策略取消，取消不算官网更新成功。
+从上述干净提交执行 `pnpm docs:build`，由 `prepare-vercel-output.mjs --clean-urls`
+生成固定快照，再以已核对 team / project 的 Vercel CLI 64.5.0 定向执行
+`deploy --prebuilt --prod`。未拉取秘密环境值、改变 Deployment Protection 或调整平台 Node。
+平台仍为 Node 24.x，不能称为 CI Node 22 的同环境产物。
+
+### 公网与 Skill
+
+| 核验 | 实际结果 |
+| --- | --- |
+| 官网固定快照 | 294 / 294 文件 SHA256 一致，88 条 clean URL 映射，未知路径真实 HTTP 404 |
+| Admin VW 与 PX | 两入口分别检查 108 个资源，版本 `0.1.1-beta`、提交 `d0f89a9` 和生产 API 均正确 |
+| DataV Guide / Compat | 分别 39 / 29 个模块、样式与资源 HTTP、MIME 和解析通过 |
+| Mock | 健康、CORS、菜单权限元数据通过；admin 管理接口 200、guest 403；最终核验两会话均退出 |
+| 宿主 Skill | 同步 12 份过期知识文件；15 个分发文件与仓库 SHA256 一致，保留 `agents/openai.yaml` 和额外文件 |
+
+Admin 公网模板探针在 VW 入口为 `width:10vw; height:5vw`，
+PX 入口为 `width:192px; height:96px`。样例容器 VW 输出
+`width:50vw; min-height:28.125vw; font-size:.729167vw; line-height:1.04167vw`，
+PX 对应 `960px / 540px / 14px / 20px`，误差限 `0.00001`。
+这验证静态产物，不代替真实浏览器交互；浏览器证据来自上述精确源提交的生产 CI。
+没有在公网执行 CRUD、重置或破坏性 E2E，也未修改两个只读业务项目。
+
+Mock 原始菜单保留 `authCode`，应用按会话权限过滤显示，不能错误要求 API 为访客删除该节点。
+最初本地检查误作此断言，已按实际公开契约修正；未改应用或服务行为。
+首次网络路径出现 Node / curl TLS 失败，独立检查采用宿主配置的代理与 PowerShell WebSession
+完整通过；没有增加重试、延长请求预算或把网络失败记成服务成功。
+初始失败日志保留，最终创建的两会话均正常退出。
+
+Skill 在仓库维护后同步本机副本，不在可分发知识中写死本机路径。
+同时修正文档遗漏：DataV 嵌入使用 `embedded`，不再要求覆盖为 absolute；
+DataV/Compat README 补齐统一 vw 和全新 clone 的 Vite 入口构建，
+Mock README 区分 Vercel 与本地 node-server 产物，Viewport Lab 增加运行与验收说明。
+仓库与安装副本均通过宿主 `python -X utf8 .../quick_validate.py`，
+文档 / Skill 专项首轮为 2 文件 / 65 项通过；收尾提交的测试与官网快照单独记录。
+
+证据位于忽略的 `output/release/postpublish-011-*`，不进入 npm。
+首轮 Docs 快照 SHA256：
+`5257faf2c4ea7e9d4cab6ab33afa217b1941632f2cad96298f769ee8c2ffdd45`。
+
+| 首轮证据文件 | SHA256 |
+| --- | --- |
+| `postpublish-011-deployments-d0f89a9.json` | `9d0f2fb1ad84c339f0e23a6da3687d6a32a365fc850343dd3c06f647403d1e8c` |
+| `postpublish-011-docs-d0f89a9-direct-http.log` | `f50fbab39e8a5dcbb25cbeed23e981a528c523c5c11ab5c901cd8d1548a3c793` |
+| `postpublish-011-datav-d0f89a9-http.json` | `f45757e91657a1824975c643f6c3b45dbdf76e0e1e16838f5d34ce2375494a39` |
+| `postpublish-011-compat-d0f89a9-http.json` | `e56a7dc1a85f76238f14dc6bace00db9ccb9a67b6e9affb133eb5643c72ff521` |
+| `postpublish-011-mock-d0f89a9-powershell.json` | `60a81df15e68b1446ab68ee8217e7bb129a8ccc858e84c1242b3ed7c74880151` |
+| `postpublish-011-installed-skill.json` | `a784218cd479d0fa20564bb42324ecf7ccef79135536a6b93895ac95fcfb6dd7` |
+
+本轮收尾代码检查：`pnpm test:scripts` 为 10 文件 / 154 项通过；
+`pnpm lint`、`pnpm format:check`、`pnpm release:boundaries`、
+`pnpm release:verify`、`pnpm docs:build` 与 `git diff --check` 均退出 0。
+`git diff --exit-code v0.1.1-beta -- packages` 为空，无公共包或已发布产物变更。
+文档构建仍有既有 chunk 大小提示，不调整阈值。
+这些文档、Skill、部署记录更新不新增实机测试；归档后的官网使用另一个干净提交的固定快照，
+最终 Deployment 与逐文件 HTTP 结果留在收尾证据中，不篡改本节首轮快照的 SHA 或时间。

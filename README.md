@@ -36,8 +36,9 @@ Viewport 的 `latest` 为 `0.0.6-beta`；后续安装仍须核对实际 registry
 仓库示例补充 Cockpit 的直接 Viewport 实验、错误恢复和配置交互，
 以及 Admin 的 Viewport / DataV / 轻量 Cockpit Runtime 示例。当前以 `0.1.1-beta` 为 API 基线；
 Designer 名称输入修复自已发布的 `0.0.7-beta` 提供，历史 `0.0.6-beta` 不包含该补丁。
-本轮已通过正式门禁并发布 npm，未手动部署生产；Windows Cockpit Demo 的独立失败按维护者授权暂缓，
-不据此声称 Demo 问题已修复。线上站点不能替代精确提交验收，详见本版发布记录。
+本轮已通过正式门禁并发布 npm，正式发布链未启用生产部署；随后独立授权更新官网、Admin、
+DataV Guide、Compat 和宿主 Skill，见 [后置更新记录](docs/npm-release-0.1.1-beta.md#非-cockpit-站点与宿主-skill-更新)。
+Windows Cockpit Demo 的独立失败仍按授权暂缓，不据此声称其问题已修复。
 接入代码见 [Demo 指南](docs/demo-integration-guide.md)，十包能力见 [覆盖表](docs/public-package-coverage.md)，
 实际环境、构建与浏览器证据见 [整改验收](docs/cockpit-demo-remediation-2026-10-26.md)。
 
