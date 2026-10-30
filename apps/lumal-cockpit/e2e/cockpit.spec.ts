@@ -7,10 +7,13 @@ import { canvasFullClip, canvasSampleClip, countCanvasColors } from './canvas-pi
 async function expectFittedStage(page: Page, width: number, height: number): Promise<void> {
   await expect(page.locator('[data-viewport-mode], [data-scale]')).toHaveCount(0)
   await expect(page.locator('.lumal-cockpit-canvas__stage')).toHaveCSS('transform', 'none')
-  // ResizeObserver 与 RAF 合并更新完成后再记录截图，不能只断言旧地图仍然连接。
+  // 软件渲染时 CDP box model 可能仍是上一帧；直接读取当前 CSS 布局，保留原尺寸误差。
   await expect.poll(async () => {
-    const bounds = await page.locator('.lumal-cockpit-canvas__stage').boundingBox()
-    return Boolean(bounds && Math.abs(bounds.width - width) < 1 && Math.abs(bounds.height - 1080 * width / 1920) < 1)
+    const bounds = await page.locator('.lumal-cockpit-canvas__stage').evaluate((element) => {
+      const { width, height } = element.getBoundingClientRect()
+      return { width, height }
+    })
+    return Math.abs(bounds.width - width) < 1 && Math.abs(bounds.height - 1080 * width / 1920) < 1
   }).toBe(true)
   // 高度不参与比例；矮屏由外层容器滚动承载同一内容。
   // scrollHeight/clientHeight 为整数；1366×768 的内容仅多 0.375px，不构成可滚动溢出。

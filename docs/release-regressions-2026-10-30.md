@@ -85,3 +85,30 @@ Windows 必须为 Microsoft Basic Render Driver / D3D11，避免参数失效后�
 新增配置回归先失败后通过；定向 6 项脚本测试及 E2E 类型检查通过。
 本机完整 Cockpit 12/12 通过，用时约 1 分钟，其中全幅 10.1 秒、恢复 14.9 秒。
 新候选的完整本地门禁、双平台 GitHub 生产验证和正式 Release Gate 仍须独立完成。
+
+### Resize 测量复核
+
+PR #18 的 `75e9a98` 在 Build Validation `40986555091` 再次出现 Windows 11/12：
+这次失败为 resize 后舞台几何断言，20 秒内多次 `boundingBox()` 均不符合预期；
+全幅与恢复用例通过。Ubuntu 生产链、双平台 CI、完整消费者、
+双平台 Vite tarball 和 Windows DataV 均通过，仍不能因此合并或发布。
+
+失败 artifact `12947184463`，SHA256
+`7cb457474e189a9f3f1c8adf5c1c68afd3c55f34805ad9e72844a4b2414651b2`。
+trace 中舞台始终使用 `width:100vw;height:56.25vw`。
+本机对同产物施加六倍 CPU 节流后复现：切回 1920 宽时协议 `boundingBox()`
+仍返回上一帧 1440×810，而随后 DOM `getBoundingClientRect()` 已为 1920×1080；
+切到 1280 宽时协议仍为 1920×1080，DOM 已为 1280×720。
+完整 Chromium 无头实现也能观察到短暂的旧布局，不能靠换 channel 宣称解决。
+
+舞台断言改为直接读取 DOM 布局矩形，与既有 Canvas 几何采样一致；
+保留 `<1px` 误差、原实例、绘图尺寸、真实截图、Worker 网络及退出清理断言，
+不增长 timeout、不增加 retry，也不修改应用尺寸或地图。
+这避免把滞后的协议几何当成当前 CSS vw 结果，仍需新提交的完整 CI 验证。
+
+候选源码的本地完整 `release:check` 已退出 0，包含 1263 项主链单测、
+37 项 Admin 生产 E2E、tarball/模板/原生 zoom、类型、构建及 pack；
+该结果不替代本次测量修正后或新 master 的远端门禁。
+测量修正后的本机 Cockpit 12/12 通过（约 1 分钟；resize 5.0 秒、
+全幅 9.0 秒、恢复 8.6 秒），类型、Lint 和 36 项相关脚本/Skill 测试通过。
+Docs/Cockpit/DataV 构建及 `release:budgets --require-all` 通过，预算未调整。
