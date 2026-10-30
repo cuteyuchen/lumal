@@ -40,7 +40,7 @@ export function nav(): DefaultTheme.NavItem[] {
     },
     {
       // 与公共包保持同版，由文档回归测试和发布边界校验共同检查。
-      text: '0.1.0-beta',
+      text: '0.1.1-beta',
       items: [
         { text: '开发路线图', link: '/reference/development-roadmap' },
         { text: '发布检查清单', link: '/reference/release-checklist' },

@@ -1,7 +1,7 @@
 {
   "name": "@lumal/icons-vue",
   "type": "module",
-  "version": "0.1.0-beta",
+  "version": "0.1.1-beta",
   "description": "Vue components and reactive adapters for @lumal/icons.",
   "license": "MIT",
   "keywords": [
@@ -43,8 +43,8 @@
     "vue": "^3.5.0"
   },
   "dependencies": {
-    "@lumal/icons": "0.1.0-beta",
-    "@lumal/viewport": "0.1.0-beta",
+    "@lumal/icons": "0.1.1-beta",
+    "@lumal/viewport": "0.1.1-beta",
     "morphicons": "2.0.0"
   }
 }

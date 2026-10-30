@@ -10,7 +10,7 @@ pnpm docs:preview
 
 本目录是长文 Markdown（架构、Core API、路线图等）的唯一编辑源。文档站 `src/reference/` 只通过 VitePress include 引用对应文件，不再维护第二份正文。指南 / 包使用 / 组件文档仍以 `apps/lumal-docs` 为准。
 
-工作区与当前指南的 API 基线：候选 `0.1.0-beta`，十包同版准备，未发布 npm。
+工作区与当前指南的 API 基线：候选 `0.1.1-beta`，十包同版准备，未发布 npm。
 本轮使用当前源码和 tarball 验证；业务兼容和部署边界以实际专项记录为准。
 
 本轮交付：[下一阶段审计与验收](./lumal-next-phase-audit.md)、

@@ -1,5 +1,10 @@
 # @lumal/cockpit
 
+## 0.1.1-beta (2026-10-30)
+
+- 包含下方未发布的 0.1.0-beta 纯 vw、Designer 与布局变更；同步固定发布组依赖。
+- 保持业务多布局、拖拽及设计像素保存，不重新引入适配模式或第二层缩放。
+
 ## 0.1.0-beta (2026-10-28)
 
 - Breaking：删除 `CockpitViewportMode`、`viewportMode`、`useCanvasScale` 及整画布适配分支。

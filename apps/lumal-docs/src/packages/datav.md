@@ -15,7 +15,7 @@
 下列命令对应工作区版本；registry 可用性与源码接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm add @lumal/datav@0.1.0-beta vue@^3.5
+pnpm add @lumal/datav@0.1.1-beta vue@^3.5
 # 仅 ECharts 图表模式或 LumalActiveRingChart 需要。
 pnpm add echarts@^6
 ```

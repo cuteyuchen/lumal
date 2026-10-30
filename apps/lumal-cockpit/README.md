@@ -1,6 +1,6 @@
 # lumal-cockpit
 
-独立驾驶舱应用，基于 `@lumal/* 0.1.0-beta` 演示运行时与设计器，并集成 Cesium、OpenLayers、ECharts GEO。应用不进入公共包 tarball；完整生产构建和生产浏览器纳入普通 PR 与 Release Gate。
+独立驾驶舱应用，基于 `@lumal/* 0.1.1-beta` 演示运行时与设计器，并集成 Cesium、OpenLayers、ECharts GEO。应用不进入公共包 tarball；完整生产构建和生产浏览器纳入普通 PR 与 Release Gate。
 
 ## 技术栈
 

@@ -1,5 +1,10 @@
 # @lumal/datav
 
+## 0.1.1-beta (2026-10-30)
+
+- 包含下方未发布的 0.1.0-beta 单一宽度容器及旧模式删除；同步固定发布组依赖。
+- 保留图表、装饰和局部图形功能，不恢复整画布缩放。
+
 ## 0.1.0-beta (2026-10-28)
 
 - Breaking：删除全屏适配模式、`useFullScreenScale`、整画布 transform 和 screen 推断。
