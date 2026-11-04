@@ -1,5 +1,6 @@
 /***********************构建元信息类型*********************/
 export interface AdminBuildInfo {
+  buildId: string
   builtAt: string
   commit: string
   dependencies: Record<string, string>

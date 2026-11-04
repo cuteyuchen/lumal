@@ -22,6 +22,33 @@ afterEach(async () => {
   await Promise.all(temporary.splice(0).map(path => fs.rm(path, { recursive: true, force: true })))
 })
 
+describe('admin 版本更新检测', () => {
+  it.each(['minimal', 'standard', 'vben-compatible'] as const)('%s 按需接入构建插件与提示组件', async (preset) => {
+    const targetDir = join(await directory(), 'demo')
+    const result = await createLumalAdminProject({ name: 'demo-admin', targetDir, preset })
+    const manifest = JSON.parse(await fs.readFile(join(targetDir, 'package.json'), 'utf8'))
+    const vite = await fs.readFile(join(targetDir, 'vite.config.ts'), 'utf8')
+    const component = await fs.readFile(join(targetDir, 'src/app/components/AppVersionUpdate.vue'), 'utf8')
+
+    if (preset === 'minimal') {
+      expect(vite).not.toContain('createVersionManifestPlugin')
+      expect(result.createdFiles).not.toContain('src/app/services/version-check.ts')
+      expect(result.createdFiles).not.toContain('src/version-info.d.ts')
+      expect(component).not.toContain('ElDialog')
+      expect(component).not.toContain('__LUMAL_VERSION_INFO__')
+      return
+    }
+
+    expect(manifest.devDependencies['@lumal/vite']).toBeDefined()
+    expect(vite).toContain('createVersionManifestPlugin')
+    expect(vite).toContain('plugins: [')
+    expect(result.createdFiles).toContain('src/app/services/version-check.ts')
+    expect(result.createdFiles).toContain('src/version-info.d.ts')
+    expect(component).toContain('ElDialog')
+    expect(component).toContain('未保存的内容将丢失')
+  })
+})
+
 describe('模板资源组合', () => {
   for (const preset of ['minimal', 'standard', 'vben-compatible'] as const) {
     for (const apiMode of ['local', 'http'] as const) {

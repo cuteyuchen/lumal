@@ -332,7 +332,13 @@ describe('deployment preparation', () => {
       writeFileSync(join(source, 'index.html'), '<script src="/assets/main.js"></script>')
       writeFileSync(join(source, 'assets/main.js'), 'console.log("built")')
       const output = prepareVercelOutput(source, project)
-      expect(JSON.parse(readFileSync(join(output, 'config.json'), 'utf8'))).toEqual({ version: 3 })
+      const config = JSON.parse(readFileSync(join(output, 'config.json'), 'utf8'))
+      expect(config.version).toBe(3)
+      expect(config.routes).toBeUndefined()
+      expect(config.headers).toEqual(expect.arrayContaining([
+        { source: '/version.json', headers: [{ key: 'Cache-Control', value: 'no-store, max-age=0' }] },
+        { source: '/index.html', headers: [{ key: 'Cache-Control', value: 'no-cache, max-age=0, must-revalidate' }] },
+      ]))
       expect(readFileSync(join(output, 'static/assets/main.js'), 'utf8')).toBe('console.log("built")')
       expect(() => prepareVercelOutput(source, project)).toThrow('拒绝混入旧文件')
     }
@@ -354,16 +360,18 @@ describe('deployment preparation', () => {
       writeFileSync(join(source, 'guide/start.html'), '<h1>Start</h1>')
       writeFileSync(join(source, 'packages/index.html'), '<h1>Packages</h1>')
       const output = prepareVercelOutput(source, project, { cleanUrls: true })
-      expect(JSON.parse(readFileSync(join(output, 'config.json'), 'utf8'))).toEqual({
-        version: 3,
-        overrides: {
-          'guide/start.html': { path: 'guide/start' },
-        },
-        routes: [
-          { handle: 'filesystem' },
-          { src: '/(.*)', dest: '/404.html', status: 404 },
-        ],
+      const config = JSON.parse(readFileSync(join(output, 'config.json'), 'utf8'))
+      expect(config.version).toBe(3)
+      expect(config.overrides).toEqual({
+        'guide/start.html': { path: 'guide/start' },
       })
+      expect(config.routes).toEqual([
+        { handle: 'filesystem' },
+        { src: '/(.*)', dest: '/404.html', status: 404 },
+      ])
+      expect(config.headers).toEqual(expect.arrayContaining([
+        { source: '/version.json', headers: [{ key: 'Cache-Control', value: 'no-store, max-age=0' }] },
+      ]))
       expect(readFileSync(join(output, 'static/packages/index.html'), 'utf8')).toBe('<h1>Packages</h1>')
       expect(readFileSync(join(output, 'static/404.html'), 'utf8')).toBe('<h1>Not Found</h1>')
     }

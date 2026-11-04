@@ -53,10 +53,13 @@ function readCommit(): string {
 export function createAdminBuildInfo(mode: string): AdminBuildInfo {
   const manifest = readManifest(join(appRoot, 'package.json'))
   const coreManifest = readInstalledPackage('@lumal/core')
+  const builtAt = new Date().toISOString()
+  const commit = readCommit()
 
   return {
-    builtAt: new Date().toISOString(),
-    commit: readCommit(),
+    buildId: `${commit}-${builtAt}`,
+    builtAt,
+    commit,
     dependencies: resolveDependencyVersions(manifest.dependencies),
     devDependencies: resolveDependencyVersions(manifest.devDependencies),
     license: coreManifest.license ?? '未声明',

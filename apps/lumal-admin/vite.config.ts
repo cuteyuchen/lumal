@@ -1,7 +1,7 @@
 import type { ConfigEnv, UserConfig } from 'vite'
 import process from 'node:process'
 import { fileURLToPath, URL } from 'node:url'
-import { createLumalAliases, createViewportTransformPlugin } from '@lumal/vite'
+import { createLumalAliases, createVersionManifestPlugin, createViewportTransformPlugin } from '@lumal/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig, normalizePath } from 'vite'
 import { createAdminBuildInfo } from './build/app-info'
@@ -46,13 +46,24 @@ const elementPlusOverlayComponents = new Set([
 /***********************应用开发配置*********************/
 // Demo 的两份产物只改变转换开关，复用相同源码、设计宽度和依赖范围。
 export function createAdminViteConfig({ command, isPreview, mode }: ConfigEnv, viewportEnabled = true): UserConfig {
+  // 一次构建只生成一份快照；About 展示、JS 注入和 version.json 共用该身份。
+  const buildInfo = createAdminBuildInfo(mode)
+
   return {
     base: viewportEnabled ? '/' : '/px/',
     define: {
-      __LUMAL_ADMIN_BUILD_INFO__: JSON.stringify(createAdminBuildInfo(mode)),
+      __LUMAL_ADMIN_BUILD_INFO__: JSON.stringify(buildInfo),
     },
     plugins: [
       vue(),
+      createVersionManifestPlugin({
+        info: {
+          buildId: buildInfo.buildId,
+          builtAt: buildInfo.builtAt,
+          commit: buildInfo.commit,
+          version: buildInfo.version,
+        },
+      }),
       createViewportTransformPlugin({
         enabled: viewportEnabled,
         // 一处定义设计宽度；自有包样式自动接入，第三方只授权已验证的 Element Plus。

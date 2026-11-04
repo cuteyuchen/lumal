@@ -4,7 +4,7 @@ import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
 import process from 'node:process'
 import { getViewportConfig, viewportLength, viewportPixels } from '@lumal/viewport'
-import { createViewportPostcssPlugin, createViewportTransformPlugin } from '@lumal/vite'
+import { createVersionManifestPlugin, createViewportPostcssPlugin, createViewportTransformPlugin } from '@lumal/vite'
 import postcss from 'postcss'
 import { compile } from 'sass-embedded'
 import { build, createServer } from 'vite'
@@ -115,7 +115,9 @@ function inlineValues(html, className) {
 async function main() {
   const commonjs = require('@lumal/vite')
   assert.equal(typeof commonjs.createViewportTransformPlugin, 'function')
+  assert.equal(typeof commonjs.createVersionManifestPlugin, 'function')
   assert.equal(typeof createViewportTransformPlugin, 'function')
+  assert.equal(typeof createVersionManifestPlugin, 'function')
   await assertConsumerPackage(require.resolve('@lumal/vite'), root)
   for (const [format, api] of [['esm', { createViewportPostcssPlugin }], ['cjs', commonjs]]) {
     const result = await postcss([api.createViewportPostcssPlugin(options, root)])

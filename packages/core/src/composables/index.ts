@@ -33,3 +33,21 @@ export type {
   UseSelectionOptions,
   UseSelectionReturn,
 } from './useSelection'
+export {
+  createVersionChecker,
+  resolveVersionManifestUrl,
+  useVersionCheck,
+  VersionCheckError,
+} from './useVersionCheck'
+export type {
+  CreateVersionCheckOptions,
+  LumalVersionInfo,
+  UseVersionCheckReturn,
+  VersionCheckController,
+  VersionCheckDocument,
+  VersionCheckEnvironment,
+  VersionCheckErrorReason,
+  VersionCheckFetch,
+  VersionCheckResponse,
+  VersionCheckWindow,
+} from './useVersionCheck'

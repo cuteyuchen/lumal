@@ -21,5 +21,14 @@ export {
 export type {
   ResolveLumalDevtoolsPluginOptions,
 } from './devtools'
+export {
+  createVersionBuildId,
+  createVersionManifest,
+  createVersionManifestPlugin,
+} from './version-manifest'
+export type {
+  CreateVersionManifestPluginOptions,
+  VersionManifest,
+} from './version-manifest'
 export { createViewportPostcssPlugin, createViewportTransformPlugin } from './viewport-transform'
 export type { ViewportTransformOptions } from './viewport-transform'

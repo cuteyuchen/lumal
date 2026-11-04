@@ -9,6 +9,7 @@ import { computed, defineAsyncComponent, onErrorCaptured, reactive, shallowRef, 
 import { useRoute, useRouter } from 'vue-router';
 import { appConfig } from './app.config';
 import AppHeaderActions from './app/components/AppHeaderActions.vue';
+import AppVersionUpdate from './app/components/AppVersionUpdate.vue';
 import { safeExternalUrl } from './app/menu-policy';
 import { createAdminSidebarMenus, createAdminTabs } from './app/router';
 import {
@@ -202,5 +203,7 @@ async function handleLogout(): Promise<void> {
       @reset="handlePreferencesChange"
       @update:preferences="handlePreferencesChange"
     />
+
+    <AppVersionUpdate />
   </ElConfigProvider>
 </template>

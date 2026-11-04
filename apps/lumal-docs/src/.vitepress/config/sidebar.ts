@@ -48,6 +48,7 @@ function sidebarGuide(): DefaultTheme.SidebarItem[] {
         { text: '请求与适配', link: 'in-depth/request' },
         { text: '布局与标签', link: 'in-depth/layout' },
         { text: '字典', link: 'in-depth/dictionary' },
+        { text: '版本更新提示', link: 'in-depth/version-update' },
         { text: '从 Vben 迁移', link: 'in-depth/migration' },
       ],
     },

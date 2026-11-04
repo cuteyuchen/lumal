@@ -42,6 +42,12 @@ await createLumalAdmin({ rootComponent: App }).mount('#app')
 
 UI 沿用 Vue、Element Plus 和既有样式入口，不新增依赖；完整 Vue 示例见 `docs/core-api.md` 的 Theme 部分。
 
+## 部署版本检查
+
+`@lumal/core/composables` 导出 `useVersionCheck` 与 `createVersionChecker`：首查直接与页面内置
+`buildId` 比较，默认每 5 分钟检查一次，`document.hidden` 暂停，恢复可见或联网立即检查。
+失败、超时与非法响应只上报错误，不产生假更新；`beforeReload` 可用于保护未保存内容。
+
 ## 纯 vw 接入
 
 在消费项目的 `@lumal/vite` 中启用转换并配置一次 `viewportWidth`。
