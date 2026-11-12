@@ -1,5 +1,24 @@
 # 更新日志
 
+## 0.1.2-beta (2026-11-12)
+
+十包同版发布，对 `0.1.1-beta` 保持 API 兼容；正式门禁、registry 与同次产物核验见
+[本版发布记录](./npm-release-0.1.2-beta.md)。
+
+- `@lumal/vite` 新增 `createVersionManifestPlugin`：一次构建只生成一份构建身份，
+  通过 `define` 注入 `__LUMAL_VERSION_INFO__` 并输出 `version.json`，SSR 默认不生成部署清单。
+- `@lumal/core/composables` 新增 `createVersionChecker` / `useVersionCheck`：
+  首查直接比较客户端 `buildId`，支持定时轮询、页面隐藏暂停、联网恢复、单飞请求、
+  超时与非法响应容错、`dismiss` 与刷新守卫。
+- Admin 根级接入 `AppVersionUpdate`，部署更新后提示「稍后 / 立即刷新」，
+  默认生产启用、5 分钟间隔、首次延迟 1.5 秒；未保存内容由业务守卫阻止直接刷新。
+- Admin standard / vben-compatible 模板默认生成版本检测与提示组件；
+  minimal 保持空实现，不引入检测运行时。
+- `/` 与 `/px/` 各自从自身 `BASE_URL` 读取 `version.json`，构建后脚本校验两份清单与
+  注入值一致；Vercel Build Output 为 `version.json` 设置 `no-store`、入口 HTML 设置 `no-cache`。
+- 本版十包 `beta` 指向 `0.1.2-beta`，既有 `latest` 保持不变；不重跑旧版本发布链，
+  正式发包阶段未启用生产部署。
+
 ## 0.1.1-beta (2026-10-30)
 
 十包已发布，正式门禁、registry 与独立消费者见 [本版发布记录](./npm-release-0.1.1-beta.md)。

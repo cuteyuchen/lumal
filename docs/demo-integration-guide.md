@@ -1,8 +1,8 @@
 # Demo 与业务接入
 
-当前 API 基线为已发布的 `0.1.1-beta`，见 [本版发布记录](./npm-release-0.1.1-beta.md)。
+当前 API 基线为已发布的 `0.1.2-beta`，见 [本版发布记录](./npm-release-0.1.2-beta.md)。
 正式发包阶段未启用生产部署；随后官网、Admin、DataV Guide、Compat 和 Mock API 的
-单独授权更新见 [后置记录](./npm-release-0.1.1-beta.md#非-cockpit-站点与宿主-skill-更新)。
+单独授权更新见 [后置记录](./npm-release-0.1.2-beta.md#非-cockpit-站点与宿主-skill-更新)。
 包发布、站点更新和真实业务验收仍是不同边界。
 Windows Cockpit Demo 的独立失败按维护者授权暂缓，不据此宣称 Demo 已修复。
 上一版 Designer 名称修复与正式发布证据见 [0.0.7-beta 发布记录](./npm-release-0.0.7-beta.md)。
@@ -23,7 +23,7 @@ Demo 页面和文档部署是独立步骤，历史授权站点更新见
 
 ```sh
 # 使用已发布的精确版本；开发未发布源码时使用本地 tarball 中的 CLI。
-pnpm --package=create-lumal-admin@0.1.1-beta dlx create-lumal internal-screen --template screen --auth http --data http --router-mode history --design-width 1920
+pnpm --package=create-lumal-admin@0.1.2-beta dlx create-lumal internal-screen --template screen --auth http --data http --router-mode history --design-width 1920
 cd internal-screen
 pnpm install
 pnpm check

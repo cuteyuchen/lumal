@@ -50,6 +50,7 @@ export async function composeTemplates(options: ReturnType<typeof resolveOptions
   if (options.preset === 'vben-compatible')
     manifest.dependencies['@lumal/vben-compat'] = version
   applyViewportTemplate(files, manifest, options, version)
+  applyVersionManifestTemplate(files, manifest, options, version)
   manifest.dependencies = Object.fromEntries(Object.entries(manifest.dependencies).sort(([left], [right]) => left.localeCompare(right)))
   manifest.devDependencies = Object.fromEntries(Object.entries(manifest.devDependencies).sort(([left], [right]) => left.localeCompare(right)))
   files.set('package.json', `${JSON.stringify(manifest, null, 2)}\n`)
@@ -102,6 +103,48 @@ export function applyViewportTemplate(
       customProperties: true,
 ${dependencies}    }),
   ]`))
+}
+
+/** standard 与 vben-compatible 默认接入生产构建版本检测；minimal 保持空实现。 */
+export function applyVersionManifestTemplate(
+  files: Map<string, string>,
+  manifest: { dependencies: Record<string, string>, devDependencies: Record<string, string> },
+  options: { preset: 'minimal' | 'standard' | 'vben-compatible' },
+  version: string,
+) {
+  if (options.preset === 'minimal')
+    return
+
+  manifest.devDependencies['@lumal/vite'] = version
+  const config = files.get('vite.config.ts')
+  if (!config)
+    throw new Error('缺少 vite.config.ts 模板')
+
+  let next = config
+  if (next.includes('from \'@lumal/vite\'')) {
+    next = next.replace(
+      /import \{ ([^}]+) \} from '@lumal\/vite';/,
+      (_, names: string) => {
+        const entries = new Set(names.split(',').map(name => name.trim()))
+        entries.add('createVersionManifestPlugin')
+        return `import { ${[...entries].sort().join(', ')} } from '@lumal/vite';`
+      },
+    )
+  }
+  else {
+    next = next.replace(
+      'import { defineConfig } from \'vite\';',
+      'import { createVersionManifestPlugin } from \'@lumal/vite\';\nimport { defineConfig } from \'vite\';',
+    )
+  }
+
+  next = next.replace(/plugins: \[(\s*)vue\(\)/, (match, whitespace: string) => {
+    if (!whitespace.includes('\n'))
+      return `${match}, createVersionManifestPlugin()`
+    const indent = whitespace.slice(whitespace.lastIndexOf('\n') + 1)
+    return `${match},\n${indent}createVersionManifestPlugin()`
+  })
+  files.set('vite.config.ts', next)
 }
 
 /** 工程层只读合成，缺失资源在首次写入前失败。 */

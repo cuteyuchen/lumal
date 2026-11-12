@@ -14,6 +14,7 @@ import { computed, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeaderActions from './components/app/AppHeaderActions.vue'
 import AppSettingsDrawer from './components/app/AppSettingsDrawer.vue'
+import AppVersionUpdate from './components/app/AppVersionUpdate.vue'
 import LumalBrand from './components/app/LumalBrand.vue'
 import {
   createAdminSidebarMenus,
@@ -256,5 +257,7 @@ function handleTabsChange(tabs: LumalLayoutTabItem[]): void {
         />
       </template>
     </LumalLayout>
+
+    <AppVersionUpdate />
   </ElConfigProvider>
 </template>

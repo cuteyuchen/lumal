@@ -1,6 +1,6 @@
 # @lumal/vite
 
-本页对应已发布的 `0.1.1-beta`。消费项目使用公开 exports，不使用工作区源码 alias。
+本页对应已发布的 `0.1.2-beta`。消费项目使用公开 exports，不使用工作区源码 alias。
 
 ## 什么时候用
 

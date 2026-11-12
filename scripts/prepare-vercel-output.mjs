@@ -10,7 +10,18 @@ export function prepareVercelOutput(source, projectDir, { cleanUrls = false } = 
     throw new Error(`静态产物缺少 index.html：${source}`)
   if (existsSync(output))
     throw new Error(`部署输出已存在，拒绝混入旧文件：${output}`)
-  const config = { version: 3 }
+  const config = {
+    version: 3,
+    // 构建身份与入口 HTML 必须重新验证；内容哈希资源继续使用平台长缓存。
+    headers: [
+      { source: '/version.json', headers: [{ key: 'Cache-Control', value: 'no-store, max-age=0' }] },
+      { source: '/px/version.json', headers: [{ key: 'Cache-Control', value: 'no-store, max-age=0' }] },
+      { source: '/', headers: [{ key: 'Cache-Control', value: 'no-cache, max-age=0, must-revalidate' }] },
+      { source: '/index.html', headers: [{ key: 'Cache-Control', value: 'no-cache, max-age=0, must-revalidate' }] },
+      { source: '/px', headers: [{ key: 'Cache-Control', value: 'no-cache, max-age=0, must-revalidate' }] },
+      { source: '/px/index.html', headers: [{ key: 'Cache-Control', value: 'no-cache, max-age=0, must-revalidate' }] },
+    ],
+  }
   if (cleanUrls) {
     if (!existsSync(join(source, '404.html')))
       throw new Error(`文档静态产物缺少 404.html：${source}`)

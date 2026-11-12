@@ -82,6 +82,12 @@ Cockpit 改名前配置的历史证据见 [Demo 整改验收](../docs/cockpit-de
 
 正式发布使用 `scripts/prepare-vercel-output.mjs` 封装已验证的静态目录，再执行固定版本 Vercel CLI 的 `deploy --prebuilt --prod`，不在凭据作业重新构建。Docs 启用 `--clean-urls`，保留无扩展名深层路径、目录首页和 HTTP 404。完整说明见 [发布检查清单](../docs/release-checklist.md#部署配置)。
 
+Admin 构建还会生成 `version.json` 与 `px/version.json`，供旧页面检测部署更新。封装脚本为两个清单设置
+`Cache-Control: no-store, max-age=0`，为 `/`、`/index.html` 和 `/px/` 入口设置
+`no-cache, max-age=0, must-revalidate`；内容哈希 JS/CSS 仍使用平台长缓存。不要把未知路径统一重写到
+`index.html`，否则缺失的 `version.json` 会返回 200 HTML。浏览器端检测与 `/px/` 独立构建说明见
+[版本更新提示](../apps/lumal-docs/src/guide/in-depth/version-update.md)。
+
 ## 工作流分工
 
 | 工作流 | 触发 | 职责 |

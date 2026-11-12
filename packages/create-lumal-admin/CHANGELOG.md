@@ -1,5 +1,11 @@
 # create-lumal-admin
 
+## 0.1.2-beta (2026-11-12)
+
+- standard / vben-compatible 模板默认接入 `createVersionManifestPlugin` 与根级版本更新提示，
+  生成项目可通过环境变量关闭检测或调整间隔；minimal 保持空实现，不引入检测运行时。
+- 生成依赖精确同步为 0.1.2-beta；保留既有模板组合、版本占位符与体积预算。
+
 ## 0.1.1-beta (2026-10-30)
 
 - 生成的 Admin 生产配置保持模块执行顺序，修复循环分包导致角色授权树内部 Checkbox 未初始化的问题；保留原有懒加载、vendor 分组和体积限制。

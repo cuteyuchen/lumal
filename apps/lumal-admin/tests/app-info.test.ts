@@ -31,6 +31,7 @@ describe('admin build info', () => {
     const info = createAdminBuildInfo('production')
 
     expect(info).toMatchObject({
+      buildId: '8e54553-2026-10-19T02:03:04.000Z',
       builtAt: '2026-10-19T02:03:04.000Z',
       commit: '8e54553',
       license: 'MIT',
@@ -38,6 +39,7 @@ describe('admin build info', () => {
       version: installedVersion('@lumal/core'),
     })
     expect(info.version).not.toBe('0.0.0')
+    expect(info.buildId).toBe(`${info.commit}-${info.builtAt}`)
     expect(info.dependencies).toMatchObject({
       '@lumal/core': installedVersion('@lumal/core'),
       'echarts': installedVersion('echarts'),
@@ -47,6 +49,19 @@ describe('admin build info', () => {
     expect(info.devDependencies.vite).toBe(installedVersion('vite'))
     expect(Object.keys(info.dependencies)).toEqual(Object.keys(info.dependencies).sort())
     expect(Object.values(info.dependencies).some(version => /^[~^]/.test(version))).toBe(false)
+  })
+
+  it('每次构建的 buildId 由提交与构建时间组成，版本号不参与唯一性', () => {
+    git.mockReset()
+    git.mockReturnValueOnce('8e54553\n').mockReturnValueOnce('')
+    const first = createAdminBuildInfo('production')
+    git.mockReturnValueOnce('8e54553\n').mockReturnValueOnce('')
+    vi.setSystemTime(new Date('2026-10-19T02:03:05Z'))
+    const second = createAdminBuildInfo('production')
+
+    expect(first.version).toBe(second.version)
+    expect(first.buildId).not.toBe(second.buildId)
+    expect(first.buildId).toBe(`${first.commit}-${first.builtAt}`)
   })
 
   it('未提交的已跟踪文件变更会标记 dirty，避免误认为是原始提交产物', () => {

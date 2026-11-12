@@ -1,7 +1,7 @@
 # @lumal/viewport
 
-已发布的 `0.1.1-beta`：宽度数值工具与实际尺寸测量，仅依赖 Vue，不需要 Core 或 UI。
-正式门禁与产物核验见 [发布记录](/reference/npm-release-0.1.1-beta)。
+已发布的 `0.1.2-beta`：宽度数值工具与实际尺寸测量，仅依赖 Vue，不需要 Core 或 UI。
+正式门禁与产物核验见 [发布记录](/reference/npm-release-0.1.2-beta)。
 
 | 项 | 值 |
 | --- | --- |
@@ -16,7 +16,7 @@
 下列命令显式选择本版；开发未发布源码时的接入见 [安装说明](/guide/essentials/installation)。
 
 ```bash
-pnpm add @lumal/viewport@0.1.1-beta vue@^3.5
+pnpm add @lumal/viewport@0.1.2-beta vue@^3.5
 ```
 
 ## 公开入口

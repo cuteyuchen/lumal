@@ -1,7 +1,7 @@
 # @lumal/vite
 
 来源受控的 px → vw 编译转换，以及组件 resolver、工作区 alias 与可选 Devtools 接线。
-本文对应 `0.1.1-beta` 公开 API，包含纯 vw 的破坏性变更；开发未发布源码时使用精确提交的 tarball 验证。
+本文对应 `0.1.2-beta` 公开 API，包含纯 vw 的破坏性变更；开发未发布源码时使用精确提交的 tarball 验证。
 
 ## 最小接入
 
@@ -127,6 +127,14 @@ const resolver = createLumalComponentResolver({ importStyle: true })
 alias 只用于真实 Lumal 工作区；npm 消费者使用公开 exports。
 resolver 接入已有自动导入插件，不强制安装该插件或全量 UI。
 `resolveLumalDevtoolsPlugin({ enabled, factory })` 仅开启时调用 factory。
+
+## 部署版本清单
+
+`createVersionManifestPlugin()` 在构建期生成 `version.json`，并向浏览器注入同一份
+`buildId` / `version` / `commit` / `builtAt` 快照。插件只作用于 `build`，文件写在本次
+`outDir` 根目录，子路径构建不会误用站点根路径。SSR 构建默认不生成部署清单，可用
+`ssr: true` 显式开启；`enabled` / `fileName` / `defineName` / `inject` / `root` 均可覆盖。
+运行期检查由 `@lumal/core/composables` 的 `useVersionCheck` 承担。
 
 ## 验证与迁移
 
