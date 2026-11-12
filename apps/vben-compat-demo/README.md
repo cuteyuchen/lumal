@@ -1,6 +1,6 @@
 # vben-compat-demo
 
-基于已发布的 `@lumal/* 0.1.1-beta` 的兼容层示例应用（包名 `lumal-vben-compat-demo`），演示如何在 Vben 风格的 API 之上使用 Lumal 组件库，帮助从 Vben Admin 迁移的项目接入。
+基于已发布的 `@lumal/* 0.1.2-beta` 的兼容层示例应用（包名 `lumal-vben-compat-demo`），演示如何在 Vben 风格的 API 之上使用 Lumal 组件库，帮助从 Vben Admin 迁移的项目接入。
 
 ## 技术栈
 
@@ -54,4 +54,4 @@ src/
 动态业务表达式和第三方实际定位不扫描；细边框、原子类与明确忽略项保持约定。
 
 接入规则见 [统一 vw 指南](../../docs/screen-viewport-guide.md)，
-部署与公网资源核验见 [0.1.1-beta 执行记录](../../docs/npm-release-0.1.1-beta.md#非-cockpit-站点与宿主-skill-更新)。
+部署与公网资源核验见 [0.1.2-beta 执行记录](../../docs/npm-release-0.1.2-beta.md#非-cockpit-站点与宿主-skill-更新)。

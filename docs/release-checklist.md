@@ -8,10 +8,9 @@
 `@lumal/viewport` 自 `0.0.6-beta` 加入十包集合；该版已发布并完成 registry 与同次发布产物核验，见 [历史发布记录](./npm-release-0.0.6-beta.md)。
 `0.0.7-beta` 已完成正式门禁、registry、同次发布产物及六类 registry 消费者核验，
 见 [历史发布记录](./npm-release-0.0.7-beta.md)。正式 npm 发布时未启用生产部署；后置站点恢复单独记录。
-当前破坏性纯 vw 版本 `0.1.1-beta` 已获授权并完成发布，见 [本版发布记录](./npm-release-0.1.1-beta.md)。
-正式发包阶段未启用生产部署；后续官网及非 Cockpit 站点更新单独授权并记录在
-[后置更新记录](./npm-release-0.1.1-beta.md#非-cockpit-站点与宿主-skill-更新)。
-Windows Cockpit Demo 的独立失败按授权暂缓，不改写其失败状态或发布图。
+当前版本 `0.1.2-beta` 新增部署构建版本提示，见 [本版发布记录](./npm-release-0.1.2-beta.md)。
+上一版 `0.1.1-beta` 的正式发布、后置站点更新与 Windows Cockpit Demo 暂缓记录保留在
+[历史发布记录](./npm-release-0.1.1-beta.md)，不改写其失败状态或发布图。
 创建 PR 或通过 CI 不自动授权后续版本的合并、发包和部署。
 已发布版本不能用于新的全量发布；部分可见也不得重发。下一次正式发布前仍须逐包查询 registry，任一已有版本或网络异常都应中断。
 

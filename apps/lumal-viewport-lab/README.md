@@ -1,7 +1,7 @@
 # lumal-viewport-lab
 
 统一宽度 vw 的独立 Vue 验收夹具，不是新的公共包，也没有单独部署的生产站点。
-基于当前 `@lumal/* 0.1.1-beta`，用于复现普通 CSS/SCSS、模板 style、数字工具、
+基于当前 `@lumal/* 0.1.2-beta`，用于复现普通 CSS/SCSS、模板 style、数字工具、
 容器测量、Element Plus、ECharts 和 OpenLayers 的协作边界。
 
 ## 本地运行
@@ -26,4 +26,4 @@ Vite 在启动时输出实际本地地址。`vite.config.ts` 一次配置设计�
 后者会串行重建并打包 Vite/Viewport，在仓库外创建真实消费者；不要用此前留下的 dist 代替候选版本验证。
 
 规则与已发布版本证据分别见 [统一 vw 指南](../../docs/screen-viewport-guide.md)
-和 [0.1.1-beta 执行记录](../../docs/npm-release-0.1.1-beta.md)。
+和 [0.1.2-beta 执行记录](../../docs/npm-release-0.1.2-beta.md)。

@@ -64,4 +64,4 @@ utils/             # 通用工具
 
 公开服务仅用于演示，会话使用隔离的内存数据。上线核验只检查健康状态、CORS、菜单和权限，
 临时登录后退出，不对其他用户会话执行 CRUD、重置或全套浏览器测试。
-本版实际部署见 [0.1.1-beta 执行记录](../../docs/npm-release-0.1.1-beta.md#非-cockpit-站点与宿主-skill-更新)。
+本版实际部署见 [0.1.2-beta 执行记录](../../docs/npm-release-0.1.2-beta.md#非-cockpit-站点与宿主-skill-更新)。

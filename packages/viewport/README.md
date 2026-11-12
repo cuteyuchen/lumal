@@ -1,6 +1,6 @@
 # @lumal/viewport
 
-宽度数值工具与元素测量。本文对应 `0.1.1-beta` 公开 API，旧多模式 API 已移除。
+宽度数值工具与元素测量。本文对应 `0.1.2-beta` 公开 API，旧多模式 API 已移除。
 静态 CSS-only 项目只需 `@lumal/vite`，不必安装本包。
 
 ## 一次配置

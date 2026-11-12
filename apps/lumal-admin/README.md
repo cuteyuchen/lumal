@@ -1,6 +1,6 @@
 # lumal-admin
 
-Lumal 中后台管理台示例应用，基于已发布的 `@lumal/* 0.1.1-beta` 公开 API 搭建，演示登录鉴权、动态菜单、权限指令、SchemaForm/CrudTable、主题定制，以及统一 vw、DataV 和 Cockpit Runtime 集成。
+Lumal 中后台管理台示例应用，基于已发布的 `@lumal/* 0.1.2-beta` 公开 API 搭建，演示登录鉴权、动态菜单、权限指令、SchemaForm/CrudTable、主题定制，以及统一 vw、DataV 和 Cockpit Runtime 集成。
 
 ## 技术栈
 
@@ -119,8 +119,8 @@ pnpm test:e2e:release:built apps/lumal-admin/e2e/visualization-examples.spec.ts
 首次生产验收基线为 `e2ac131`；实际 Deployment、菜单与资源证据见
 [0.0.7-beta 历史部署记录](../../docs/npm-release-0.0.7-beta.md#合并与站点实际验收)。
 后续本地改动仍须独立构建、部署，不能凭 npm 版本推断线上已更新。
-`0.1.1-beta` 的正式站点、VW/PX 双入口及 Mock 权限核验见
-[本版后置更新记录](../../docs/npm-release-0.1.1-beta.md#非-cockpit-站点与宿主-skill-更新)。
+`0.1.2-beta` 的正式站点、VW/PX 双入口及 Mock 权限核验见
+[本版后置更新记录](../../docs/npm-release-0.1.2-beta.md#非-cockpit-站点与宿主-skill-更新)。
 
 当前纯 vw 实现没有工作区模式菜单、路由适配豁免、局部字号补偿或整画布缩放。
 Header、侧栏、内容区和 body 弹层遵循同一设计宽度；旧模式偏好键在启动时定向清理，

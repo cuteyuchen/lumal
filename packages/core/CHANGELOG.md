@@ -1,5 +1,13 @@
 # @lumal/core
 
+## 0.1.2-beta (2026-11-12)
+
+- 新增 `@lumal/core/composables` 版本检查：`createVersionChecker` / `useVersionCheck`、
+  `resolveVersionManifestUrl` 与 `VersionCheckError`；首查直接比较客户端 `buildId`，
+  支持轮询、隐藏暂停、联网恢复、单飞请求、超时与非法响应容错、关闭提示和刷新守卫。
+- 停止或卸载会清理计时器、可见性/联网监听与在途请求；不新增运行时依赖。
+- 与十包固定发布组同步为 0.1.2-beta，未更改既有组件、主题与 API。
+
 ## 0.1.1-beta (2026-10-30)
 
 - 原生标签按钮显式继承主题字体，修复 vw 适配后按钮缩小而 UA 字号保持不变、文字溢出的问题。

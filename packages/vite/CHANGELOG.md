@@ -1,5 +1,13 @@
 # @lumal/vite
 
+## 0.1.2-beta (2026-11-12)
+
+- 新增 `createVersionManifestPlugin`：一次构建只生成一份构建身份快照，
+  注入 `__LUMAL_VERSION_INFO__` 并输出 `version.json`；SSR 默认不生成部署清单。
+- 导出 `createVersionManifest`、`createVersionBuildId` 与相关类型；不新增运行时依赖，
+  不改变既有 viewport 转换、来源和原子化行为。
+- 与十包固定发布组同步为 0.1.2-beta。
+
 ## 0.1.1-beta (2026-10-30)
 
 - 包含下方未发布的 0.1.0-beta 纯 vw 转换与公共样式接入；保留 AST、来源与原子化保护。

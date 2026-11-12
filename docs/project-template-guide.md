@@ -1,19 +1,19 @@
 # 项目模板
 
-本文面向已发布的 `0.1.1-beta`，扩展现有 `create-lumal-admin`，不新增独立 npm 包。包内提供
+本文面向已发布的 `0.1.2-beta`，扩展现有 `create-lumal-admin`，不新增独立 npm 包。包内提供
 `create-lumal` binary 和 `createLumalProject` API，保留旧 binary、API 与默认参数。
 `create-lumal` 名称在 2026-10-23 的 registry 查询返回 E404，不表示已取得发布权。
 当前仍没有独立的 `create-lumal` npm 包，不要把 `pnpm create lumal` 当成已发布命令。
 
 ## 版本与入口
 
-`create-lumal-admin@0.1.1-beta` 已发布，以下命令使用精确 registry 版本，
-正式门禁和独立工程验证见 [发布记录](./npm-release-0.1.1-beta.md)：
+`create-lumal-admin@0.1.2-beta` 已发布，以下命令使用精确 registry 版本，
+正式门禁和独立工程验证见 [发布记录](./npm-release-0.1.2-beta.md)：
 
 ```sh
-pnpm --package=create-lumal-admin@0.1.1-beta dlx create-lumal demo --template blank
-pnpm --package=create-lumal-admin@0.1.1-beta dlx create-lumal screen-demo --template screen
-pnpm create lumal-admin@0.1.1-beta admin-app --preset standard --api-mode local
+pnpm --package=create-lumal-admin@0.1.2-beta dlx create-lumal demo --template blank
+pnpm --package=create-lumal-admin@0.1.2-beta dlx create-lumal screen-demo --template screen
+pnpm create lumal-admin@0.1.2-beta admin-app --preset standard --api-mode local
 ```
 
 安装前核对实际版本；验证未发布源码时使用本地 tarball，不用旧 CLI 代替新增能力。

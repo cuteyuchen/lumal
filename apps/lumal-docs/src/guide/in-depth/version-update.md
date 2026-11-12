@@ -33,7 +33,7 @@ export default defineConfig({
 ```json
 {
   "buildId": "eb822ad-2026-11-04T08:51:20.900Z",
-  "version": "0.1.1-beta",
+  "version": "0.1.2-beta",
   "commit": "eb822ad",
   "builtAt": "2026-11-04T08:51:20.900Z"
 }

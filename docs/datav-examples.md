@@ -6,11 +6,11 @@
 
 ## 安装与注册
 
-以下命令显式选择已发布的 `0.1.1-beta`；开发未发布源码时使用精确提交的本地 tarball。
+以下命令显式选择已发布的 `0.1.2-beta`；开发未发布源码时使用精确提交的本地 tarball。
 只使用数字、边框和列表时无需图表引擎。
 
 ```bash
-pnpm add @lumal/datav@0.1.1-beta vue@^3.5
+pnpm add @lumal/datav@0.1.2-beta vue@^3.5
 # 仅使用 ECharts 模式或 LumalActiveRingChart 时安装。
 pnpm add echarts@^6
 ```

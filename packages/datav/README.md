@@ -4,11 +4,11 @@
 
 ## 安装
 
-下列命令显式安装 `0.1.1-beta`，安装时核对 registry 与实际版本；
+下列命令显式安装 `0.1.2-beta`，安装时核对 registry 与实际版本；
 开发未发布源码时使用本地构建或精确 tarball，不根据本文推断 npm 的当前 dist-tag。
 
 ```bash
-pnpm add @lumal/datav@0.1.1-beta vue@^3.5
+pnpm add @lumal/datav@0.1.2-beta vue@^3.5
 # 仅使用 ECharts 模式或 LumalActiveRingChart 时安装。
 pnpm add echarts@^6
 ```

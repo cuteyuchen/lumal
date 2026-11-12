@@ -1,6 +1,6 @@
 # lumal-datav-guide
 
-基于已发布的 `@lumal/* 0.1.1-beta` 的 DataV 独立指南站，逐一演示各组件的用法与可交互的属性编辑示例。可静态托管，并通过外链形式内嵌到 [lumal-admin](../lumal-admin/README.md)（由其 `VITE_DATAV_GUIDE_URL` 指向本站）。
+基于已发布的 `@lumal/* 0.1.2-beta` 的 DataV 独立指南站，逐一演示各组件的用法与可交互的属性编辑示例。可静态托管，并通过外链形式内嵌到 [lumal-admin](../lumal-admin/README.md)（由其 `VITE_DATAV_GUIDE_URL` 指向本站）。
 
 ## 技术栈
 
@@ -67,4 +67,4 @@ admin 中的 DataV 指南入口通过 iframe 外链本站。本地联调时，`p
 iframe 中的 vw 相对 iframe 自身浏览器布局视口，不相对外层 Admin 的容器宽度。
 动态图表设计数值显式使用宽度工具，实际 DOM/Canvas 测量直接用于 resize，不再换算。
 详细规则见 [统一 vw 指南](../../docs/screen-viewport-guide.md)，线上更新证据见
-[0.1.1-beta 执行记录](../../docs/npm-release-0.1.1-beta.md#非-cockpit-站点与宿主-skill-更新)。
+[0.1.2-beta 执行记录](../../docs/npm-release-0.1.2-beta.md#非-cockpit-站点与宿主-skill-更新)。

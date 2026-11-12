@@ -10,7 +10,7 @@ pnpm docs:preview
 
 本目录是长文 Markdown（架构、Core API、路线图等）的唯一编辑源。文档站 `src/reference/` 只通过 VitePress include 引用对应文件，不再维护第二份正文。指南 / 包使用 / 组件文档仍以 `apps/lumal-docs` 为准。
 
-工作区与当前指南的 API 基线：已发布的 `0.1.1-beta`，十包同版。
+工作区与当前指南的 API 基线：已发布的 `0.1.2-beta`，十包同版。
 正式门禁、registry 与独立消费者见本版发布记录；业务兼容和部署边界以实际专项记录为准。
 
 本轮交付：[下一阶段审计与验收](./lumal-next-phase-audit.md)、
@@ -22,7 +22,7 @@ pnpm docs:preview
 历史交付：[三模板与 Vben 5 升级验收](./upgrade-verification.md)，能力起点见 [源码审计](./upgrade-audit.md)，迁移边界见 [Vben 5 兼容矩阵](./migration-from-vben.md)。
 
 当前开发记录：[纯 vw 重构](./pure-vw-refactor-2026-10-28.md)。
-本版发布记录：[0.1.1-beta npm 发布记录](./npm-release-0.1.1-beta.md)。
+本版发布记录：[0.1.2-beta npm 发布记录](./npm-release-0.1.2-beta.md)。
 历史已核验记录：[0.0.7-beta](./npm-release-0.0.7-beta.md)、
 [0.0.6-beta](./npm-release-0.0.6-beta.md)、[0.0.5-beta](./npm-release-0.0.5-beta.md)；
 历史报告不替代新提交核验。
