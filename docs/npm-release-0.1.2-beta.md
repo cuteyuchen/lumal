@@ -1,7 +1,7 @@
 # 0.1.2-beta 发布执行记录
 
-日期：2026-11-12。状态：版本与文档已准备，等待正式 Release Gate 与 npm 发布；
-门禁 run、artifact 与 registry 证据在发布完成后补入本记录。
+日期：2026-11-12。**十包已发布，正式门禁、同次产物与 registry 核验通过；生产部署未启用。**
+发布命令成功、registry 可见性与消费者验证分别记录，不相互替代。
 
 ## 版本与授权
 
@@ -48,13 +48,40 @@
 
 ## 正式门禁
 
-待发布后补入：Release Gate run、四个校验作业、十包串行发布作业与
-`lumal-npm-dist-<sha>` artifact。
+[Release Gate 43180740143](https://github.com/cuteyuchen/lumal/actions/runs/43180740143)
+由 `v0.1.2-beta` 标签 push 触发，源提交
+`dcca22c520e0c1aee4a6f53d520fd58ef06dcfae`，四个校验全部成功后才发布十包，
+没有复用历史通过状态。
+
+| 校验 / 作业 | Job | 结果 / 时间（UTC） |
+| --- | --- | --- |
+| 版本、lockfile、tag、工作流安全与 actionlint | `131055804462` | success，08:10:11–08:10:34 |
+| Windows lint、格式、单测、类型、构建、tarball 与公共包检查 | `131055993122` | success，08:10:37–08:21:16 |
+| Ubuntu 完整 `pnpm release:check` | `131055993213` | success，08:10:37–08:42:44 |
+| Docs / Cockpit / DataV 静态站点构建与预算 | `131070496796` | success，08:42:46–08:49:53 |
+| 十包串行发布，复用本次校验的 npm dist | `131073759120` | success，08:49:56–08:50:50 |
+| 生产部署 | `131074199329` | skipped（`DEPLOY_PRODUCTION` 未启用） |
+
+master 分支 CI `43180683109` 同样通过；本版未使用分支手动 dry-run 代替正式门禁。
 
 ## Registry 与同次产物
 
-待发布后补入：十包 `npm view <name>@0.1.2-beta version dist.integrity dist-tags`、
-`beta` 指向与既有 `latest` 快照对比。
+正式 npm artifact：`13928505329`，
+`lumal-npm-dist-dcca22c520e0c1aee4a6f53d520fd58ef06dcfae`，
+API digest `sha256:cc1462e1d5dc8816db9db86b4027eeb8b79bd54eebbd8a7e7ff70e151985a836`。
+解压后为 **704 个 dist 文件 / 1,887,686 bytes**，不是工作区遗留 dist。
+相较 `0.1.1-beta` 的 700 文件 / 1,859,441 bytes，增加 4 个文件、28,245 bytes，
+对应新增的版本清单插件、版本检查服务及其声明文件。
+
+十包 `beta` 均指向 `0.1.2-beta`，`latest` 与发布前快照一致：
+`@lumal/viewport` 为 `0.0.6-beta`，其余九包为 `0.0.1-beta`。
+逐包 `version` 与 `dist.integrity` 已通过 registry 查询核对；线上 tarball 另行下载检查，
+`create-lumal-admin` 含 base 与 standard 两份 `AppVersionUpdate.vue`，
+`@lumal/core` 含 `composables` 版本检查实现，`@lumal/vite` 含 `createVersionManifestPlugin`。
+
+registry 边缘缓存对新版本存在延迟：`@lumal/icons-vue` 在发布成功后约 8 分钟才可查询，
+包元数据与 tarball 端点均如此；其余包陆续可见。该延迟不是发布失败，
+以发布作业的 `+ <pkg>@0.1.2-beta` 输出和最终 registry 结果为准。
 
 ## 风险与边界
 
