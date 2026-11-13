@@ -73,6 +73,7 @@ features:
 十包已发布并核验，下列命令使用精确 registry 版本。
 正式门禁和消费者结果见 [发布记录](/reference/npm-release-0.1.2-beta)，
 功能与性能边界见 [下一阶段验收](/reference/lumal-next-phase-audit)。
+部署新构建后如何让旧页面安全刷新，见 [版本更新提示](/guide/in-depth/version-update)。
 历史十包发布事实保留在 [0.0.7-beta](/reference/npm-release-0.0.7-beta) 与 [0.0.6-beta 记录](/reference/npm-release-0.0.6-beta)。
 上一版九包的已核验发布事实保留在 [历史记录](/reference/npm-release-0.0.5-beta)。
 

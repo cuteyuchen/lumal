@@ -52,6 +52,21 @@ export default defineConfig({
 
 本包不强制安装 Devtools、自动导入或打包完整行业预设。静态 SVG 插件属于 `@lumal/icons/vite`。
 
+## 构建版本清单
+
+```ts
+import { createVersionManifestPlugin } from '@lumal/vite'
+
+plugins: [createVersionManifestPlugin()]
+```
+
+构建时生成 `{ buildId, version, commit, builtAt }`，向浏览器注入
+`__LUMAL_VERSION_INFO__`，并在各自 `build.outDir` 输出 `version.json`。
+`buildId` 由提交与构建时间组成，同一版本号多次构建也能区分；SSR 默认不生成清单。
+`info` 可传已有构建信息，`inject: false` 只生成文件，`enabled: false` 全部关闭。
+根路径与 `/px/` 独立构建各生成自己的清单。运行时检查、缓存头和验证见
+[版本更新](version-update.md)。
+
 ## 视口转换
 
 默认关闭，启用必须明确 `include`，例如 `src/screen/**`。

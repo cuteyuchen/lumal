@@ -90,3 +90,31 @@ registry 边缘缓存对新版本存在延迟：`@lumal/icons-vue` 在发布成�
 - 非原子部署或回滚可能造成部署身份变化并提示刷新；刷新后旧 chunk 若已删除，
   由业务错误页或浏览器缓存处理，不在本版引入 Service Worker 兜底。
 - 本环境未实际部署 Vercel，缓存头通过 Build Output 配置与脚本单测验证。
+
+## 后置文档、Skill 与 Demo 更新
+
+日期：2026-11-13。发包后独立提交，不改包源码、不移动标签、不重发 npm。
+`git diff v0.1.2-beta -- packages` 应为空。
+
+### 文档与 Skill
+
+- 版本更新指南补充本地验证步骤、线上清单对照与 E2E 演练方式；
+  文档首页、`docs/README.md` 增加入口。
+- 仓库 Skill 新增 `references/version-update.md`，在包选型表加入部署更新检测；
+  `vite.md`、`core.md`、`repository.md` 补充构建清单、`composables` 入口与校验边界。
+- Skill 由 15 个文件增至 16 个，已同步宿主副本；`scripts/lumal-skill.test.ts`
+  32 项通过，安装命令版本、相对链接与公开导入契约保持有效。
+
+### Demo
+
+- Admin 生产已由平台 Git 集成更新到 `0.1.2-beta`：
+  `/version.json` 与 `/px/version.json` 均返回 200，`buildId` 分别为
+  `3497eb0-2026-11-12T09:04:29.248Z` 与 `3497eb0-2026-11-12T09:04:34.458Z`，
+  两个入口独立构建、互不复用。
+- About 页增加「部署标识」一行，直接展示与 `version.json` 相同的 `buildId`；
+  推送后由同一 Git 集成重建。
+- DataV Guide、Compat 与 Mock API 沿用平台 Git 集成，本轮未单独上传或重复部署；
+  未在本记录中声称已逐站验收。
+- 文档站生产仍为 `0.1.1-beta`，新指南返回 404；Docs 的 Git 构建被既有
+  Ignored Build Step 取消，需要 Vercel 凭据按 `prepare-vercel-output.mjs --clean-urls`
+  定向 prebuilt 部署。该项未在本次仓库提交中声称完成。

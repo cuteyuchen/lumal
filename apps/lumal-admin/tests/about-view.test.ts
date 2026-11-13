@@ -5,6 +5,7 @@ import AboutView from '../src/views/about/AboutView.vue'
 vi.mock('../src/services/app-info', () => ({
   adminBuildInfo: {
     builtAt: '2026-10-19T02:03:04.000Z',
+    buildId: 'abc1234-2026-10-19T02:03:04.000Z',
     commit: 'abc1234',
     dependencies: {
       '@lumal/core': '9.8.7-beta',
@@ -40,6 +41,7 @@ describe('about view', () => {
     expect(basicInfo.text()).toContain('框架版本')
     expect(basicInfo.text()).toContain('9.8.7-beta')
     expect(basicInfo.text()).toContain('abc1234')
+    expect(basicInfo.text()).toContain('abc1234-2026-10-19T02:03:04.000Z')
     expect(basicInfo.text()).toContain('MIT')
     expect(basicInfo.text()).toContain('生产环境')
     expect(wrapper.findAll('h2').map(heading => heading.text())).toEqual([

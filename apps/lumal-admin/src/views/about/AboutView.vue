@@ -21,6 +21,7 @@ const basicInfo = [
   { highlight: true, label: '框架版本', value: adminBuildInfo.version },
   { datetime: adminBuildInfo.builtAt, label: '最近构建时间（UTC+8）', value: buildTime },
   { label: '提交标识', value: adminBuildInfo.commit },
+  { label: '部署标识', value: adminBuildInfo.buildId },
   { label: '开源许可协议', value: adminBuildInfo.license },
   { href: 'https://lumal.cuteyuchen.top', label: '文档地址', value: 'Lumal 文档' },
   { href: 'https://lumal-admin.cuteyuchen.top', label: '预览地址', value: 'Lumal Admin' },

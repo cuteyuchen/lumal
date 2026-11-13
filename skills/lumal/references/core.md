@@ -10,6 +10,8 @@
 - `@lumal/core`：带默认 UI 组件表的便利入口，支持 preset 和按名称选择注册。
 - `@lumal/core/components`：页面、Schema、CRUD、分页等组件及其类型。
 - `@lumal/core/layout`：后台壳与路由出口，详见 [路由与布局](core-routing.md)。
+- `@lumal/core/composables`：无 UI 组合式能力，含分页、选择、字典、确认操作、持久状态、
+  全屏和部署版本检查；版本检查见 [版本更新](version-update.md)。
 - UI 使用 Element Plus；Router、Pinia 仅在对应场景显式传入。启动器不会替应用创建这些实例。
 
 使用 UI 时在应用入口统一引入样式，避免逐页重复导入：

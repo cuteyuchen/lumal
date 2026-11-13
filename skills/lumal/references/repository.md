@@ -38,6 +38,11 @@ pnpm release:artifacts
 pnpm release:budgets
 ```
 
+修改部署版本检测时，`pnpm --filter lumal-admin build` 会生成 `/` 与 `/px/` 两份
+`version.json`，并由 `scripts/check-version-manifests.mjs` 校验 JSON 与 JS 注入值一致；
+`scripts/prepare-vercel-output.mjs` 负责 `no-store` / `no-cache` 头。不要为补清单把未知路径
+重写到 `index.html`。运行时规则见 [版本更新](version-update.md)。
+
 改动独立 Cockpit 或可视化示例时，完整构建与浏览器验收分别运行
 `pnpm cockpit:build` / `pnpm test:e2e:cockpit:built`；
 Admin 使用 `pnpm test:e2e:release`。普通公共包 build 不证明 Demo 可运行。

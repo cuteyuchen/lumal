@@ -141,6 +141,26 @@ VITE_VERSION_CHECK_URL=/ops/version.json
 
 常规使用不需要写这些变量。Admin 使用现有的 Element Plus `ElDialog`，根组件只挂载一份，不依赖路由页面，也不会在每次导航时重建定时器。
 
+## 本地验证
+
+```bash
+pnpm --filter lumal-admin build
+cat apps/lumal-admin/dist/version.json
+cat apps/lumal-admin/dist/px/version.json
+```
+
+`pnpm --filter lumal-admin build` 在两次构建后会执行
+`scripts/check-version-manifests.mjs dist`，核对两份清单的 `buildId` 互不相同、
+且分别与各自 JS 注入值一致。需要手动演练时，用
+`pnpm --filter lumal-admin exec vite preview` 启动产物，修改 `dist/version.json` 的
+`buildId` 后等待首次检查（1.5 秒）即可看到提示；改回原值可验证同一构建不会重复提示。
+
+线上可对照 Admin Demo 的
+[`/version.json`](https://lumal-admin.cuteyuchen.top/version.json) 与
+[`/px/version.json`](https://lumal-admin.cuteyuchen.top/px/version.json)，
+两个入口各自独立部署。E2E 通过路由拦截返回另一个 `buildId`，断言提示展示、
+「稍后」关闭和「立即刷新」只触发一次页面重载。
+
 ## 边界
 
 - **非原子部署**：新旧文件短暂并存时，可能先拿到新 `version.json`，但旧页面仍能继续工作；刷新后如果旧 chunk 已被删除，由业务错误页或浏览器缓存策略处理，本功能不会扫描或改写运行中的模块。

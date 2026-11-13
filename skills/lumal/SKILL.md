@@ -31,6 +31,7 @@ metadata:
 | 不依赖 Vue 的图标注册、SVG 处理、Data URI、可选状态形变 | `@lumal/icons`、`@lumal/icons/morph` | [图标内核](references/icons.md) |
 | Vue 图标组件、选择器、响应式图标注册表 | `@lumal/icons-vue` | [Vue 图标](references/icons-vue.md) |
 | 受控 CSS/行内样式视口转换、Vite resolver、源码 alias、可选 Devtools | `@lumal/vite` | [构建辅助](references/vite.md) |
+| 部署后检测新构建并提示用户刷新 | `@lumal/vite` + `@lumal/core/composables` | [版本更新](references/version-update.md) |
 | 迁移 Vben 5 页面或旧 Lumal 适配代码 | `@lumal/vben-compat/v5` 或 `/legacy` | [Vben 迁移](references/vben-compat.md) |
 | 修改包源码、公共 API、脚手架模板、发布边界 | 对应包及受影响消费者 | [仓库维护](references/repository.md)，再读相应分包参考 |
 
@@ -42,6 +43,8 @@ metadata:
 - 后端字段和业务状态码留在应用 adapter。分页使用 `{ items, total }`，字典使用 `{ items }`，会话使用 `{ accessToken, refreshToken?, expiresAt? }`；异常字段通过 `fieldNames`、`parseResponse` 或 `transform` 显式转换。
 - 脚手架默认 `standard/local/hash`，HTTP 模式必须接真实后端，不能将未配置或认证失败静默改为演示登录。新版命令须先确认对应版本已发布，不能用旧版 CLI 验证新版模板。
 - 菜单隐藏、按钮权限只改善前端体验，不能代替服务端鉴权；远程菜单组件只允许映射到应用白名单。
+- 版本更新检测用 `buildId` 判断部署身份，`version` 只用于展示；不要自动强制刷新，
+  `version.json` 不能被 SPA rewrite 成 200 HTML。
 - 图标 SVG 必须来自可信静态资源。图标注册和格式校验不等于安全净化。
 - 不把消费方的地图、业务接口、行业皮肤和持久化策略写进通用包；Cockpit 不负责这些业务能力。
 
